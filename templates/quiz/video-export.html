@@ -280,12 +280,27 @@ document.addEventListener('DOMContentLoaded', function() {
     exportBtn.classList.add('btn-secondary');
     updateDurationInfo();
 
+    // Track if video is being generated
+    let isGenerating = false;
+
+    // Warn user before leaving during generation
+    window.addEventListener('beforeunload', function(e) {
+        if (isGenerating) {
+            e.preventDefault();
+            e.returnValue = 'Video is still generating. If you leave, your quota will be consumed but you won\'t get the video.';
+            return e.returnValue;
+        }
+    });
+
     // Form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
         // Get form data
         const formData = new FormData(form);
+
+        // Mark as generating
+        isGenerating = true;
 
         // Show progress, hide other sections
         videoInfo.classList.add('d-none');
@@ -352,6 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showSuccess(downloadUrl) {
+        isGenerating = false;  // Clear flag - video ready
         progressSection.classList.add('d-none');
         successSection.classList.remove('d-none');
         downloadSection.classList.remove('d-none');
@@ -359,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showError(message) {
+        isGenerating = false;  // Clear flag - generation failed
         progressSection.classList.add('d-none');
         errorSection.classList.remove('d-none');
         errorMessage.textContent = message;

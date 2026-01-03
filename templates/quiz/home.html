@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Quizzes{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+            <div class="mb-3 mb-md-0">
+                <h2 class="fw-bold">Discover Quizzes</h2>
+                <p class="text-muted mb-0">Test your knowledge across different tech domains</p>
+            </div>
+            <a href="{% url 'categories' %}" class="btn btn-outline-primary">
+                <i class="bi bi-grid"></i> All Categories
+            </a>
+        </div>
+
+        <!-- Featured Quizzes -->
+        {% if featured_quizzes %}
+        <h5 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning"></i> Featured</h5>
+        <div class="row g-3 g-md-4 mb-5">
+            {% for quiz in featured_quizzes %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 p-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-primary">{{ quiz.category.name }}</span>
+                        <span class="badge badge-difficulty-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span>
+                    </div>
+                    <h5 class="mb-2">{{ quiz.title }}</h5>
+                    <p class="text-muted small mb-3">{{ quiz.description|truncatewords:20 }}</p>
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <span><i class="bi bi-question-circle"></i> {{ quiz.question_count }}</span>
+                        <span><i class="bi bi-clock"></i> {{ quiz.time_limit|divisibleby:60 }} min</span>
+                    </div>
+                    <a href="{% url 'quiz_detail' quiz.slug %}" class="btn btn-primary btn-sm mt-auto">Start Quiz</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Categories -->
+        <h5 class="fw-bold mb-3"><i class="bi bi-grid"></i> Categories</h5>
+        <div class="row g-3 g-md-4 mb-5">
+            {% for category in categories %}
+            <div class="col-6 col-md-3">
+                <a href="{% url 'category_detail' category.slug %}" class="card p-3 p-md-4 text-center text-decoration-none h-100">
+                    <i class="bi bi-{{ category.icon|default:'folder' }} fs-1 mb-2" style="color: {{ category.color }};"></i>
+                    <h6 class="mb-1">{{ category.name }}</h6>
+                    <small class="text-muted">{{ category.quiz_count }} quizzes</small>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Recent Quizzes -->
+        {% if recent_quizzes %}
+        <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> Recently Added</h5>
+        <div class="row g-3 g-md-4">
+            {% for quiz in recent_quizzes %}
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'quiz_detail' quiz.slug %}" class="card h-100 p-4 text-decoration-none">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-secondary">{{ quiz.category.name }}</span>
+                        <span class="badge badge-difficulty-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span>
+                    </div>
+                    <h6 class="mb-2">{{ quiz.title }}</h6>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span><i class="bi bi-question-circle"></i> {{ quiz.question_count }}</span>
+                        <span><i class="bi bi-star-fill text-warning"></i> +{{ quiz.xp_reward }} XP</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

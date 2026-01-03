@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subscription{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 mb-4">
+                <div class="card p-3">
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+                        <a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a>
+                        <a class="nav-link active" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i> Subscription</a>
+                        <a class="nav-link" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i> Settings</a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <h2 class="fw-bold mb-4">My Subscription</h2>
+
+                {% if subscription and subscription.is_active %}
+                <!-- Active Subscription -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i> Active Subscription</h5>
+                        <span class="badge bg-light text-primary">{{ subscription.plan.name }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Plan:</strong> {{ subscription.plan.name }}</p>
+                                <p class="mb-2"><strong>Billing:</strong> {% if subscription.is_yearly %}Yearly{% else %}Monthly{% endif %}</p>
+                                <p class="mb-2"><strong>Status:</strong>
+                                    <span class="badge bg-success">{{ subscription.status|title }}</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Started:</strong> {{ subscription.start_date|date:"M d, Y" }}</p>
+                                <p class="mb-2"><strong>Expires:</strong> {{ subscription.end_date|date:"M d, Y" }}</p>
+                                <p class="mb-2"><strong>Days Remaining:</strong>
+                                    {% widthratio subscription.end_date|timeuntil:"" 1 1 as days_left %}
+                                    <span class="badge bg-info">{{ subscription.end_date|timeuntil }}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Stats -->
+                {% if usage_stats %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i> Usage This Period</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for stat in usage_stats %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>{{ stat.description }}</span>
+                                <span class="text-muted">
+                                    {{ stat.used }} / {% if stat.limit == 'Unlimited' %}<i class="bi bi-infinity"></i>{% else %}{{ stat.limit }}{% endif %}
+                                </span>
+                            </div>
+                            {% if stat.limit != 'Unlimited' %}
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar {% if stat.percentage >= 90 %}bg-danger{% elif stat.percentage >= 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ stat.percentage }}%"
+                                     aria-valuenow="{{ stat.percentage }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ stat.remaining }} remaining</small>
+                            {% else %}
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                            </div>
+                            <small class="text-success"><i class="bi bi-infinity"></i> Unlimited</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        {% if subscription.next_reset_date %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Usage resets on <strong>{{ subscription.next_reset_date|date:"M d, Y" }}</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Plan Features -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-star me-2"></i> Your Plan Features</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for feature in subscription.plan.features %}
+                            <div class="col-md-6 mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                {{ feature.description }}
+                                {% if feature.limit %}
+                                <span class="badge bg-light text-dark">{{ feature.limit }}</span>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p class="text-muted mb-0">No features listed for this plan.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+                <!-- No Active Subscription -->
+                <div class="card mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-credit-card-2-back text-muted" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3">No Active Subscription</h4>
+                        <p class="text-muted mb-4">
+                            You're currently on the free plan. Upgrade to unlock more features!
+                        </p>
+                        <a href="{% url 'pricing' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-up-circle me-2"></i> View Plans & Upgrade
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Available Plans -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-grid me-2"></i> Available Plans</h5>
+                        <a href="{% url 'pricing' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for plan in plans %}
+                            <div class="col-md-4">
+                                <div class="card h-100 {% if subscription and subscription.plan.id == plan.id %}border-primary{% endif %}">
+                                    <div class="card-body text-center">
+                                        {% if plan.is_popular %}
+                                        <span class="badge bg-primary mb-2">Popular</span>
+                                        {% endif %}
+                                        <h6 class="fw-bold">{{ plan.name }}</h6>
+                                        <p class="fs-4 fw-bold mb-1">
+                                            {% if plan.price_monthly > 0 %}
+                                            ₹{{ plan.price_monthly|floatformat:0 }}<small class="text-muted fs-6">/mo</small>
+                                            {% else %}
+                                            Free
+                                            {% endif %}
+                                        </p>
+                                        {% if subscription and subscription.plan.id == plan.id %}
+                                        <span class="badge bg-success">Current Plan</span>
+                                        {% elif plan.plan_type != 'free' %}
+                                        <a href="{% url 'checkout' %}?plan={{ plan.slug }}" class="btn btn-sm btn-outline-primary mt-2">
+                                            Upgrade
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No plans available.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                {% if transactions %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i> Transaction History</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for txn in transactions %}
+                                <tr>
+                                    <td>{{ txn.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if txn.subscription %}
+                                        {{ txn.subscription.plan.name }} Plan
+                                        {% else %}
+                                        Payment
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ txn.currency }} {{ txn.amount }}</td>
+                                    <td>
+                                        {% if txn.status == 'success' %}
+                                        <span class="badge bg-success">Success</span>
+                                        {% elif txn.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif txn.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ txn.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

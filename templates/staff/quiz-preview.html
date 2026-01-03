@@ -1,0 +1,139 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Preview - {{ quiz.title }}{% endblock %}
+
+{% block staff_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'staff_pending_approvals' %}">Pending Approvals</a></li>
+        <li class="breadcrumb-item active">Preview</li>
+    </ol>
+</nav>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h3 class="fw-bold mb-1">{{ quiz.title }}</h3>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                {% if quiz.category %}
+                <span class="badge bg-primary">{{ quiz.category.name }}</span>
+                {% endif %}
+                <span class="badge badge-difficulty-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span>
+                <span class="badge bg-warning text-dark">Pending Approval</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <form action="{% url 'staff_approve_quiz' quiz.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check"></i> Approve
+                </button>
+            </form>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                <i class="bi bi-x"></i> Reject
+            </button>
+        </div>
+    </div>
+
+    {% if quiz.description %}
+    <p class="text-muted">{{ quiz.description }}</p>
+    {% endif %}
+
+    <div class="row g-3 text-muted small">
+        <div class="col-auto">
+            <i class="bi bi-person"></i> Created by: <strong>{{ quiz.created_by.email }}</strong>
+        </div>
+        <div class="col-auto">
+            <i class="bi bi-question-circle"></i> {{ quiz.question_count }} questions
+        </div>
+        <div class="col-auto">
+            <i class="bi bi-clock"></i> {{ quiz.time_limit|divisibleby:60 }} min
+        </div>
+        <div class="col-auto">
+            <i class="bi bi-bullseye"></i> {{ quiz.pass_percentage }}% to pass
+        </div>
+        <div class="col-auto">
+            <i class="bi bi-star"></i> {{ quiz.xp_reward }} XP
+        </div>
+    </div>
+</div>
+
+<h5 class="fw-bold mb-3">Questions ({{ questions|length }})</h5>
+
+{% for question in questions %}
+<div class="card mb-3">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Question {{ question.order }}</span>
+            <span class="badge bg-secondary">{{ question.get_question_type_display }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="fw-medium mb-3">{{ question.text }}</p>
+
+        {% if question.code_snippet %}
+        <pre class="bg-dark text-light p-3 rounded mb-3"><code>{{ question.code_snippet }}</code></pre>
+        {% endif %}
+
+        <div class="row g-2">
+            {% for option in question.options.all %}
+            <div class="col-md-6">
+                <div class="p-2 rounded {% if option.is_correct %}bg-success bg-opacity-25 border border-success{% else %}bg-light{% endif %}">
+                    {% if option.is_correct %}
+                    <i class="bi bi-check-circle-fill text-success me-1"></i>
+                    {% else %}
+                    <i class="bi bi-circle text-muted me-1"></i>
+                    {% endif %}
+                    {{ option.text }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if question.explanation %}
+        <div class="mt-3 p-2 bg-info bg-opacity-10 rounded">
+            <small class="text-muted"><i class="bi bi-lightbulb"></i> <strong>Explanation:</strong> {{ question.explanation }}</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> This quiz has no questions.
+</div>
+{% endfor %}
+
+<div class="mt-4">
+    <a href="{% url 'staff_pending_approvals' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Pending Approvals
+    </a>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'staff_reject_quiz' quiz.pk %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Rejecting: <strong>{{ quiz.title }}</strong></p>
+                    <div class="mb-3">
+                        <label for="rejectReason" class="form-label">Reason for rejection</label>
+                        <textarea name="reason" id="rejectReason" class="form-control" rows="3"
+                                  placeholder="Please explain why this quiz is being rejected..."></textarea>
+                        <small class="text-muted">This will be shown to the quiz creator.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

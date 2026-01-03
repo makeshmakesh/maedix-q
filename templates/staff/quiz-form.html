@@ -1,0 +1,88 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}{{ action }} Quiz{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">{{ action }} Quiz</h4>
+    <a href="{% url 'staff_quiz_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="card p-4">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="{{ form.title.id_for_label }}" class="form-label">Title *</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <div class="text-danger small">{{ form.title.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+            {{ form.description }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.difficulty.id_for_label }}" class="form-label">Difficulty</label>
+                {{ form.difficulty }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.time_limit.id_for_label }}" class="form-label">Time Limit (seconds)</label>
+                {{ form.time_limit }}
+                <small class="text-muted">600 = 10 minutes</small>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.pass_percentage.id_for_label }}" class="form-label">Pass Percentage</label>
+                {{ form.pass_percentage }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.xp_reward.id_for_label }}" class="form-label">XP Reward</label>
+                {{ form.xp_reward }}
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <div class="form-check mb-2">
+                {{ form.is_published }}
+                <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                    Published (visible to users)
+                </label>
+            </div>
+            <div class="form-check">
+                {{ form.is_featured }}
+                <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                    Featured (shown on homepage)
+                </label>
+            </div>
+        </div>
+
+        <div class="d-grid d-md-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> {{ action }} Quiz
+            </button>
+            {% if quiz %}
+            <a href="{% url 'staff_question_list' quiz.id %}" class="btn btn-outline-info">
+                <i class="bi bi-list-ul"></i> Manage Questions
+            </a>
+            {% endif %}
+            <a href="{% url 'staff_quiz_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

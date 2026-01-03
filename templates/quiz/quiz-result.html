@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Result{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Result Card -->
+                <div class="card p-4 text-center mb-4">
+                    {% if attempt.passed %}
+                    <div class="mb-3">
+                        <i class="bi bi-trophy-fill text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="text-success fw-bold">Congratulations!</h2>
+                    <p class="text-muted">You passed the quiz!</p>
+                    {% else %}
+                    <div class="mb-3">
+                        <i class="bi bi-emoji-frown text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="text-danger fw-bold">Keep Trying!</h2>
+                    <p class="text-muted">You didn't pass this time, but don't give up!</p>
+                    {% endif %}
+
+                    <div class="row g-2 g-md-3 my-4">
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light-custom">
+                                <h3 class="fw-bold mb-0 {% if attempt.passed %}text-success{% else %}text-danger{% endif %}">{{ attempt.percentage }}%</h3>
+                                <small class="text-muted">Score</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light-custom">
+                                <h3 class="fw-bold mb-0">{{ attempt.score }}/{{ attempt.total_points }}</h3>
+                                <small class="text-muted">Points</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light-custom">
+                                <h3 class="fw-bold mb-0 text-warning">+{{ attempt.xp_earned }}</h3>
+                                <small class="text-muted">XP Earned</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if attempt.xp_earned == 0 and attempt.passed %}
+                    <div class="alert alert-info small mb-4">
+                        <i class="bi bi-info-circle"></i> You've already passed this quiz before. XP is only awarded on your first successful completion.
+                    </div>
+                    {% elif attempt.xp_earned == 0 and not attempt.passed %}
+                    <div class="alert alert-secondary small mb-4">
+                        <i class="bi bi-info-circle"></i> Keep practicing! You've already earned XP from this quiz.
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid d-sm-flex justify-content-center gap-3">
+                        <a href="{% url 'quiz_detail' attempt.quiz.slug %}" class="btn btn-primary">
+                            <i class="bi bi-arrow-repeat"></i> Try Again
+                        </a>
+                        <a href="{% url 'quiz_home' %}" class="btn btn-outline-secondary">
+                            Browse More Quizzes
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Answer Review -->
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-4">Review Your Answers</h5>
+                    {% for answer in answers %}
+                    <div class="mb-4 pb-4 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if answer.is_correct %}Correct{% else %}Incorrect{% endif %}
+                            </span>
+                            <span class="text-muted small">+{{ answer.points_earned }} points</span>
+                        </div>
+                        <p class="fw-bold mb-2">{{ answer.question.text }}</p>
+
+                        {% for option in answer.question.options.all %}
+                        <div class="d-flex align-items-center mb-1">
+                            {% if option.is_correct %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% elif option in answer.selected_options.all %}
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                            {% else %}
+                                <i class="bi bi-circle text-muted me-2"></i>
+                            {% endif %}
+                            <span class="{% if option.is_correct %}text-success fw-bold{% elif option in answer.selected_options.all %}text-danger{% else %}text-muted{% endif %}">
+                                {{ option.text }}
+                            </span>
+                        </div>
+                        {% endfor %}
+
+                        {% if answer.question.explanation %}
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-lightbulb"></i> {{ answer.question.explanation }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

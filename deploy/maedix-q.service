@@ -1,0 +1,61 @@
+# Systemd service file for maedix-q
+# Copy to: /etc/systemd/system/maedix-q.service
+# Enable: systemctl enable maedix-q
+# Start: systemctl start maedix-q
+
+[Unit]
+Description=Maedix-Q Gunicorn Daemon
+Documentation=https://github.com/yourusername/maedix-q
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=notify
+User=ubuntu
+Group=www-data
+RuntimeDirectory=maedix-q
+WorkingDirectory=/home/ubuntu/maedix-q
+
+# Environment
+Environment="PATH=/home/ubuntu/maedix-q/venv/bin"
+EnvironmentFile=/home/ubuntu/maedix-q/.env
+
+# Gunicorn command
+ExecStart=/home/ubuntu/maedix-q/venv/bin/gunicorn \
+    --config /home/ubuntu/maedix-q/deploy/gunicorn.conf.py \
+    maedix_q.wsgi:application
+
+# Alternative: Simple command without config file
+# ExecStart=/home/ubuntu/maedix-q/venv/bin/gunicorn \
+#     --workers 3 \
+#     --bind unix:/home/ubuntu/maedix-q/maedix-q.sock \
+#     --access-logfile /home/ubuntu/maedix-q/logs/gunicorn-access.log \
+#     --error-logfile /home/ubuntu/maedix-q/logs/gunicorn-error.log \
+#     --capture-output \
+#     --timeout 120 \
+#     maedix_q.wsgi:application
+
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Security settings
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/maedix-q/logs
+ReadWritePaths=/home/ubuntu/maedix-q/media
+ReadWritePaths=/home/ubuntu/maedix-q/staticfiles
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

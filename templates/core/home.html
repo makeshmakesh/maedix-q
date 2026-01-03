@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+
+{% block title %}Maedix-Q - Quiz Platform & Video Generator{% endblock %}
+
+{% block content %}
+<!-- Audience Toggle -->
+<div class="bg-white border-bottom sticky-top" style="top: 56px; z-index: 1000;">
+    <div class="container">
+        <div class="d-flex justify-content-center py-2">
+            <div class="btn-group" role="group" id="audienceToggle">
+                <button type="button" class="btn btn-sm px-4 active" data-target="learners" id="btnLearners">
+                    <i class="bi bi-mortarboard me-1"></i> For Learners
+                </button>
+                <button type="button" class="btn btn-sm px-4" data-target="creators" id="btnCreators">
+                    <i class="bi bi-camera-reels me-1"></i> For Creators
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== LEARNERS CONTENT ==================== -->
+<div id="learnersContent">
+    <!-- Hero Section - Learners -->
+    <section class="py-5 hero-gradient">
+        <div class="container py-4 py-lg-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6 text-center text-lg-start">
+                    <span class="badge bg-success-subtle text-success mb-3 px-3 py-2">Free to Start</span>
+                    <h1 class="display-5 fw-bold mb-4">
+                        Learn & Grow with <span class="text-primary">Interactive Quizzes</span>
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Test your knowledge across hundreds of topics - from tech and science to trivia and general knowledge. Track your progress, compete on leaderboards, and level up your skills.
+                    </p>
+                    <div class="d-grid d-sm-flex gap-3 justify-content-center justify-content-lg-start">
+                        <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-rocket-takeoff me-1"></i> Start Learning Free
+                        </a>
+                        <a href="{% url 'quiz_home' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-play-circle me-1"></i> Browse Quizzes
+                        </a>
+                    </div>
+                    <div class="mt-4 d-flex gap-4 justify-content-center justify-content-lg-start text-muted small">
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> 100+ Quizzes</span>
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Multiple Categories</span>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center mt-5 mt-lg-0">
+                    <div class="position-relative">
+                        <div class="card p-4 mx-auto shadow" style="max-width: 400px;">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-info me-2">Science</span>
+                                <span class="badge bg-warning text-dark">Intermediate</span>
+                            </div>
+                            <h5>Space & Astronomy</h5>
+                            <p class="text-muted small mb-3">Explore the wonders of our universe - planets, stars, and galaxies</p>
+                            <div class="d-flex justify-content-between text-muted small mb-3">
+                                <span><i class="bi bi-question-circle"></i> 15 Questions</span>
+                                <span><i class="bi bi-clock"></i> 10 min</span>
+                                <span><i class="bi bi-star-fill text-warning"></i> +50 XP</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 65%"></div>
+                            </div>
+                            <small class="text-muted">65% Complete</small>
+                        </div>
+                        <!-- Floating elements -->
+                        <div class="position-absolute" style="top: -10px; right: 10%;">
+                            <span class="badge bg-warning p-2 shadow"><i class="bi bi-trophy me-1"></i> #12 on Leaderboard</span>
+                        </div>
+                        <div class="position-absolute" style="bottom: 10%; left: -5%;">
+                            <span class="badge bg-success p-2 shadow"><i class="bi bi-fire me-1"></i> 7 Day Streak</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section - Learners -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Why Learn with Maedix-Q?</h2>
+                <p class="text-muted">Everything you need to expand your knowledge</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-lightning-charge-fill text-primary fs-1"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Quick Quizzes</h5>
+                        <p class="text-muted mb-0">Bite-sized quizzes you can complete in 5-10 minutes. Perfect for learning on the go.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-graph-up text-success fs-1"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Track Progress</h5>
+                        <p class="text-muted mb-0">Monitor your learning journey with detailed stats, streaks, and achievement badges.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-trophy-fill text-warning fs-1"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Compete & Earn</h5>
+                        <p class="text-muted mb-0">Climb the leaderboard, earn XP points, and showcase your expertise to others.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section - Learners -->
+    <section class="py-5 bg-light-custom">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Popular Categories</h2>
+                <p class="text-muted">Explore quizzes across different topics</p>
+            </div>
+            <div class="row g-3 g-md-4">
+                <div class="col-6 col-md-3">
+                    <a href="{% url 'categories' %}" class="card p-3 p-md-4 text-center text-decoration-none h-100 border-0 shadow-sm">
+                        <i class="bi bi-code-slash text-primary fs-1 mb-2"></i>
+                        <h6 class="mb-0">Technology</h6>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="{% url 'categories' %}" class="card p-3 p-md-4 text-center text-decoration-none h-100 border-0 shadow-sm">
+                        <i class="bi bi-globe-americas text-info fs-1 mb-2"></i>
+                        <h6 class="mb-0">General Knowledge</h6>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="{% url 'categories' %}" class="card p-3 p-md-4 text-center text-decoration-none h-100 border-0 shadow-sm">
+                        <i class="bi bi-rocket text-warning fs-1 mb-2"></i>
+                        <h6 class="mb-0">Science</h6>
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="{% url 'categories' %}" class="card p-3 p-md-4 text-center text-decoration-none h-100 border-0 shadow-sm">
+                        <i class="bi bi-film text-danger fs-1 mb-2"></i>
+                        <h6 class="mb-0">Entertainment</h6>
+                    </a>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="{% url 'categories' %}" class="btn btn-outline-primary">
+                    View All Categories <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works - Learners -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">How It Works</h2>
+                <p class="text-muted">Start learning in 3 simple steps</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                        <span class="fs-4 fw-bold">1</span>
+                    </div>
+                    <h5 class="fw-bold">Choose a Quiz</h5>
+                    <p class="text-muted">Browse our library of quizzes or pick a category that interests you.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                        <span class="fs-4 fw-bold">2</span>
+                    </div>
+                    <h5 class="fw-bold">Answer Questions</h5>
+                    <p class="text-muted">Test your knowledge with timed questions. Get instant feedback on your answers.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                        <span class="fs-4 fw-bold">3</span>
+                    </div>
+                    <h5 class="fw-bold">Track & Improve</h5>
+                    <p class="text-muted">Review your results, learn from explanations, and watch your skills grow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section - Learners -->
+    <section class="py-5">
+        <div class="container">
+            <div class="card p-4 p-md-5 text-center border-0" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+                <h2 class="fw-bold text-white mb-3">Ready to Test Your Knowledge?</h2>
+                <p class="text-white-50 mb-4">Join thousands of learners expanding their knowledge every day.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{% url 'signup' %}" class="btn btn-light btn-lg">
+                        <i class="bi bi-person-plus me-1"></i> Create Free Account
+                    </a>
+                    <a href="{% url 'quiz_home' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-play-circle me-1"></i> Browse Quizzes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ==================== CREATORS CONTENT ==================== -->
+<div id="creatorsContent" class="d-none">
+    <!-- Hero Section - Creators -->
+    <section class="py-5 hero-gradient">
+        <div class="container py-4 py-lg-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6 text-center text-lg-start">
+                    <span class="badge bg-danger-subtle text-danger mb-3 px-3 py-2">For Content Creators</span>
+                    <h1 class="display-5 fw-bold mb-4">
+                        Create Engaging <span class="text-primary">Quiz Videos</span> in Seconds
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Transform your knowledge into viral quiz content for Instagram Reels and YouTube Shorts. Create quizzes, export as videos, and grow your audience effortlessly.
+                    </p>
+                    <div class="d-grid d-sm-flex gap-3 justify-content-center justify-content-lg-start">
+                        <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-rocket-takeoff me-1"></i> Start Creating Free
+                        </a>
+                        <a href="{% url 'quiz_home' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-play-circle me-1"></i> See Examples
+                        </a>
+                    </div>
+                    <div class="mt-4 d-flex gap-4 justify-content-center justify-content-lg-start text-muted small">
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> No credit card</span>
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Free plan available</span>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center mt-5 mt-lg-0">
+                    <div class="position-relative d-inline-block" style="overflow: visible;">
+                        <!-- Video Preview Mockup -->
+                        <div class="card p-3 shadow-lg" style="width: 240px; border-radius: 24px; background: #121212;">
+                            <div class="rounded-3 p-3 text-white" style="background: #1c1c1e;">
+                                <span class="badge mb-3 px-3 py-2" style="background: #8b5cf6 !important;">QUESTION 1/3</span>
+                                <div class="bg-dark rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 50px; height: 50px; border: 2px solid #8b5cf6;">
+                                    <span class="fs-5 fw-bold">10</span>
+                                </div>
+                                <p class="text-center small mb-3">What is the capital of France?</p>
+                                <div class="text-start">
+                                    <div class="bg-dark rounded p-2 mb-2 small"><span class="badge me-2" style="background: #8b5cf6 !important;">A</span> London</div>
+                                    <div class="bg-success rounded p-2 mb-2 small"><span class="badge bg-light text-success me-2">B</span> Paris <i class="bi bi-check float-end"></i></div>
+                                    <div class="bg-dark rounded p-2 mb-2 small"><span class="badge me-2" style="background: #8b5cf6 !important;">C</span> Berlin</div>
+                                    <div class="bg-dark rounded p-2 small"><span class="badge me-2" style="background: #8b5cf6 !important;">D</span> Madrid</div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-white-50">9:16 Video Preview</small>
+                            </div>
+                        </div>
+                        <!-- Floating badges -->
+                        <div class="position-absolute" style="top: 5%; left: -20px;">
+                            <span class="badge bg-danger p-2 shadow"><i class="bi bi-instagram me-1"></i> Reels</span>
+                        </div>
+                        <div class="position-absolute" style="bottom: 15%; right: -20px;">
+                            <span class="badge bg-dark p-2 shadow"><i class="bi bi-youtube me-1"></i> Shorts</span>
+                        </div>
+                        <div class="position-absolute" style="top: 40%; right: -25px;">
+                            <span class="badge bg-secondary p-2 shadow"><i class="bi bi-tiktok me-1"></i> TikTok</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section - Creators -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Everything You Need to Create Quiz Content</h2>
+                <p class="text-muted">From quiz creation to video export - all in one platform</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-plus-circle-fill text-primary fs-1"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Create Quizzes</h5>
+                        <p class="text-muted mb-0">Build engaging quizzes with multiple choice questions, code snippets, and instant feedback. Easy-to-use editor.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-camera-reels-fill text-danger fs-1"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Export as Video</h5>
+                        <p class="text-muted mb-0">One-click export to vertical video format (9:16). Perfect for Instagram Reels, YouTube Shorts, and TikTok.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="bi bi-graph-up-arrow text-success fs-1"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Grow Your Audience</h5>
+                        <p class="text-muted mb-0">Quiz videos are highly engaging. Boost your reach, increase watch time, and grow your followers organically.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section - Creators -->
+    <section class="py-5 bg-light-custom">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">How It Works</h2>
+                <p class="text-muted">Create your first quiz video in 3 simple steps</p>
+            </div>
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-5">
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 48px; height: 48px;">
+                            <span class="fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-2">Create Your Quiz</h5>
+                            <p class="text-muted mb-0">Add questions, options, and mark correct answers. Support for text, code snippets, and explanations.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 48px; height: 48px;">
+                            <span class="fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-2">Select & Customize</h5>
+                            <p class="text-muted mb-0">Choose 1-3 questions for your video. Toggle answer reveal on or off based on your content style.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 48px; height: 48px;">
+                            <span class="fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-2">Export & Share</h5>
+                            <p class="text-muted mb-0">Generate your video in seconds. Download and share directly to Instagram, YouTube, or TikTok.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card p-4 shadow-sm border-0">
+                        <div class="row g-3 text-center">
+                            <div class="col-4">
+                                <div class="bg-light rounded p-3">
+                                    <i class="bi bi-pencil-square text-primary fs-2 mb-2 d-block"></i>
+                                    <small class="text-muted">Create Quiz</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light rounded p-3">
+                                    <i class="bi bi-sliders text-primary fs-2 mb-2 d-block"></i>
+                                    <small class="text-muted">Customize</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light rounded p-3">
+                                    <i class="bi bi-download text-primary fs-2 mb-2 d-block"></i>
+                                    <small class="text-muted">Download</small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row g-2">
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-instagram text-danger fs-4"></i>
+                                    <small class="d-block text-muted">Reels</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-youtube text-danger fs-4"></i>
+                                    <small class="d-block text-muted">Shorts</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-tiktok fs-4"></i>
+                                    <small class="d-block text-muted">TikTok</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-facebook text-primary fs-4"></i>
+                                    <small class="d-block text-muted">Reels</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Features Section - Creators -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <span class="badge bg-danger-subtle text-danger mb-3 px-3 py-2">Video Export</span>
+                    <h2 class="fw-bold mb-4">Professional Quiz Videos Ready for Social Media</h2>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>Vertical Format (9:16)</strong>
+                                <p class="text-muted mb-0 small">Optimized for mobile viewing on all platforms</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>Animated Timer</strong>
+                                <p class="text-muted mb-0 small">10-second countdown keeps viewers engaged</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>Answer Reveal</strong>
+                                <p class="text-muted mb-0 small">Optional answer reveal with visual feedback</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>Dark Theme Design</strong>
+                                <p class="text-muted mb-0 small">Modern, eye-catching visuals that pop on feeds</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="card p-4 bg-dark text-white" style="border-radius: 16px;">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="bg-white bg-opacity-10 rounded p-3">
+                                    <i class="bi bi-phone text-primary fs-1 d-block mb-2"></i>
+                                    <small>1080 x 1920</small>
+                                    <p class="small text-muted mb-0">Full HD Vertical</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-white bg-opacity-10 rounded p-3">
+                                    <i class="bi bi-stopwatch text-warning fs-1 d-block mb-2"></i>
+                                    <small>30-60 sec</small>
+                                    <p class="small text-muted mb-0">Optimal Length</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-white bg-opacity-10 rounded p-3">
+                                    <i class="bi bi-lightning-fill text-info fs-1 d-block mb-2"></i>
+                                    <small>~60 sec</small>
+                                    <p class="small text-muted mb-0">Fast Generation</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-white bg-opacity-10 rounded p-3">
+                                    <i class="bi bi-film text-success fs-1 d-block mb-2"></i>
+                                    <small>MP4</small>
+                                    <p class="small text-muted mb-0">Universal Format</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section - Creators -->
+    <section class="py-5 bg-light-custom">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Perfect For Content Creators</h2>
+                <p class="text-muted">Join creators who are growing their audience with quiz content</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <i class="bi bi-code-slash text-primary fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Tech Educators</h5>
+                        <p class="text-muted small mb-0">Create coding quizzes for Python, JavaScript, SQL and more. Help your audience learn while engaging with your content.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <i class="bi bi-mortarboard text-success fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Teachers & Tutors</h5>
+                        <p class="text-muted small mb-0">Make learning fun with quiz videos. Perfect for test prep, revision, and keeping students engaged.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <i class="bi bi-stars text-warning fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Trivia Creators</h5>
+                        <p class="text-muted small mb-0">General knowledge, pop culture, sports - create viral trivia content that keeps viewers coming back.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <i class="bi bi-briefcase text-danger fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Brand Marketers</h5>
+                        <p class="text-muted small mb-0">Engage your audience with interactive quiz content. Boost brand awareness and social engagement.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section - Creators -->
+    <section class="py-5">
+        <div class="container">
+            <div class="card p-4 p-md-5 text-center border-0" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+                <h2 class="fw-bold text-white mb-3">Ready to Create Your First Quiz Video?</h2>
+                <p class="text-white-50 mb-4">Join content creators who are growing their audience with engaging quiz content.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{% url 'signup' %}" class="btn btn-light btn-lg">
+                        <i class="bi bi-rocket-takeoff me-1"></i> Start Creating Free
+                    </a>
+                    <a href="{% url 'pricing' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-tag me-1"></i> View Pricing
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+#audienceToggle .btn {
+    border: 2px solid var(--border-color);
+    background: var(--bg-white);
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+#audienceToggle .btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+#audienceToggle .btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnLearners = document.getElementById('btnLearners');
+    const btnCreators = document.getElementById('btnCreators');
+    const learnersContent = document.getElementById('learnersContent');
+    const creatorsContent = document.getElementById('creatorsContent');
+
+    function showLearners() {
+        btnLearners.classList.add('active');
+        btnCreators.classList.remove('active');
+        learnersContent.classList.remove('d-none');
+        creatorsContent.classList.add('d-none');
+        localStorage.setItem('audiencePreference', 'learners');
+    }
+
+    function showCreators() {
+        btnCreators.classList.add('active');
+        btnLearners.classList.remove('active');
+        creatorsContent.classList.remove('d-none');
+        learnersContent.classList.add('d-none');
+        localStorage.setItem('audiencePreference', 'creators');
+    }
+
+    btnLearners.addEventListener('click', showLearners);
+    btnCreators.addEventListener('click', showCreators);
+
+    // Check URL parameter or localStorage for preference
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPreference = urlParams.get('for');
+    const savedPreference = localStorage.getItem('audiencePreference');
+
+    if (urlPreference === 'creators' || savedPreference === 'creators') {
+        showCreators();
+    } else {
+        showLearners();
+    }
+});
+</script>
+{% endblock %}

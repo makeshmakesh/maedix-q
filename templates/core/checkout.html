@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - {{ plan.name }}{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="row g-4">
+                    <!-- Order Summary -->
+                    <div class="col-md-7">
+                        <div class="card p-4">
+                            <h4 class="fw-bold mb-4">Order Summary</h4>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <span class="text-muted">Selected Plan</span>
+                                <span class="badge bg-primary fs-6">{{ plan.name }}</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <span class="text-muted">Billing Period</span>
+                                <span class="fw-medium">{% if is_yearly %}Yearly{% else %}Monthly{% endif %}</span>
+                            </div>
+
+                            {% if plan.description %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <span class="text-muted d-block mb-2">Description</span>
+                                <p class="mb-0">{{ plan.description }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if plan.features %}
+                            <div class="mb-4">
+                                <span class="text-muted d-block mb-3">Features Included</span>
+                                <ul class="list-unstyled mb-0">
+                                    {% for feature in plan.features %}
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        {{ feature.description }}
+                                        {% if feature.limit %}
+                                        <span class="badge bg-light text-dark ms-1">{{ feature.limit }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <span class="fs-5 fw-bold">Total Amount</span>
+                                <span class="fs-4 fw-bold text-primary">{{ currency_symbol }}{{ price }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'pricing' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i> Back to Plans
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Payment Section -->
+                    <div class="col-md-5">
+                        <div class="card p-4">
+                            <h5 class="fw-bold mb-4">Payment</h5>
+
+                            <button id="rzp-button" class="btn btn-primary btn-lg w-100 mb-3">
+                                <span class="btn-text">
+                                    <i class="bi bi-lock-fill me-2"></i> Pay {{ currency_symbol }}{{ price }}
+                                </span>
+                                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            </button>
+
+                            <div class="text-center mb-4">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Secured by Razorpay | 256-bit encryption
+                                </small>
+                            </div>
+
+                            <hr>
+
+                            <div class="text-center">
+                                <p class="small text-muted mb-2">Accepted Payment Methods</p>
+                                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                    <span class="badge bg-light text-dark p-2">Credit/Debit Cards</span>
+                                    <span class="badge bg-light text-dark p-2">UPI</span>
+                                    <span class="badge bg-light text-dark p-2">Net Banking</span>
+                                    <span class="badge bg-light text-dark p-2">Wallets</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-3 mt-3 bg-light">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-info-circle text-primary me-2 mt-1"></i>
+                                <small class="text-muted">
+                                    Your subscription will start immediately after successful payment.
+                                    You can cancel anytime from your account settings.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rzpButton = document.getElementById('rzp-button');
+    const btnText = rzpButton.querySelector('.btn-text');
+    const spinner = rzpButton.querySelector('.spinner-border');
+
+    const options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": "{{ amount_paise }}",
+        "currency": "{{ currency }}",
+        "name": "MaedixQ",
+        "description": "{{ plan.name }} Plan - {% if is_yearly %}Yearly{% else %}Monthly{% endif %}",
+        "order_id": "{{ order_id }}",
+        "handler": function(response) {
+            // Payment successful - submit to backend
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "payment_success" %}';
+
+            const inputs = {
+                'razorpay_payment_id': response.razorpay_payment_id,
+                'razorpay_order_id': response.razorpay_order_id,
+                'razorpay_signature': response.razorpay_signature,
+                'plan_slug': '{{ plan.slug }}',
+                'billing': '{{ billing }}',
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            };
+
+            Object.keys(inputs).forEach(key => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = inputs[key];
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        },
+        "prefill": {
+            "name": "{{ user.get_full_name|default:user.username }}",
+            "email": "{{ user.email }}"
+        },
+        "notes": {
+            "plan_slug": "{{ plan.slug }}",
+            "billing": "{{ billing }}"
+        },
+        "theme": {
+            "color": "#6366f1"
+        },
+        "modal": {
+            "ondismiss": function() {
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                rzpButton.disabled = false;
+            }
+        }
+    };
+
+    const rzp = new Razorpay(options);
+
+    rzp.on('payment.failed', function(response) {
+        btnText.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        rzpButton.disabled = false;
+
+        alert('Payment Failed: ' + response.error.description);
+
+        // Log failure to backend
+        fetch('{% url "payment_failed" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                error_code: response.error.code,
+                error_description: response.error.description,
+                order_id: response.error.metadata.order_id,
+                payment_id: response.error.metadata.payment_id
+            })
+        });
+    });
+
+    rzpButton.onclick = function(e) {
+        e.preventDefault();
+        btnText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+        rzpButton.disabled = true;
+        rzp.open();
+    };
+});
+</script>
+{% endblock %}

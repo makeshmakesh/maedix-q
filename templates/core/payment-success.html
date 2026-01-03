@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Successful{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card p-5 text-center">
+                    <div class="mb-4">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-check-lg text-success" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+
+                    <h2 class="fw-bold mb-3">Payment Successful!</h2>
+                    <p class="text-muted mb-4">
+                        Thank you for your purchase. Your subscription is now active.
+                    </p>
+
+                    <div class="card bg-light p-4 mb-4 text-start">
+                        <h6 class="fw-bold mb-3">Subscription Details</h6>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Plan</span>
+                            <span class="fw-medium">{{ plan.name }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Billing</span>
+                            <span class="fw-medium">{% if subscription.is_yearly %}Yearly{% else %}Monthly{% endif %}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Amount Paid</span>
+                            <span class="fw-medium">INR {{ transaction.amount }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Start Date</span>
+                            <span class="fw-medium">{{ subscription.start_date|date:"M d, Y" }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">End Date</span>
+                            <span class="fw-medium">{{ subscription.end_date|date:"M d, Y" }}</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Transaction ID</span>
+                            <span class="fw-medium text-break" style="font-size: 0.85rem;">{{ transaction.razorpay_payment_id }}</span>
+                        </div>
+                    </div>
+
+                    {% if plan.features %}
+                    <div class="card bg-light p-4 mb-4 text-start">
+                        <h6 class="fw-bold mb-3">Your Plan Features</h6>
+                        <ul class="list-unstyled mb-0">
+                            {% for feature in plan.features %}
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                {{ feature.description }}
+                                {% if feature.limit %}
+                                <span class="badge bg-primary ms-1">{{ feature.limit }}</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'quiz_home' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-circle me-2"></i> Start Taking Quizzes
+                        </a>
+                        <a href="{% url 'user_quiz_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-plus-circle me-2"></i> Create Your Own Quiz
+                        </a>
+                    </div>
+
+                    <p class="text-muted small mt-4 mb-0">
+                        A confirmation email has been sent to {{ user.email }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

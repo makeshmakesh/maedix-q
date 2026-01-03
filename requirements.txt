@@ -1,0 +1,15 @@
+django
+djangorestframework
+zappa
+psycopg2-binary
+python-dotenv
+requests
+openai-agents
+pgvector
+razorpay
+django-storages
+boto3
+imageio-ffmpeg==0.6.0
+moviepy==2.2.1
+numpy==2.4.0
+pillow==11.3.0

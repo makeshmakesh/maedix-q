@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card p-4 text-center">
+                    <i class="bi bi-person-circle text-muted mx-auto mb-3" style="font-size: 6rem;"></i>
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    {% if profile.bio %}
+                        <p class="text-muted small">{{ profile.bio }}</p>
+                    {% endif %}
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-4">Statistics</h5>
+                    <div class="row g-4">
+                        <div class="col-6 col-md-3 text-center">
+                            <h3 class="fw-bold text-primary">{{ stats.xp_points }}</h3>
+                            <small class="text-muted">XP Points</small>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <h3 class="fw-bold text-success">{{ stats.total_quizzes_passed }}</h3>
+                            <small class="text-muted">Quizzes Passed</small>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <h3 class="fw-bold text-warning">{{ stats.accuracy }}%</h3>
+                            <small class="text-muted">Accuracy</small>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <h3 class="fw-bold text-danger">{{ stats.longest_streak }}</h3>
+                            <small class="text-muted">Best Streak</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% if profile.skills %}
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3">Skills</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in profile.skills %}
+                            <span class="badge bg-primary">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

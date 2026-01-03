@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} Quizzes{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'quiz_home' %}">Quizzes</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'categories' %}">Categories</a></li>
+                <li class="breadcrumb-item active">{{ category.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex align-items-center mb-4">
+            <i class="bi bi-{{ category.icon|default:'folder' }} fs-1 me-3" style="color: {{ category.color }};"></i>
+            <div>
+                <h2 class="fw-bold mb-1">{{ category.name }}</h2>
+                {% if category.description %}
+                <p class="text-muted mb-0">{{ category.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Subcategories -->
+        {% if subcategories %}
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            {% for sub in subcategories %}
+            <a href="{% url 'category_detail' sub.slug %}" class="badge bg-light text-dark text-decoration-none p-2">{{ sub.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Filters -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a href="?" class="btn btn-sm {% if not request.GET.difficulty %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+            <a href="?difficulty=beginner" class="btn btn-sm {% if request.GET.difficulty == 'beginner' %}btn-primary{% else %}btn-outline-primary{% endif %}">Beginner</a>
+            <a href="?difficulty=intermediate" class="btn btn-sm {% if request.GET.difficulty == 'intermediate' %}btn-primary{% else %}btn-outline-primary{% endif %}">Intermediate</a>
+            <a href="?difficulty=advanced" class="btn btn-sm {% if request.GET.difficulty == 'advanced' %}btn-primary{% else %}btn-outline-primary{% endif %}">Advanced</a>
+        </div>
+
+        <!-- Quizzes -->
+        <div class="row g-3 g-md-4">
+            {% for quiz in quizzes %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 p-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge badge-difficulty-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span>
+                        <span class="badge xp-badge">+{{ quiz.xp_reward }} XP</span>
+                    </div>
+                    <h5 class="mb-2">{{ quiz.title }}</h5>
+                    <p class="text-muted small mb-3">{{ quiz.description|truncatewords:15 }}</p>
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <span><i class="bi bi-question-circle"></i> {{ quiz.question_count }}</span>
+                        <span><i class="bi bi-clock"></i> {{ quiz.time_limit|divisibleby:60 }} min</span>
+                    </div>
+                    <a href="{% url 'quiz_detail' quiz.slug %}" class="btn btn-outline-primary btn-sm mt-auto">View Quiz</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3">No Quizzes Yet</h4>
+                <p class="text-muted">No quizzes available in this category.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

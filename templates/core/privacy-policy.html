@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="fw-bold mb-4">Privacy Policy</h1>
+                <p class="text-muted mb-4">Last updated: {% now "F j, Y" %}</p>
+
+                <div class="card p-4">
+                    <h5>1. Information We Collect</h5>
+                    <p class="text-muted">We collect information you provide directly, including name, email, and quiz performance data.</p>
+
+                    <h5 class="mt-4">2. How We Use Your Information</h5>
+                    <p class="text-muted">We use your information to provide and improve our services, personalize your experience, and communicate with you.</p>
+
+                    <h5 class="mt-4">3. Information Sharing</h5>
+                    <p class="text-muted">We do not sell your personal information. We may share data with service providers who assist in our operations.</p>
+
+                    <h5 class="mt-4">4. Data Security</h5>
+                    <p class="text-muted">We implement appropriate security measures to protect your personal information.</p>
+
+                    <h5 class="mt-4">5. Your Rights</h5>
+                    <p class="text-muted">You have the right to access, correct, or delete your personal data. Contact us to exercise these rights.</p>
+
+                    <h5 class="mt-4">6. Contact</h5>
+                    <p class="text-muted">For privacy questions, contact us at privacy@maedix.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

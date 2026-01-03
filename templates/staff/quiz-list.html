@@ -1,0 +1,134 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Manage Quizzes{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Quizzes</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'staff_quiz_import' %}" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> Import JSON
+        </a>
+        <a href="{% url 'staff_quiz_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> New Quiz
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Created By</th>
+                    <th>Questions</th>
+                    <th>Difficulty</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in quizzes %}
+                <tr>
+                    <td>
+                        <span class="fw-bold">{{ quiz.title }}</span>
+                        {% if quiz.is_featured %}
+                        <i class="bi bi-star-fill text-warning ms-1" title="Featured"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if quiz.category %}
+                        <span class="badge bg-light text-dark">{{ quiz.category.name }}</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if quiz.created_by %}
+                        <small class="text-muted">{{ quiz.created_by.email }}</small>
+                        {% else %}
+                        <small class="text-muted">System</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ quiz.question_count }}</td>
+                    <td>
+                        <span class="badge badge-difficulty-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span>
+                    </td>
+                    <td>
+                        {% if quiz.is_published %}
+                        <span class="badge bg-success">Published</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Draft</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'staff_question_list' quiz.id %}" class="btn btn-sm btn-outline-info" title="Questions">
+                            <i class="bi bi-list-ul"></i>
+                        </a>
+                        <a href="{% url 'staff_quiz_edit' quiz.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete-quiz" data-quiz-id="{{ quiz.id }}" data-quiz-title="{{ quiz.title }}" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="bi bi-journal-x text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No quizzes yet. <a href="{% url 'staff_quiz_create' %}">Create one</a></p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Single Delete Modal -->
+<div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-labelledby="deleteQuizModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteQuizModalLabel">Delete Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteQuizTitle"></strong>?</p>
+                <p class="text-danger small mb-0">This will also delete all questions and attempts.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteQuizForm" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteQuizModal');
+    const deleteForm = document.getElementById('deleteQuizForm');
+    const deleteTitle = document.getElementById('deleteQuizTitle');
+
+    document.querySelectorAll('.btn-delete-quiz').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const quizId = this.dataset.quizId;
+            const quizTitle = this.dataset.quizTitle;
+
+            deleteForm.action = '{% url "staff_quiz_delete" 0 %}'.replace('/0/', '/' + quizId + '/');
+            deleteTitle.textContent = quizTitle;
+
+            const modal = new bootstrap.Modal(deleteModal);
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

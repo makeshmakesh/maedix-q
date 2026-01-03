@@ -1,0 +1,19 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.HomePage.as_view(), name='home'),
+    path('about/', views.AboutPage.as_view(), name='about'),
+    path('pricing/', views.PricingPage.as_view(), name='pricing'),
+    path('contact/', views.ContactPage.as_view(), name='contact'),
+    path('terms/', views.TermsPage.as_view(), name='terms'),
+    path('privacy-policy/', views.PrivacyPolicyPage.as_view(), name='privacy_policy'),
+    path('refund-policy/', views.RefundPolicyPage.as_view(), name='refund_policy'),
+
+    # Payment URLs
+    path('payment/checkout/', views.CheckoutView.as_view(), name='checkout'),
+    path('payment/success/', views.PaymentSuccessView.as_view(), name='payment_success'),
+    path('payment/success/page/', views.PaymentSuccessPageView.as_view(), name='payment_success_page'),
+    path('payment/failed/', views.PaymentFailedView.as_view(), name='payment_failed'),
+    path('payment/webhook/', views.PaymentWebhookView.as_view(), name='payment_webhook'),
+]

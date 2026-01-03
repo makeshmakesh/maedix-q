@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms of Service{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="fw-bold mb-4">Terms of Service</h1>
+                <p class="text-muted mb-4">Last updated: {% now "F j, Y" %}</p>
+
+                <div class="card p-4">
+                    <h5>1. Acceptance of Terms</h5>
+                    <p class="text-muted">By accessing and using Maedix-Q, you accept and agree to be bound by these Terms of Service.</p>
+
+                    <h5 class="mt-4">2. Use of Service</h5>
+                    <p class="text-muted">You agree to use the service only for lawful purposes and in accordance with these terms.</p>
+
+                    <h5 class="mt-4">3. User Accounts</h5>
+                    <p class="text-muted">You are responsible for maintaining the confidentiality of your account and password.</p>
+
+                    <h5 class="mt-4">4. Intellectual Property</h5>
+                    <p class="text-muted">All content on Maedix-Q is the property of Maedix and is protected by copyright laws.</p>
+
+                    <h5 class="mt-4">5. Limitation of Liability</h5>
+                    <p class="text-muted">Maedix-Q shall not be liable for any indirect, incidental, or consequential damages.</p>
+
+                    <h5 class="mt-4">6. Contact</h5>
+                    <p class="text-muted">For questions about these terms, contact us at legal@maedix.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

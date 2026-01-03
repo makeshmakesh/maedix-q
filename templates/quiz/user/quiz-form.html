@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit Quiz{% else %}Create Quiz{% endif %}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="{% url 'user_quiz_list' %}">My Quizzes</a></li>
+                        <li class="breadcrumb-item active">{% if is_edit %}Edit{% else %}Create{% endif %}</li>
+                    </ol>
+                </nav>
+
+                <div class="card p-4">
+                    <h3 class="fw-bold mb-4">{% if is_edit %}Edit Quiz{% else %}Create New Quiz{% endif %}</h3>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">Quiz Title *</label>
+                            <input type="text" name="title" id="id_title" class="form-control"
+                                   value="{{ form.title.value|default:'' }}" required
+                                   placeholder="e.g., Python Basics Quiz">
+                            {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            <textarea name="description" id="id_description" class="form-control" rows="3"
+                                      placeholder="Describe what this quiz covers...">{{ form.description.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_category" class="form-label">Category *</label>
+                                <select name="category" id="id_category" class="form-select" required>
+                                    <option value="">Select category...</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="id_difficulty" class="form-label">Difficulty *</label>
+                                <select name="difficulty" id="id_difficulty" class="form-select" required>
+                                    <option value="beginner" {% if form.difficulty.value == 'beginner' %}selected{% endif %}>Beginner</option>
+                                    <option value="intermediate" {% if form.difficulty.value == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                    <option value="advanced" {% if form.difficulty.value == 'advanced' %}selected{% endif %}>Advanced</option>
+                                    <option value="expert" {% if form.difficulty.value == 'expert' %}selected{% endif %}>Expert</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_time_limit" class="form-label">Time Limit (seconds)</label>
+                                <input type="number" name="time_limit" id="id_time_limit" class="form-control"
+                                       value="{{ form.time_limit.value|default:'600' }}" min="60" max="3600">
+                                <small class="text-muted">60-3600 seconds (1-60 min)</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="id_pass_percentage" class="form-label">Pass Percentage</label>
+                                <input type="number" name="pass_percentage" id="id_pass_percentage" class="form-control"
+                                       value="{{ form.pass_percentage.value|default:'70' }}" min="1" max="100">
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="id_xp_reward" class="form-label">XP Reward</label>
+                                <input type="number" name="xp_reward" id="id_xp_reward" class="form-control"
+                                       value="{{ form.xp_reward.value|default:'10' }}" min="1" max="100">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check"></i> {% if is_edit %}Save Changes{% else %}Create Quiz{% endif %}
+                            </button>
+                            <a href="{% url 'user_quiz_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                {% if not is_edit %}
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle"></i>
+                    After creating the quiz, you'll be able to add questions. Once ready, submit it for admin approval.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

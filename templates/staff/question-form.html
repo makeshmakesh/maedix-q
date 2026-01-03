@@ -1,0 +1,116 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}{{ action }} Question{% endblock %}
+
+{% block staff_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'staff_quiz_list' %}">Quizzes</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'staff_question_list' quiz.id %}">{{ quiz.title }}</a></li>
+        <li class="breadcrumb-item active">{{ action }} Question</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">{{ action }} Question</h4>
+    <a href="{% url 'staff_question_list' quiz.id %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="card p-4">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="{{ form.text.id_for_label }}" class="form-label">Question Text *</label>
+            {{ form.text }}
+            {% if form.text.errors %}
+            <div class="text-danger small">{{ form.text.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.question_type.id_for_label }}" class="form-label">Question Type</label>
+                {{ form.question_type }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.points.id_for_label }}" class="form-label">Points</label>
+                {{ form.points }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+                {{ form.order }}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.code_snippet.id_for_label }}" class="form-label">Code Snippet (optional)</label>
+            {{ form.code_snippet }}
+            <small class="text-muted">Add code for coding questions</small>
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.explanation.id_for_label }}" class="form-label">Explanation (optional)</label>
+            {{ form.explanation }}
+            <small class="text-muted">Shown after the user answers</small>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="fw-bold mb-3">Answer Options</h5>
+        <p class="text-muted small mb-3">Add at least 2 options. Check the box for correct answer(s).</p>
+
+        {{ option_formset.management_form }}
+
+        <div id="options-container">
+            {% for option_form in option_formset %}
+            <div class="option-row card p-3 mb-3 bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="mb-2">
+                            {{ option_form.text }}
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="form-check">
+                                {{ option_form.is_correct }}
+                                <label class="form-check-label small" for="{{ option_form.is_correct.id_for_label }}">
+                                    Correct Answer
+                                </label>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label class="small text-muted me-2" for="{{ option_form.order.id_for_label }}">Order:</label>
+                                {{ option_form.order }}
+                            </div>
+                            {% if option_form.instance.pk %}
+                            <div class="form-check">
+                                {{ option_form.DELETE }}
+                                <label class="form-check-label small text-danger" for="{{ option_form.DELETE.id_for_label }}">
+                                    Delete
+                                </label>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {{ option_form.id }}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if option_formset.non_form_errors %}
+        <div class="alert alert-danger">
+            {{ option_formset.non_form_errors }}
+        </div>
+        {% endif %}
+
+        <div class="d-grid d-md-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> {{ action }} Question
+            </button>
+            <a href="{% url 'staff_question_list' quiz.id %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

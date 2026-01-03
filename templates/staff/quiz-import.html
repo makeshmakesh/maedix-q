@@ -1,0 +1,145 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Import Quiz from JSON{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1">Import Quiz from JSON</h4>
+                    <p class="text-muted mb-0">Bulk create quiz with questions and options</p>
+                </div>
+                <a href="{% url 'staff_quiz_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Quizzes
+                </a>
+            </div>
+
+            {% if errors %}
+            <div class="alert alert-danger">
+                <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle me-1"></i> Errors</h6>
+                <ul class="mb-0">
+                    {% for error in errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-code-square me-2"></i>Quiz JSON Data</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <div class="mb-3">
+                                    <label for="category" class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                                    <select name="category" id="category" class="form-select" required>
+                                        <option value="">Select a category...</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="json_data" class="form-label fw-bold">JSON Data <span class="text-danger">*</span></label>
+                                    <textarea name="json_data" id="json_data" class="form-control font-monospace" rows="20" required placeholder="Paste your JSON here...">{{ json_data }}</textarea>
+                                    <div class="form-text">Paste the quiz JSON with questions and options.</div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-upload me-1"></i> Import Quiz
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="loadSample()">
+                                        <i class="bi bi-file-earmark-code me-1"></i> Load Sample
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="formatJSON()">
+                                        <i class="bi bi-braces me-1"></i> Format JSON
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>JSON Structure</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="fw-bold">Quiz Fields</h6>
+                            <ul class="small mb-3">
+                                <li><code>title</code> - Quiz title (required)</li>
+                                <li><code>description</code> - Quiz description</li>
+                                <li><code>difficulty</code> - beginner, intermediate, advanced, expert</li>
+                                <li><code>time_limit</code> - Time in seconds (default: 600)</li>
+                                <li><code>pass_percentage</code> - Pass threshold (default: 70)</li>
+                                <li><code>xp_reward</code> - XP reward (default: 10)</li>
+                                <li><code>is_published</code> - true/false</li>
+                                <li><code>is_featured</code> - true/false</li>
+                            </ul>
+
+                            <h6 class="fw-bold">Question Fields</h6>
+                            <ul class="small mb-3">
+                                <li><code>text</code> - Question text (required)</li>
+                                <li><code>question_type</code> - single, multiple, true_false, code</li>
+                                <li><code>code_snippet</code> - Code to display</li>
+                                <li><code>code_language</code> - python, javascript, etc.</li>
+                                <li><code>explanation</code> - Answer explanation</li>
+                                <li><code>points</code> - Points (default: 1)</li>
+                            </ul>
+
+                            <h6 class="fw-bold">Option Fields</h6>
+                            <ul class="small mb-0">
+                                <li><code>text</code> - Option text (required)</li>
+                                <li><code>is_correct</code> - true/false</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Tips</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small mb-0">
+                                <li>Category is selected separately (not in JSON)</li>
+                                <li>Each question must have at least one correct option</li>
+                                <li>Use <code>is_published: true</code> to publish immediately</li>
+                                <li>Slug is auto-generated from title</li>
+                                <li>Quiz is created by current staff user</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const sampleJSON = {{ sample_json|safe }};
+
+function loadSample() {
+    document.getElementById('json_data').value = JSON.stringify(sampleJSON, null, 2);
+}
+
+function formatJSON() {
+    const textarea = document.getElementById('json_data');
+    try {
+        const parsed = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(parsed, null, 2);
+    } catch (e) {
+        alert('Invalid JSON: ' + e.message);
+    }
+}
+</script>
+{% endblock %}

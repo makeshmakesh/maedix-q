@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="{% url 'quiz_home' %}">Quizzes</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'category_detail' quiz.category.slug %}">{{ quiz.category.name }}</a></li>
+                        <li class="breadcrumb-item active">{{ quiz.title }}</li>
+                    </ol>
+                </nav>
+
+                <div class="card p-4">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-primary">{{ quiz.category.name }}</span>
+                        <span class="badge badge-difficulty-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span>
+                    </div>
+
+                    <h2 class="fw-bold mb-3">{{ quiz.title }}</h2>
+
+                    {% if quiz.description %}
+                    <p class="text-muted mb-4">{{ quiz.description }}</p>
+                    {% endif %}
+
+                    <div class="row g-2 g-md-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded bg-light-custom">
+                                <i class="bi bi-question-circle text-primary fs-4"></i>
+                                <p class="mb-0 mt-2 fw-bold">{{ quiz.question_count }}</p>
+                                <small class="text-muted">Questions</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded bg-light-custom">
+                                <i class="bi bi-clock text-info fs-4"></i>
+                                <p class="mb-0 mt-2 fw-bold">{{ quiz.time_limit|divisibleby:60 }} min</p>
+                                <small class="text-muted">Time Limit</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded bg-light-custom">
+                                <i class="bi bi-bullseye text-success fs-4"></i>
+                                <p class="mb-0 mt-2 fw-bold">{{ quiz.pass_percentage }}%</p>
+                                <small class="text-muted">To Pass</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded bg-light-custom">
+                                <i class="bi bi-star-fill text-warning fs-4"></i>
+                                <p class="mb-0 mt-2 fw-bold">+{{ quiz.xp_reward }}</p>
+                                <small class="text-muted">XP Reward</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'quiz_start' quiz.slug %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-fill"></i> Start Quiz
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'quiz_video_export' quiz.slug %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-camera-reels"></i> Export as Video
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                {% if user_attempts %}
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3">Your Attempts</h5>
+                    {% for attempt in user_attempts %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div>
+                            <small class="text-muted">{{ attempt.completed_at|date:"M d, Y" }}</small>
+                            <p class="mb-0 {% if attempt.passed %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                {{ attempt.percentage }}%
+                                {% if attempt.passed %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                            </p>
+                        </div>
+                        <span class="badge xp-badge">+{{ attempt.xp_earned }} XP</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -80,9 +80,26 @@ class DashboardView(LoginRequiredMixin, View):
     template_name = 'users/dashboard.html'
 
     def get(self, request):
+        from quiz.models import GeneratedVideo
+
         # Get or create user stats
         stats, _ = UserStats.objects.get_or_create(user=request.user)
-        return render(request, self.template_name, {'stats': stats})
+
+        # Get recent generated videos
+        recent_videos = GeneratedVideo.objects.filter(
+            user=request.user
+        ).select_related('quiz')[:5]
+
+        # Check Instagram connection status
+        instagram_connected = False
+        if hasattr(request.user, 'instagram_account'):
+            instagram_connected = request.user.instagram_account.is_connected
+
+        return render(request, self.template_name, {
+            'stats': stats,
+            'recent_videos': recent_videos,
+            'instagram_connected': instagram_connected,
+        })
 
 
 class ProfileView(LoginRequiredMixin, View):

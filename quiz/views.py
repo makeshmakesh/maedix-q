@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db.models import Count, Avg
 from django.core.cache import cache
-from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard
+from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, GeneratedVideo
 from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet
 from core.models import Configuration
 from core.subscription_utils import check_feature_access, use_feature, get_or_create_free_subscription
@@ -726,11 +726,13 @@ class StaffQuestionDeleteView(StaffRequiredMixin, View):
 # =============================================================================
 
 def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_answer=True,
-                         handle_name="@maedix-q", audio_url=None, audio_volume=0.3):
+                         handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
+                         user_id=None, quiz_id=None):
     """Background task to generate video with progress updates"""
     import shutil
     from .video_generator import generate_quiz_video
     from core.s3_utils import upload_file_to_s3
+    from .models import GeneratedVideo
 
     def progress_callback(percent, message):
         cache.set(f'video_progress_{task_id}', {
@@ -787,6 +789,21 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
             cache_data['content'] = video_content
 
         cache.set(f'video_file_{task_id}', cache_data, timeout=1800)
+
+        # Save to database if S3 upload succeeded
+        if s3_url and user_id and quiz_id:
+            try:
+                GeneratedVideo.objects.create(
+                    user_id=user_id,
+                    quiz_id=quiz_id,
+                    s3_url=s3_url,
+                    s3_key=s3_key,
+                    filename=f'{quiz_slug}_reel.mp4',
+                    questions_count=len(question_data)
+                )
+            except Exception as db_error:
+                import logging
+                logging.error(f"Failed to save video to database: {db_error}")
 
         cache.set(f'video_progress_{task_id}', {
             'percent': 100,
@@ -846,6 +863,12 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         if hasattr(request.user, 'instagram_account'):
             instagram_connected = request.user.instagram_account.is_connected
 
+        # Get recent videos for this quiz by this user
+        recent_videos = GeneratedVideo.objects.filter(
+            user=request.user,
+            quiz=quiz
+        )[:5]
+
         return render(request, self.template_name, {
             'quiz': quiz,
             'questions': questions,
@@ -854,6 +877,7 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'subscription': subscription,
             'can_custom_handle': can_custom_handle,
             'instagram_connected': instagram_connected,
+            'recent_videos': recent_videos,
         })
 
     def post(self, request, slug):
@@ -940,7 +964,12 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         thread = threading.Thread(
             target=_generate_video_task,
             args=(task_id, question_data, output_path, quiz.slug, show_answer, handle_name),
-            kwargs={'audio_url': audio_url, 'audio_volume': audio_volume}
+            kwargs={
+                'audio_url': audio_url,
+                'audio_volume': audio_volume,
+                'user_id': request.user.id,
+                'quiz_id': quiz.id
+            }
         )
         thread.daemon = True
         thread.start()

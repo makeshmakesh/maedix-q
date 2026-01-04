@@ -36,6 +36,39 @@
                     </div>
                     {% endif %}
 
+                    <!-- Recent Videos -->
+                    {% if recent_videos %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Your Recent Videos</h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for video in recent_videos %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">{{ video.created_at|date:"M d, Y H:i" }}</small>
+                                        <br>
+                                        <span class="small">{{ video.questions_count }} question{{ video.questions_count|pluralize }}</span>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ video.s3_url }}" class="btn btn-outline-success" target="_blank" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        {% if instagram_connected %}
+                                        <a href="{% url 'instagram_post_page' %}?video_url={{ video.s3_url|urlencode }}&title={{ quiz.title|urlencode }}&return_url={{ request.path|urlencode }}"
+                                           class="btn btn-outline-danger" title="Post to Instagram">
+                                            <i class="bi bi-instagram"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Video Preview Info -->
                     <div class="alert alert-info" id="videoInfo">
                         <h6 class="fw-bold mb-2"><i class="bi bi-info-circle"></i> Video Details</h6>
@@ -119,11 +152,7 @@
                         <div class="text-center">
                             <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
                             <h5 class="fw-bold mt-3 text-success">Video Ready!</h5>
-                            <p class="text-muted">Your video has been generated successfully.</p>
-                        </div>
-                        <div class="alert alert-warning mt-3">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <strong>Download now!</strong> This video is not saved permanently. If you leave this page without downloading, you will need to regenerate the video, which will consume your quota again.
+                            <p class="text-muted">Your video has been generated and saved successfully.</p>
                         </div>
                     </div>
 
@@ -172,9 +201,9 @@
                             <i class="bi bi-download"></i> Download Video
                         </a>
                         {% if instagram_connected %}
-                        <button type="button" class="btn btn-danger btn-lg" id="postToInstagramBtn" data-bs-toggle="modal" data-bs-target="#instagramModal">
+                        <a href="#" class="btn btn-danger btn-lg" id="postToInstagramBtn">
                             <i class="bi bi-instagram me-2"></i>Post to Instagram Reels
-                        </button>
+                        </a>
                         {% else %}
                         <a href="{% url 'instagram_connect' %}" class="btn btn-outline-danger">
                             <i class="bi bi-instagram me-2"></i>Connect Instagram to Post
@@ -187,47 +216,6 @@
                             Back to Quiz
                         </a>
                     </div>
-
-                    <!-- Instagram Post Modal -->
-                    {% if instagram_connected %}
-                    <div class="modal fade" id="instagramModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title"><i class="bi bi-instagram text-danger me-2"></i>Post to Instagram Reels</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="instagramCaption" class="form-label">Caption</label>
-                                        <textarea class="form-control" id="instagramCaption" rows="4" placeholder="Write a caption for your Reel..."></textarea>
-                                        <small class="text-muted">Add hashtags to increase reach</small>
-                                    </div>
-                                    <div class="alert alert-info small">
-                                        <i class="bi bi-info-circle me-1"></i>
-                                        The video will be posted as a Reel to your connected Instagram account.
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-danger" id="confirmPostBtn">
-                                        <i class="bi bi-send me-1"></i>Post to Instagram
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Instagram Posting Progress -->
-                    <div class="d-none" id="instagramPostingSection">
-                        <div class="alert alert-info">
-                            <div class="d-flex align-items-center">
-                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                <span id="instagramPostingMessage">Posting to Instagram...</span>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
 
                     <div class="mt-4 text-center" id="timeEstimate">
                         <small class="text-muted">
@@ -422,6 +410,29 @@ document.addEventListener('DOMContentLoaded', function() {
         successSection.classList.remove('d-none');
         downloadSection.classList.remove('d-none');
         downloadBtn.href = downloadUrl;
+
+        // Update Instagram link with S3 URL
+        {% if instagram_connected %}
+        const postToInstagramBtn = document.getElementById('postToInstagramBtn');
+        const match = downloadUrl.match(/\/video\/download\/([^\/]+)\//);
+        if (match) {
+            const taskId = match[1];
+            // Fetch S3 URL and update the Instagram link
+            fetch(`/quiz/video/url/${taskId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.url) {
+                        const returnUrl = encodeURIComponent(window.location.pathname);
+                        const videoUrl = encodeURIComponent(data.url);
+                        const title = encodeURIComponent('{{ quiz.title }}');
+                        postToInstagramBtn.href = `{% url 'instagram_post_page' %}?video_url=${videoUrl}&title=${title}&return_url=${returnUrl}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to get S3 URL:', error);
+                });
+        }
+        {% endif %}
     }
 
     function showError(message) {
@@ -437,95 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
         videoOptions.classList.remove('d-none');
         timeEstimate.classList.remove('d-none');
     }
-
-    // Instagram posting functionality
-    {% if instagram_connected %}
-    const postToInstagramBtn = document.getElementById('postToInstagramBtn');
-    const instagramModalEl = document.getElementById('instagramModal');
-    const instagramModal = bootstrap.Modal.getOrCreateInstance(instagramModalEl);
-    const confirmPostBtn = document.getElementById('confirmPostBtn');
-    const instagramCaption = document.getElementById('instagramCaption');
-    const instagramPostingSection = document.getElementById('instagramPostingSection');
-    const instagramPostingMessage = document.getElementById('instagramPostingMessage');
-
-    let currentTaskId = null;
-
-    // Store task_id when success is shown
-    const originalShowSuccess = showSuccess;
-    showSuccess = function(downloadUrl) {
-        originalShowSuccess(downloadUrl);
-        // Extract task_id from download URL
-        const match = downloadUrl.match(/\/video\/download\/([^\/]+)\//);
-        if (match) {
-            currentTaskId = match[1];
-        }
-    };
-
-    confirmPostBtn.addEventListener('click', async function() {
-        const caption = instagramCaption.value.trim();
-
-        // Hide modal
-        instagramModal.hide();
-
-        // Show posting progress
-        instagramPostingSection.classList.remove('d-none');
-        postToInstagramBtn.disabled = true;
-        postToInstagramBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
-
-        try {
-            // First, get the S3 URL for the video
-            instagramPostingMessage.textContent = 'Getting video URL...';
-            const urlResponse = await fetch(`/quiz/video/url/${currentTaskId}/`);
-            const urlData = await urlResponse.json();
-
-            if (!urlData.success) {
-                throw new Error(urlData.error || 'Failed to get video URL');
-            }
-
-            // Post to Instagram using S3 URL
-            instagramPostingMessage.textContent = 'Posting to Instagram...';
-            const postResponse = await fetch('{% url "instagram_post" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    video_url: urlData.url,
-                    caption: caption
-                })
-            });
-            const postData = await postResponse.json();
-
-            instagramPostingSection.classList.add('d-none');
-            postToInstagramBtn.disabled = false;
-
-            if (postData.success) {
-                postToInstagramBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Posted Successfully!';
-                postToInstagramBtn.classList.remove('btn-danger');
-                postToInstagramBtn.classList.add('btn-success');
-                postToInstagramBtn.disabled = true;
-
-                // Show success alert
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-success mt-3';
-                alertDiv.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>' + postData.message;
-                downloadSection.insertBefore(alertDiv, downloadSection.firstChild);
-            } else {
-                throw new Error(postData.error || 'Failed to post to Instagram');
-            }
-        } catch (error) {
-            instagramPostingSection.classList.add('d-none');
-            postToInstagramBtn.disabled = false;
-            postToInstagramBtn.innerHTML = '<i class="bi bi-instagram me-2"></i>Post to Instagram Reels';
-
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-danger mt-3';
-            alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>' + error.message;
-            downloadSection.insertBefore(alertDiv, downloadSection.firstChild);
-        }
-    });
-    {% endif %}
 });
 </script>
 {% endblock %}

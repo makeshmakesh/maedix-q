@@ -162,9 +162,6 @@ else:
 PASSWORD_RESET_TIMEOUT = 86400
 
 
-# Razorpay Configuration
-RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
-RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
 
 
 # Cache Configuration (file-based for multi-worker support)

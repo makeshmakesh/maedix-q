@@ -258,7 +258,34 @@ class PostToInstagramView(LoginRequiredMixin, View):
 
             container_id = container_data["id"]
 
-            # Step 2: Publish the container
+            # Step 2: Wait for video processing to complete
+            import time
+            max_attempts = 30  # Max 5 minutes (30 * 10 seconds)
+            for attempt in range(max_attempts):
+                status_response = requests.get(
+                    f"https://graph.instagram.com/v21.0/{container_id}",
+                    params={
+                        "fields": "status_code,status",
+                        "access_token": access_token,
+                    },
+                    timeout=10,
+                )
+                status_data = status_response.json()
+                status_code = status_data.get("status_code")
+
+                if status_code == "FINISHED":
+                    break
+                elif status_code == "ERROR":
+                    error_status = status_data.get("status", "Unknown processing error")
+                    return JsonResponse({'success': False, 'error': f'Video processing failed: {error_status}'}, status=400)
+                elif status_code in ("IN_PROGRESS", "PUBLISHED"):
+                    time.sleep(10)  # Wait 10 seconds before checking again
+                else:
+                    time.sleep(10)
+            else:
+                return JsonResponse({'success': False, 'error': 'Video processing timeout. Please try again.'}, status=400)
+
+            # Step 3: Publish the container
             publish_response = requests.post(
                 f"https://graph.instagram.com/v21.0/{ig_user_id}/media_publish",
                 data={

@@ -762,11 +762,14 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
         progress_callback(95, "Uploading to cloud...")
         s3_key = f"videos/{task_id}/{quiz_slug}_reel.mp4"
         s3_url = None
+        s3_error_msg = None
         try:
             s3_url = upload_file_to_s3(output_path, s3_key, content_type='video/mp4')
         except Exception as s3_error:
             # S3 upload failed, will use cache fallback
-            pass
+            s3_error_msg = str(s3_error)
+            import logging
+            logging.error(f"S3 upload failed: {s3_error}")
 
         # Clean up temp file
         temp_dir = os.path.dirname(output_path)
@@ -776,7 +779,8 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
         cache_data = {
             'filename': f'{quiz_slug}_reel.mp4',
             's3_url': s3_url,
-            's3_key': s3_key if s3_url else None
+            's3_key': s3_key if s3_url else None,
+            's3_error': s3_error_msg
         }
         # If S3 failed, include video content for direct download
         if not s3_url:
@@ -990,7 +994,10 @@ class VideoUrlView(LoginRequiredMixin, View):
 
         s3_url = video_data.get('s3_url')
         if not s3_url:
-            return JsonResponse({'error': 'Video not uploaded to cloud storage'}, status=400)
+            s3_error = video_data.get('s3_error', 'Unknown error')
+            return JsonResponse({
+                'error': f'S3 upload failed: {s3_error}'
+            }, status=400)
 
         return JsonResponse({
             'success': True,

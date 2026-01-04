@@ -172,7 +172,7 @@
                             <i class="bi bi-download"></i> Download Video
                         </a>
                         {% if instagram_connected %}
-                        <button type="button" class="btn btn-danger btn-lg" id="postToInstagramBtn">
+                        <button type="button" class="btn btn-danger btn-lg" id="postToInstagramBtn" data-bs-toggle="modal" data-bs-target="#instagramModal">
                             <i class="bi bi-instagram me-2"></i>Post to Instagram Reels
                         </button>
                         {% else %}
@@ -441,7 +441,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Instagram posting functionality
     {% if instagram_connected %}
     const postToInstagramBtn = document.getElementById('postToInstagramBtn');
-    const instagramModal = new bootstrap.Modal(document.getElementById('instagramModal'));
+    const instagramModalEl = document.getElementById('instagramModal');
+    const instagramModal = bootstrap.Modal.getOrCreateInstance(instagramModalEl);
     const confirmPostBtn = document.getElementById('confirmPostBtn');
     const instagramCaption = document.getElementById('instagramCaption');
     const instagramPostingSection = document.getElementById('instagramPostingSection');
@@ -459,10 +460,6 @@ document.addEventListener('DOMContentLoaded', function() {
             currentTaskId = match[1];
         }
     };
-
-    postToInstagramBtn.addEventListener('click', function() {
-        instagramModal.show();
-    });
 
     confirmPostBtn.addEventListener('click', async function() {
         const caption = instagramCaption.value.trim();

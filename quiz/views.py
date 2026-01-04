@@ -883,6 +883,8 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         for q in selected_questions:
             question_data.append({
                 'text': q.text,
+                'code_snippet': q.code_snippet or '',
+                'code_language': q.code_language or 'python',
                 'options': [
                     {'text': opt.text, 'is_correct': opt.is_correct}
                     for opt in q.options.all()

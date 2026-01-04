@@ -188,7 +188,8 @@ class QuizVideoGenerator:
         return lines if lines else [text]
 
     def _create_question_frame(self, question_num, total, question_text, options,
-                                timer_value=None, reveal_answer=False, correct_indices=None):
+                                timer_value=None, reveal_answer=False, correct_indices=None,
+                                code_snippet=None):
         """Create a single frame for a question with modern dark theme"""
         if correct_indices is None:
             correct_indices = []
@@ -198,11 +199,12 @@ class QuizVideoGenerator:
 
         # Fonts
         badge_font = self._get_font(36)
-        question_font = self._get_font(48)
-        option_font = self._get_font(38)
+        question_font = self._get_font(44 if code_snippet else 48)  # Smaller if code present
+        option_font = self._get_font(36 if code_snippet else 38)
         timer_font = self._get_font(72)
         label_font = self._get_font(32)
         brand_font = self._get_font(28)
+        code_font = self._get_font(24)  # Monospace-like font for code
 
         y_offset = 120
 
@@ -289,7 +291,42 @@ class QuizVideoGenerator:
             )
             y_offset += line_height
 
-        y_offset = q_box_y + q_box_height + 50
+        y_offset = q_box_y + q_box_height + 30
+
+        # Code snippet (if present)
+        if code_snippet and code_snippet.strip():
+            code_lines = code_snippet.strip().split('\n')[:8]  # Max 8 lines
+            code_line_height = 32
+            code_padding = 20
+            code_box_height = len(code_lines) * code_line_height + code_padding * 2
+
+            # Code block background (darker)
+            code_bg_color = (15, 15, 15)
+            draw.rounded_rectangle(
+                [60, y_offset, self.WIDTH - 60, y_offset + code_box_height],
+                radius=12,
+                fill=code_bg_color,
+                outline=(50, 50, 50),
+                width=1
+            )
+
+            # Code text
+            code_y = y_offset + code_padding
+            for code_line in code_lines:
+                # Truncate long lines
+                if len(code_line) > 45:
+                    code_line = code_line[:42] + '...'
+                draw.text(
+                    (80, code_y),
+                    code_line,
+                    font=code_font,
+                    fill=(0, 255, 136)  # Green code color
+                )
+                code_y += code_line_height
+
+            y_offset += code_box_height + 20
+        else:
+            y_offset += 20
 
         # Options
         option_labels = ['A', 'B', 'C', 'D']
@@ -494,6 +531,9 @@ class QuizVideoGenerator:
                 if opt.get('is_correct', False):
                     correct_indices.append(i)
 
+            # Get code snippet if present
+            code_snippet = question.get('code_snippet', '')
+
             # Create question frames with countdown (1 frame per second for countdown)
             for timer in range(self.QUESTION_DURATION, 0, -1):
                 frame = self._create_question_frame(
@@ -503,7 +543,8 @@ class QuizVideoGenerator:
                     options=question['options'],
                     timer_value=timer,
                     reveal_answer=False,
-                    correct_indices=correct_indices
+                    correct_indices=correct_indices,
+                    code_snippet=code_snippet
                 )
                 clip = ImageClip(frame, duration=1)
                 clips.append(clip)
@@ -517,7 +558,8 @@ class QuizVideoGenerator:
                     options=question['options'],
                     timer_value=None,
                     reveal_answer=True,
-                    correct_indices=correct_indices
+                    correct_indices=correct_indices,
+                    code_snippet=code_snippet
                 )
                 reveal_clip = ImageClip(reveal_frame, duration=self.ANSWER_REVEAL_DURATION)
                 clips.append(reveal_clip)
@@ -639,6 +681,8 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
                 # It's a model instance
                 question_data.append({
                     'text': q.text,
+                    'code_snippet': getattr(q, 'code_snippet', '') or '',
+                    'code_language': getattr(q, 'code_language', 'python') or 'python',
                     'options': [
                         {'text': opt.text, 'is_correct': opt.is_correct}
                         for opt in q.options.all()

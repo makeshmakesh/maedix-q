@@ -12,6 +12,7 @@ urlpatterns = [
     # Video export endpoints (must be before slug patterns)
     path('video/progress/<str:task_id>/', views.VideoProgressView.as_view(), name='video_progress'),
     path('video/download/<str:task_id>/', views.VideoDownloadView.as_view(), name='video_download'),
+    path('video/url/<str:task_id>/', views.VideoUrlView.as_view(), name='video_url'),
 
     # User Quiz Management (must be before slug patterns)
     path('my-quizzes/', views.UserQuizListView.as_view(), name='user_quiz_list'),

@@ -92,9 +92,19 @@ class ProfileView(LoginRequiredMixin, View):
     def get(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         stats, _ = UserStats.objects.get_or_create(user=request.user)
+
+        # Check Instagram connection status
+        instagram_connected = False
+        instagram_account = None
+        if hasattr(request.user, 'instagram_account'):
+            instagram_account = request.user.instagram_account
+            instagram_connected = instagram_account.is_connected
+
         return render(request, self.template_name, {
             'profile': profile,
             'stats': stats,
+            'instagram_connected': instagram_connected,
+            'instagram_account': instagram_account,
         })
 
 

@@ -730,6 +730,7 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
     """Background task to generate video with progress updates"""
     import shutil
     from .video_generator import generate_quiz_video
+    from core.s3_utils import upload_file_to_s3
 
     def progress_callback(percent, message):
         cache.set(f'video_progress_{task_id}', {
@@ -753,19 +754,32 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
             audio_url=audio_url, audio_volume=audio_volume
         )
 
-        # Read video into memory and store in cache
-        with open(output_path, 'rb') as f:
-            video_content = f.read()
+        # Upload to S3
+        progress_callback(95, "Uploading to cloud...")
+        s3_key = f"videos/{task_id}/{quiz_slug}_reel.mp4"
+        try:
+            s3_url = upload_file_to_s3(output_path, s3_key, content_type='video/mp4')
+        except Exception as s3_error:
+            # Fallback: store in cache if S3 fails
+            with open(output_path, 'rb') as f:
+                video_content = f.read()
+            cache.set(f'video_file_{task_id}', {
+                'content': video_content,
+                'filename': f'{quiz_slug}_reel.mp4',
+                's3_url': None
+            }, timeout=300)
+            s3_url = None
 
         # Clean up temp file
         temp_dir = os.path.dirname(output_path)
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-        # Store completed video in cache (5 minute expiry)
+        # Store S3 URL in cache (30 minute expiry for Instagram posting)
         cache.set(f'video_file_{task_id}', {
-            'content': video_content,
-            'filename': f'{quiz_slug}_reel.mp4'
-        }, timeout=300)
+            'filename': f'{quiz_slug}_reel.mp4',
+            's3_url': s3_url,
+            's3_key': s3_key if s3_url else None
+        }, timeout=1800)
 
         cache.set(f'video_progress_{task_id}', {
             'percent': 100,
@@ -820,6 +834,11 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         elif request.user.is_staff:
             can_custom_handle = True
 
+        # Check Instagram connection status
+        instagram_connected = False
+        if hasattr(request.user, 'instagram_account'):
+            instagram_connected = request.user.instagram_account.is_connected
+
         return render(request, self.template_name, {
             'quiz': quiz,
             'questions': questions,
@@ -827,6 +846,7 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'subscription_message': message if not can_access else None,
             'subscription': subscription,
             'can_custom_handle': can_custom_handle,
+            'instagram_connected': instagram_connected,
         })
 
     def post(self, request, slug):
@@ -943,15 +963,37 @@ class VideoDownloadView(LoginRequiredMixin, View):
         if not video_data:
             return JsonResponse({'error': 'Video not found or expired'}, status=404)
 
-        # Clear from cache after download
-        cache.delete(f'video_file_{task_id}')
-        cache.delete(f'video_progress_{task_id}')
+        # If S3 URL available, redirect to it
+        if video_data.get('s3_url'):
+            return redirect(video_data['s3_url'])
 
-        response = HttpResponse(video_data['content'], content_type='video/mp4')
-        response['Content-Disposition'] = f'attachment; filename="{video_data["filename"]}"'
-        response['Content-Length'] = len(video_data['content'])
+        # Fallback: serve from cache if S3 failed
+        if video_data.get('content'):
+            response = HttpResponse(video_data['content'], content_type='video/mp4')
+            response['Content-Disposition'] = f'attachment; filename="{video_data["filename"]}"'
+            response['Content-Length'] = len(video_data['content'])
+            return response
 
-        return response
+        return JsonResponse({'error': 'Video not found'}, status=404)
+
+
+class VideoUrlView(LoginRequiredMixin, View):
+    """Get S3 URL for the video (used for Instagram posting)"""
+
+    def get(self, request, task_id):
+        video_data = cache.get(f'video_file_{task_id}')
+        if not video_data:
+            return JsonResponse({'error': 'Video not found or expired'}, status=404)
+
+        s3_url = video_data.get('s3_url')
+        if not s3_url:
+            return JsonResponse({'error': 'Video not uploaded to cloud storage'}, status=400)
+
+        return JsonResponse({
+            'success': True,
+            'url': s3_url,
+            'filename': video_data.get('filename', 'video.mp4')
+        })
 
 
 # =============================================================================

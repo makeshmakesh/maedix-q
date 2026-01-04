@@ -5,8 +5,10 @@ Generates vertical videos (1080x1920) with questions, options, timer, and answer
 import os
 import tempfile
 import shutil
+import requests
 from PIL import Image, ImageDraw, ImageFont
-from moviepy import ImageClip, concatenate_videoclips
+from moviepy import ImageClip, AudioFileClip, concatenate_videoclips
+from moviepy.audio.fx import AudioLoop, MultiplyVolume
 import numpy as np
 
 
@@ -37,10 +39,13 @@ class QuizVideoGenerator:
     MUTED_TEXT = (156, 163, 175)  # Grey for secondary text
     CARD_BG = (28, 28, 30)  # Slightly lighter than bg for cards
 
-    def __init__(self, handle_name="@maedix-q"):
+    def __init__(self, handle_name="@maedix-q", audio_url=None, audio_volume=0.3):
         self.temp_dir = tempfile.mkdtemp()
         self._font_cache = {}
         self.handle_name = handle_name
+        self.audio_url = audio_url
+        self.audio_volume = audio_volume
+        self._audio_path = None
 
     def _get_font(self, size):
         """Get a font with caching"""
@@ -69,6 +74,96 @@ class QuizVideoGenerator:
         font = ImageFont.load_default()
         self._font_cache[size] = font
         return font
+
+    def _download_audio(self):
+        """Download audio file from URL and cache locally"""
+        print(f"Audio URL configured: '{self.audio_url}'")
+
+        if not self.audio_url:
+            print("No audio URL configured")
+            return None
+
+        if self._audio_path and os.path.exists(self._audio_path):
+            print(f"Using cached audio: {self._audio_path}")
+            return self._audio_path
+
+        try:
+            # Determine file extension from URL
+            ext = '.mp3'
+            if '.wav' in self.audio_url.lower():
+                ext = '.wav'
+            elif '.ogg' in self.audio_url.lower():
+                ext = '.ogg'
+
+            audio_path = os.path.join(self.temp_dir, f'background_audio{ext}')
+
+            # Download audio file
+            print(f"Downloading audio from: {self.audio_url}")
+            response = requests.get(self.audio_url, timeout=30)
+            response.raise_for_status()
+            print(f"Downloaded {len(response.content)} bytes")
+
+            with open(audio_path, 'wb') as f:
+                f.write(response.content)
+
+            self._audio_path = audio_path
+            print(f"Audio saved to: {audio_path}")
+            return audio_path
+
+        except Exception as e:
+            print(f"Warning: Failed to download audio: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    def _add_audio_to_video(self, video_clip):
+        """Add background audio to video clip"""
+        audio_path = self._download_audio()
+        if not audio_path:
+            print("No audio path available, skipping audio")
+            return video_clip
+
+        try:
+            print(f"Loading audio from: {audio_path}")
+            # Load audio
+            audio_clip = AudioFileClip(audio_path)
+
+            # Get durations
+            video_duration = video_clip.duration
+            audio_duration = audio_clip.duration
+            print(f"Video duration: {video_duration}s, Audio duration: {audio_duration}s")
+
+            # Build effects list
+            effects = []
+
+            # Loop audio if shorter than video
+            if audio_duration < video_duration:
+                loops_needed = int(video_duration / audio_duration) + 1
+                print(f"Looping audio {loops_needed} times")
+                effects.append(AudioLoop(n_loops=loops_needed))
+
+            # Adjust volume
+            print(f"Setting volume to: {self.audio_volume}")
+            effects.append(MultiplyVolume(factor=self.audio_volume))
+
+            # Apply effects
+            if effects:
+                audio_clip = audio_clip.with_effects(effects)
+
+            # Trim audio to match video duration
+            audio_clip = audio_clip.with_duration(video_duration)
+
+            # Set audio on video
+            video_with_audio = video_clip.with_audio(audio_clip)
+            print("Audio successfully added to video")
+
+            return video_with_audio
+
+        except Exception as e:
+            print(f"Warning: Failed to add audio: {e}")
+            import traceback
+            traceback.print_exc()
+            return video_clip
 
     def _wrap_text(self, text, font, max_width, draw):
         """Wrap text to fit within max_width"""
@@ -437,6 +532,11 @@ class QuizVideoGenerator:
         report_progress(25, "Assembling clips...")
         final_video = concatenate_videoclips(clips, method="compose")
 
+        # Add background audio if configured
+        if self.audio_url:
+            report_progress(30, "Adding background music...")
+            final_video = self._add_audio_to_video(final_video)
+
         report_progress(35, "Preparing encoder...")
 
         # Start a background thread to simulate smooth progress during encoding
@@ -477,12 +577,14 @@ class QuizVideoGenerator:
         progress_thread.start()
 
         # Write video file
+        has_audio = final_video.audio is not None
         try:
             final_video.write_videofile(
                 output_path,
                 fps=self.FPS,
                 codec='libx264',
-                audio=False,
+                audio=has_audio,
+                audio_codec='aac' if has_audio else None,
                 preset='ultrafast',
                 threads=2,
                 logger=None
@@ -506,7 +608,8 @@ class QuizVideoGenerator:
             shutil.rmtree(self.temp_dir, ignore_errors=True)
 
 
-def generate_quiz_video(questions, output_path, progress_callback=None, show_answer=True, handle_name="@maedix-q"):
+def generate_quiz_video(questions, output_path, progress_callback=None, show_answer=True,
+                        handle_name="@maedix-q", audio_url=None, audio_volume=0.3):
     """
     Convenience function to generate quiz video.
 
@@ -516,11 +619,17 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
         progress_callback: Optional callback function(percent, message) for progress updates
         show_answer: Whether to reveal the correct answer after the timer (default: True)
         handle_name: Custom handle name to display in video (default: "@maedix-q")
+        audio_url: URL to background audio file (mp3/wav) - optional
+        audio_volume: Volume level for background audio (0.0 to 1.0, default: 0.3)
 
     Returns:
         Path to generated video
     """
-    generator = QuizVideoGenerator(handle_name=handle_name)
+    generator = QuizVideoGenerator(
+        handle_name=handle_name,
+        audio_url=audio_url,
+        audio_volume=audio_volume
+    )
 
     try:
         # Convert Question models to dicts if needed

@@ -15,10 +15,11 @@ from django.db.models import Count, Avg
 from django.core.cache import cache
 from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard
 from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet
+from core.models import Configuration
 from core.subscription_utils import check_feature_access, use_feature, get_or_create_free_subscription
 
 # Limit concurrent video generations (adjust based on server capacity)
-VIDEO_GENERATION_SEMAPHORE = Semaphore(2)  # Max 2 concurrent video generations
+VIDEO_GENERATION_SEMAPHORE = Semaphore(1)  # Max 2 concurrent video generations
 
 
 class StaffRequiredMixin(UserPassesTestMixin):
@@ -724,7 +725,8 @@ class StaffQuestionDeleteView(StaffRequiredMixin, View):
 # Video Export Views
 # =============================================================================
 
-def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_answer=True, handle_name="@maedix-q"):
+def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_answer=True,
+                         handle_name="@maedix-q", audio_url=None, audio_volume=0.3):
     """Background task to generate video with progress updates"""
     import shutil
     from .video_generator import generate_quiz_video
@@ -745,7 +747,11 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
 
     try:
         progress_callback(5, "Starting video generation...")
-        generate_quiz_video(question_data, output_path, progress_callback, show_answer=show_answer, handle_name=handle_name)
+        generate_quiz_video(
+            question_data, output_path, progress_callback,
+            show_answer=show_answer, handle_name=handle_name,
+            audio_url=audio_url, audio_volume=audio_volume
+        )
 
         # Read video into memory and store in cache
         with open(output_path, 'rb') as f:
@@ -897,10 +903,15 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'status': 'processing'
         }, timeout=600)
 
+        # Get audio settings from configuration
+        audio_url = Configuration.get_value('video_background_music_url', '')
+        audio_volume = float(Configuration.get_value('video_background_music_volume', '0.5'))
+
         # Start video generation in background thread
         thread = threading.Thread(
             target=_generate_video_task,
-            args=(task_id, question_data, output_path, quiz.slug, show_answer, handle_name)
+            args=(task_id, question_data, output_path, quiz.slug, show_answer, handle_name),
+            kwargs={'audio_url': audio_url, 'audio_volume': audio_volume}
         )
         thread.daemon = True
         thread.start()

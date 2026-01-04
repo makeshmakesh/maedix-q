@@ -81,7 +81,7 @@
                 </div>
 
                 <!-- Progress Summary -->
-                <div class="card p-4">
+                <div class="card p-4 mb-4">
                     <h5 class="fw-bold mb-3">Your Progress</h5>
                     <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
                         <span class="text-muted">Quizzes Completed</span>
@@ -100,6 +100,39 @@
                         <span class="text-warning fw-bold">{{ stats.longest_streak }} days</span>
                     </div>
                 </div>
+
+                <!-- Generated Videos -->
+                {% if recent_videos %}
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-camera-reels me-2"></i>Your Videos</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for video in recent_videos %}
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'quiz_detail' video.quiz.slug %}" class="text-decoration-none fw-medium">
+                                    {{ video.quiz.title|truncatewords:5 }}
+                                </a>
+                                <br>
+                                <small class="text-muted">{{ video.created_at|date:"M d, H:i" }} · {{ video.questions_count }}Q</small>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ video.s3_url }}" class="btn btn-outline-success" target="_blank" title="Download">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% if instagram_connected %}
+                                <a href="{% url 'instagram_post_page' %}?video_url={{ video.s3_url|urlencode }}&title={{ video.quiz.title|urlencode }}&return_url={% url 'dashboard' %}"
+                                   class="btn btn-outline-danger" title="Post to Instagram">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Sidebar -->
@@ -125,4 +158,5 @@
         </div>
     </div>
 </section>
+
 {% endblock %}

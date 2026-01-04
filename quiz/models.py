@@ -251,6 +251,31 @@ class QuestionAnswer(models.Model):
         unique_together = ['attempt', 'question']
 
 
+class GeneratedVideo(models.Model):
+    """Store generated quiz videos for users"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='generated_videos'
+    )
+    quiz = models.ForeignKey(
+        Quiz,
+        on_delete=models.CASCADE,
+        related_name='generated_videos'
+    )
+    s3_url = models.URLField(max_length=500)
+    s3_key = models.CharField(max_length=255)
+    filename = models.CharField(max_length=255)
+    questions_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.quiz.title} - {self.user.email} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
 class Leaderboard(models.Model):
     """Leaderboard entries"""
     PERIOD_CHOICES = [

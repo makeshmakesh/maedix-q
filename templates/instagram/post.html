@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Post to Instagram{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-instagram text-danger" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mt-3">Post to Instagram Reels</h3>
+                        <p class="text-muted">Posting as <strong>@{{ instagram_username }}</strong></p>
+                    </div>
+
+                    <form method="post" id="postForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="video_url" value="{{ video_url }}">
+                        <input type="hidden" name="return_url" value="{{ return_url }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Video</label>
+                            <div class="card bg-light p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-film text-primary me-3" style="font-size: 2rem;"></i>
+                                    <div>
+                                        <span class="fw-medium">{{ video_title }}</span>
+                                        <br>
+                                        <small class="text-muted">Ready to post</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="caption" class="form-label fw-bold">Caption</label>
+                            <textarea class="form-control" id="caption" name="caption" rows="5"
+                                      placeholder="Write a caption for your Reel...&#10;&#10;Add hashtags to increase reach!"></textarea>
+                            <small class="text-muted">Tip: Use relevant hashtags like #quiz #trivia #learning</small>
+                        </div>
+
+                        <div class="alert alert-info small mb-4">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Video processing may take 1-2 minutes. Please wait after clicking Post.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg" id="postBtn">
+                                <i class="bi bi-send me-2"></i>Post to Instagram
+                            </button>
+                            {% if return_url %}
+                            <a href="{{ return_url }}" class="btn btn-outline-secondary">Cancel</a>
+                            {% else %}
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </form>
+
+                    <!-- Posting Progress (hidden by default) -->
+                    <div class="d-none" id="postingProgress">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-danger mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                            <h5 class="fw-bold">Posting to Instagram...</h5>
+                            <p class="text-muted" id="progressText">Uploading video...</p>
+                            <div class="alert alert-warning mt-3">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Please don't close this page. This may take a minute or two.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('postForm');
+    const postBtn = document.getElementById('postBtn');
+    const postingProgress = document.getElementById('postingProgress');
+
+    form.addEventListener('submit', function() {
+        // Show loading state
+        form.classList.add('d-none');
+        postingProgress.classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

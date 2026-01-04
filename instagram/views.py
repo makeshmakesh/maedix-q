@@ -203,8 +203,129 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
             return redirect("instagram_connect")
 
 
+class InstagramPostPageView(LoginRequiredMixin, View):
+    """Page to post video to Instagram with caption"""
+    template_name = 'instagram/post.html'
+
+    def get(self, request):
+        video_url = request.GET.get('video_url', '')
+        video_title = request.GET.get('title', 'Quiz Video')
+        return_url = request.GET.get('return_url', '')
+
+        if not video_url:
+            messages.error(request, 'No video URL provided.')
+            return redirect('dashboard')
+
+        # Check Instagram connection
+        if not hasattr(request.user, 'instagram_account') or not request.user.instagram_account.is_connected:
+            messages.error(request, 'Please connect your Instagram account first.')
+            return redirect('instagram_connect')
+
+        context = {
+            'video_url': video_url,
+            'video_title': video_title,
+            'return_url': return_url,
+            'instagram_username': request.user.instagram_account.username,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        video_url = request.POST.get('video_url', '')
+        caption = request.POST.get('caption', '')
+        return_url = request.POST.get('return_url', '')
+
+        if not video_url:
+            messages.error(request, 'No video URL provided.')
+            return redirect('dashboard')
+
+        # Check Instagram connection
+        if not hasattr(request.user, 'instagram_account'):
+            messages.error(request, 'Instagram not connected.')
+            return redirect('instagram_connect')
+
+        ig_account = request.user.instagram_account
+        if not ig_account.is_connected:
+            messages.error(request, 'Instagram token expired. Please reconnect.')
+            return redirect('instagram_connect')
+
+        access_token = ig_account.access_token
+        ig_user_id = ig_account.instagram_user_id
+
+        try:
+            import time
+
+            # Step 1: Create media container for Reel
+            container_response = requests.post(
+                f"https://graph.instagram.com/v21.0/{ig_user_id}/media",
+                data={
+                    "media_type": "REELS",
+                    "video_url": video_url,
+                    "caption": caption,
+                    "access_token": access_token,
+                },
+                timeout=30,
+            )
+            container_data = container_response.json()
+
+            if "id" not in container_data:
+                error_msg = container_data.get("error", {}).get("message", "Failed to create media")
+                messages.error(request, f'Instagram error: {error_msg}')
+                return redirect(return_url or 'dashboard')
+
+            container_id = container_data["id"]
+
+            # Step 2: Wait for video processing to complete
+            max_attempts = 30  # Max 5 minutes
+            for attempt in range(max_attempts):
+                status_response = requests.get(
+                    f"https://graph.instagram.com/v21.0/{container_id}",
+                    params={
+                        "fields": "status_code,status",
+                        "access_token": access_token,
+                    },
+                    timeout=10,
+                )
+                status_data = status_response.json()
+                status_code = status_data.get("status_code")
+
+                if status_code == "FINISHED":
+                    break
+                elif status_code == "ERROR":
+                    error_status = status_data.get("status", "Unknown processing error")
+                    messages.error(request, f'Video processing failed: {error_status}')
+                    return redirect(return_url or 'dashboard')
+                else:
+                    time.sleep(10)
+            else:
+                messages.error(request, 'Video processing timeout. Please try again.')
+                return redirect(return_url or 'dashboard')
+
+            # Step 3: Publish the container
+            publish_response = requests.post(
+                f"https://graph.instagram.com/v21.0/{ig_user_id}/media_publish",
+                data={
+                    "creation_id": container_id,
+                    "access_token": access_token,
+                },
+                timeout=60,
+            )
+            publish_data = publish_response.json()
+
+            if "id" not in publish_data:
+                error_msg = publish_data.get("error", {}).get("message", "Failed to publish")
+                messages.error(request, f'Instagram error: {error_msg}')
+                return redirect(return_url or 'dashboard')
+
+            messages.success(request, 'Video posted to Instagram Reels successfully!')
+            return redirect(return_url or 'dashboard')
+
+        except Exception as e:
+            messages.error(request, f'Error posting to Instagram: {str(e)}')
+            return redirect(return_url or 'dashboard')
+
+
 class PostToInstagramView(LoginRequiredMixin, View):
-    """Post video to Instagram as Reel"""
+    """Post video to Instagram as Reel (API endpoint)"""
 
     def post(self, request):
         """

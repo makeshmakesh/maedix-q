@@ -754,32 +754,35 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
             audio_url=audio_url, audio_volume=audio_volume
         )
 
-        # Upload to S3
+        # Read video content first (before cleanup)
+        with open(output_path, 'rb') as f:
+            video_content = f.read()
+
+        # Try to upload to S3
         progress_callback(95, "Uploading to cloud...")
         s3_key = f"videos/{task_id}/{quiz_slug}_reel.mp4"
+        s3_url = None
         try:
             s3_url = upload_file_to_s3(output_path, s3_key, content_type='video/mp4')
         except Exception as s3_error:
-            # Fallback: store in cache if S3 fails
-            with open(output_path, 'rb') as f:
-                video_content = f.read()
-            cache.set(f'video_file_{task_id}', {
-                'content': video_content,
-                'filename': f'{quiz_slug}_reel.mp4',
-                's3_url': None
-            }, timeout=300)
-            s3_url = None
+            # S3 upload failed, will use cache fallback
+            pass
 
         # Clean up temp file
         temp_dir = os.path.dirname(output_path)
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-        # Store S3 URL in cache (30 minute expiry for Instagram posting)
-        cache.set(f'video_file_{task_id}', {
+        # Store video data in cache
+        cache_data = {
             'filename': f'{quiz_slug}_reel.mp4',
             's3_url': s3_url,
             's3_key': s3_key if s3_url else None
-        }, timeout=1800)
+        }
+        # If S3 failed, include video content for direct download
+        if not s3_url:
+            cache_data['content'] = video_content
+
+        cache.set(f'video_file_{task_id}', cache_data, timeout=1800)
 
         cache.set(f'video_progress_{task_id}', {
             'percent': 100,

@@ -42,16 +42,27 @@ def upload_file_to_s3(file_path, s3_key, content_type='video/mp4'):
 
     s3_client = get_s3_client()
 
-    # Upload with public-read ACL for Instagram API access
-    s3_client.upload_file(
-        file_path,
-        bucket_name,
-        s3_key,
-        ExtraArgs={
-            'ContentType': content_type,
-            'ACL': 'public-read'
-        }
-    )
+    # Upload file (public access should be configured via bucket policy)
+    try:
+        s3_client.upload_file(
+            file_path,
+            bucket_name,
+            s3_key,
+            ExtraArgs={
+                'ContentType': content_type,
+                'ACL': 'public-read'
+            }
+        )
+    except Exception as acl_error:
+        # If ACL fails (bucket might block public ACLs), try without ACL
+        s3_client.upload_file(
+            file_path,
+            bucket_name,
+            s3_key,
+            ExtraArgs={
+                'ContentType': content_type
+            }
+        )
 
     # Generate public URL
     aws_region = Configuration.get_value('aws_region', 'ap-south-1')

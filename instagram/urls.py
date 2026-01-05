@@ -6,6 +6,5 @@ urlpatterns = [
     path('oauth/', views.InstagramOAuthRedirectView.as_view(), name='instagram_oauth'),
     path('callback/', views.InstagramCallbackView.as_view(), name='instagram_callback'),
     path('disconnect/', views.InstagramDisconnectView.as_view(), name='instagram_disconnect'),
-    path('post/', views.PostToInstagramView.as_view(), name='instagram_post'),
-    path('post/page/', views.InstagramPostPageView.as_view(), name='instagram_post_page'),
+    path('post/', views.InstagramPostPageView.as_view(), name='instagram_post_page'),
 ]

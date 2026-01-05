@@ -41,9 +41,10 @@
                             <i class="bi bi-play-circle me-1"></i> Browse Quizzes
                         </a>
                     </div>
-                    <div class="mt-4 d-flex gap-4 justify-content-center justify-content-lg-start text-muted small">
+                    <div class="mt-4 d-flex gap-3 justify-content-center justify-content-lg-start text-muted small flex-wrap">
                         <span><i class="bi bi-check-circle-fill text-success me-1"></i> 100+ Quizzes</span>
-                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Multiple Categories</span>
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> XP & Streaks</span>
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Leaderboards</span>
                     </div>
                 </div>
                 <div class="col-lg-6 text-center mt-5 mt-lg-0">
@@ -86,37 +87,48 @@
                 <p class="text-muted">Everything you need to expand your knowledge</p>
             </div>
             <div class="row g-4">
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 p-4 text-center border-0 shadow-sm">
                         <div class="mb-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-lightning-charge-fill text-primary fs-1"></i>
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-lightning-charge-fill text-primary fs-2"></i>
                             </div>
                         </div>
                         <h5 class="fw-bold">Quick Quizzes</h5>
-                        <p class="text-muted mb-0">Bite-sized quizzes you can complete in 5-10 minutes. Perfect for learning on the go.</p>
+                        <p class="text-muted small mb-0">Bite-sized quizzes you can complete in 5-10 minutes. Perfect for learning on the go.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 p-4 text-center border-0 shadow-sm">
                         <div class="mb-3">
-                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-graph-up text-success fs-1"></i>
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-graph-up text-success fs-2"></i>
                             </div>
                         </div>
                         <h5 class="fw-bold">Track Progress</h5>
-                        <p class="text-muted mb-0">Monitor your learning journey with detailed stats, streaks, and achievement badges.</p>
+                        <p class="text-muted small mb-0">Detailed stats, accuracy tracking, and learning streaks to monitor your journey.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 p-4 text-center border-0 shadow-sm">
                         <div class="mb-3">
-                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-trophy-fill text-warning fs-1"></i>
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-trophy-fill text-warning fs-2"></i>
                             </div>
                         </div>
-                        <h5 class="fw-bold">Compete & Earn</h5>
-                        <p class="text-muted mb-0">Climb the leaderboard, earn XP points, and showcase your expertise to others.</p>
+                        <h5 class="fw-bold">Leaderboards</h5>
+                        <p class="text-muted small mb-0">Compete on daily, weekly, monthly & all-time leaderboards. Earn XP points!</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-clock-history text-info fs-2"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Quiz History</h5>
+                        <p class="text-muted small mb-0">Review past attempts, see detailed results, and learn from your mistakes.</p>
                     </div>
                 </div>
             </div>
@@ -225,10 +237,10 @@
                 <div class="col-lg-6 text-center text-lg-start">
                     <span class="badge bg-danger-subtle text-danger mb-3 px-3 py-2">For Content Creators</span>
                     <h1 class="display-5 fw-bold mb-4">
-                        Create Engaging <span class="text-primary">Quiz Videos</span> in Seconds
+                        Create & Post <span class="text-primary">Quiz Videos</span> in One Click
                     </h1>
                     <p class="lead text-muted mb-4">
-                        Transform your knowledge into viral quiz content for Instagram Reels and YouTube Shorts. Create quizzes, export as videos, and grow your audience effortlessly.
+                        Transform your knowledge into viral quiz content. Create quizzes, export as videos, and <strong>post directly to Instagram Reels & YouTube Shorts</strong> without leaving the platform.
                     </p>
                     <div class="d-grid d-sm-flex gap-3 justify-content-center justify-content-lg-start">
                         <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">
@@ -238,9 +250,10 @@
                             <i class="bi bi-play-circle me-1"></i> See Examples
                         </a>
                     </div>
-                    <div class="mt-4 d-flex gap-4 justify-content-center justify-content-lg-start text-muted small">
+                    <div class="mt-4 d-flex gap-3 justify-content-center justify-content-lg-start text-muted small flex-wrap">
                         <span><i class="bi bi-check-circle-fill text-success me-1"></i> No credit card</span>
-                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Free plan available</span>
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Direct to Reels</span>
+                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Direct to Shorts</span>
                     </div>
                 </div>
                 <div class="col-lg-6 text-center mt-5 mt-lg-0">
@@ -285,40 +298,52 @@
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="fw-bold">Everything You Need to Create Quiz Content</h2>
-                <p class="text-muted">From quiz creation to video export - all in one platform</p>
+                <p class="text-muted">From quiz creation to posting - all in one platform</p>
             </div>
             <div class="row g-4">
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 p-4 text-center border-0 shadow-sm">
                         <div class="mb-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-plus-circle-fill text-primary fs-1"></i>
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-plus-circle-fill text-primary fs-2"></i>
                             </div>
                         </div>
                         <h5 class="fw-bold">Create Quizzes</h5>
-                        <p class="text-muted mb-0">Build engaging quizzes with multiple choice questions, code snippets, and instant feedback. Easy-to-use editor.</p>
+                        <p class="text-muted small mb-0">Build engaging quizzes with multiple choice questions and code snippets.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 p-4 text-center border-0 shadow-sm">
                         <div class="mb-3">
-                            <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-camera-reels-fill text-danger fs-1"></i>
+                            <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-camera-reels-fill text-danger fs-2"></i>
                             </div>
                         </div>
                         <h5 class="fw-bold">Export as Video</h5>
-                        <p class="text-muted mb-0">One-click export to vertical video format (9:16). Perfect for Instagram Reels, YouTube Shorts, and TikTok.</p>
+                        <p class="text-muted small mb-0">One-click export to vertical video format (9:16) optimized for social media.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm position-relative">
+                        <span class="badge bg-success position-absolute" style="top: 10px; right: 10px;">NEW</span>
                         <div class="mb-3">
-                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-graph-up-arrow text-success fs-1"></i>
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-send-fill text-warning fs-2"></i>
                             </div>
                         </div>
-                        <h5 class="fw-bold">Grow Your Audience</h5>
-                        <p class="text-muted mb-0">Quiz videos are highly engaging. Boost your reach, increase watch time, and grow your followers organically.</p>
+                        <h5 class="fw-bold">Direct Posting</h5>
+                        <p class="text-muted small mb-0">Post directly to Instagram Reels & YouTube Shorts without downloading.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 text-center border-0 shadow-sm">
+                        <div class="mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                <i class="bi bi-graph-up-arrow text-success fs-2"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">Grow Audience</h5>
+                        <p class="text-muted small mb-0">Boost engagement, increase watch time, and grow your followers organically.</p>
                     </div>
                 </div>
             </div>
@@ -357,8 +382,8 @@
                             <span class="fw-bold">3</span>
                         </div>
                         <div>
-                            <h5 class="fw-bold mb-2">Export & Share</h5>
-                            <p class="text-muted mb-0">Generate your video in seconds. Download and share directly to Instagram, YouTube, or TikTok.</p>
+                            <h5 class="fw-bold mb-2">Post Directly <span class="badge bg-success">NEW</span></h5>
+                            <p class="text-muted mb-0">Generate your video and post directly to Instagram Reels or YouTube Shorts with one click. No download needed!</p>
                         </div>
                     </div>
                 </div>
@@ -385,29 +410,30 @@
                             </div>
                         </div>
                         <hr>
+                        <p class="text-center text-muted small mb-3">Connect your accounts for direct posting</p>
                         <div class="row g-2">
                             <div class="col-6 col-md-3">
-                                <div class="text-center">
+                                <div class="text-center p-2 bg-light rounded">
                                     <i class="bi bi-instagram text-danger fs-4"></i>
-                                    <small class="d-block text-muted">Reels</small>
+                                    <small class="d-block text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Direct Post</small>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
-                                <div class="text-center">
+                                <div class="text-center p-2 bg-light rounded">
                                     <i class="bi bi-youtube text-danger fs-4"></i>
-                                    <small class="d-block text-muted">Shorts</small>
+                                    <small class="d-block text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Direct Post</small>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
-                                <div class="text-center">
+                                <div class="text-center p-2 bg-light rounded">
                                     <i class="bi bi-tiktok fs-4"></i>
-                                    <small class="d-block text-muted">TikTok</small>
+                                    <small class="d-block text-muted">Download</small>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
-                                <div class="text-center">
+                                <div class="text-center p-2 bg-light rounded">
                                     <i class="bi bi-facebook text-primary fs-4"></i>
-                                    <small class="d-block text-muted">Reels</small>
+                                    <small class="d-block text-muted">Download</small>
                                 </div>
                             </div>
                         </div>
@@ -446,11 +472,25 @@
                                 <p class="text-muted mb-0 small">Optional answer reveal with visual feedback</p>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
                             <div>
                                 <strong>Dark Theme Design</strong>
                                 <p class="text-muted mb-0 small">Modern, eye-catching visuals that pop on feeds</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>Direct Posting <span class="badge bg-success">NEW</span></strong>
+                                <p class="text-muted mb-0 small">Post to Instagram Reels & YouTube Shorts in one click</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>Cloud Storage</strong>
+                                <p class="text-muted mb-0 small">Videos saved securely - access anytime from your dashboard</p>
                             </div>
                         </div>
                     </div>

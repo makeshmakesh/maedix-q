@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Email{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">Verify Your Email</h2>
+                    <p class="text-muted">We've sent a 6-digit code to <strong>{{ email }}</strong></p>
+                </div>
+
+                <div class="card p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">Enter Verification Code</label>
+                            {{ form.otp }}
+                            <small class="text-muted d-block mt-2">The code expires in 10 minutes</small>
+                        </div>
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="bi bi-check-circle"></i> Verify Email
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Didn't receive the code?</p>
+                        <form method="post" action="{% url 'resend_otp' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link text-primary p-0">Resend Code</button>
+                        </form>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="text-center">
+                        <a href="{% url 'signup' %}" class="text-muted">
+                            <i class="bi bi-arrow-left"></i> Back to Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,6 +1,8 @@
+import random
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
+from datetime import timedelta
 from .managers import CustomUserManager
 
 
@@ -88,3 +90,51 @@ class UserStats(models.Model):
 
     class Meta:
         verbose_name_plural = 'User Stats'
+
+
+class EmailOTP(models.Model):
+    """Store OTP for email verification during signup"""
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='email_otps'
+    )
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"OTP for {self.user.email}"
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_valid(self):
+        return not self.is_expired and not self.is_verified
+
+    @classmethod
+    def generate_otp(cls):
+        """Generate a 6-digit OTP"""
+        return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+    @classmethod
+    def create_for_user(cls, user):
+        """Create a new OTP for user, invalidating any previous ones"""
+        # Delete any existing unverified OTPs for this user
+        cls.objects.filter(user=user, is_verified=False).delete()
+        # Create new OTP
+        otp = cls.generate_otp()
+        return cls.objects.create(user=user, otp=otp)
+
+    class Meta:
+        verbose_name = 'Email OTP'
+        verbose_name_plural = 'Email OTPs'
+        ordering = ['-created_at']

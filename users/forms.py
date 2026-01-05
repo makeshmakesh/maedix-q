@@ -97,3 +97,25 @@ class ProfileForm(forms.ModelForm):
             'linkedin_url': forms.URLInput(attrs={'class': 'form-control'}),
             'twitter_handle': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class OTPVerificationForm(forms.Form):
+    """Form for OTP verification during signup"""
+    otp = forms.CharField(
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg text-center',
+            'placeholder': 'Enter 6-digit OTP',
+            'maxlength': '6',
+            'pattern': '[0-9]{6}',
+            'inputmode': 'numeric',
+            'autocomplete': 'one-time-code',
+        })
+    )
+
+    def clean_otp(self):
+        otp = self.cleaned_data.get('otp')
+        if not otp.isdigit():
+            raise forms.ValidationError('OTP must contain only digits')
+        return otp

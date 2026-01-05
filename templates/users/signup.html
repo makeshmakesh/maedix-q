@@ -48,7 +48,16 @@
                         </div>
                         {% endif %}
 
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                <label class="form-check-label small" for="agreeTerms">
+                                    I agree to the <a href="{% url 'terms' %}" target="_blank" class="text-primary">Terms of Service</a> and <a href="{% url 'privacy_policy' %}" target="_blank" class="text-primary">Privacy Policy</a>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3" id="signupBtn" disabled>
                             <i class="bi bi-person-plus"></i> Create Account
                         </button>
                     </form>
@@ -61,4 +70,17 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const agreeCheckbox = document.getElementById('agreeTerms');
+        const signupBtn = document.getElementById('signupBtn');
+
+        agreeCheckbox.addEventListener('change', function() {
+            signupBtn.disabled = !this.checked;
+        });
+    });
+</script>
 {% endblock %}

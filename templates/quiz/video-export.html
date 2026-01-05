@@ -61,6 +61,12 @@
                                             <i class="bi bi-instagram"></i>
                                         </a>
                                         {% endif %}
+                                        {% if youtube_connected %}
+                                        <a href="{% url 'youtube_post' %}?video_url={{ video.s3_url|urlencode }}&title={{ quiz.title|urlencode }}&return_url={{ request.path|urlencode }}"
+                                           class="btn btn-outline-danger" title="Post to YouTube">
+                                            <i class="bi bi-youtube"></i>
+                                        </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -209,6 +215,15 @@
                             <i class="bi bi-instagram me-2"></i>Connect Instagram to Post
                         </a>
                         {% endif %}
+                        {% if youtube_connected %}
+                        <a href="#" class="btn btn-danger btn-lg" id="postToYouTubeBtn">
+                            <i class="bi bi-youtube me-2"></i>Post to YouTube Shorts
+                        </a>
+                        {% else %}
+                        <a href="{% url 'youtube_connect' %}" class="btn btn-outline-danger">
+                            <i class="bi bi-youtube me-2"></i>Connect YouTube to Post
+                        </a>
+                        {% endif %}
                         <a href="{% url 'quiz_video_export' quiz.slug %}" class="btn btn-outline-primary">
                             <i class="bi bi-arrow-repeat"></i> Generate Another
                         </a>
@@ -251,6 +266,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const questionInfo = document.getElementById('questionInfo');
 
     const canGenerate = {{ can_generate|yesno:"true,false" }};
+
+    // Check URL for video_url parameter (returning from Instagram/YouTube post)
+    const urlParams = new URLSearchParams(window.location.search);
+    const savedVideoUrl = urlParams.get('video_url');
+
+    if (savedVideoUrl) {
+        // Show success state with the saved video
+        showSuccessWithVideo(decodeURIComponent(savedVideoUrl));
+    }
 
     // Selection validation
     const checkboxes = document.querySelectorAll('.question-checkbox');
@@ -404,6 +428,33 @@ document.addEventListener('DOMContentLoaded', function() {
         progressMessage.textContent = message;
     }
 
+    function showSuccessWithVideo(s3Url) {
+        // Show success state with pre-populated video URL (when returning from Instagram/YouTube)
+        videoInfo.classList.add('d-none');
+        videoOptions.classList.add('d-none');
+        selectionSection.classList.add('d-none');
+        buttonSection.classList.add('d-none');
+        timeEstimate.classList.add('d-none');
+        successSection.classList.remove('d-none');
+        downloadSection.classList.remove('d-none');
+        downloadBtn.href = s3Url;
+
+        // Build return URL with video_url parameter to preserve state
+        const returnUrl = encodeURIComponent(window.location.pathname + '?video_url=' + encodeURIComponent(s3Url));
+        const videoUrl = encodeURIComponent(s3Url);
+        const title = encodeURIComponent('{{ quiz.title }}');
+
+        {% if instagram_connected %}
+        const postToInstagramBtn = document.getElementById('postToInstagramBtn');
+        postToInstagramBtn.href = `{% url 'instagram_post_page' %}?video_url=${videoUrl}&title=${title}&return_url=${returnUrl}`;
+        {% endif %}
+
+        {% if youtube_connected %}
+        const postToYouTubeBtn = document.getElementById('postToYouTubeBtn');
+        postToYouTubeBtn.href = `{% url 'youtube_post' %}?video_url=${videoUrl}&title=${title}&return_url=${returnUrl}`;
+        {% endif %}
+    }
+
     function showSuccess(downloadUrl) {
         isGenerating = false;  // Clear flag - video ready
         progressSection.classList.add('d-none');
@@ -411,28 +462,42 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadSection.classList.remove('d-none');
         downloadBtn.href = downloadUrl;
 
-        // Update Instagram link with S3 URL
-        {% if instagram_connected %}
-        const postToInstagramBtn = document.getElementById('postToInstagramBtn');
+        // Update Instagram and YouTube links with S3 URL
         const match = downloadUrl.match(/\/video\/download\/([^\/]+)\//);
         if (match) {
             const taskId = match[1];
-            // Fetch S3 URL and update the Instagram link
+            // Fetch S3 URL and update the posting links
             fetch(`/quiz/video/url/${taskId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.url) {
-                        const returnUrl = encodeURIComponent(window.location.pathname);
+                        // Update URL with video_url parameter for state preservation
+                        const newUrl = window.location.pathname + '?video_url=' + encodeURIComponent(data.url);
+                        window.history.replaceState({}, '', newUrl);
+
+                        // Build return URL with video_url parameter
+                        const returnUrl = encodeURIComponent(newUrl);
                         const videoUrl = encodeURIComponent(data.url);
                         const title = encodeURIComponent('{{ quiz.title }}');
+
+                        // Update download button to use S3 URL directly
+                        downloadBtn.href = data.url;
+
+                        {% if instagram_connected %}
+                        const postToInstagramBtn = document.getElementById('postToInstagramBtn');
                         postToInstagramBtn.href = `{% url 'instagram_post_page' %}?video_url=${videoUrl}&title=${title}&return_url=${returnUrl}`;
+                        {% endif %}
+
+                        {% if youtube_connected %}
+                        const postToYouTubeBtn = document.getElementById('postToYouTubeBtn');
+                        postToYouTubeBtn.href = `{% url 'youtube_post' %}?video_url=${videoUrl}&title=${title}&return_url=${returnUrl}`;
+                        {% endif %}
                     }
                 })
                 .catch(error => {
                     console.error('Failed to get S3 URL:', error);
                 });
         }
-        {% endif %}
     }
 
     function showError(message) {

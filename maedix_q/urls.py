@@ -12,6 +12,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('quiz/', include('quiz.urls')),
     path('instagram/', include('instagram.urls')),
+    path('youtube/', include('youtube.urls')),
 ]
 
 if settings.DEBUG:

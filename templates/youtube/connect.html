@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Connect YouTube{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-youtube text-danger" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mt-3">YouTube Connection</h3>
+                        <p class="text-muted">Connect your YouTube channel to post Shorts directly</p>
+                    </div>
+
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if not is_configured %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        YouTube API is not configured. Please contact support.
+                    </div>
+                    {% elif youtube_account and youtube_account.is_connected %}
+                    <!-- Connected State -->
+                    <div class="alert alert-success">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <strong>Connected!</strong>
+                                <br>
+                                <span class="text-muted">{{ youtube_account.channel_title }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Channel Details</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="text-muted">Channel</td>
+                                <td>{{ youtube_account.channel_title }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Channel ID</td>
+                                <td><code>{{ youtube_account.channel_id }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Status</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            {% if youtube_account.token_expires_at %}
+                            <tr>
+                                <td class="text-muted">Token Expires</td>
+                                <td>{{ youtube_account.token_expires_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{% url 'youtube_oauth' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-repeat me-2"></i>Reconnect Account
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'youtube_disconnect' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-x-circle me-2"></i>Disconnect Account
+                            </button>
+                        </form>
+                    </div>
+
+                    {% else %}
+                    <!-- Not Connected State -->
+                    <div class="alert alert-info">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i>Requirements</h6>
+                        <ul class="mb-0 small">
+                            <li>A YouTube channel (any type)</li>
+                            <li>Google account access</li>
+                            <li>Permission to upload videos</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid">
+                        <form method="post" action="{% url 'youtube_oauth' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-lg w-100">
+                                <i class="bi bi-youtube me-2"></i>Connect YouTube
+                            </button>
+                        </form>
+                    </div>
+
+                    <p class="text-muted small text-center mt-3">
+                        By connecting, you authorize this app to upload videos to your YouTube channel.
+                    </p>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

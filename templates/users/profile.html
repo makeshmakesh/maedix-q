@@ -24,7 +24,7 @@
                 <!-- Connected Accounts -->
                 <div class="card p-4 mt-3">
                     <h6 class="fw-bold mb-3">Connected Accounts</h6>
-                    <a href="{% url 'instagram_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border {% if instagram_connected %}border-success{% endif %}">
+                    <a href="{% url 'instagram_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border mb-2 {% if instagram_connected %}border-success{% endif %}">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-instagram text-danger me-2" style="font-size: 1.5rem;"></i>
                             <div>
@@ -37,6 +37,24 @@
                             </div>
                         </div>
                         {% if instagram_connected %}
+                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
+                        {% else %}
+                        <span class="badge bg-secondary">Connect</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'youtube_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border {% if youtube_connected %}border-success{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-youtube text-danger me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <span class="fw-medium">YouTube</span>
+                                {% if youtube_connected %}
+                                <br><small class="text-success">{{ youtube_account.channel_title }}</small>
+                                {% else %}
+                                <br><small class="text-muted">Not connected</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if youtube_connected %}
                         <span class="badge bg-success"><i class="bi bi-check"></i></span>
                         {% else %}
                         <span class="badge bg-secondary">Connect</span>

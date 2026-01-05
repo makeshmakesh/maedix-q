@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'users',
     'quiz',
     'instagram',
+    'youtube',
     # 'courses',       # Phase 2
     # 'assessments',   # Phase 2
     # 'hr',            # Phase 3

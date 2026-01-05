@@ -863,6 +863,11 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         if hasattr(request.user, 'instagram_account'):
             instagram_connected = request.user.instagram_account.is_connected
 
+        # Check YouTube connection status
+        youtube_connected = False
+        if hasattr(request.user, 'youtube_account'):
+            youtube_connected = request.user.youtube_account.is_connected
+
         # Get recent videos for this quiz by this user
         recent_videos = GeneratedVideo.objects.filter(
             user=request.user,
@@ -877,6 +882,7 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'subscription': subscription,
             'can_custom_handle': can_custom_handle,
             'instagram_connected': instagram_connected,
+            'youtube_connected': youtube_connected,
             'recent_videos': recent_videos,
         })
 

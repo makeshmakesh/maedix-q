@@ -207,10 +207,16 @@ class DashboardView(LoginRequiredMixin, View):
         if hasattr(request.user, 'instagram_account'):
             instagram_connected = request.user.instagram_account.is_connected
 
+        # Check YouTube connection status
+        youtube_connected = False
+        if hasattr(request.user, 'youtube_account'):
+            youtube_connected = request.user.youtube_account.is_connected
+
         return render(request, self.template_name, {
             'stats': stats,
             'recent_videos': recent_videos,
             'instagram_connected': instagram_connected,
+            'youtube_connected': youtube_connected,
         })
 
 
@@ -229,11 +235,20 @@ class ProfileView(LoginRequiredMixin, View):
             instagram_account = request.user.instagram_account
             instagram_connected = instagram_account.is_connected
 
+        # Check YouTube connection status
+        youtube_connected = False
+        youtube_account = None
+        if hasattr(request.user, 'youtube_account'):
+            youtube_account = request.user.youtube_account
+            youtube_connected = youtube_account.is_connected
+
         return render(request, self.template_name, {
             'profile': profile,
             'stats': stats,
             'instagram_connected': instagram_connected,
             'instagram_account': instagram_account,
+            'youtube_connected': youtube_connected,
+            'youtube_account': youtube_account,
         })
 
 

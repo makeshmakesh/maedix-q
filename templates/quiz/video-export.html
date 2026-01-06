@@ -80,7 +80,7 @@
                         <h6 class="fw-bold mb-2"><i class="bi bi-info-circle"></i> Video Details</h6>
                         <ul class="mb-0 small">
                             <li>Format: Vertical (1080x1920) - Perfect for Instagram Reels</li>
-                            <li id="durationInfo">Duration: ~41 seconds (3 questions x 13 sec + 2 sec outro)</li>
+                            <li id="durationInfo">Duration: ~41 seconds (3 questions x 13 sec + 2 sec ending)</li>
                             <li id="questionInfo">Each question: 10 sec timer + 3 sec answer reveal</li>
                         </ul>
                     </div>
@@ -99,6 +99,54 @@
                                     <br>
                                     <small class="text-muted">Reveal the correct answer after the timer ends</small>
                                 </label>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <!-- Intro Section -->
+                            <div class="mb-3">
+                                <label for="introText" class="form-label">
+                                    <strong><i class="bi bi-play-circle me-1"></i>Intro Text (Optional)</strong>
+                                    <br>
+                                    <small class="text-muted">Add a 3-second intro slide with custom text before questions</small>
+                                </label>
+                                {% if can_custom_intro_outro %}
+                                <input type="text" class="form-control" id="introText" name="intro_text"
+                                       placeholder="e.g., Can you guess? Most of them fail!" maxlength="100">
+                                <small class="text-muted">Leave empty to skip intro. Max 100 characters.</small>
+                                {% else %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="text" class="form-control bg-light" id="introText" placeholder="Intro text" disabled readonly>
+                                    <a href="{% url 'pricing' %}" class="btn btn-outline-primary btn-sm text-nowrap">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Upgrade
+                                    </a>
+                                </div>
+                                <small class="text-muted"><i class="bi bi-lock me-1"></i>Upgrade your plan to add custom intro</small>
+                                {% endif %}
+                            </div>
+
+                            <hr class="my-3">
+
+                            <!-- Pre-Outro Section -->
+                            <div class="mb-3">
+                                <label for="preOutroText" class="form-label">
+                                    <strong><i class="bi bi-chat-dots me-1"></i>Call-to-Action Text (Optional)</strong>
+                                    <br>
+                                    <small class="text-muted">Add a 3-second call-to-action slide before outro (e.g., engage viewers to comment)</small>
+                                </label>
+                                {% if can_custom_intro_outro %}
+                                <input type="text" class="form-control" id="preOutroText" name="pre_outro_text"
+                                       placeholder="e.g., Comment your answer!" maxlength="100">
+                                <small class="text-muted">Leave empty to skip. Max 100 characters.</small>
+                                {% else %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="text" class="form-control bg-light" id="preOutroText" placeholder="Call-to-action text" disabled readonly>
+                                    <a href="{% url 'pricing' %}" class="btn btn-outline-primary btn-sm text-nowrap">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Upgrade
+                                    </a>
+                                </div>
+                                <small class="text-muted"><i class="bi bi-lock me-1"></i>Upgrade your plan to add call-to-action</small>
+                                {% endif %}
                             </div>
 
                             <hr class="my-3">
@@ -281,22 +329,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedCountEl = document.getElementById('selectedCount');
     const selectionHint = document.getElementById('selectionHint');
 
-    // Update duration info based on selected questions and show answer option
+    // Update duration info based on selected questions, show answer option, intro, and pre-outro
+    const introTextInput = document.getElementById('introText');
+    const preOutroTextInput = document.getElementById('preOutroText');
+
     function updateDurationInfo() {
         const selectedCount = document.querySelectorAll('.question-checkbox:checked').length;
         const showAnswer = showAnswerCheckbox.checked;
+        const hasIntro = introTextInput && introTextInput.value.trim().length > 0;
+        const hasPreOutro = preOutroTextInput && preOutroTextInput.value.trim().length > 0;
         const perQuestion = showAnswer ? 13 : 10;
+        const intro = hasIntro ? 3 : 0;
+        const preOutro = hasPreOutro ? 3 : 0;
         const outro = 2;
-        const totalSeconds = (selectedCount * perQuestion) + outro;
+        const ending = preOutro + outro;
+        const totalSeconds = intro + (selectedCount * perQuestion) + ending;
 
         if (selectedCount > 0) {
             const answerText = showAnswer ? ' + 3 sec answer reveal' : '';
-            durationInfo.textContent = `Duration: ~${totalSeconds} seconds (${selectedCount} question${selectedCount > 1 ? 's' : ''} x ${perQuestion} sec + ${outro} sec outro)`;
+            const introText = hasIntro ? '3 sec intro + ' : '';
+            durationInfo.textContent = `Duration: ~${totalSeconds} seconds (${introText}${selectedCount} question${selectedCount > 1 ? 's' : ''} x ${perQuestion} sec + ${ending} sec ending)`;
             questionInfo.textContent = `Each question: 10 sec timer${answerText}`;
         } else {
             durationInfo.textContent = 'Duration: Select questions to see estimate';
             questionInfo.textContent = showAnswer ? 'Each question: 10 sec timer + 3 sec answer reveal' : 'Each question: 10 sec timer (no answer reveal)';
         }
+    }
+
+    // Listen for intro and pre-outro text changes
+    if (introTextInput) {
+        introTextInput.addEventListener('input', updateDurationInfo);
+    }
+    if (preOutroTextInput) {
+        preOutroTextInput.addEventListener('input', updateDurationInfo);
     }
 
     function updateSelection() {

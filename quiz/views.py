@@ -727,7 +727,9 @@ class StaffQuestionDeleteView(StaffRequiredMixin, View):
 
 def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_answer=True,
                          handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
-                         user_id=None, quiz_id=None):
+                         user_id=None, quiz_id=None,
+                         intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
+                         pre_outro_text="Comment your answer!"):
     """Background task to generate video with progress updates"""
     import shutil
     from .video_generator import generate_quiz_video
@@ -753,7 +755,10 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
         generate_quiz_video(
             question_data, output_path, progress_callback,
             show_answer=show_answer, handle_name=handle_name,
-            audio_url=audio_url, audio_volume=audio_volume
+            audio_url=audio_url, audio_volume=audio_volume,
+            intro_text=intro_text, intro_audio_url=intro_audio_url,
+            intro_audio_volume=intro_audio_volume,
+            pre_outro_text=pre_outro_text
         )
 
         # Read video content first (before cleanup)
@@ -858,6 +863,13 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         elif request.user.is_staff:
             can_custom_handle = True
 
+        # Check if user has custom intro/outro feature
+        can_custom_intro_outro = False
+        if subscription and subscription.plan.has_feature('custom_intro_and_outro'):
+            can_custom_intro_outro = True
+        elif request.user.is_staff:
+            can_custom_intro_outro = True
+
         # Check Instagram connection status
         instagram_connected = False
         if hasattr(request.user, 'instagram_account'):
@@ -881,6 +893,7 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'subscription_message': message if not can_access else None,
             'subscription': subscription,
             'can_custom_handle': can_custom_handle,
+            'can_custom_intro_outro': can_custom_intro_outro,
             'instagram_connected': instagram_connected,
             'youtube_connected': youtube_connected,
             'recent_videos': recent_videos,
@@ -925,6 +938,13 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         elif request.user.is_staff:
             can_custom_handle = True
 
+        # Check if user has custom intro/outro feature
+        can_custom_intro_outro = False
+        if subscription and subscription.plan.has_feature('custom_intro_and_outro'):
+            can_custom_intro_outro = True
+        elif request.user.is_staff:
+            can_custom_intro_outro = True
+
         if can_custom_handle:
             custom_handle = request.POST.get('handle_name', '').strip()
             if custom_handle:
@@ -966,6 +986,17 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         audio_url = Configuration.get_value('video_background_music_url', '')
         audio_volume = float(Configuration.get_value('video_background_music_volume', '0.5'))
 
+        # Get intro and pre-outro settings (only if user has the feature)
+        intro_text = None
+        pre_outro_text = None
+        if can_custom_intro_outro:
+            intro_text = request.POST.get('intro_text', '').strip() or None
+            pre_outro_text = request.POST.get('pre_outro_text', '').strip() or None
+
+        # Get intro audio from configuration (separate from main audio)
+        intro_audio_url = Configuration.get_value('video_intro_music_url', '')
+        intro_audio_volume = float(Configuration.get_value('video_intro_music_volume', '0.5'))
+
         # Start video generation in background thread
         thread = threading.Thread(
             target=_generate_video_task,
@@ -974,7 +1005,11 @@ class QuizVideoExportView(LoginRequiredMixin, View):
                 'audio_url': audio_url,
                 'audio_volume': audio_volume,
                 'user_id': request.user.id,
-                'quiz_id': quiz.id
+                'quiz_id': quiz.id,
+                'intro_text': intro_text,
+                'intro_audio_url': intro_audio_url,
+                'intro_audio_volume': intro_audio_volume,
+                'pre_outro_text': pre_outro_text
             }
         )
         thread.daemon = True

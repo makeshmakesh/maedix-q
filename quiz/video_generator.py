@@ -23,6 +23,8 @@ class QuizVideoGenerator:
     # Timing (in seconds)
     QUESTION_DURATION = 10
     ANSWER_REVEAL_DURATION = 3
+    INTRO_DURATION = 3
+    PRE_OUTRO_DURATION = 3
     OUTRO_DURATION = 2
 
     # Modern Dark Theme Colors
@@ -39,13 +41,22 @@ class QuizVideoGenerator:
     MUTED_TEXT = (156, 163, 175)  # Grey for secondary text
     CARD_BG = (28, 28, 30)  # Slightly lighter than bg for cards
 
-    def __init__(self, handle_name="@maedix-q", audio_url=None, audio_volume=0.3):
+    def __init__(self, handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
+                 intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
+                 pre_outro_text=None):
         self.temp_dir = tempfile.mkdtemp()
         self._font_cache = {}
         self.handle_name = handle_name
         self.audio_url = audio_url
         self.audio_volume = audio_volume
         self._audio_path = None
+        # Intro settings
+        self.intro_text = intro_text  # Custom intro text (None = no intro)
+        self.intro_audio_url = intro_audio_url
+        self.intro_audio_volume = intro_audio_volume
+        self._intro_audio_path = None
+        # Pre-outro settings (call-to-action before outro)
+        self.pre_outro_text = pre_outro_text
 
     def _get_font(self, size):
         """Get a font with caching"""
@@ -115,6 +126,95 @@ class QuizVideoGenerator:
             import traceback
             traceback.print_exc()
             return None
+
+    def _download_intro_audio(self):
+        """Download intro audio file from URL and cache locally"""
+        print(f"Intro audio URL configured: '{self.intro_audio_url}'")
+
+        if not self.intro_audio_url:
+            print("No intro audio URL configured")
+            return None
+
+        if self._intro_audio_path and os.path.exists(self._intro_audio_path):
+            print(f"Using cached intro audio: {self._intro_audio_path}")
+            return self._intro_audio_path
+
+        try:
+            # Determine file extension from URL
+            ext = '.mp3'
+            if '.wav' in self.intro_audio_url.lower():
+                ext = '.wav'
+            elif '.ogg' in self.intro_audio_url.lower():
+                ext = '.ogg'
+
+            audio_path = os.path.join(self.temp_dir, f'intro_audio{ext}')
+
+            # Download audio file
+            print(f"Downloading intro audio from: {self.intro_audio_url}")
+            response = requests.get(self.intro_audio_url, timeout=30)
+            response.raise_for_status()
+            print(f"Downloaded {len(response.content)} bytes for intro")
+
+            with open(audio_path, 'wb') as f:
+                f.write(response.content)
+
+            self._intro_audio_path = audio_path
+            print(f"Intro audio saved to: {audio_path}")
+            return audio_path
+
+        except Exception as e:
+            print(f"Warning: Failed to download intro audio: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    def _add_intro_audio_to_clip(self, video_clip):
+        """Add intro audio to intro clip"""
+        audio_path = self._download_intro_audio()
+        if not audio_path:
+            print("No intro audio path available, skipping intro audio")
+            return video_clip
+
+        try:
+            print(f"Loading intro audio from: {audio_path}")
+            audio_clip = AudioFileClip(audio_path)
+
+            # Get durations
+            video_duration = video_clip.duration
+            audio_duration = audio_clip.duration
+            print(f"Intro video duration: {video_duration}s, Intro audio duration: {audio_duration}s")
+
+            # Build effects list
+            effects = []
+
+            # Loop audio if shorter than video
+            if audio_duration < video_duration:
+                loops_needed = int(video_duration / audio_duration) + 1
+                print(f"Looping intro audio {loops_needed} times")
+                effects.append(AudioLoop(n_loops=loops_needed))
+
+            # Adjust volume
+            print(f"Setting intro volume to: {self.intro_audio_volume}")
+            effects.append(MultiplyVolume(factor=self.intro_audio_volume))
+
+            # Apply effects
+            if effects:
+                audio_clip = audio_clip.with_effects(effects)
+
+            # Trim audio to match video duration
+            audio_clip = audio_clip.with_duration(video_duration)
+
+            # Set audio on video
+            video_with_audio = video_clip.with_audio(audio_clip)
+            print("Intro audio successfully added")
+
+            return video_with_audio
+
+        except Exception as e:
+            print(f"Warning: Failed to add intro audio: {e}")
+            import traceback
+            traceback.print_exc()
+            return video_clip
 
     def _add_audio_to_video(self, video_clip):
         """Add background audio to video clip"""
@@ -429,6 +529,100 @@ class QuizVideoGenerator:
 
         return np.array(img)
 
+    def _create_intro_frame(self, intro_text):
+        """Create the intro frame with custom text - clean design without circles"""
+        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.BG_COLOR)
+        draw = ImageDraw.Draw(img)
+
+        # Top and bottom accent bars
+        draw.rectangle([0, 0, self.WIDTH, 8], fill=self.ACCENT_COLOR)
+        draw.rectangle([0, self.HEIGHT - 8, self.WIDTH, self.HEIGHT], fill=self.ACCENT_COLOR)
+
+        # Fonts
+        main_font = self._get_font(72)
+        brand_font = self._get_font(28)
+
+        center_x = self.WIDTH // 2
+        center_y = self.HEIGHT // 2
+
+        # Wrap text if needed
+        max_text_width = self.WIDTH - 160
+        lines = self._wrap_text(intro_text, main_font, max_text_width, draw)
+
+        # Calculate total height of text block
+        line_height = 90
+        total_text_height = len(lines) * line_height
+        start_y = center_y - total_text_height // 2
+
+        # Draw each line centered
+        for i, line in enumerate(lines):
+            draw.text(
+                (center_x, start_y + i * line_height),
+                line,
+                font=main_font,
+                fill=self.TEXT_COLOR,
+                anchor="mm"
+            )
+
+        # Brand name at bottom
+        brand_text = self.handle_name
+        draw.text(
+            (center_x, self.HEIGHT - 80),
+            brand_text,
+            font=brand_font,
+            fill=self.MUTED_TEXT,
+            anchor="mm"
+        )
+
+        return np.array(img)
+
+    def _create_pre_outro_frame(self, pre_outro_text):
+        """Create the pre-outro frame (e.g., 'Comment your answer!')"""
+        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.BG_COLOR)
+        draw = ImageDraw.Draw(img)
+
+        # Top and bottom accent bars
+        draw.rectangle([0, 0, self.WIDTH, 8], fill=self.ACCENT_COLOR)
+        draw.rectangle([0, self.HEIGHT - 8, self.WIDTH, self.HEIGHT], fill=self.ACCENT_COLOR)
+
+        # Fonts
+        main_font = self._get_font(72)
+        brand_font = self._get_font(28)
+
+        center_x = self.WIDTH // 2
+        center_y = self.HEIGHT // 2
+
+        # Wrap text if needed
+        max_text_width = self.WIDTH - 160
+        lines = self._wrap_text(pre_outro_text, main_font, max_text_width, draw)
+
+        # Calculate total height of text block
+        line_height = 90
+        total_text_height = len(lines) * line_height
+        start_y = center_y - total_text_height // 2
+
+        # Draw each line centered with accent color for emphasis
+        for i, line in enumerate(lines):
+            draw.text(
+                (center_x, start_y + i * line_height),
+                line,
+                font=main_font,
+                fill=self.ACCENT_COLOR,  # Purple accent for call-to-action
+                anchor="mm"
+            )
+
+        # Brand name at bottom
+        brand_text = self.handle_name
+        draw.text(
+            (center_x, self.HEIGHT - 80),
+            brand_text,
+            font=brand_font,
+            fill=self.MUTED_TEXT,
+            anchor="mm"
+        )
+
+        return np.array(img)
+
     def _create_outro_frame(self):
         """Create the outro frame with modern dark theme"""
         img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.BG_COLOR)
@@ -510,13 +704,14 @@ class QuizVideoGenerator:
         Returns:
             Path to the generated video
         """
-        clips = []
+        question_clips = []
         total_questions = len(questions)
 
         def report_progress(percent, message):
             if progress_callback:
                 progress_callback(percent, message)
 
+        # Create question clips
         for q_idx, question in enumerate(questions):
             question_num = q_idx + 1
             total = len(questions)
@@ -547,7 +742,7 @@ class QuizVideoGenerator:
                     code_snippet=code_snippet
                 )
                 clip = ImageClip(frame, duration=1)
-                clips.append(clip)
+                question_clips.append(clip)
 
             # Create answer reveal frame (only if show_answer is True)
             if show_answer:
@@ -562,22 +757,60 @@ class QuizVideoGenerator:
                     code_snippet=code_snippet
                 )
                 reveal_clip = ImageClip(reveal_frame, duration=self.ANSWER_REVEAL_DURATION)
-                clips.append(reveal_clip)
+                question_clips.append(reveal_clip)
 
-        # Add outro
-        report_progress(15, "Creating outro...")
+        # Create intro clip if configured
+        report_progress(15, "Creating intro...")
+        intro_clip = None
+        if self.intro_text:
+            intro_frame = self._create_intro_frame(self.intro_text)
+            intro_clip = ImageClip(intro_frame, duration=self.INTRO_DURATION)
+
+        # Create pre-outro clip (optional)
+        pre_outro_clip = None
+        if self.pre_outro_text:
+            report_progress(18, "Creating pre-outro...")
+            pre_outro_frame = self._create_pre_outro_frame(self.pre_outro_text)
+            pre_outro_clip = ImageClip(pre_outro_frame, duration=self.PRE_OUTRO_DURATION)
+
+        # Create outro clip
+        report_progress(20, "Creating outro...")
         outro_frame = self._create_outro_frame()
         outro_clip = ImageClip(outro_frame, duration=self.OUTRO_DURATION)
-        clips.append(outro_clip)
 
-        # Concatenate all clips
+        # Handle audio and concatenation
         report_progress(25, "Assembling clips...")
-        final_video = concatenate_videoclips(clips, method="compose")
 
-        # Add background audio if configured
+        # Concatenate question clips and add main background music
+        questions_video = concatenate_videoclips(question_clips, method="compose")
         if self.audio_url:
-            report_progress(30, "Adding background music...")
-            final_video = self._add_audio_to_video(final_video)
+            report_progress(28, "Adding background music to questions...")
+            questions_video = self._add_audio_to_video(questions_video)
+
+        # Create ending section (pre-outro if exists + outro) with intro music
+        ending_clips = []
+        if pre_outro_clip:
+            ending_clips.append(pre_outro_clip)
+        ending_clips.append(outro_clip)
+        ending_video = concatenate_videoclips(ending_clips, method="compose")
+
+        # Add intro music to intro and ending (pre-outro + outro)
+        if self.intro_audio_url:
+            report_progress(30, "Adding intro music...")
+            # Add intro audio to intro clip
+            if intro_clip:
+                intro_clip = self._add_intro_audio_to_clip(intro_clip)
+            # Add intro audio to ending (pre-outro + outro)
+            ending_video = self._add_intro_audio_to_clip(ending_video)
+
+        # Final assembly: intro (optional) + questions + ending
+        final_clips = []
+        if intro_clip:
+            final_clips.append(intro_clip)
+        final_clips.append(questions_video)
+        final_clips.append(ending_video)
+
+        final_video = concatenate_videoclips(final_clips, method="compose")
 
         report_progress(35, "Preparing encoder...")
 
@@ -639,8 +872,13 @@ class QuizVideoGenerator:
 
         # Cleanup clips
         final_video.close()
-        for clip in clips:
+        for clip in question_clips:
             clip.close()
+        if intro_clip:
+            intro_clip.close()
+        if pre_outro_clip:
+            pre_outro_clip.close()
+        outro_clip.close()
 
         return output_path
 
@@ -651,7 +889,9 @@ class QuizVideoGenerator:
 
 
 def generate_quiz_video(questions, output_path, progress_callback=None, show_answer=True,
-                        handle_name="@maedix-q", audio_url=None, audio_volume=0.3):
+                        handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
+                        intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
+                        pre_outro_text=None):
     """
     Convenience function to generate quiz video.
 
@@ -663,6 +903,10 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
         handle_name: Custom handle name to display in video (default: "@maedix-q")
         audio_url: URL to background audio file (mp3/wav) - optional
         audio_volume: Volume level for background audio (0.0 to 1.0, default: 0.3)
+        intro_text: Custom text to display in the intro (None = no intro)
+        intro_audio_url: URL to intro audio file (mp3/wav) - optional, plays for intro/pre-outro/outro
+        intro_audio_volume: Volume level for intro audio (0.0 to 1.0, default: 0.5)
+        pre_outro_text: Text for pre-outro call-to-action (default: "Comment your answer!")
 
     Returns:
         Path to generated video
@@ -670,7 +914,11 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
     generator = QuizVideoGenerator(
         handle_name=handle_name,
         audio_url=audio_url,
-        audio_volume=audio_volume
+        audio_volume=audio_volume,
+        intro_text=intro_text,
+        intro_audio_url=intro_audio_url,
+        intro_audio_volume=intro_audio_volume,
+        pre_outro_text=pre_outro_text
     )
 
     try:

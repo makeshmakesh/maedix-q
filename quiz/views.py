@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db.models import Count, Avg
 from django.core.cache import cache
-from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, GeneratedVideo, BulkVideoJob
+from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, GeneratedVideo, BulkVideoJob, VideoTemplate
 from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet
 from core.models import Configuration
 from core.subscription_utils import check_feature_access, use_feature, get_or_create_free_subscription, get_user_subscription
@@ -732,7 +732,7 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
                          handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
                          user_id=None, quiz_id=None,
                          intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
-                         pre_outro_text="Comment your answer!"):
+                         pre_outro_text="Comment your answer!", template_config=None):
     """Background task to generate video with progress updates"""
     import shutil
     from .video_generator import generate_quiz_video
@@ -761,7 +761,8 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
             audio_url=audio_url, audio_volume=audio_volume,
             intro_text=intro_text, intro_audio_url=intro_audio_url,
             intro_audio_volume=intro_audio_volume,
-            pre_outro_text=pre_outro_text
+            pre_outro_text=pre_outro_text,
+            template_config=template_config
         )
 
         # Read video content first (before cleanup)
@@ -896,6 +897,29 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         elif request.user.is_staff:
             can_bulk_generate = True
 
+        # Get video templates
+        templates = VideoTemplate.objects.filter(is_active=True).order_by('sort_order')
+        # Mark which templates the user can access
+        has_premium_templates = (
+            (subscription and subscription.plan.has_feature('premium_video_templates'))
+            or request.user.is_staff
+        )
+        templates_data = []
+        default_template_id = None
+        for template in templates:
+            can_use = not template.is_premium or has_premium_templates
+            templates_data.append({
+                'id': template.id,
+                'name': template.name,
+                'slug': template.slug,
+                'description': template.description,
+                'is_premium': template.is_premium,
+                'is_default': template.is_default,
+                'can_use': can_use,
+            })
+            if template.is_default:
+                default_template_id = template.id
+
         return render(request, self.template_name, {
             'quiz': quiz,
             'questions': questions,
@@ -908,6 +932,8 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'youtube_connected': youtube_connected,
             'recent_videos': recent_videos,
             'can_bulk_generate': can_bulk_generate,
+            'templates': templates_data,
+            'default_template_id': default_template_id,
         })
 
     def post(self, request, slug):
@@ -1008,6 +1034,28 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         intro_audio_url = Configuration.get_value('video_intro_music_url', '')
         intro_audio_volume = float(Configuration.get_value('video_intro_music_volume', '0.5'))
 
+        # Get selected template
+        template_config = None
+        template_id = request.POST.get('template_id')
+        if template_id:
+            try:
+                template = VideoTemplate.objects.get(id=template_id, is_active=True)
+                # Check if user has access to premium template
+                has_premium_templates = (
+                    (subscription and subscription.plan.has_feature('premium_video_templates'))
+                    or request.user.is_staff
+                )
+                if template.is_premium and not has_premium_templates:
+                    # Fall back to default template
+                    template = VideoTemplate.objects.filter(is_default=True, is_active=True).first()
+                if template:
+                    template_config = template.config
+            except VideoTemplate.DoesNotExist:
+                # Use default template
+                default_template = VideoTemplate.objects.filter(is_default=True, is_active=True).first()
+                if default_template:
+                    template_config = default_template.config
+
         # Start video generation in background thread
         thread = threading.Thread(
             target=_generate_video_task,
@@ -1020,7 +1068,8 @@ class QuizVideoExportView(LoginRequiredMixin, View):
                 'intro_text': intro_text,
                 'intro_audio_url': intro_audio_url,
                 'intro_audio_volume': intro_audio_volume,
-                'pre_outro_text': pre_outro_text
+                'pre_outro_text': pre_outro_text,
+                'template_config': template_config
             }
         )
         thread.daemon = True
@@ -1693,7 +1742,7 @@ def _process_bulk_video_job(job_id):
     logger = logging.getLogger(__name__)
 
     try:
-        job = BulkVideoJob.objects.select_related('user', 'quiz').get(id=job_id)
+        job = BulkVideoJob.objects.select_related('user', 'quiz', 'template').get(id=job_id)
         job.status = 'processing'
         job.save()
 
@@ -1706,6 +1755,11 @@ def _process_bulk_video_job(job_id):
         audio_volume = float(Configuration.get_value('video_background_music_volume', '0.5'))
         intro_audio_url = Configuration.get_value('video_intro_music_url', '')
         intro_audio_volume = float(Configuration.get_value('video_intro_music_volume', '0.5'))
+
+        # Get template config
+        template_config = None
+        if job.template:
+            template_config = job.template.config
 
         for config in job.questions_config:
             question_id = config['question_id']
@@ -1750,7 +1804,8 @@ def _process_bulk_video_job(job_id):
                         intro_text=config.get('intro_text') or None,
                         intro_audio_url=intro_audio_url,
                         intro_audio_volume=intro_audio_volume,
-                        pre_outro_text=config.get('outro_text') or None
+                        pre_outro_text=config.get('outro_text') or None,
+                        template_config=template_config
                     )
                 finally:
                     VIDEO_GENERATION_SEMAPHORE.release()
@@ -1889,12 +1944,36 @@ class BulkVideoExportView(LoginRequiredMixin, View):
             status__in=['pending', 'processing']
         )
 
+        # Get video templates
+        templates = VideoTemplate.objects.filter(is_active=True).order_by('sort_order')
+        has_premium_templates = (
+            (subscription and subscription.plan.has_feature('premium_video_templates'))
+            or request.user.is_staff
+        )
+        templates_data = []
+        default_template_id = None
+        for template in templates:
+            can_use = not template.is_premium or has_premium_templates
+            templates_data.append({
+                'id': template.id,
+                'name': template.name,
+                'slug': template.slug,
+                'description': template.description,
+                'is_premium': template.is_premium,
+                'is_default': template.is_default,
+                'can_use': can_use,
+            })
+            if template.is_default:
+                default_template_id = template.id
+
         return render(request, self.template_name, {
             'quiz': quiz,
             'questions': questions,
             'instagram_connected': instagram_connected,
             'youtube_connected': youtube_connected,
             'active_jobs': active_jobs,
+            'templates': templates_data,
+            'default_template_id': default_template_id,
         })
 
     def post(self, request, slug):
@@ -1956,12 +2035,30 @@ class BulkVideoExportView(LoginRequiredMixin, View):
             if not hasattr(request.user, 'youtube_account') or not request.user.youtube_account.is_connected:
                 return JsonResponse({'error': 'YouTube not connected'}, status=400)
 
+        # Get selected template
+        template = None
+        template_id = request.POST.get('template_id')
+        if template_id:
+            try:
+                template = VideoTemplate.objects.get(id=template_id, is_active=True)
+                # Check if user has access to premium template
+                has_premium_templates = (
+                    (subscription and subscription.plan.has_feature('premium_video_templates'))
+                    or request.user.is_staff
+                )
+                if template.is_premium and not has_premium_templates:
+                    # Fall back to default template
+                    template = VideoTemplate.objects.filter(is_default=True, is_active=True).first()
+            except VideoTemplate.DoesNotExist:
+                template = VideoTemplate.objects.filter(is_default=True, is_active=True).first()
+
         # Create bulk job
         job = BulkVideoJob.objects.create(
             user=request.user,
             quiz=quiz,
             post_to_instagram=post_to_instagram,
             post_to_youtube=post_to_youtube,
+            template=template,
             questions_config=questions_config,
             total_questions=len(questions_config),
             status='pending'

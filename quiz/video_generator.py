@@ -27,23 +27,23 @@ class QuizVideoGenerator:
     PRE_OUTRO_DURATION = 3
     OUTRO_DURATION = 2
 
-    # Modern Dark Theme Colors
-    BG_COLOR = (18, 18, 18)  # Mat black
-    TEXT_COLOR = (255, 255, 255)  # White
-    ACCENT_COLOR = (138, 43, 226)  # Purple accent
-    CORRECT_COLOR = (0, 200, 83)  # Vibrant green
-    WRONG_COLOR = (239, 68, 68)  # Red for wrong (during reveal)
-    OPTION_BG = (38, 38, 38)  # Dark grey for options
-    OPTION_HOVER = (55, 55, 55)  # Slightly lighter grey
-    OPTION_TEXT = (240, 240, 240)  # Light text on dark
-    TIMER_BG = (75, 0, 130)  # Deep purple for timer
-    TIMER_TEXT = (255, 255, 255)  # White timer text
-    MUTED_TEXT = (156, 163, 175)  # Grey for secondary text
-    CARD_BG = (28, 28, 30)  # Slightly lighter than bg for cards
+    # Default Colors (Dark Purple theme)
+    DEFAULT_COLORS = {
+        'bg_color': (18, 18, 18),  # Mat black
+        'text_color': (255, 255, 255),  # White
+        'accent_color': (138, 43, 226),  # Purple accent
+        'correct_color': (0, 200, 83),  # Vibrant green
+        'wrong_color': (239, 68, 68),  # Red for wrong (during reveal)
+        'option_bg': (38, 38, 38),  # Dark grey for options
+        'option_text': (240, 240, 240),  # Light text on dark
+        'timer_bg': (75, 0, 130),  # Deep purple for timer
+        'muted_text': (156, 163, 175),  # Grey for secondary text
+        'card_bg': (28, 28, 30),  # Slightly lighter than bg for cards
+    }
 
     def __init__(self, handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
                  intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
-                 pre_outro_text=None):
+                 pre_outro_text=None, template_config=None):
         self.temp_dir = tempfile.mkdtemp()
         self._font_cache = {}
         self.handle_name = handle_name
@@ -57,6 +57,28 @@ class QuizVideoGenerator:
         self._intro_audio_path = None
         # Pre-outro settings (call-to-action before outro)
         self.pre_outro_text = pre_outro_text
+        # Load template colors
+        self._load_template_colors(template_config)
+
+    def _load_template_colors(self, template_config):
+        """Load colors from template config or use defaults"""
+        colors = {}
+        if template_config and 'colors' in template_config:
+            colors = template_config['colors']
+
+        # Set instance color variables from config or defaults
+        self.BG_COLOR = tuple(colors.get('bg_color', self.DEFAULT_COLORS['bg_color']))
+        self.TEXT_COLOR = tuple(colors.get('text_color', self.DEFAULT_COLORS['text_color']))
+        self.ACCENT_COLOR = tuple(colors.get('accent_color', self.DEFAULT_COLORS['accent_color']))
+        self.CORRECT_COLOR = tuple(colors.get('correct_color', self.DEFAULT_COLORS['correct_color']))
+        self.WRONG_COLOR = tuple(colors.get('wrong_color', self.DEFAULT_COLORS['wrong_color']))
+        self.OPTION_BG = tuple(colors.get('option_bg', self.DEFAULT_COLORS['option_bg']))
+        self.OPTION_TEXT = tuple(colors.get('option_text', self.DEFAULT_COLORS['option_text']))
+        self.TIMER_BG = tuple(colors.get('timer_bg', self.DEFAULT_COLORS['timer_bg']))
+        self.TIMER_TEXT = self.TEXT_COLOR  # Timer text uses main text color
+        self.MUTED_TEXT = tuple(colors.get('muted_text', self.DEFAULT_COLORS['muted_text']))
+        self.CARD_BG = tuple(colors.get('card_bg', self.DEFAULT_COLORS['card_bg']))
+        self.OPTION_HOVER = tuple(c + 17 for c in self.OPTION_BG)  # Slightly lighter than option bg
 
     def _get_font(self, size):
         """Get a font with caching"""
@@ -830,7 +852,7 @@ class QuizVideoGenerator:
                 (60, "Rendering frames..."),
                 (70, "Compressing video..."),
                 (80, "Optimizing output..."),
-                (85, "Almost done..."),
+                (85, "Final Rendering (This may take time)..."),
             ]
             msg_index = 0
 
@@ -891,7 +913,7 @@ class QuizVideoGenerator:
 def generate_quiz_video(questions, output_path, progress_callback=None, show_answer=True,
                         handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
                         intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
-                        pre_outro_text=None):
+                        pre_outro_text=None, template_config=None):
     """
     Convenience function to generate quiz video.
 
@@ -907,6 +929,7 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
         intro_audio_url: URL to intro audio file (mp3/wav) - optional, plays for intro/pre-outro/outro
         intro_audio_volume: Volume level for intro audio (0.0 to 1.0, default: 0.5)
         pre_outro_text: Text for pre-outro call-to-action (default: "Comment your answer!")
+        template_config: Template configuration dict with 'colors' key (optional)
 
     Returns:
         Path to generated video
@@ -918,7 +941,8 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
         intro_text=intro_text,
         intro_audio_url=intro_audio_url,
         intro_audio_volume=intro_audio_volume,
-        pre_outro_text=pre_outro_text
+        pre_outro_text=pre_outro_text,
+        template_config=template_config
     )
 
     try:

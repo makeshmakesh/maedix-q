@@ -338,6 +338,15 @@ class BulkVideoJob(models.Model):
     post_to_instagram = models.BooleanField(default=False)
     post_to_youtube = models.BooleanField(default=False)
 
+    # Video template (optional)
+    template = models.ForeignKey(
+        'VideoTemplate',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bulk_jobs'
+    )
+
     # Per-question configuration stored as JSON
     # Format: [{"question_id": 1, "reveal_answer": true, "intro_text": "...", "outro_text": "..."}, ...]
     questions_config = models.JSONField(default=list)
@@ -372,3 +381,42 @@ class BulkVideoJob(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class VideoTemplate(models.Model):
+    """Video templates for quiz video generation"""
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    preview_image = models.URLField(blank=True)  # S3 URL for preview thumbnail
+    is_active = models.BooleanField(default=True)
+    is_default = models.BooleanField(default=False)
+    is_premium = models.BooleanField(default=False)  # Requires Pro+ subscription
+    sort_order = models.IntegerField(default=0)
+
+    # All template configuration stored as JSON
+    # Structure:
+    # {
+    #   "colors": {
+    #     "bg_color": [18, 18, 18],
+    #     "text_color": [255, 255, 255],
+    #     "accent_color": [138, 43, 226],
+    #     "correct_color": [0, 200, 83],
+    #     "wrong_color": [239, 68, 68],
+    #     "option_bg": [38, 38, 38],
+    #     "option_text": [240, 240, 240],
+    #     "timer_bg": [75, 0, 130],
+    #     "muted_text": [156, 163, 175],
+    #     "card_bg": [28, 28, 30]
+    #   }
+    # }
+    config = models.JSONField(default=dict)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['sort_order', 'name']

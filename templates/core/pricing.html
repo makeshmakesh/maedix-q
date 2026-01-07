@@ -227,6 +227,20 @@
                         {% endfor %}
                     </tr>
 
+                    <!-- Premium Video Templates -->
+                    <tr>
+                        <td class="py-3">Premium video templates</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'premium_video_templates' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
                     <!-- Bulk Generation -->
                     <tr>
                         <td class="py-3">Bulk video generation & auto-post</td>
@@ -257,19 +271,6 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Certificates -->
-                    <tr>
-                        <td class="py-3">Completion certificates</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'certificates' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
                 </tbody>
             </table>
         </div>

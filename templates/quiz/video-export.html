@@ -75,6 +75,19 @@
                     </div>
                     {% endif %}
 
+                    <!-- Bulk Export Option (only for users with permission) -->
+                    {% if can_bulk_generate %}
+                    <div class="card mb-4 border-primary">
+                        <div class="card-body text-center">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-lightning-charge me-2"></i>Bulk Generate & Post</h6>
+                            <p class="text-muted small mb-3">Generate videos for multiple questions and automatically post to Instagram and YouTube</p>
+                            <a href="{% url 'quiz_bulk_video_export' quiz.slug %}" class="btn btn-primary">
+                                <i class="bi bi-collection-play me-2"></i>Auto Generate & Post Multiple
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Video Preview Info -->
                     <div class="alert alert-info" id="videoInfo">
                         <h6 class="fw-bold mb-2"><i class="bi bi-info-circle"></i> Video Details</h6>

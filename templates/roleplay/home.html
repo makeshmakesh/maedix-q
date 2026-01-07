@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Voice Roleplay{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Voice Roleplay</h1>
+            <p class="text-muted mb-0">Practice conversations with AI-powered bots</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-coin text-warning me-2" style="font-size: 1.5rem;"></i>
+                <span class="fw-semibold">{{ credits }} credits</span>
+            </div>
+            <a href="{% url 'roleplay:purchase_credits' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Buy Credits
+            </a>
+        </div>
+    </div>
+
+    <!-- Bots Grid -->
+    <div class="row g-4 mb-5">
+        {% for bot in bots %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        {% if bot.avatar_url %}
+                        <img src="{{ bot.avatar_url }}" alt="{{ bot.name }}" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-robot text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="card-title mb-1">{{ bot.name }}</h5>
+                            <span class="badge bg-secondary">{{ bot.get_category_display }}</span>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">{{ bot.description|truncatewords:25 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            <i class="bi bi-coin text-warning me-1"></i>
+                            {{ bot.required_credits }} credits/min
+                        </span>
+                        <a href="{% url 'roleplay:start' bot.id %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-play-fill me-1"></i> Start
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-robot text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted">No bots available yet</h5>
+                    <p class="text-muted mb-0">Check back soon for exciting roleplay characters!</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Sessions -->
+    {% if recent_sessions %}
+    <h4 class="mb-3">Recent Sessions</h4>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Bot</th>
+                        <th>Duration</th>
+                        <th>Credits Used</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in recent_sessions %}
+                    <tr>
+                        <td>{{ session.bot.name }}</td>
+                        <td>{{ session.duration_seconds|floatformat:0 }}s</td>
+                        <td>{{ session.credits_used }}</td>
+                        <td>
+                            {% if session.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif session.status == 'in_progress' %}
+                            <span class="badge bg-warning">In Progress</span>
+                            {% else %}
+                            <span class="badge bg-danger">Error</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ session.started_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -47,11 +47,29 @@ class UserProfile(models.Model):
     linkedin_url = models.URLField(blank=True)
     twitter_handle = models.CharField(max_length=15, blank=True)
     skills = models.JSONField(default=list)  # List of skill tags
+    credits = models.IntegerField(default=0)  # Roleplay credits balance
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Profile: {self.user.email}"
+
+    def has_credits(self, required=10):
+        """Check if user has enough credits"""
+        return self.credits >= required
+
+    def deduct_credits(self, amount=10):
+        """Deduct credits from user balance"""
+        if self.credits >= amount:
+            self.credits -= amount
+            self.save(update_fields=['credits'])
+            return True
+        return False
+
+    def add_credits(self, amount):
+        """Add credits to user balance"""
+        self.credits += amount
+        self.save(update_fields=['credits'])
 
 
 class UserStats(models.Model):

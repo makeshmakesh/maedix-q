@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Buy Credits - Voice Roleplay{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <h1 class="fw-bold">Buy Credits</h1>
+                    <p class="text-muted">Credits are used for voice roleplay sessions</p>
+                    <div class="d-inline-flex align-items-center bg-primary-soft rounded-pill px-4 py-2">
+                        <i class="bi bi-coin text-warning me-2" style="font-size: 1.5rem;"></i>
+                        <span class="fw-semibold">Current Balance: {{ credits }} credits</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Credit Packages -->
+                    <div class="col-md-7">
+                        <h5 class="fw-bold mb-3">Choose a Package</h5>
+
+                        {% for package in packages %}
+                        <div class="card p-4 mb-3 package-card" data-package-id="{{ package.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">{{ package.name }}</h5>
+                                    <p class="text-muted mb-2">{{ package.description }}</p>
+                                    <span class="badge bg-primary-soft text-primary">
+                                        <i class="bi bi-coin me-1"></i>{{ package.credits }} credits
+                                    </span>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fs-3 fw-bold text-primary">&#8377;{{ package.price_inr }}</div>
+                                    <button class="btn btn-primary mt-2 buy-btn"
+                                            data-package-id="{{ package.id }}"
+                                            data-package-name="{{ package.name }}"
+                                            data-price="{{ package.price_inr }}"
+                                            data-credits="{{ package.credits }}">
+                                        <i class="bi bi-cart-plus me-1"></i> Buy Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="card p-4 bg-light">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-info-circle text-primary me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">How credits work</h6>
+                                    <ul class="text-muted small mb-0">
+                                        <li>10 credits are deducted per minute of roleplay</li>
+                                        <li>Credits never expire</li>
+                                        <li>Unused time is not charged</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="col-md-5">
+                        <h5 class="fw-bold mb-3">Recent Purchases</h5>
+
+                        {% if transactions %}
+                        <div class="card">
+                            <div class="list-group list-group-flush">
+                                {% for transaction in transactions %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-medium">{{ transaction.credits }} credits</div>
+                                        <small class="text-muted">{{ transaction.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <span class="badge bg-success">&#8377;{{ transaction.amount }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="card p-4 text-center">
+                            <i class="bi bi-receipt text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">No purchases yet</p>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            <a href="{% url 'roleplay:home' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Roleplay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+            <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
+            <p class="mb-0">Processing payment...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buyButtons = document.querySelectorAll('.buy-btn');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+
+    buyButtons.forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const packageId = this.dataset.packageId;
+            const packageName = this.dataset.packageName;
+            const price = this.dataset.price;
+            const credits = this.dataset.credits;
+
+            try {
+                // Get order from backend
+                const formData = new FormData();
+                formData.append('package_id', packageId);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+                const response = await fetch('{% url "roleplay:credit_checkout" %}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                // Open Razorpay
+                const options = {
+                    "key": data.key_id,
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "MaedixQ",
+                    "description": `${credits} Roleplay Credits`,
+                    "order_id": data.order_id,
+                    "handler": function(response) {
+                        loadingModal.show();
+
+                        // Submit to backend
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{% url "roleplay:credit_success" %}';
+
+                        const inputs = {
+                            'razorpay_payment_id': response.razorpay_payment_id,
+                            'razorpay_order_id': response.razorpay_order_id,
+                            'razorpay_signature': response.razorpay_signature,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        };
+
+                        Object.keys(inputs).forEach(key => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = key;
+                            input.value = inputs[key];
+                            form.appendChild(input);
+                        });
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    },
+                    "prefill": {
+                        "name": "{{ user.get_full_name|default:user.username }}",
+                        "email": "{{ user.email }}"
+                    },
+                    "theme": {
+                        "color": "#6366f1"
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+
+                rzp.on('payment.failed', function(response) {
+                    alert('Payment Failed: ' + response.error.description);
+
+                    fetch('{% url "roleplay:credit_failed" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            error_code: response.error.code,
+                            error_description: response.error.description,
+                            order_id: response.error.metadata.order_id
+                        })
+                    });
+                });
+
+                rzp.open();
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

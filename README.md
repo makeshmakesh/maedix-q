@@ -412,3 +412,8 @@ maedix-q/
 ## License
 
 Private - All rights reserved
+
+
+sudo systemctl daemon-reload
+sudo systemctl restart maedix-q
+sudo systemctl restart nginx

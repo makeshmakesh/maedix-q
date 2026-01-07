@@ -24,6 +24,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.maedix.com',
 ]
 
+# Trust X-Forwarded-Proto header from nginx (for HTTPS detection behind proxy)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 INSTALLED_APPS = [

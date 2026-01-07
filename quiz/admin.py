@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard
-
-
+from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, VideoTemplate
+@admin.register(VideoTemplate)
+class VideoTemplateAdmin(admin.ModelAdmin):
+    pass
 class OptionInline(admin.TabularInline):
     model = Option
     extra = 4

@@ -190,6 +190,48 @@
                                 <small class="text-muted"><i class="bi bi-lock me-1"></i>Upgrade your plan to use a custom handle name</small>
                                 {% endif %}
                             </div>
+
+                            {% if templates %}
+                            <hr class="my-3">
+
+                            <!-- Video Template Selection -->
+                            <div class="mb-2">
+                                <label class="form-label">
+                                    <strong><i class="bi bi-palette me-1"></i>Video Template</strong>
+                                    <br>
+                                    <small class="text-muted">Choose a color theme for your video</small>
+                                </label>
+                                <input type="hidden" name="template_id" id="templateId" value="{{ default_template_id }}">
+                                <div class="row g-2 mt-2">
+                                    {% for template in templates %}
+                                    <div class="col-6 col-md-4">
+                                        <div class="template-card {% if template.is_default %}selected{% endif %} {% if not template.can_use %}locked{% endif %}"
+                                             data-template-id="{{ template.id }}"
+                                             data-can-use="{{ template.can_use|yesno:'true,false' }}"
+                                             role="button"
+                                             tabindex="0">
+                                            <div class="template-preview template-{{ template.slug }}">
+                                                {% if not template.can_use %}
+                                                <div class="template-lock">
+                                                    <i class="bi bi-lock-fill"></i>
+                                                </div>
+                                                {% endif %}
+                                                {% if template.is_default %}
+                                                <div class="template-badge">Free</div>
+                                                {% elif template.is_premium %}
+                                                <div class="template-badge pro">Pro</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="template-name">{{ template.name }}</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted mt-2 d-block">
+                                    <i class="bi bi-lock me-1"></i> = Requires Pro subscription
+                                </small>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -591,6 +633,138 @@ document.addEventListener('DOMContentLoaded', function() {
         videoOptions.classList.remove('d-none');
         timeEstimate.classList.remove('d-none');
     }
+
+    // Template selection
+    const templateCards = document.querySelectorAll('.template-card');
+    const templateIdInput = document.getElementById('templateId');
+
+    templateCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            const canUse = this.dataset.canUse === 'true';
+            if (!canUse) {
+                // Show upgrade message
+                alert('This template requires a Pro subscription. Please upgrade your plan to use it.');
+                return;
+            }
+
+            // Remove selected class from all cards
+            templateCards.forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            // Update hidden input
+            templateIdInput.value = this.dataset.templateId;
+        });
+
+        // Keyboard accessibility
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
 });
 </script>
+
+<style>
+/* Template card styles */
+.template-card {
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.template-card:hover {
+    border-color: #6c757d;
+    transform: translateY(-2px);
+}
+
+.template-card.selected {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+.template-card.locked {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.template-card.locked:hover {
+    transform: none;
+}
+
+.template-preview {
+    height: 60px;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.template-lock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.template-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #198754;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.template-badge.pro {
+    background: #6f42c1;
+}
+
+.template-name {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 6px;
+    color: #333;
+}
+
+/* Template color previews */
+.template-dark-purple {
+    background: linear-gradient(135deg, #121212 0%, #1c1c1e 50%, #8a2be2 100%);
+}
+
+.template-clean-light {
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 50%, #3b82f6 100%);
+    border: 1px solid #e0e0e0;
+}
+
+.template-neon-glow {
+    background: linear-gradient(135deg, #0a0a14 0%, #141428 50%, #00ffff 100%);
+}
+
+.template-sunset {
+    background: linear-gradient(135deg, #1e141e 0%, #321e28 50%, #ff6432 100%);
+}
+
+.template-ocean-blue {
+    background: linear-gradient(135deg, #0a192f 0%, #0f233c 50%, #00c8c8 100%);
+}
+</style>
 {% endblock %}

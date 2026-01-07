@@ -200,7 +200,7 @@ class DashboardView(LoginRequiredMixin, View):
         # Get recent generated videos
         recent_videos = GeneratedVideo.objects.filter(
             user=request.user
-        ).select_related('quiz')[:5]
+        ).select_related('quiz')[:15]
 
         # Check Instagram connection status
         instagram_connected = False

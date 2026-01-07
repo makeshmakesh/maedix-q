@@ -30,6 +30,7 @@ INSTALLED_APPS = [
 
     # Third party
     'rest_framework',
+    'channels',
 
     # Local apps
     'core',
@@ -37,10 +38,10 @@ INSTALLED_APPS = [
     'quiz',
     'instagram',
     'youtube',
+    'roleplay',
     # 'courses',       # Phase 2
     # 'assessments',   # Phase 2
     # 'hr',            # Phase 3
-    # 'voice',         # Phase 4
 ]
 
 MIDDLEWARE = [
@@ -72,6 +73,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'maedix_q.wsgi.application'
+ASGI_APPLICATION = 'maedix_q.asgi.application'
+
+# Channel Layers
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
 
 
 # Database

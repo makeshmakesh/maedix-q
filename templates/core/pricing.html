@@ -5,68 +5,102 @@
 {% block content %}
 <section class="py-5">
     <div class="container">
+        <!-- Header -->
         <div class="text-center mb-5">
-            <h1 class="fw-bold">Simple, Transparent Pricing</h1>
-            <p class="text-muted">Choose the plan that works for you</p>
+            <h1 class="fw-bold mb-2">Simple Pricing</h1>
+            <p class="text-muted">All limits reset monthly. No hidden fees.</p>
         </div>
 
         {% if plans %}
+        <!-- Pricing Cards -->
         <div class="row g-4 justify-content-center">
             {% for plan in plans %}
-            <div class="col-md-4">
-                <div class="card h-100 p-4 {% if current_plan and current_plan.id == plan.id %}border-success border-2{% elif plan.is_popular %}border-primary{% endif %}">
-                    <div class="text-center mb-4">
-                        {% if current_plan and current_plan.id == plan.id %}
-                        <span class="badge bg-success mb-2"><i class="bi bi-check-circle me-1"></i>Current Plan</span>
-                        {% elif plan.is_popular %}
-                        <span class="badge bg-primary mb-2">Most Popular</span>
-                        {% endif %}
-                        <h4 class="{% if current_plan and current_plan.id == plan.id %}text-success{% elif plan.is_popular %}text-primary{% else %}text-muted{% endif %}">{{ plan.name }}</h4>
-                        {% if plan.plan_type == 'enterprise' %}
-                        <h1 class="fw-bold">Custom</h1>
-                        {% else %}
-                        <h1 class="fw-bold">
-                            {% if plan.price_monthly > 0 %}
-                            ₹{{ plan.price_monthly|floatformat:0 }}<small class="fs-6 text-muted">/month</small>
-                            {% else %}
-                            ₹0<small class="fs-6 text-muted">/month</small>
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 {% if plan.is_popular %}border-primary border-2 shadow{% elif current_plan and current_plan.id == plan.id %}border-success border-2{% endif %}">
+
+                    {% if plan.is_popular and not current_plan or current_plan and current_plan.id != plan.id and plan.is_popular %}
+                    <div class="card-header bg-primary text-white text-center py-2 border-0">
+                        <small class="fw-semibold">MOST POPULAR</small>
+                    </div>
+                    {% endif %}
+
+                    {% if current_plan and current_plan.id == plan.id %}
+                    <div class="card-header bg-success text-white text-center py-2 border-0">
+                        <small class="fw-semibold"><i class="bi bi-check-circle me-1"></i>CURRENT PLAN</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-body p-4">
+                        <!-- Plan Name & Price -->
+                        <div class="text-center mb-4">
+                            <h4 class="fw-bold">{{ plan.name }}</h4>
+                            {% if plan.description %}
+                            <p class="text-muted small">{{ plan.description }}</p>
                             {% endif %}
-                        </h1>
-                        {% endif %}
-                        {% if plan.description %}
-                        <p class="text-muted small mt-2">{{ plan.description }}</p>
+
+                            <div class="my-3">
+                                {% if plan.plan_type == 'enterprise' %}
+                                <span class="h2 fw-bold">Custom</span>
+                                {% elif plan.price_monthly > 0 %}
+                                <span class="h2 fw-bold">₹{{ plan.price_monthly|floatformat:0 }}</span>
+                                <span class="text-muted">/month</span>
+                                {% else %}
+                                <span class="h2 fw-bold">Free</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Features -->
+                        <ul class="list-unstyled mb-4">
+                            {% for feature in plan.features %}
+                            <li class="py-2 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small">{{ feature.description }}</span>
+                                    {% if feature.limit %}
+                                    <span class="badge bg-dark">{{ feature.limit }}/mo</span>
+                                    {% else %}
+                                    <i class="bi bi-check-lg text-success"></i>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <!-- CTA Button -->
+                        {% if current_plan and current_plan.id == plan.id %}
+                        <a href="{% url 'subscription' %}" class="btn btn-success w-100">
+                            Manage Subscription
+                        </a>
+                        {% elif plan.plan_type == 'free' %}
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-outline-secondary w-100" disabled>Free Plan</button>
+                            {% else %}
+                            <a href="{% url 'signup' %}" class="btn btn-outline-primary w-100">Get Started</a>
+                            {% endif %}
+                        {% elif plan.plan_type == 'enterprise' %}
+                        <a href="{% url 'contact' %}" class="btn btn-outline-primary w-100">Contact Sales</a>
+                        {% else %}
+                        <a href="{% url 'checkout' %}?plan={{ plan.slug }}" class="btn {% if plan.is_popular %}btn-primary{% else %}btn-dark{% endif %} w-100">
+                            Upgrade Now
+                        </a>
                         {% endif %}
                     </div>
-                    <ul class="list-unstyled mb-4">
-                        {% for feature in plan.features %}
-                        <li class="mb-2">
-                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                            {{ feature.description }}
-                            {% if feature.limit %}
-                            <span class="badge bg-light text-dark ms-1">{{ feature.limit }}</span>
-                            {% endif %}
-                        </li>
-                        {% empty %}
-                        <li class="mb-2 text-muted">No features listed</li>
-                        {% endfor %}
-                    </ul>
-                    {% if current_plan and current_plan.id == plan.id %}
-                    <a href="{% url 'subscription' %}" class="btn btn-outline-success w-100"><i class="bi bi-check-circle me-1"></i>Current Plan</a>
-                    {% elif plan.plan_type == 'free' %}
-                        {% if user.is_authenticated %}
-                        <button class="btn btn-outline-secondary w-100" disabled>Free Plan</button>
-                        {% else %}
-                        <a href="{% url 'signup' %}" class="btn btn-outline-primary w-100">Get Started</a>
-                        {% endif %}
-                    {% elif plan.plan_type == 'enterprise' %}
-                    <a href="{% url 'contact' %}" class="btn btn-outline-primary w-100">Contact Sales</a>
-                    {% else %}
-                    <a href="{% url 'checkout' %}?plan={{ plan.slug }}" class="btn btn-primary w-100">Upgrade to {{ plan.name }}</a>
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
+
+        <!-- Trust badges -->
+        <div class="text-center mt-4 pt-3">
+            <small class="text-muted">
+                <i class="bi bi-shield-check me-1"></i> Secure payments
+                <span class="mx-2">|</span>
+                <i class="bi bi-arrow-repeat me-1"></i> Cancel anytime
+                <span class="mx-2">|</span>
+                <i class="bi bi-calendar-check me-1"></i> Limits reset monthly
+            </small>
+        </div>
+
         {% else %}
         <div class="text-center py-5">
             <i class="bi bi-tag text-muted" style="font-size: 3rem;"></i>
@@ -76,4 +110,170 @@
         {% endif %}
     </div>
 </section>
+
+<!-- Feature Comparison -->
+{% if plans and plans|length > 1 %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Compare Plans</h3>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table bg-white">
+                <thead>
+                    <tr>
+                        <th class="py-3 border-0" style="min-width: 200px;">Feature</th>
+                        {% for plan in plans %}
+                        <th class="py-3 border-0 text-center" style="min-width: 120px;">
+                            <strong>{{ plan.name }}</strong>
+                            {% if current_plan and current_plan.id == plan.id %}
+                            <br><span class="badge bg-success">Current</span>
+                            {% endif %}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Price Row -->
+                    <tr class="table-light">
+                        <td class="py-3 fw-semibold">Monthly Price</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% if plan.plan_type == 'enterprise' %}
+                            Custom
+                            {% elif plan.price_monthly > 0 %}
+                            <strong>₹{{ plan.price_monthly|floatformat:0 }}</strong>
+                            {% else %}
+                            Free
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Quiz Attempts -->
+                    <tr>
+                        <td class="py-3">Quiz attempts per month</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'quiz_attempt' %}
+                                    <strong>{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Video Generation -->
+                    <tr>
+                        <td class="py-3">Video generation per month</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'video_gen' %}
+                                    <strong>{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Quiz Creation -->
+                    <tr>
+                        <td class="py-3">Create custom quizzes</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'quiz_create' %}
+                                    <strong>{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Custom Handle -->
+                    <tr>
+                        <td class="py-3">Custom handle in videos</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% with has_feature=False %}
+                            {% for f in plan.features %}
+                                {% if f.code == 'custom_handle_name_in_video_export' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% empty %}
+                                <i class="bi bi-x text-muted"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Custom Intro/Outro -->
+                    <tr>
+                        <td class="py-3">Custom intro & CTA slides</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% with has_feature=False %}
+                            {% for f in plan.features %}
+                                {% if f.code == 'custom_intro_and_outro' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Bulk Generation -->
+                    <tr>
+                        <td class="py-3">Bulk video generation & auto-post</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% with has_feature=False %}
+                            {% for f in plan.features %}
+                                {% if f.code == 'can_generate_and_post_multiple_auto' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Analytics -->
+                    <tr>
+                        <td class="py-3">Advanced analytics</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'analytics' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Certificates -->
+                    <tr>
+                        <td class="py-3">Completion certificates</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'certificates' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
 {% endblock %}

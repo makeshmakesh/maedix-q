@@ -1718,6 +1718,9 @@ def _process_bulk_video_job(job_id):
 
                 question = Question.objects.prefetch_related('options').get(id=question_id)
 
+                # Deduct video_gen credit for each video
+                use_feature(user, 'video_gen')
+
                 # Build question data for video generation (single question)
                 question_data = [{
                     'text': question.text,
@@ -1919,6 +1922,20 @@ class BulkVideoExportView(LoginRequiredMixin, View):
 
         if not question_ids:
             return JsonResponse({'error': 'No questions selected'}, status=400)
+
+        # Check if user has enough video_gen credits for all selected questions
+        num_questions = len(question_ids)
+        can_access, message, _ = check_feature_access(request.user, 'video_gen')
+        if not can_access:
+            return JsonResponse({'error': message}, status=403)
+
+        # Check remaining credits
+        if subscription:
+            remaining = subscription.get_remaining('video_gen')
+            if remaining is not None and remaining < num_questions:
+                return JsonResponse({
+                    'error': f'Not enough video credits. You have {remaining} remaining but need {num_questions}.'
+                }, status=403)
 
         # Build questions config
         questions_config = []

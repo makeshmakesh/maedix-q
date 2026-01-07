@@ -54,7 +54,12 @@ def get_valid_credentials(youtube_account):
             credentials.refresh(Request())
             # Update stored tokens
             youtube_account.access_token = credentials.token
-            youtube_account.token_expires_at = credentials.expiry
+            # Make expiry timezone-aware if it's naive (Google API returns naive datetime)
+            expiry = credentials.expiry
+            if expiry and timezone.is_naive(expiry):
+                import datetime
+                expiry = expiry.replace(tzinfo=datetime.timezone.utc)
+            youtube_account.token_expires_at = expiry
             youtube_account.save(update_fields=['access_token', 'token_expires_at', 'updated_at'])
         except Exception as e:
             raise Exception(f"Failed to refresh token: {str(e)}")

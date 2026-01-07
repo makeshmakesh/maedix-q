@@ -3,6 +3,9 @@ import json
 import tempfile
 import uuid
 import threading
+import shutil
+import time
+import logging
 from threading import Semaphore
 from django.utils.text import slugify
 from django.shortcuts import render, redirect, get_object_or_404
@@ -13,10 +16,10 @@ from django.utils import timezone
 from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db.models import Count, Avg
 from django.core.cache import cache
-from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, GeneratedVideo
+from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, GeneratedVideo, BulkVideoJob
 from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet
 from core.models import Configuration
-from core.subscription_utils import check_feature_access, use_feature, get_or_create_free_subscription
+from core.subscription_utils import check_feature_access, use_feature, get_or_create_free_subscription, get_user_subscription
 
 # Limit concurrent video generations (adjust based on server capacity)
 VIDEO_GENERATION_SEMAPHORE = Semaphore(1)  # Max 2 concurrent video generations
@@ -886,6 +889,13 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             quiz=quiz
         )[:5]
 
+        # Check if user can bulk generate
+        can_bulk_generate = False
+        if subscription and subscription.plan.has_feature('can_generate_and_post_multiple_auto'):
+            can_bulk_generate = True
+        elif request.user.is_staff:
+            can_bulk_generate = True
+
         return render(request, self.template_name, {
             'quiz': quiz,
             'questions': questions,
@@ -897,6 +907,7 @@ class QuizVideoExportView(LoginRequiredMixin, View):
             'instagram_connected': instagram_connected,
             'youtube_connected': youtube_connected,
             'recent_videos': recent_videos,
+            'can_bulk_generate': can_bulk_generate,
         })
 
     def post(self, request, slug):
@@ -1566,3 +1577,403 @@ class StaffQuizImportView(StaffRequiredMixin, View):
                 'json_data': json_data,
                 'selected_category': category_id,
             })
+
+
+# =============================================================================
+# Bulk Video Export Views
+# =============================================================================
+
+def _post_to_instagram_sync(user, video_url, quiz_title, question_text):
+    """Synchronously post video to Instagram"""
+    import requests
+
+    ig_account = user.instagram_account
+    access_token = ig_account.access_token
+    ig_user_id = ig_account.instagram_user_id
+
+    caption = f"{quiz_title}\n\n{question_text[:100]}...\n\n#quiz #education #maedixq #shorts"
+
+    # Step 1: Create media container for Reel
+    container_response = requests.post(
+        f"https://graph.instagram.com/v21.0/{ig_user_id}/media",
+        data={
+            "media_type": "REELS",
+            "video_url": video_url,
+            "caption": caption,
+            "access_token": access_token,
+        },
+        timeout=30,
+    )
+    container_data = container_response.json()
+
+    if "id" not in container_data:
+        raise Exception(container_data.get("error", {}).get("message", "Failed to create media"))
+
+    container_id = container_data["id"]
+
+    # Step 2: Wait for video processing to complete
+    for _ in range(30):
+        status_response = requests.get(
+            f"https://graph.instagram.com/v21.0/{container_id}",
+            params={"fields": "status_code", "access_token": access_token},
+            timeout=10,
+        )
+        status_code = status_response.json().get("status_code")
+        if status_code == "FINISHED":
+            break
+        elif status_code == "ERROR":
+            raise Exception("Video processing failed")
+        time.sleep(10)
+    else:
+        raise Exception("Video processing timeout")
+
+    # Step 3: Publish
+    publish_response = requests.post(
+        f"https://graph.instagram.com/v21.0/{ig_user_id}/media_publish",
+        data={"creation_id": container_id, "access_token": access_token},
+        timeout=60,
+    )
+    if "id" not in publish_response.json():
+        raise Exception(publish_response.json().get("error", {}).get("message", "Failed to publish"))
+
+
+def _post_to_youtube_sync(user, video_url, quiz_title, question_text):
+    """Synchronously post video to YouTube"""
+    import requests
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+    from youtube.views import get_valid_credentials
+
+    youtube_account = user.youtube_account
+    credentials = get_valid_credentials(youtube_account)
+    youtube = build('youtube', 'v3', credentials=credentials)
+
+    # Download video to temp file
+    with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_file:
+        response = requests.get(video_url, stream=True)
+        response.raise_for_status()
+        for chunk in response.iter_content(chunk_size=8192):
+            tmp_file.write(chunk)
+        tmp_path = tmp_file.name
+
+    try:
+        body = {
+            'snippet': {
+                'title': f"{quiz_title} - Quiz"[:100],
+                'description': f"{question_text[:200]}...\n\n#Shorts #quiz #education",
+                'tags': ['quiz', 'education', 'shorts'],
+                'categoryId': '27',  # Education
+            },
+            'status': {
+                'privacyStatus': 'public',
+                'selfDeclaredMadeForKids': False,
+            },
+        }
+
+        media = MediaFileUpload(tmp_path, mimetype='video/mp4', resumable=True)
+        insert_request = youtube.videos().insert(part='snippet,status', body=body, media_body=media)
+
+        response = None
+        while response is None:
+            _, response = insert_request.next_chunk()
+    finally:
+        os.unlink(tmp_path)
+
+
+def _process_bulk_video_job(job_id):
+    """Background task to process bulk video generation and posting"""
+    from django.db import connection
+    from .video_generator import generate_quiz_video
+    from core.s3_utils import upload_file_to_s3
+
+    # Close any existing database connection (important for threads)
+    connection.close()
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        job = BulkVideoJob.objects.select_related('user', 'quiz').get(id=job_id)
+        job.status = 'processing'
+        job.save()
+
+        quiz = job.quiz
+        user = job.user
+        results = []
+
+        # Get audio settings from configuration
+        audio_url = Configuration.get_value('video_background_music_url', '')
+        audio_volume = float(Configuration.get_value('video_background_music_volume', '0.5'))
+        intro_audio_url = Configuration.get_value('video_intro_music_url', '')
+        intro_audio_volume = float(Configuration.get_value('video_intro_music_volume', '0.5'))
+
+        for config in job.questions_config:
+            question_id = config['question_id']
+
+            try:
+                # Update current question
+                job.current_question_id = question_id
+                job.current_step = 'generating'
+                job.save()
+
+                question = Question.objects.prefetch_related('options').get(id=question_id)
+
+                # Build question data for video generation (single question)
+                question_data = [{
+                    'text': question.text,
+                    'code_snippet': question.code_snippet or '',
+                    'code_language': question.code_language or 'python',
+                    'options': [
+                        {'text': opt.text, 'is_correct': opt.is_correct}
+                        for opt in question.options.all()
+                    ]
+                }]
+
+                # Generate video synchronously
+                temp_dir = tempfile.mkdtemp()
+                output_path = os.path.join(temp_dir, f'{quiz.slug}_q{question_id}.mp4')
+
+                # Acquire semaphore for video generation
+                VIDEO_GENERATION_SEMAPHORE.acquire(blocking=True)
+                try:
+                    generate_quiz_video(
+                        question_data,
+                        output_path,
+                        progress_callback=lambda p, m: None,  # Silent progress
+                        show_answer=config.get('reveal_answer', True),
+                        handle_name="@maedix-q",
+                        audio_url=audio_url,
+                        audio_volume=audio_volume,
+                        intro_text=config.get('intro_text') or None,
+                        intro_audio_url=intro_audio_url,
+                        intro_audio_volume=intro_audio_volume,
+                        pre_outro_text=config.get('outro_text') or None
+                    )
+                finally:
+                    VIDEO_GENERATION_SEMAPHORE.release()
+
+                # Upload to S3
+                s3_key = f"videos/bulk/{job.id}/{quiz.slug}_q{question_id}.mp4"
+                s3_url = upload_file_to_s3(output_path, s3_key, content_type='video/mp4')
+
+                # Clean up temp dir
+                shutil.rmtree(temp_dir, ignore_errors=True)
+
+                # Save to GeneratedVideo
+                GeneratedVideo.objects.create(
+                    user=user,
+                    quiz=quiz,
+                    s3_url=s3_url,
+                    s3_key=s3_key,
+                    filename=f'{quiz.slug}_q{question_id}.mp4',
+                    questions_count=1
+                )
+
+                result = {
+                    'question_id': question_id,
+                    'video_url': s3_url,
+                    'instagram_posted': False,
+                    'youtube_posted': False,
+                    'error': None
+                }
+
+                # Post to Instagram if enabled
+                if job.post_to_instagram:
+                    job.current_step = 'posting_instagram'
+                    job.save()
+
+                    try:
+                        _post_to_instagram_sync(user, s3_url, quiz.title, question.text)
+                        result['instagram_posted'] = True
+                    except Exception as ig_error:
+                        logger.error(f"Instagram posting failed: {ig_error}")
+                        result['error'] = f"Instagram: {str(ig_error)}"
+
+                # Post to YouTube if enabled
+                if job.post_to_youtube:
+                    job.current_step = 'posting_youtube'
+                    job.save()
+
+                    try:
+                        _post_to_youtube_sync(user, s3_url, quiz.title, question.text)
+                        result['youtube_posted'] = True
+                    except Exception as yt_error:
+                        logger.error(f"YouTube posting failed: {yt_error}")
+                        error_msg = f"YouTube: {str(yt_error)}"
+                        result['error'] = f"{result.get('error') or ''} {error_msg}".strip()
+
+                results.append(result)
+                job.completed_count += 1
+                job.results = results
+                job.save()
+
+                # Small delay between posts to avoid rate limiting
+                time.sleep(5)
+
+            except Exception as e:
+                logger.error(f"Error processing question {question_id}: {e}")
+                results.append({
+                    'question_id': question_id,
+                    'video_url': None,
+                    'instagram_posted': False,
+                    'youtube_posted': False,
+                    'error': str(e)
+                })
+                job.results = results
+                job.save()
+
+        # Determine final status
+        failed_count = sum(1 for r in results if r.get('error'))
+        if failed_count == 0:
+            job.status = 'completed'
+        elif failed_count == len(results):
+            job.status = 'failed'
+        else:
+            job.status = 'partially_completed'
+
+        job.current_question_id = None
+        job.current_step = ''
+        job.save()
+
+    except Exception as e:
+        logger.error(f"Bulk video job {job_id} failed: {e}")
+        try:
+            job = BulkVideoJob.objects.get(id=job_id)
+            job.status = 'failed'
+            job.error_message = str(e)
+            job.save()
+        except Exception:
+            pass
+
+
+class BulkVideoExportView(LoginRequiredMixin, View):
+    """Configure and start bulk video generation and posting"""
+    template_name = 'quiz/bulk-video-export.html'
+
+    def get(self, request, slug):
+        quiz = get_object_or_404(Quiz, slug=slug)
+        if not quiz.is_published and quiz.created_by != request.user:
+            raise Http404("Quiz not found")
+
+        questions = quiz.questions.prefetch_related('options').order_by('order')
+
+        if questions.count() < 1:
+            messages.error(request, 'This quiz has no questions.')
+            return redirect('quiz_detail', slug=slug)
+
+        # Check permission
+        get_or_create_free_subscription(request.user)
+        subscription = get_user_subscription(request.user)
+
+        can_bulk = False
+        if subscription and subscription.plan.has_feature('can_generate_and_post_multiple_auto'):
+            can_bulk = True
+        elif request.user.is_staff:
+            can_bulk = True
+
+        if not can_bulk:
+            messages.error(request, 'This feature requires a subscription with bulk generation enabled.')
+            return redirect('quiz_video_export', slug=slug)
+
+        # Check platform connections
+        instagram_connected = hasattr(request.user, 'instagram_account') and request.user.instagram_account.is_connected
+        youtube_connected = hasattr(request.user, 'youtube_account') and request.user.youtube_account.is_connected
+
+        # Get pending/processing jobs for this quiz
+        active_jobs = BulkVideoJob.objects.filter(
+            user=request.user,
+            quiz=quiz,
+            status__in=['pending', 'processing']
+        )
+
+        return render(request, self.template_name, {
+            'quiz': quiz,
+            'questions': questions,
+            'instagram_connected': instagram_connected,
+            'youtube_connected': youtube_connected,
+            'active_jobs': active_jobs,
+        })
+
+    def post(self, request, slug):
+        quiz = get_object_or_404(Quiz, slug=slug)
+        if not quiz.is_published and quiz.created_by != request.user:
+            raise Http404("Quiz not found")
+
+        # Verify permission
+        get_or_create_free_subscription(request.user)
+        subscription = get_user_subscription(request.user)
+
+        can_bulk = False
+        if subscription and subscription.plan.has_feature('can_generate_and_post_multiple_auto'):
+            can_bulk = True
+        elif request.user.is_staff:
+            can_bulk = True
+
+        if not can_bulk:
+            return JsonResponse({'error': 'Feature not available'}, status=403)
+
+        # Parse form data
+        question_ids = request.POST.getlist('question_ids')
+        post_to_instagram = request.POST.get('post_to_instagram') == 'on'
+        post_to_youtube = request.POST.get('post_to_youtube') == 'on'
+
+        if not question_ids:
+            return JsonResponse({'error': 'No questions selected'}, status=400)
+
+        # Build questions config
+        questions_config = []
+        for qid in question_ids:
+            questions_config.append({
+                'question_id': int(qid),
+                'reveal_answer': request.POST.get(f'reveal_answer_{qid}') == 'on',
+                'intro_text': request.POST.get(f'intro_text_{qid}', '').strip()[:100],
+                'outro_text': request.POST.get(f'outro_text_{qid}', '').strip()[:100],
+            })
+
+        # Validate platform connections if selected
+        if post_to_instagram:
+            if not hasattr(request.user, 'instagram_account') or not request.user.instagram_account.is_connected:
+                return JsonResponse({'error': 'Instagram not connected'}, status=400)
+
+        if post_to_youtube:
+            if not hasattr(request.user, 'youtube_account') or not request.user.youtube_account.is_connected:
+                return JsonResponse({'error': 'YouTube not connected'}, status=400)
+
+        # Create bulk job
+        job = BulkVideoJob.objects.create(
+            user=request.user,
+            quiz=quiz,
+            post_to_instagram=post_to_instagram,
+            post_to_youtube=post_to_youtube,
+            questions_config=questions_config,
+            total_questions=len(questions_config),
+            status='pending'
+        )
+
+        # Start background processing
+        thread = threading.Thread(
+            target=_process_bulk_video_job,
+            args=(job.id,)
+        )
+        thread.daemon = True
+        thread.start()
+
+        return JsonResponse({'job_id': job.id})
+
+
+class BulkVideoJobProgressView(LoginRequiredMixin, View):
+    """Get progress of bulk video job"""
+
+    def get(self, request, job_id):
+        job = get_object_or_404(BulkVideoJob, id=job_id, user=request.user)
+
+        return JsonResponse({
+            'status': job.status,
+            'progress_percent': job.progress_percent,
+            'total_questions': job.total_questions,
+            'completed_count': job.completed_count,
+            'current_question_id': job.current_question_id,
+            'current_step': job.current_step,
+            'results': job.results,
+            'error_message': job.error_message,
+        })

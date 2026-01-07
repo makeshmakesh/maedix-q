@@ -310,3 +310,65 @@ class Leaderboard(models.Model):
     class Meta:
         unique_together = ['user', 'category', 'period']
         ordering = ['rank']
+
+
+class BulkVideoJob(models.Model):
+    """Tracks bulk video generation and posting jobs"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('partially_completed', 'Partially Completed'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='bulk_video_jobs'
+    )
+    quiz = models.ForeignKey(
+        Quiz,
+        on_delete=models.CASCADE,
+        related_name='bulk_video_jobs'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Platform selection
+    post_to_instagram = models.BooleanField(default=False)
+    post_to_youtube = models.BooleanField(default=False)
+
+    # Per-question configuration stored as JSON
+    # Format: [{"question_id": 1, "reveal_answer": true, "intro_text": "...", "outro_text": "..."}, ...]
+    questions_config = models.JSONField(default=list)
+
+    # Progress tracking
+    total_questions = models.IntegerField(default=0)
+    completed_count = models.IntegerField(default=0)
+    current_question_id = models.IntegerField(null=True, blank=True)
+    current_step = models.CharField(max_length=50, blank=True)  # 'generating', 'posting_instagram', 'posting_youtube'
+
+    # Results stored as JSON
+    # Format: [{"question_id": 1, "video_url": "...", "instagram_posted": true, "youtube_posted": true, "error": null}, ...]
+    results = models.JSONField(default=list)
+
+    error_message = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Bulk Job {self.id} - {self.user.email} - {self.quiz.title}"
+
+    @property
+    def progress_percent(self):
+        if self.total_questions == 0:
+            return 0
+        # Each question has up to 3 steps: generate, ig post, yt post
+        steps_per_question = 1 + (1 if self.post_to_instagram else 0) + (1 if self.post_to_youtube else 0)
+        total_steps = self.total_questions * steps_per_question
+        completed_steps = self.completed_count * steps_per_question
+        return int((completed_steps / total_steps) * 100)
+
+    class Meta:
+        ordering = ['-created_at']

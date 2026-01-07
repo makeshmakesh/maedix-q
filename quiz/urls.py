@@ -13,6 +13,7 @@ urlpatterns = [
     path('video/progress/<str:task_id>/', views.VideoProgressView.as_view(), name='video_progress'),
     path('video/download/<str:task_id>/', views.VideoDownloadView.as_view(), name='video_download'),
     path('video/url/<str:task_id>/', views.VideoUrlView.as_view(), name='video_url'),
+    path('video/bulk/progress/<int:job_id>/', views.BulkVideoJobProgressView.as_view(), name='bulk_video_progress'),
 
     # User Quiz Management (must be before slug patterns)
     path('my-quizzes/', views.UserQuizListView.as_view(), name='user_quiz_list'),
@@ -59,6 +60,7 @@ urlpatterns = [
     # Quiz detail and related pages (slug patterns MUST be last)
     path('<slug:slug>/', views.QuizDetailView.as_view(), name='quiz_detail'),
     path('<slug:slug>/export-video/', views.QuizVideoExportView.as_view(), name='quiz_video_export'),
+    path('<slug:slug>/bulk-export/', views.BulkVideoExportView.as_view(), name='quiz_bulk_video_export'),
     path('<slug:slug>/start/', views.QuizStartView.as_view(), name='quiz_start'),
     path('<slug:slug>/question/<int:q_num>/', views.QuizQuestionView.as_view(), name='quiz_question'),
     path('<slug:slug>/submit/', views.QuizSubmitView.as_view(), name='quiz_submit'),

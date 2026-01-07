@@ -87,7 +87,11 @@ class QuizDetailView(View):
     template_name = 'quiz/quiz-detail.html'
 
     def get(self, request, slug):
-        quiz = get_object_or_404(Quiz, slug=slug, is_published=True)
+        # Allow published quizzes OR creator's own drafts
+        quiz = get_object_or_404(Quiz, slug=slug)
+        if not quiz.is_published and quiz.created_by != request.user:
+            raise Http404("Quiz not found")
+
         user_attempts = []
 
         if request.user.is_authenticated:

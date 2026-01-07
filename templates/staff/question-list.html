@@ -118,14 +118,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = document.getElementById('deleteQuestionModal');
     const deleteForm = document.getElementById('deleteQuestionForm');
     const deleteText = document.getElementById('deleteQuestionText');
-    const baseUrl = '{% url "staff_question_delete" quiz.id 0 %}'.replace('/0/', '/');
+    const baseUrl = '{% url "staff_question_delete" quiz.id 0 %}';
 
     document.querySelectorAll('.btn-delete-question').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const questionId = this.dataset.questionId;
             const questionText = this.dataset.questionText;
 
-            deleteForm.action = baseUrl + questionId + '/delete/';
+            deleteForm.action = baseUrl.replace('/0/delete/', '/' + questionId + '/delete/');
             deleteText.textContent = questionText;
 
             const modal = new bootstrap.Modal(deleteModal);

@@ -78,6 +78,21 @@ def get_or_create_free_subscription(user):
                     "limit": 15,
                     "description": "Create custom quizzes",
                 },
+                {
+                    "code": "topic_create",
+                    "limit": 10,
+                    "description": "Create learning topics",
+                },
+                {
+                    "code": "topics_view",
+                    "limit": 30,
+                    "description": "View learning topics",
+                },
+                {
+                    "code": "carousel_export",
+                    "limit": 10,
+                    "description": "Export carousel images",
+                },
                 {"code": "analytics", "description": "Advanced analytics"},
                 {"code": "certificates", "description": "Completion certificates"},
             ],

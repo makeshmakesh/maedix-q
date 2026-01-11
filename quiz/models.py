@@ -74,6 +74,10 @@ class Quiz(models.Model):
     thumbnail = models.ImageField(upload_to='quiz_thumbnails/', blank=True, null=True)
     is_published = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
+    is_mini_quiz = models.BooleanField(
+        default=False,
+        help_text='Mini-quiz for topics (2-3 questions max)'
+    )
 
     # Approval workflow
     status = models.CharField(
@@ -420,3 +424,212 @@ class VideoTemplate(models.Model):
 
     class Meta:
         ordering = ['sort_order', 'name']
+
+
+class Topic(models.Model):
+    """Short-form learning topic containing swipeable cards"""
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('published', 'Published'),
+    ]
+
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True, max_length=500)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name='topics'
+    )
+    thumbnail_url = models.URLField(max_length=500, blank=True)
+    thumbnail_s3_key = models.CharField(max_length=255, blank=True)
+
+    # Linked quiz for deeper learning (optional)
+    linked_quiz = models.ForeignKey(
+        Quiz,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='linked_topics',
+        help_text='Optional quiz for deeper learning on this topic'
+    )
+
+    # Mini-quiz (reuses Quiz model with 2-3 questions)
+    mini_quiz = models.ForeignKey(
+        Quiz,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='topic_mini_quiz',
+        help_text='Optional 2-3 question quiz after cards'
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='draft'
+    )
+    order = models.IntegerField(default=0)
+    is_featured = models.BooleanField(default=False)
+    estimated_time = models.IntegerField(default=2, help_text='Estimated reading time in minutes')
+
+    # Approval workflow
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_topics'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_topics'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    @property
+    def card_count(self):
+        return self.cards.count()
+
+    @property
+    def is_published(self):
+        return self.status == 'published'
+
+    @property
+    def has_mini_quiz(self):
+        return self.mini_quiz is not None
+
+    @property
+    def can_be_edited(self):
+        """Topic can be edited if it's not approved/published"""
+        return self.status in ['draft', 'rejected']
+
+    @property
+    def can_be_deleted(self):
+        """Topic can be deleted if it's not approved/published"""
+        return self.status in ['draft', 'pending', 'rejected']
+
+    class Meta:
+        ordering = ['category', 'order', 'title']
+
+
+class TopicCard(models.Model):
+    """Individual learning card within a topic"""
+    CARD_TYPE_CHOICES = [
+        ('text', 'Text Only'),
+        ('text_code', 'Text + Code'),
+        ('text_image', 'Text + Image'),
+    ]
+
+    topic = models.ForeignKey(
+        Topic,
+        on_delete=models.CASCADE,
+        related_name='cards'
+    )
+    card_type = models.CharField(
+        max_length=20,
+        choices=CARD_TYPE_CHOICES,
+        default='text'
+    )
+    title = models.CharField(max_length=100, blank=True)
+    content = models.TextField(
+        max_length=600,
+        help_text='Main content (~100 words recommended)'
+    )
+
+    # For text_code type
+    code_snippet = models.TextField(blank=True)
+    code_language = models.CharField(max_length=20, blank=True, default='python')
+
+    # For text_image type (S3 storage)
+    image_url = models.URLField(max_length=500, blank=True)
+    image_s3_key = models.CharField(max_length=255, blank=True)
+    image_caption = models.CharField(max_length=200, blank=True)
+
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.topic.title} - Card {self.order + 1}"
+
+    class Meta:
+        ordering = ['order']
+        unique_together = ['topic', 'order']
+
+
+class TopicProgress(models.Model):
+    """Track user progress through a topic"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='topic_progress'
+    )
+    topic = models.ForeignKey(
+        Topic,
+        on_delete=models.CASCADE,
+        related_name='user_progress'
+    )
+    current_card_index = models.IntegerField(default=0)
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Track if mini-quiz was taken
+    quiz_attempt = models.ForeignKey(
+        QuizAttempt,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='topic_progress'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.topic.title}"
+
+    class Meta:
+        unique_together = ['user', 'topic']
+        ordering = ['-updated_at']
+
+
+class TopicCarouselExport(models.Model):
+    """Stores generated carousel images for Instagram export"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='topic_carousel_exports'
+    )
+    topic = models.ForeignKey(
+        Topic,
+        on_delete=models.CASCADE,
+        related_name='carousel_exports'
+    )
+    # List of {s3_url, s3_key} for each card image
+    images = models.JSONField(default=list)
+    cards_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.topic.title} - {self.user.email} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['-created_at']

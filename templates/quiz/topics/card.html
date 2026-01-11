@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ topic.title }} - Card {{ card_num }}{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{% url 'topic_detail' topic.slug %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Exit
+            </a>
+            <span class="text-muted">{{ topic.title }}</span>
+            <span class="badge bg-primary">{{ card_num }}/{{ total_cards }}</span>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress mb-4" style="height: 4px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ card_num|floatformat:0 }}%;"
+                 aria-valuenow="{{ card_num }}" aria-valuemin="0" aria-valuemax="{{ total_cards }}">
+            </div>
+        </div>
+
+        <!-- Card Content -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card p-4 p-md-5 mb-4" style="min-height: 400px;">
+                    <!-- Card Title -->
+                    {% if card.title %}
+                    <h4 class="fw-bold mb-4">{{ card.title }}</h4>
+                    {% endif %}
+
+                    <!-- Card Content -->
+                    <div class="card-content mb-4">
+                        <p class="lead" style="line-height: 1.8;">{{ card.content|linebreaks }}</p>
+                    </div>
+
+                    <!-- Code Snippet -->
+                    {% if card.card_type == 'text_code' and card.code_snippet %}
+                    <div class="bg-dark rounded p-3 p-md-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary">{{ card.code_language|default:"code" }}</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="copyCode()">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <pre class="text-light mb-0" id="codeBlock" style="white-space: pre-wrap; word-break: break-word;"><code>{{ card.code_snippet }}</code></pre>
+                    </div>
+                    {% endif %}
+
+                    <!-- Image -->
+                    {% if card.card_type == 'text_image' and card.image_url %}
+                    <div class="text-center mb-4">
+                        <img src="{{ card.image_url }}" alt="{{ card.image_caption }}" class="img-fluid rounded" style="max-height: 300px;">
+                        {% if card.image_caption %}
+                        <p class="text-muted small mt-2">{{ card.image_caption }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Navigation -->
+                <div class="d-flex justify-content-between align-items-center">
+                    {% if prev_card %}
+                    <a href="{% url 'topic_card' topic.slug prev_card %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-chevron-left"></i> Previous
+                    </a>
+                    {% else %}
+                    <div></div>
+                    {% endif %}
+
+                    <!-- Swipe dots -->
+                    <div class="d-flex gap-1">
+                        {% for i in cards|length|make_list %}
+                        <span class="rounded-circle {% if forloop.counter == card_num %}bg-primary{% else %}bg-secondary{% endif %}"
+                              style="width: 8px; height: 8px; display: inline-block;"></span>
+                        {% endfor %}
+                    </div>
+
+                    {% if next_card %}
+                    <a href="{% url 'topic_card' topic.slug next_card %}" class="btn btn-primary">
+                        Next <i class="bi bi-chevron-right"></i>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'topic_complete' topic.slug %}" class="btn btn-success">
+                        Complete <i class="bi bi-check-lg"></i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Swipe hint -->
+                <p class="text-center text-muted small mt-4">
+                    <i class="bi bi-hand-index"></i> Swipe or use buttons to navigate
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// Copy code functionality
+function copyCode() {
+    const code = document.getElementById('codeBlock').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        // Show feedback
+        const btn = event.target.closest('button');
+        btn.innerHTML = '<i class="bi bi-check"></i>';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+        }, 2000);
+    });
+}
+
+// Touch swipe support
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+}, false);
+
+document.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}, false);
+
+function handleSwipe() {
+    const diff = touchStartX - touchEndX;
+    const threshold = 50;
+
+    if (diff > threshold) {
+        // Swipe left - go next
+        {% if next_card %}
+        window.location.href = "{% url 'topic_card' topic.slug next_card %}";
+        {% else %}
+        window.location.href = "{% url 'topic_complete' topic.slug %}";
+        {% endif %}
+    } else if (diff < -threshold) {
+        // Swipe right - go back
+        {% if prev_card %}
+        window.location.href = "{% url 'topic_card' topic.slug prev_card %}";
+        {% endif %}
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') {
+        {% if next_card %}
+        window.location.href = "{% url 'topic_card' topic.slug next_card %}";
+        {% else %}
+        window.location.href = "{% url 'topic_complete' topic.slug %}";
+        {% endif %}
+    } else if (e.key === 'ArrowLeft') {
+        {% if prev_card %}
+        window.location.href = "{% url 'topic_card' topic.slug prev_card %}";
+        {% endif %}
+    }
+});
+</script>
+{% endblock %}

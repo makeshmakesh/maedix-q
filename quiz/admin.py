@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, VideoTemplate
+from .models import (
+    Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer,
+    Leaderboard, VideoTemplate, Topic, TopicCard, TopicProgress, TopicCarouselExport
+)
 @admin.register(VideoTemplate)
 class VideoTemplateAdmin(admin.ModelAdmin):
     pass
@@ -78,3 +81,48 @@ class LeaderboardAdmin(admin.ModelAdmin):
     list_filter = ['period', 'category']
     search_fields = ['user__email']
     ordering = ['period', 'rank']
+
+
+class TopicCardInline(admin.TabularInline):
+    model = TopicCard
+    extra = 1
+    ordering = ['order']
+
+
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'card_count', 'status', 'is_featured', 'created_by', 'created_at']
+    list_filter = ['status', 'category', 'is_featured']
+    search_fields = ['title', 'description']
+    prepopulated_fields = {'slug': ('title',)}
+    inlines = [TopicCardInline]
+    raw_id_fields = ['created_by', 'linked_quiz', 'mini_quiz']
+    ordering = ['category', 'order', 'title']
+
+
+@admin.register(TopicCard)
+class TopicCardAdmin(admin.ModelAdmin):
+    list_display = ['topic', 'title', 'card_type', 'order', 'content_preview']
+    list_filter = ['card_type', 'topic']
+    search_fields = ['title', 'content', 'topic__title']
+    ordering = ['topic', 'order']
+
+    def content_preview(self, obj):
+        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
+    content_preview.short_description = 'Content'
+
+
+@admin.register(TopicProgress)
+class TopicProgressAdmin(admin.ModelAdmin):
+    list_display = ['user', 'topic', 'current_card_index', 'is_completed', 'completed_at']
+    list_filter = ['is_completed', 'topic']
+    search_fields = ['user__email', 'topic__title']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(TopicCarouselExport)
+class TopicCarouselExportAdmin(admin.ModelAdmin):
+    list_display = ['topic', 'user', 'cards_count', 'created_at']
+    list_filter = ['topic']
+    search_fields = ['user__email', 'topic__title']
+    readonly_fields = ['created_at']

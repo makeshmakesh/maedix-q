@@ -1,0 +1,196 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}{{ action }} Card - {{ topic.title }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">{{ action }} Card</h4>
+        <p class="text-muted mb-0">{{ topic.title }}</p>
+    </div>
+    <a href="{% url 'staff_topic_cards' topic.id %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Cards
+    </a>
+</div>
+
+<div class="card p-4">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Card Title</label>
+                {{ form.title }}
+                <small class="text-muted">Optional title shown at the top of the card</small>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="{{ form.card_type.id_for_label }}" class="form-label">Card Type *</label>
+                {{ form.card_type }}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.content.id_for_label }}" class="form-label">Content *</label>
+            {{ form.content }}
+            {% if form.content.errors %}
+            <div class="text-danger small">{{ form.content.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted">Keep content concise (~100 words recommended for best readability)</small>
+        </div>
+
+        <!-- Code Snippet Section (for text_code type) -->
+        <div class="card bg-light p-3 mb-3" id="codeSection">
+            <h6 class="mb-3"><i class="bi bi-code-slash"></i> Code Snippet (for Text + Code cards)</h6>
+            <div class="mb-3">
+                <label for="{{ form.code_snippet.id_for_label }}" class="form-label">Code</label>
+                {{ form.code_snippet }}
+                {% if form.code_snippet.errors %}
+                <div class="text-danger small">{{ form.code_snippet.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.code_language.id_for_label }}" class="form-label">Language</label>
+                {{ form.code_language }}
+                <small class="text-muted">e.g., python, javascript, go, rust</small>
+            </div>
+        </div>
+
+        <!-- Image Section (for text_image type) -->
+        <div class="card bg-light p-3 mb-3" id="imageSection">
+            <h6 class="mb-3"><i class="bi bi-image"></i> Image (for Text + Image cards)</h6>
+
+            <!-- Image Upload -->
+            <div class="mb-3">
+                <label class="form-label">Upload Image</label>
+                <div class="row align-items-start">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="cardImageFile" accept="image/*">
+                            <button type="button" class="btn btn-outline-primary" id="uploadCardImageBtn">
+                                <i class="bi bi-cloud-upload"></i> Upload
+                            </button>
+                        </div>
+                        <input type="hidden" name="image_url" id="cardImageUrl" value="{{ form.image_url.value|default:'' }}">
+                        <small class="text-muted">Upload an image (max 5MB). JPEG, PNG, GIF, WebP supported.</small>
+                        <div id="cardImageUploadStatus" class="small mt-1"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="cardImagePreview" class="border rounded p-2 text-center bg-white" style="min-height: 100px;">
+                            {% if form.image_url.value %}
+                            <img src="{{ form.image_url.value }}" class="img-fluid rounded" style="max-height: 100px;">
+                            {% else %}
+                            <span class="text-muted small">No image</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.image_caption.id_for_label }}" class="form-label">Caption</label>
+                {{ form.image_caption }}
+                <small class="text-muted">Optional caption displayed below the image</small>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.order.id_for_label }}" class="form-label">Order *</label>
+            {{ form.order }}
+            <small class="text-muted">Display order (0 = first card)</small>
+        </div>
+
+        <div class="d-grid d-md-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> {{ action }} Card
+            </button>
+            <a href="{% url 'staff_topic_cards' topic.id %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cardTypeSelect = document.getElementById('{{ form.card_type.id_for_label }}');
+    const codeSection = document.getElementById('codeSection');
+    const imageSection = document.getElementById('imageSection');
+
+    function toggleSections() {
+        const cardType = cardTypeSelect.value;
+        codeSection.style.display = (cardType === 'text_code') ? 'block' : 'none';
+        imageSection.style.display = (cardType === 'text_image') ? 'block' : 'none';
+    }
+
+    cardTypeSelect.addEventListener('change', toggleSections);
+    toggleSections(); // Initial state
+
+    // Image upload functionality
+    document.getElementById('uploadCardImageBtn').addEventListener('click', async function() {
+        const fileInput = document.getElementById('cardImageFile');
+        const urlInput = document.getElementById('cardImageUrl');
+        const preview = document.getElementById('cardImagePreview');
+        const status = document.getElementById('cardImageUploadStatus');
+        const btn = this;
+
+        if (!fileInput.files.length) {
+            status.innerHTML = '<span class="text-danger">Please select a file first</span>';
+            return;
+        }
+
+        const file = fileInput.files[0];
+
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            status.innerHTML = '<span class="text-danger">File too large. Max 5MB.</span>';
+            return;
+        }
+
+        // Show uploading state
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+        status.innerHTML = '<span class="text-muted">Uploading...</span>';
+
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('folder', 'topic-card-images');
+
+            const response = await fetch('{% url "staff_image_upload" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                urlInput.value = data.url;
+                preview.innerHTML = `<img src="${data.url}" class="img-fluid rounded" style="max-height: 100px;">`;
+                status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Uploaded successfully</span>';
+            } else {
+                status.innerHTML = `<span class="text-danger">${data.error}</span>`;
+            }
+        } catch (error) {
+            status.innerHTML = `<span class="text-danger">Upload failed: ${error.message}</span>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload';
+        }
+    });
+
+    // Preview on file select
+    document.getElementById('cardImageFile').addEventListener('change', function() {
+        const preview = document.getElementById('cardImagePreview');
+        if (this.files.length) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 100px; opacity: 0.5;">
+                    <div class="small text-muted mt-1">Click Upload to save</div>`;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+</script>
+{% endblock %}

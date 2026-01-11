@@ -5,11 +5,16 @@
 {% block staff_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="fw-bold mb-0">Pending Approvals</h4>
-    <span class="badge bg-warning text-dark">{{ pending_quizzes|length }} pending</span>
+    <div>
+        <span class="badge bg-warning text-dark me-2">{{ pending_quizzes|length }} quizzes</span>
+        <span class="badge bg-info">{{ pending_topics|length }} topics</span>
+    </div>
 </div>
 
+<!-- Pending Quizzes -->
 {% if pending_quizzes %}
-<div class="row g-4">
+<h5 class="fw-bold mb-3"><i class="bi bi-journal-text"></i> Quizzes</h5>
+<div class="row g-4 mb-5">
     {% for quiz in pending_quizzes %}
     <div class="col-md-6">
         <div class="card h-100">
@@ -58,15 +63,70 @@
     </div>
     {% endfor %}
 </div>
-{% else %}
-<div class="card p-5 text-center">
-    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-    <h5 class="mt-3">All caught up!</h5>
-    <p class="text-muted mb-0">No quizzes pending approval.</p>
+{% endif %}
+
+<!-- Pending Topics -->
+{% if pending_topics %}
+<h5 class="fw-bold mb-3"><i class="bi bi-layers"></i> Topics</h5>
+<div class="row g-4 mb-4">
+    {% for topic in pending_topics %}
+    <div class="col-md-6">
+        <div class="card h-100 border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold mb-0">{{ topic.title }}</h5>
+                    <span class="badge bg-info">Topic - Pending</span>
+                </div>
+
+                <p class="text-muted small mb-2">
+                    {% if topic.category %}
+                    <span class="badge bg-light text-dark">{{ topic.category.name }}</span>
+                    {% endif %}
+                </p>
+
+                {% if topic.description %}
+                <p class="card-text small text-muted">{{ topic.description|truncatewords:25 }}</p>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center text-muted small mb-3">
+                    <span><i class="bi bi-layers"></i> {{ topic.card_count }} cards</span>
+                    <span><i class="bi bi-person"></i> {{ topic.created_by.email }}</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'staff_topic_preview' topic.pk %}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-eye"></i> Preview
+                    </a>
+                    <form action="{% url 'staff_approve_topic' topic.pk %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-check"></i> Approve
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-sm btn-danger btn-reject-topic"
+                            data-topic-id="{{ topic.pk }}" data-topic-title="{{ topic.title }}">
+                        <i class="bi bi-x"></i> Reject
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent text-muted small">
+                Submitted {{ topic.updated_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endif %}
 
-<!-- Reject Modal -->
+{% if not pending_quizzes and not pending_topics %}
+<div class="card p-5 text-center">
+    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+    <h5 class="mt-3">All caught up!</h5>
+    <p class="text-muted mb-0">No quizzes or topics pending approval.</p>
+</div>
+{% endif %}
+
+<!-- Reject Quiz Modal -->
 <div class="modal fade" id="rejectQuizModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -79,8 +139,8 @@
                 <div class="modal-body">
                     <p>Rejecting: <strong id="rejectQuizTitle"></strong></p>
                     <div class="mb-3">
-                        <label for="rejectReason" class="form-label">Reason for rejection</label>
-                        <textarea name="reason" id="rejectReason" class="form-control" rows="3"
+                        <label for="rejectQuizReason" class="form-label">Reason for rejection</label>
+                        <textarea name="reason" id="rejectQuizReason" class="form-control" rows="3"
                                   placeholder="Please explain why this quiz is being rejected..."></textarea>
                         <small class="text-muted">This will be shown to the quiz creator.</small>
                     </div>
@@ -94,21 +154,68 @@
     </div>
 </div>
 
+<!-- Reject Topic Modal -->
+<div class="modal fade" id="rejectTopicModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Topic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectTopicForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Rejecting: <strong id="rejectTopicTitle"></strong></p>
+                    <div class="mb-3">
+                        <label for="rejectTopicReason" class="form-label">Reason for rejection</label>
+                        <textarea name="reason" id="rejectTopicReason" class="form-control" rows="3"
+                                  placeholder="Please explain why this topic is being rejected..."></textarea>
+                        <small class="text-muted">This will be shown to the topic creator.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Topic</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const rejectModal = document.getElementById('rejectQuizModal');
-    const rejectForm = document.getElementById('rejectQuizForm');
-    const rejectTitle = document.getElementById('rejectQuizTitle');
+    // Quiz rejection
+    const rejectQuizModal = document.getElementById('rejectQuizModal');
+    const rejectQuizForm = document.getElementById('rejectQuizForm');
+    const rejectQuizTitle = document.getElementById('rejectQuizTitle');
 
     document.querySelectorAll('.btn-reject-quiz').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const quizId = this.dataset.quizId;
             const quizTitle = this.dataset.quizTitle;
 
-            rejectForm.action = '{% url "staff_reject_quiz" 0 %}'.replace('/0/', '/' + quizId + '/');
-            rejectTitle.textContent = quizTitle;
+            rejectQuizForm.action = '{% url "staff_reject_quiz" 0 %}'.replace('/0/', '/' + quizId + '/');
+            rejectQuizTitle.textContent = quizTitle;
 
-            const modal = new bootstrap.Modal(rejectModal);
+            const modal = new bootstrap.Modal(rejectQuizModal);
+            modal.show();
+        });
+    });
+
+    // Topic rejection
+    const rejectTopicModal = document.getElementById('rejectTopicModal');
+    const rejectTopicForm = document.getElementById('rejectTopicForm');
+    const rejectTopicTitle = document.getElementById('rejectTopicTitle');
+
+    document.querySelectorAll('.btn-reject-topic').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const topicId = this.dataset.topicId;
+            const topicTitle = this.dataset.topicTitle;
+
+            rejectTopicForm.action = '{% url "staff_reject_topic" 0 %}'.replace('/0/', '/' + topicId + '/');
+            rejectTopicTitle.textContent = topicTitle;
+
+            const modal = new bootstrap.Modal(rejectTopicModal);
             modal.show();
         });
     });

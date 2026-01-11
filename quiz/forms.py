@@ -1,5 +1,5 @@
 from django import forms
-from .models import Category, Quiz, Question, Option
+from .models import Category, Quiz, Question, Option, Topic, TopicCard
 
 
 class CategoryForm(forms.ModelForm):
@@ -122,6 +122,195 @@ OptionFormSet = forms.inlineformset_factory(
     form=OptionForm,
     formset=BaseOptionFormSet,
     extra=4,
+    min_num=0,
+    validate_min=False,
+    can_delete=True
+)
+
+
+class TopicForm(forms.ModelForm):
+    """Form for creating/editing topics"""
+
+    class Meta:
+        model = Topic
+        fields = [
+            'title', 'description', 'category', 'thumbnail_url',
+            'linked_quiz', 'mini_quiz', 'status', 'order',
+            'is_featured', 'estimated_time'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'maxlength': 500,
+                'placeholder': 'Brief description of the topic (max 500 characters)'
+            }),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'thumbnail_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'S3 URL for thumbnail image'
+            }),
+            'linked_quiz': forms.Select(attrs={'class': 'form-select'}),
+            'mini_quiz': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'estimated_time': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 30,
+                'placeholder': 'Minutes'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(is_active=True)
+        self.fields['linked_quiz'].queryset = Quiz.objects.filter(
+            is_published=True, is_mini_quiz=False
+        )
+        self.fields['mini_quiz'].queryset = Quiz.objects.filter(is_mini_quiz=True)
+        self.fields['linked_quiz'].required = False
+        self.fields['mini_quiz'].required = False
+        self.fields['thumbnail_url'].required = False
+        self.fields['description'].required = False
+
+
+class UserTopicForm(forms.ModelForm):
+    """Simplified form for users to create/edit topics"""
+
+    class Meta:
+        model = Topic
+        fields = ['title', 'description', 'category', 'thumbnail_url', 'estimated_time']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Understanding Python Decorators'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'maxlength': 500,
+                'placeholder': 'Brief description of what this topic covers...'
+            }),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'thumbnail_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://example.com/image.jpg'
+            }),
+            'estimated_time': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 30,
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(is_active=True)
+        self.fields['thumbnail_url'].required = False
+        self.fields['description'].required = False
+        self.fields['estimated_time'].initial = 2
+
+
+class TopicCardForm(forms.ModelForm):
+    """Form for creating/editing topic cards"""
+
+    class Meta:
+        model = TopicCard
+        fields = [
+            'card_type', 'title', 'content', 'code_snippet',
+            'code_language', 'image_url', 'image_caption', 'order'
+        ]
+        widgets = {
+            'card_type': forms.Select(attrs={'class': 'form-select'}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Optional card title'
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'maxlength': 600,
+                'placeholder': 'Main content (~100 words recommended)'
+            }),
+            'code_snippet': forms.Textarea(attrs={
+                'class': 'form-control font-monospace',
+                'rows': 6,
+                'placeholder': 'Code snippet (for Text + Code cards)'
+            }),
+            'code_language': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., python, javascript, go'
+            }),
+            'image_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'S3 URL for image (for Text + Image cards)'
+            }),
+            'image_caption': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Image caption'
+            }),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['title'].required = False
+        self.fields['code_snippet'].required = False
+        self.fields['code_language'].required = False
+        self.fields['image_url'].required = False
+        self.fields['image_caption'].required = False
+
+    def clean_content(self):
+        content = self.cleaned_data.get('content', '')
+        word_count = len(content.split())
+        if word_count > 150:
+            raise forms.ValidationError(
+                f'Content is {word_count} words. Please keep it under 150 words for best readability.'
+            )
+        return content
+
+    def clean(self):
+        cleaned_data = super().clean()
+        card_type = cleaned_data.get('card_type')
+        code_snippet = cleaned_data.get('code_snippet')
+        image_url = cleaned_data.get('image_url')
+
+        if card_type == 'text_code' and not code_snippet:
+            self.add_error('code_snippet', 'Code snippet is required for Text + Code cards.')
+
+        if card_type == 'text_image' and not image_url:
+            self.add_error('image_url', 'Image URL is required for Text + Image cards.')
+
+        return cleaned_data
+
+
+class BaseTopicCardFormSet(forms.BaseInlineFormSet):
+    """Custom formset for topic cards"""
+
+    def clean(self):
+        super().clean()
+        filled_forms = 0
+
+        for form in self.forms:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                content = form.cleaned_data.get('content', '').strip()
+                if content:
+                    filled_forms += 1
+
+        if filled_forms < 1:
+            raise forms.ValidationError('Please provide at least 1 card.')
+
+
+# Formset for managing multiple topic cards
+TopicCardFormSet = forms.inlineformset_factory(
+    Topic,
+    TopicCard,
+    form=TopicCardForm,
+    formset=BaseTopicCardFormSet,
+    extra=3,
     min_num=0,
     validate_min=False,
     can_delete=True

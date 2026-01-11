@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Export {{ topic.title }} - Instagram Carousel{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'topics_home' %}">Topics</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'topic_detail' topic.slug %}">{{ topic.title }}</a></li>
+                <li class="breadcrumb-item active">Export</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card p-4 mb-4">
+                    <h3 class="fw-bold mb-3">
+                        <i class="bi bi-instagram"></i> Export as Instagram Carousel
+                    </h3>
+                    <p class="text-muted mb-4">
+                        Generate swipeable carousel images for Instagram from this topic's cards.
+                    </p>
+
+                    <!-- Preview Cards -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Cards to Export ({{ cards|length }})</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% for card in cards %}
+                            <div class="badge bg-light text-dark p-2">
+                                {{ forloop.counter }}. {{ card.title|default:"Card"|truncatechars:20 }}
+                                {% if card.card_type == 'text_code' %}
+                                <span class="badge bg-info ms-1">Code</span>
+                                {% elif card.card_type == 'text_image' %}
+                                <span class="badge bg-warning ms-1">Image</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Export Form -->
+                    <form id="exportForm">
+                        {% csrf_token %}
+
+                        <!-- Template Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Style Template</label>
+                            <div class="row g-3">
+                                {% for template in templates %}
+                                <div class="col-6 col-md-4">
+                                    <div class="form-check card p-3 h-100">
+                                        <input class="form-check-input" type="radio" name="template_id"
+                                               id="template_{{ template.id }}" value="{{ template.id }}"
+                                               {% if template.is_default %}checked{% endif %}>
+                                        <label class="form-check-label w-100" for="template_{{ template.id }}">
+                                            <strong>{{ template.name }}</strong>
+                                            {% if template.is_premium %}
+                                            <span class="badge bg-warning">Pro</span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ template.description }}</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12">
+                                    <p class="text-muted">Using default style</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Handle Name -->
+                        <div class="mb-4">
+                            <label for="handle_name" class="form-label fw-bold">Instagram Handle</label>
+                            <input type="text" class="form-control" id="handle_name" name="handle_name"
+                                   value="@maedix-q" placeholder="@yourusername">
+                            <small class="text-muted">Displayed on carousel images</small>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                            <i class="bi bi-images"></i> Generate Carousel Images
+                        </button>
+                    </form>
+
+                    <!-- Progress -->
+                    <div id="progressSection" class="mt-4" style="display: none;">
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                 id="progressBar" role="progressbar" style="width: 0%;">0%</div>
+                        </div>
+                        <p class="text-muted small mb-0" id="progressMessage">Starting...</p>
+                    </div>
+
+                    <!-- Result -->
+                    <div id="resultSection" class="mt-4" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span id="resultMessage">Carousel images generated!</span>
+                        </div>
+
+                        <h6 class="mb-3">Generated Images</h6>
+                        <div class="row g-2 mb-4" id="generatedImages"></div>
+
+                        <div class="d-flex gap-2">
+                            {% if instagram_connected %}
+                            <a href="#" id="postInstagramBtn" class="btn btn-primary">
+                                <i class="bi bi-instagram"></i> Post to Instagram
+                            </a>
+                            {% else %}
+                            <a href="{% url 'instagram_connect' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-instagram"></i> Connect Instagram
+                            </a>
+                            {% endif %}
+                            <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
+                                <i class="bi bi-arrow-repeat"></i> Generate Again
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error -->
+                    <div id="errorSection" class="mt-4" style="display: none;">
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span id="errorMessage">An error occurred.</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="location.reload()">
+                            <i class="bi bi-arrow-repeat"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Recent Exports -->
+                {% if recent_exports %}
+                <div class="card p-4 mb-4">
+                    <h6 class="mb-3"><i class="bi bi-clock-history"></i> Recent Exports</h6>
+                    <div class="list-group list-group-flush">
+                        {% for export in recent_exports %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">{{ export.created_at|timesince }} ago</small>
+                                    <br>
+                                    <span>{{ export.cards_count }} cards</span>
+                                </div>
+                                {% if instagram_connected %}
+                                <a href="{% url 'topic_post_instagram' topic.slug %}?export_id={{ export.id }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Info -->
+                <div class="card p-4">
+                    <h6 class="mb-3"><i class="bi bi-info-circle"></i> About Carousel Export</h6>
+                    <ul class="list-unstyled mb-0 small text-muted">
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success"></i>
+                            Generates 1080x1350px images (Instagram 4:5 ratio)
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success"></i>
+                            Includes intro and outro slides
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success"></i>
+                            Swipe dots indicator on each image
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success"></i>
+                            Max 10 images per carousel (Instagram limit)
+                        </li>
+                        <li>
+                            <i class="bi bi-check text-success"></i>
+                            Post directly to Instagram
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('exportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+    const generateBtn = document.getElementById('generateBtn');
+    const progressSection = document.getElementById('progressSection');
+    const progressBar = document.getElementById('progressBar');
+    const progressMessage = document.getElementById('progressMessage');
+    const resultSection = document.getElementById('resultSection');
+    const errorSection = document.getElementById('errorSection');
+
+    // Reset
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Starting...';
+    progressSection.style.display = 'block';
+    resultSection.style.display = 'none';
+    errorSection.style.display = 'none';
+
+    try {
+        // Start generation
+        const response = await fetch('{% url "topic_export" topic.slug %}', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to start generation');
+        }
+
+        const taskId = data.task_id;
+
+        // Poll for progress
+        const pollProgress = async () => {
+            const progressResponse = await fetch(`{% url "topic_export_progress" task_id="TASK_ID" %}`.replace('TASK_ID', taskId));
+            const progressData = await progressResponse.json();
+
+            progressBar.style.width = progressData.percent + '%';
+            progressBar.textContent = progressData.percent + '%';
+            progressMessage.textContent = progressData.message;
+
+            if (progressData.status === 'completed') {
+                // Show result
+                progressSection.style.display = 'none';
+                resultSection.style.display = 'block';
+                document.getElementById('resultMessage').textContent = progressData.message;
+
+                // Display images
+                const imagesContainer = document.getElementById('generatedImages');
+                imagesContainer.innerHTML = '';
+                progressData.images.forEach((img, index) => {
+                    imagesContainer.innerHTML += `
+                        <div class="col-4">
+                            <img src="${img.s3_url}" class="img-fluid rounded" alt="Card ${index + 1}">
+                        </div>
+                    `;
+                });
+
+                // Update post button
+                if (progressData.export_id) {
+                    const postBtn = document.getElementById('postInstagramBtn');
+                    if (postBtn) {
+                        postBtn.href = `{% url "topic_post_instagram" topic.slug %}?export_id=${progressData.export_id}`;
+                    }
+                }
+
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="bi bi-images"></i> Generate Carousel Images';
+            } else if (progressData.status === 'error') {
+                throw new Error(progressData.message);
+            } else {
+                // Continue polling
+                setTimeout(pollProgress, 1000);
+            }
+        };
+
+        pollProgress();
+
+    } catch (error) {
+        progressSection.style.display = 'none';
+        errorSection.style.display = 'block';
+        document.getElementById('errorMessage').textContent = error.message;
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="bi bi-images"></i> Generate Carousel Images';
+    }
+});
+</script>
+{% endblock %}

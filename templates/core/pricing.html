@@ -193,6 +193,48 @@
                         {% endfor %}
                     </tr>
 
+                    <!-- Topic Creation -->
+                    <tr>
+                        <td class="py-3">Create learning topics</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'topic_create' %}
+                                    <strong>{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Topics View -->
+                    <tr>
+                        <td class="py-3">View learning topics per month</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'topics_view' %}
+                                    <strong>{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Carousel Export -->
+                    <tr>
+                        <td class="py-3">Export carousel images</td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'carousel_export' %}
+                                    <strong>{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
                     <!-- Custom Handle -->
                     <tr>
                         <td class="py-3">Custom handle in videos</td>

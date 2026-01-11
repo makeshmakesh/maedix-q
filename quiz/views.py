@@ -16,8 +16,12 @@ from django.utils import timezone
 from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db.models import Count, Avg
 from django.core.cache import cache
-from .models import Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer, Leaderboard, GeneratedVideo, BulkVideoJob, VideoTemplate
-from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet
+from .models import (
+    Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer,
+    Leaderboard, GeneratedVideo, BulkVideoJob, VideoTemplate,
+    Topic, TopicCard, TopicProgress, TopicCarouselExport
+)
+from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet, TopicForm, TopicCardForm, TopicCardFormSet, UserTopicForm
 from core.models import Configuration
 from core.subscription_utils import check_feature_access, use_feature, get_or_create_free_subscription, get_user_subscription
 
@@ -493,6 +497,30 @@ class StaffDashboardView(StaffRequiredMixin, View):
             'stats': stats,
             'recent_quizzes': recent_quizzes,
             'recent_attempts': recent_attempts,
+        })
+
+
+class StaffImageUploadView(StaffRequiredMixin, View):
+    """AJAX endpoint for uploading images to S3"""
+
+    def post(self, request):
+        from core.s3_utils import upload_image_to_s3
+
+        if 'image' not in request.FILES:
+            return JsonResponse({'error': 'No image provided'}, status=400)
+
+        uploaded_file = request.FILES['image']
+        folder = request.POST.get('folder', 'topic-images')
+
+        url, s3_key, error = upload_image_to_s3(uploaded_file, folder)
+
+        if error:
+            return JsonResponse({'error': error}, status=400)
+
+        return JsonResponse({
+            'success': True,
+            'url': url,
+            's3_key': s3_key
         })
 
 
@@ -1429,17 +1457,284 @@ class UserQuizSubmitApprovalView(LoginRequiredMixin, View):
 
 
 # =============================================================================
+# User Topic Management Views
+# =============================================================================
+
+class UserTopicListView(LoginRequiredMixin, View):
+    """List user's own topics"""
+    template_name = 'quiz/user/my-topics.html'
+
+    def get(self, request):
+        topics = Topic.objects.filter(created_by=request.user).order_by('-created_at')
+        return render(request, self.template_name, {
+            'topics': topics,
+        })
+
+
+class UserTopicCreateView(LoginRequiredMixin, View):
+    """Create a new topic"""
+    template_name = 'quiz/user/topic-form.html'
+
+    def get(self, request):
+        # Ensure user has a subscription
+        get_or_create_free_subscription(request.user)
+
+        # Check if user can create more topics
+        can_access, message, _ = check_feature_access(request.user, 'topic_create')
+        if not can_access:
+            messages.warning(request, message)
+            return redirect('subscription')
+
+        form = UserTopicForm()
+        categories = Category.objects.filter(is_active=True)
+        return render(request, self.template_name, {
+            'form': form,
+            'categories': categories,
+            'is_edit': False,
+        })
+
+    def post(self, request):
+        # Ensure user has a subscription
+        get_or_create_free_subscription(request.user)
+
+        # Check if user can create more topics
+        can_access, message, _ = check_feature_access(request.user, 'topic_create')
+        if not can_access:
+            messages.warning(request, message)
+            return redirect('subscription')
+
+        form = UserTopicForm(request.POST)
+        if form.is_valid():
+            # Use the feature (increment usage)
+            use_feature(request.user, 'topic_create')
+
+            topic = form.save(commit=False)
+            topic.created_by = request.user
+            topic.status = 'draft'
+            topic.save()
+            messages.success(request, 'Topic created! Now add some cards.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        categories = Category.objects.filter(is_active=True)
+        return render(request, self.template_name, {
+            'form': form,
+            'categories': categories,
+            'is_edit': False,
+        })
+
+
+class UserTopicEditView(LoginRequiredMixin, View):
+    """Edit user's topic (only if not approved)"""
+    template_name = 'quiz/user/topic-form.html'
+
+    def get(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, created_by=request.user)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Approved topics cannot be edited.')
+            return redirect('user_topic_list')
+
+        form = UserTopicForm(instance=topic)
+        categories = Category.objects.filter(is_active=True)
+        return render(request, self.template_name, {
+            'form': form,
+            'topic': topic,
+            'categories': categories,
+            'is_edit': True,
+        })
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, created_by=request.user)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Approved topics cannot be edited.')
+            return redirect('user_topic_list')
+
+        form = UserTopicForm(request.POST, instance=topic)
+        if form.is_valid():
+            # Reset to draft if it was rejected
+            if topic.status == 'rejected':
+                topic.status = 'draft'
+                topic.rejection_reason = ''
+            form.save()
+            messages.success(request, 'Topic updated successfully!')
+            return redirect('user_topic_list')
+
+        categories = Category.objects.filter(is_active=True)
+        return render(request, self.template_name, {
+            'form': form,
+            'topic': topic,
+            'categories': categories,
+            'is_edit': True,
+        })
+
+
+class UserTopicDeleteView(LoginRequiredMixin, View):
+    """Delete user's topic (only if not approved)"""
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, created_by=request.user)
+
+        if not topic.can_be_deleted:
+            messages.error(request, 'Approved topics cannot be deleted.')
+            return redirect('user_topic_list')
+
+        topic.delete()
+        messages.success(request, 'Topic deleted successfully!')
+        return redirect('user_topic_list')
+
+
+class UserTopicCardsView(LoginRequiredMixin, View):
+    """Manage cards for user's topic"""
+    template_name = 'quiz/user/topic-cards.html'
+
+    def get(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, created_by=request.user)
+        cards = topic.cards.all().order_by('order')
+        return render(request, self.template_name, {
+            'topic': topic,
+            'cards': cards,
+        })
+
+
+class UserCardCreateView(LoginRequiredMixin, View):
+    """Add card to user's topic"""
+    template_name = 'quiz/user/card-form.html'
+
+    def get(self, request, topic_id):
+        topic = get_object_or_404(Topic, pk=topic_id, created_by=request.user)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Cannot add cards to approved topics.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        form = TopicCardForm()
+        # Set default order to next available
+        next_order = topic.cards.count()
+        form.initial['order'] = next_order
+        return render(request, self.template_name, {
+            'topic': topic,
+            'form': form,
+            'is_edit': False,
+        })
+
+    def post(self, request, topic_id):
+        topic = get_object_or_404(Topic, pk=topic_id, created_by=request.user)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Cannot add cards to approved topics.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        form = TopicCardForm(request.POST)
+        if form.is_valid():
+            card = form.save(commit=False)
+            card.topic = topic
+            card.save()
+            messages.success(request, 'Card added successfully!')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'form': form,
+            'is_edit': False,
+        })
+
+
+class UserCardEditView(LoginRequiredMixin, View):
+    """Edit card in user's topic"""
+    template_name = 'quiz/user/card-form.html'
+
+    def get(self, request, topic_id, pk):
+        topic = get_object_or_404(Topic, pk=topic_id, created_by=request.user)
+        card = get_object_or_404(TopicCard, pk=pk, topic=topic)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Cannot edit cards in approved topics.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        form = TopicCardForm(instance=card)
+        return render(request, self.template_name, {
+            'topic': topic,
+            'card': card,
+            'form': form,
+            'is_edit': True,
+        })
+
+    def post(self, request, topic_id, pk):
+        topic = get_object_or_404(Topic, pk=topic_id, created_by=request.user)
+        card = get_object_or_404(TopicCard, pk=pk, topic=topic)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Cannot edit cards in approved topics.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        form = TopicCardForm(request.POST, instance=card)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Card updated successfully!')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'card': card,
+            'form': form,
+            'is_edit': True,
+        })
+
+
+class UserCardDeleteView(LoginRequiredMixin, View):
+    """Delete card from user's topic"""
+
+    def post(self, request, topic_id, pk):
+        topic = get_object_or_404(Topic, pk=topic_id, created_by=request.user)
+        card = get_object_or_404(TopicCard, pk=pk, topic=topic)
+
+        if not topic.can_be_edited:
+            messages.error(request, 'Cannot delete cards from approved topics.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        card.delete()
+        messages.success(request, 'Card deleted successfully!')
+        return redirect('user_topic_cards', pk=topic.pk)
+
+
+class UserTopicSubmitApprovalView(LoginRequiredMixin, View):
+    """Submit topic for admin approval"""
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, created_by=request.user)
+
+        # Check if topic has at least 1 card
+        if topic.cards.count() < 1:
+            messages.error(request, 'Topic must have at least 1 card before submitting for approval.')
+            return redirect('user_topic_cards', pk=topic.pk)
+
+        # Check all cards have content
+        for card in topic.cards.all():
+            if not card.content.strip():
+                messages.error(request, f'Card "{card.title or "Untitled"}" must have content.')
+                return redirect('user_topic_cards', pk=topic.pk)
+
+        topic.status = 'pending'
+        topic.save()
+        messages.success(request, 'Topic submitted for approval! You will be notified once reviewed.')
+        return redirect('user_topic_list')
+
+
+# =============================================================================
 # Admin Approval Views
 # =============================================================================
 
 class StaffPendingApprovalsView(StaffRequiredMixin, View):
-    """List quizzes pending approval"""
+    """List quizzes and topics pending approval"""
     template_name = 'staff/pending-approvals.html'
 
     def get(self, request):
         pending_quizzes = Quiz.objects.filter(status='pending').select_related('created_by', 'category').order_by('created_at')
+        pending_topics = Topic.objects.filter(status='pending').select_related('created_by', 'category').order_by('created_at')
         return render(request, self.template_name, {
             'pending_quizzes': pending_quizzes,
+            'pending_topics': pending_topics,
         })
 
 
@@ -1480,6 +1775,45 @@ class StaffRejectQuizView(StaffRequiredMixin, View):
         quiz.rejection_reason = reason
         quiz.save()
         messages.success(request, f'Quiz "{quiz.title}" has been rejected.')
+        return redirect('staff_pending_approvals')
+
+
+class StaffTopicPreviewView(StaffRequiredMixin, View):
+    """Preview topic before approval"""
+    template_name = 'staff/topic-preview.html'
+
+    def get(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk)
+        cards = topic.cards.all().order_by('order')
+        return render(request, self.template_name, {
+            'topic': topic,
+            'cards': cards,
+        })
+
+
+class StaffApproveTopicView(StaffRequiredMixin, View):
+    """Approve a topic"""
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, status='pending')
+        topic.status = 'approved'
+        topic.approved_by = request.user
+        topic.approved_at = timezone.now()
+        topic.save()
+        messages.success(request, f'Topic "{topic.title}" has been approved!')
+        return redirect('staff_pending_approvals')
+
+
+class StaffRejectTopicView(StaffRequiredMixin, View):
+    """Reject a topic"""
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk, status='pending')
+        reason = request.POST.get('reason', '')
+        topic.status = 'rejected'
+        topic.rejection_reason = reason
+        topic.save()
+        messages.success(request, f'Topic "{topic.title}" has been rejected.')
         return redirect('staff_pending_approvals')
 
 
@@ -2095,3 +2429,868 @@ class BulkVideoJobProgressView(LoginRequiredMixin, View):
             'results': job.results,
             'error_message': job.error_message,
         })
+
+
+# =============================================================================
+# TOPIC MANAGEMENT - Staff Views
+# =============================================================================
+
+class StaffTopicListView(StaffRequiredMixin, View):
+    """List all topics for staff"""
+    template_name = 'staff/topic-list.html'
+
+    def get(self, request):
+        topics = Topic.objects.all().select_related('category', 'created_by').order_by('-created_at')
+        return render(request, self.template_name, {'topics': topics})
+
+
+class StaffTopicImportView(StaffRequiredMixin, View):
+    """Import topic from JSON - for bulk creation"""
+    template_name = 'staff/topic-import.html'
+
+    def get(self, request):
+        categories = Category.objects.filter(is_active=True).order_by('name')
+        sample_json = '''{
+  "title": "Python Variables",
+  "description": "Learn about variables in Python",
+  "status": "published",
+  "is_featured": false,
+  "estimated_time": 3,
+  "cards": [
+    {
+      "title": "What are Variables?",
+      "content": "Variables are containers for storing data values. In Python, you don't need to declare the type of a variable - it's determined automatically when you assign a value.",
+      "card_type": "text"
+    },
+    {
+      "title": "Creating Variables",
+      "content": "To create a variable, simply assign a value using the equals sign. Python will automatically determine the data type based on the value you assign.",
+      "card_type": "text_code",
+      "code_snippet": "name = \\"John\\"\\nage = 25\\nheight = 5.9\\nis_student = True",
+      "code_language": "python"
+    },
+    {
+      "title": "Variable Naming Rules",
+      "content": "Variable names must start with a letter or underscore. They can contain letters, numbers, and underscores. Python is case-sensitive, so 'name' and 'Name' are different variables.",
+      "card_type": "text"
+    }
+  ]
+}'''
+        return render(request, self.template_name, {
+            'categories': categories,
+            'sample_json': sample_json,
+        })
+
+    def post(self, request):
+        categories = Category.objects.filter(is_active=True).order_by('name')
+        category_id = request.POST.get('category')
+        json_data = request.POST.get('json_data', '').strip()
+
+        errors = []
+
+        # Validate category
+        category = None
+        try:
+            category = Category.objects.get(pk=category_id, is_active=True)
+        except Category.DoesNotExist:
+            errors.append('Please select a valid category.')
+
+        # Parse JSON
+        try:
+            data = json.loads(json_data)
+        except json.JSONDecodeError as e:
+            errors.append(f'Invalid JSON format: {str(e)}')
+            return render(request, self.template_name, {
+                'categories': categories,
+                'errors': errors,
+                'json_data': json_data,
+                'selected_category': category_id,
+            })
+
+        # Validate required fields
+        if not data.get('title'):
+            errors.append('Topic title is required.')
+        if not data.get('cards') or len(data.get('cards', [])) < 1:
+            errors.append('At least one card is required.')
+
+        # Check for duplicate slug
+        title = data.get('title', '')
+        slug = slugify(title)
+        if Topic.objects.filter(slug=slug).exists():
+            # Make slug unique
+            slug = f"{slug}-{uuid.uuid4().hex[:6]}"
+
+        if errors:
+            return render(request, self.template_name, {
+                'categories': categories,
+                'errors': errors,
+                'json_data': json_data,
+                'selected_category': category_id,
+            })
+
+        try:
+            # Create Topic
+            topic = Topic.objects.create(
+                title=data.get('title'),
+                slug=slug,
+                description=data.get('description', ''),
+                category=category,
+                status=data.get('status', 'draft'),
+                is_featured=data.get('is_featured', False),
+                estimated_time=data.get('estimated_time', 2),
+                thumbnail_url=data.get('thumbnail_url', ''),
+                created_by=request.user,
+            )
+
+            # Create Cards
+            cards_created = 0
+            for c_order, c_data in enumerate(data.get('cards', [])):
+                if not c_data.get('content'):
+                    continue
+
+                TopicCard.objects.create(
+                    topic=topic,
+                    title=c_data.get('title', ''),
+                    content=c_data.get('content'),
+                    card_type=c_data.get('card_type', 'text'),
+                    code_snippet=c_data.get('code_snippet', ''),
+                    code_language=c_data.get('code_language', 'python'),
+                    image_url=c_data.get('image_url', ''),
+                    image_caption=c_data.get('image_caption', ''),
+                    order=c_order,
+                )
+                cards_created += 1
+
+            messages.success(
+                request,
+                f'Topic "{topic.title}" created successfully with {cards_created} cards!'
+            )
+            return redirect('staff_topic_cards', topic_id=topic.id)
+
+        except Exception as e:
+            errors.append(f'Error creating topic: {str(e)}')
+            return render(request, self.template_name, {
+                'categories': categories,
+                'errors': errors,
+                'json_data': json_data,
+                'selected_category': category_id,
+            })
+
+
+class StaffTopicCreateView(StaffRequiredMixin, View):
+    """Create a new topic"""
+    template_name = 'staff/topic-form.html'
+
+    def get(self, request):
+        form = TopicForm()
+        return render(request, self.template_name, {'form': form, 'action': 'Create'})
+
+    def post(self, request):
+        form = TopicForm(request.POST)
+        if form.is_valid():
+            topic = form.save(commit=False)
+            topic.created_by = request.user
+            topic.save()
+            messages.success(request, 'Topic created successfully! Now add cards.')
+            return redirect('staff_topic_cards', topic_id=topic.id)
+        return render(request, self.template_name, {'form': form, 'action': 'Create'})
+
+
+class StaffTopicEditView(StaffRequiredMixin, View):
+    """Edit an existing topic"""
+    template_name = 'staff/topic-form.html'
+
+    def get(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk)
+        form = TopicForm(instance=topic)
+        return render(request, self.template_name, {
+            'form': form,
+            'topic': topic,
+            'action': 'Edit'
+        })
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk)
+        form = TopicForm(request.POST, instance=topic)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Topic updated successfully!')
+            return redirect('staff_topic_list')
+        return render(request, self.template_name, {
+            'form': form,
+            'topic': topic,
+            'action': 'Edit'
+        })
+
+
+class StaffTopicDeleteView(StaffRequiredMixin, View):
+    """Delete a topic"""
+
+    def post(self, request, pk):
+        topic = get_object_or_404(Topic, pk=pk)
+        topic.delete()
+        messages.success(request, 'Topic deleted successfully!')
+        return redirect('staff_topic_list')
+
+
+class StaffTopicCardsView(StaffRequiredMixin, View):
+    """List and manage cards for a topic"""
+    template_name = 'staff/topic-cards.html'
+
+    def get(self, request, topic_id):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        cards = topic.cards.all().order_by('order')
+        return render(request, self.template_name, {
+            'topic': topic,
+            'cards': cards,
+        })
+
+
+class StaffCardCreateView(StaffRequiredMixin, View):
+    """Create a new card for a topic"""
+    template_name = 'staff/card-form.html'
+
+    def get(self, request, topic_id):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        form = TopicCardForm()
+        # Set default order to next available
+        next_order = topic.cards.count()
+        form.initial['order'] = next_order
+        return render(request, self.template_name, {
+            'topic': topic,
+            'form': form,
+            'action': 'Create'
+        })
+
+    def post(self, request, topic_id):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        form = TopicCardForm(request.POST)
+        if form.is_valid():
+            card = form.save(commit=False)
+            card.topic = topic
+            card.save()
+            messages.success(request, 'Card created successfully!')
+            return redirect('staff_topic_cards', topic_id=topic.id)
+        return render(request, self.template_name, {
+            'topic': topic,
+            'form': form,
+            'action': 'Create'
+        })
+
+
+class StaffCardEditView(StaffRequiredMixin, View):
+    """Edit an existing card"""
+    template_name = 'staff/card-form.html'
+
+    def get(self, request, topic_id, pk):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        card = get_object_or_404(TopicCard, pk=pk, topic=topic)
+        form = TopicCardForm(instance=card)
+        return render(request, self.template_name, {
+            'topic': topic,
+            'card': card,
+            'form': form,
+            'action': 'Edit'
+        })
+
+    def post(self, request, topic_id, pk):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        card = get_object_or_404(TopicCard, pk=pk, topic=topic)
+        form = TopicCardForm(request.POST, instance=card)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Card updated successfully!')
+            return redirect('staff_topic_cards', topic_id=topic.id)
+        return render(request, self.template_name, {
+            'topic': topic,
+            'card': card,
+            'form': form,
+            'action': 'Edit'
+        })
+
+
+class StaffCardDeleteView(StaffRequiredMixin, View):
+    """Delete a card"""
+
+    def post(self, request, topic_id, pk):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        card = get_object_or_404(TopicCard, pk=pk, topic=topic)
+        card.delete()
+        messages.success(request, 'Card deleted successfully!')
+        return redirect('staff_topic_cards', topic_id=topic.id)
+
+
+# =============================================================================
+# TOPIC - Public Views
+# =============================================================================
+
+class TopicsHomeView(View):
+    """Topics home page - discover learning topics"""
+    template_name = 'quiz/topics/home.html'
+
+    def get(self, request):
+        featured_topics = Topic.objects.filter(status='published', is_featured=True)[:6]
+        categories = Category.objects.filter(is_active=True, parent__isnull=True)[:8]
+        recent_topics = Topic.objects.filter(status='published').order_by('-created_at')[:6]
+
+        # Get user's in-progress topics
+        in_progress_topics = []
+        if request.user.is_authenticated:
+            in_progress_progress = TopicProgress.objects.filter(
+                user=request.user,
+                is_completed=False
+            ).select_related('topic')[:3]
+            in_progress_topics = [p.topic for p in in_progress_progress]
+
+        return render(request, self.template_name, {
+            'featured_topics': featured_topics,
+            'categories': categories,
+            'recent_topics': recent_topics,
+            'in_progress_topics': in_progress_topics,
+        })
+
+
+class TopicCategoryView(View):
+    """View topics in a specific category"""
+    template_name = 'quiz/topics/category.html'
+
+    def get(self, request, slug):
+        category = get_object_or_404(Category, slug=slug, is_active=True)
+        topics = Topic.objects.filter(category=category, status='published')
+
+        # Include subcategory topics
+        subcategories = category.subcategories.filter(is_active=True)
+        for subcat in subcategories:
+            topics = topics | Topic.objects.filter(category=subcat, status='published')
+
+        return render(request, self.template_name, {
+            'category': category,
+            'topics': topics.distinct().order_by('order', 'title'),
+            'subcategories': subcategories,
+        })
+
+
+class TopicDetailView(View):
+    """Topic detail page before starting"""
+    template_name = 'quiz/topics/detail.html'
+
+    def get(self, request, slug):
+        topic = get_object_or_404(Topic, slug=slug, status='published')
+        cards = topic.cards.all().order_by('order')
+
+        user_progress = None
+        if request.user.is_authenticated:
+            user_progress = TopicProgress.objects.filter(
+                user=request.user,
+                topic=topic
+            ).first()
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'cards': cards,
+            'user_progress': user_progress,
+        })
+
+
+class TopicCardView(LoginRequiredMixin, View):
+    """View/swipe through topic cards"""
+    template_name = 'quiz/topics/card.html'
+
+    def get(self, request, slug, card_num):
+        topic = get_object_or_404(Topic, slug=slug, status='published')
+        cards = list(topic.cards.all().order_by('order'))
+
+        if not cards:
+            messages.error(request, 'This topic has no cards yet.')
+            return redirect('topic_detail', slug=slug)
+
+        # Validate card_num (1-indexed for URL)
+        card_index = card_num - 1
+        if card_index < 0 or card_index >= len(cards):
+            return redirect('topic_card', slug=slug, card_num=1)
+
+        card = cards[card_index]
+
+        # Get or create progress (only on first card view, check subscription)
+        progress, created = TopicProgress.objects.get_or_create(
+            user=request.user,
+            topic=topic,
+            defaults={'current_card_index': card_index}
+        )
+
+        # Check subscription for new topics
+        if created:
+            get_or_create_free_subscription(request.user)
+            can_access, message, subscription = check_feature_access(request.user, 'topics_view')
+            if not can_access:
+                progress.delete()
+                messages.warning(request, message)
+                return redirect('subscription')
+            use_feature(request.user, 'topics_view')
+
+        # Update progress
+        if card_index > progress.current_card_index:
+            progress.current_card_index = card_index
+            progress.save()
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'card': card,
+            'card_num': card_num,
+            'total_cards': len(cards),
+            'progress': progress,
+            'prev_card': card_num - 1 if card_num > 1 else None,
+            'next_card': card_num + 1 if card_num < len(cards) else None,
+        })
+
+
+class TopicCompleteView(LoginRequiredMixin, View):
+    """Mark topic as completed"""
+    template_name = 'quiz/topics/complete.html'
+
+    def get(self, request, slug):
+        topic = get_object_or_404(Topic, slug=slug, status='published')
+
+        progress = get_object_or_404(TopicProgress, user=request.user, topic=topic)
+
+        # Mark as completed if not already
+        if not progress.is_completed:
+            progress.is_completed = True
+            progress.completed_at = timezone.now()
+            progress.save()
+
+        # Get similar topics from same category (excluding current)
+        similar_topics = Topic.objects.filter(
+            category=topic.category,
+            status='published'
+        ).exclude(id=topic.id).order_by('?')[:3]
+
+        # If not enough from same category, fill with featured topics
+        if similar_topics.count() < 3:
+            additional_count = 3 - similar_topics.count()
+            additional_topics = Topic.objects.filter(
+                status='published',
+                is_featured=True
+            ).exclude(
+                id=topic.id
+            ).exclude(
+                id__in=similar_topics.values_list('id', flat=True)
+            ).order_by('?')[:additional_count]
+            similar_topics = list(similar_topics) + list(additional_topics)
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'progress': progress,
+            'similar_topics': similar_topics,
+        })
+
+
+class TopicMiniQuizView(LoginRequiredMixin, View):
+    """Start mini-quiz for a topic"""
+
+    def get(self, request, slug):
+        topic = get_object_or_404(Topic, slug=slug, status='published')
+
+        if not topic.mini_quiz:
+            messages.info(request, 'This topic does not have a mini-quiz.')
+            return redirect('topic_complete', slug=slug)
+
+        # Redirect to quiz start
+        return redirect('quiz_start', slug=topic.mini_quiz.slug)
+
+
+class TopicProgressView(LoginRequiredMixin, View):
+    """User's topic learning history"""
+    template_name = 'quiz/topics/my-progress.html'
+
+    def get(self, request):
+        progress_list = TopicProgress.objects.filter(
+            user=request.user
+        ).select_related('topic', 'topic__category').order_by('-updated_at')
+
+        completed = progress_list.filter(is_completed=True)
+        in_progress = progress_list.filter(is_completed=False)
+
+        return render(request, self.template_name, {
+            'completed': completed,
+            'in_progress': in_progress,
+        })
+
+
+# =============================================================================
+# Topic Instagram Carousel Export Views
+# =============================================================================
+
+class TopicExportView(LoginRequiredMixin, View):
+    """Export topic cards as Instagram carousel images"""
+    template_name = 'quiz/topics/export.html'
+
+    def get(self, request, slug):
+        # Allow export for: published topics OR user's own approved/draft topics
+        topic = get_object_or_404(Topic, slug=slug)
+
+        # Check access: must be published OR owned by user with approved/draft status
+        if topic.status != 'published':
+            if topic.created_by != request.user:
+                messages.error(request, 'You can only export your own topics or published topics.')
+                return redirect('topics_home')
+            if topic.status not in ['draft', 'approved', 'pending']:
+                messages.error(request, 'This topic cannot be exported.')
+                return redirect('user_topic_list')
+
+        cards = topic.cards.order_by('order')
+
+        if cards.count() < 1:
+            messages.error(request, 'This topic has no cards to export.')
+            return redirect('topic_detail', slug=slug)
+
+        # Check Instagram connection
+        instagram_connected = False
+        if hasattr(request.user, 'instagram_account'):
+            instagram_connected = request.user.instagram_account.is_connected
+
+        # Get video templates for styling
+        templates = VideoTemplate.objects.filter(is_active=True).order_by('sort_order')
+
+        # Get recent exports for this topic
+        recent_exports = TopicCarouselExport.objects.filter(
+            user=request.user,
+            topic=topic
+        ).order_by('-created_at')[:5]
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'cards': cards,
+            'instagram_connected': instagram_connected,
+            'templates': templates,
+            'recent_exports': recent_exports,
+        })
+
+    def post(self, request, slug):
+        """Start carousel image generation"""
+        topic = get_object_or_404(Topic, slug=slug)
+
+        # Check access: must be published OR owned by user
+        if topic.status != 'published':
+            if topic.created_by != request.user:
+                return JsonResponse({'error': 'You can only export your own topics.'}, status=403)
+            if topic.status not in ['draft', 'approved', 'pending']:
+                return JsonResponse({'error': 'This topic cannot be exported.'}, status=403)
+
+        cards = topic.cards.order_by('order')
+
+        if cards.count() < 1:
+            return JsonResponse({'error': 'No cards to export.'}, status=400)
+
+        # Check subscription for carousel export
+        get_or_create_free_subscription(request.user)
+        can_access, message, _ = check_feature_access(request.user, 'carousel_export')
+        if not can_access:
+            return JsonResponse({'error': message}, status=403)
+
+        # Use the feature (increment usage)
+        use_feature(request.user, 'carousel_export')
+
+        # Get template
+        template_id = request.POST.get('template_id')
+        template = None
+        if template_id:
+            template = VideoTemplate.objects.filter(id=template_id, is_active=True).first()
+
+        # Get handle name
+        handle_name = request.POST.get('handle_name', '@maedix-q').strip()
+        if not handle_name.startswith('@'):
+            handle_name = '@' + handle_name
+
+        # Generate unique task ID
+        task_id = str(uuid.uuid4())
+
+        # Store initial progress
+        cache.set(f'carousel_progress_{task_id}', {
+            'percent': 0,
+            'message': 'Starting image generation...',
+            'status': 'processing'
+        }, timeout=600)
+
+        # Start background generation
+        thread = threading.Thread(
+            target=self._generate_carousel_images,
+            args=(task_id, topic.id, template.id if template else None,
+                  handle_name, request.user.id)
+        )
+        thread.start()
+
+        return JsonResponse({
+            'task_id': task_id,
+            'message': 'Carousel generation started'
+        })
+
+    def _generate_carousel_images(self, task_id, topic_id, template_id, handle_name, user_id):
+        """Background task to generate carousel images"""
+        from io import BytesIO
+        from .topic_image_generator import TopicCardImageGenerator
+        from core.s3_utils import upload_to_s3
+
+        try:
+            topic = Topic.objects.get(id=topic_id)
+            cards = list(topic.cards.order_by('order'))
+
+            # Load template config
+            template_config = None
+            if template_id:
+                template = VideoTemplate.objects.filter(id=template_id).first()
+                if template and template.config:
+                    template_config = template.config
+
+            # Update progress
+            cache.set(f'carousel_progress_{task_id}', {
+                'percent': 10,
+                'message': 'Initializing image generator...',
+                'status': 'processing'
+            }, timeout=600)
+
+            # Initialize generator
+            generator = TopicCardImageGenerator(
+                handle_name=handle_name,
+                template_config=template_config
+            )
+
+            # Generate images
+            cache.set(f'carousel_progress_{task_id}', {
+                'percent': 20,
+                'message': 'Generating carousel images...',
+                'status': 'processing'
+            }, timeout=600)
+
+            images = generator.generate_carousel_images(topic, cards)
+
+            # Upload images to S3
+            cache.set(f'carousel_progress_{task_id}', {
+                'percent': 60,
+                'message': 'Uploading images to S3...',
+                'status': 'processing'
+            }, timeout=600)
+
+            uploaded_images = []
+            for i, pil_image in enumerate(images):
+                # Convert PIL Image to bytes
+                img_buffer = BytesIO()
+                pil_image.save(img_buffer, format='PNG', quality=95)
+                img_bytes = img_buffer.getvalue()
+
+                s3_key = f"topic-carousels/{topic.slug}/{task_id}/card_{i+1}.png"
+                s3_url, _, error = upload_to_s3(
+                    img_bytes,
+                    s3_key,
+                    content_type='image/png'
+                )
+                if error:
+                    raise Exception(f"Failed to upload image {i+1}: {error}")
+
+                uploaded_images.append({
+                    's3_url': s3_url,
+                    's3_key': s3_key
+                })
+
+                # Update progress
+                progress_pct = 60 + int((i + 1) / len(images) * 30)
+                cache.set(f'carousel_progress_{task_id}', {
+                    'percent': progress_pct,
+                    'message': f'Uploaded image {i+1} of {len(images)}...',
+                    'status': 'processing'
+                }, timeout=600)
+
+            # Save export record
+            export = TopicCarouselExport.objects.create(
+                user_id=user_id,
+                topic=topic,
+                images=uploaded_images,
+                cards_count=len(cards)
+            )
+
+            # Store completed result
+            cache.set(f'carousel_progress_{task_id}', {
+                'percent': 100,
+                'message': 'Carousel images ready!',
+                'status': 'completed',
+                'export_id': export.id,
+                'images': uploaded_images
+            }, timeout=1800)
+
+        except Exception as e:
+            logging.error(f"Carousel generation error: {e}")
+            cache.set(f'carousel_progress_{task_id}', {
+                'percent': 0,
+                'message': f'Error: {str(e)}',
+                'status': 'error'
+            }, timeout=600)
+
+
+class TopicExportProgressView(LoginRequiredMixin, View):
+    """Check progress of carousel image generation"""
+
+    def get(self, request, task_id):
+        progress = cache.get(f'carousel_progress_{task_id}')
+        if not progress:
+            return JsonResponse({
+                'percent': 0,
+                'message': 'Task not found or expired.',
+                'status': 'error'
+            })
+        return JsonResponse(progress)
+
+
+class TopicPostInstagramView(LoginRequiredMixin, View):
+    """Post topic carousel to Instagram"""
+    template_name = 'quiz/topics/post-instagram.html'
+
+    def get(self, request, slug):
+        topic = get_object_or_404(Topic, slug=slug, status='published')
+        export_id = request.GET.get('export_id')
+
+        if not export_id:
+            messages.error(request, 'No export selected.')
+            return redirect('topic_export', slug=slug)
+
+        export = get_object_or_404(
+            TopicCarouselExport,
+            id=export_id,
+            user=request.user,
+            topic=topic
+        )
+
+        # Check Instagram connection
+        if not hasattr(request.user, 'instagram_account'):
+            messages.error(request, 'Please connect your Instagram account first.')
+            return redirect('instagram_connect')
+
+        if not request.user.instagram_account.is_connected:
+            messages.error(request, 'Your Instagram token has expired. Please reconnect.')
+            return redirect('instagram_connect')
+
+        return render(request, self.template_name, {
+            'topic': topic,
+            'export': export,
+            'instagram_username': request.user.instagram_account.username,
+        })
+
+    def post(self, request, slug):
+        """Post carousel to Instagram"""
+        import requests as http_requests
+
+        topic = get_object_or_404(Topic, slug=slug, status='published')
+        export_id = request.POST.get('export_id')
+        caption = request.POST.get('caption', '')
+
+        export = get_object_or_404(
+            TopicCarouselExport,
+            id=export_id,
+            user=request.user,
+            topic=topic
+        )
+
+        # Check Instagram connection
+        if not hasattr(request.user, 'instagram_account'):
+            return JsonResponse({'error': 'Instagram not connected.'}, status=400)
+
+        ig_account = request.user.instagram_account
+        if not ig_account.is_connected:
+            return JsonResponse({'error': 'Instagram token expired.'}, status=400)
+
+        access_token = ig_account.access_token
+        ig_user_id = ig_account.instagram_user_id
+
+        try:
+            # Step 1: Create individual image containers
+            children_ids = []
+            for img_data in export.images:
+                container_response = http_requests.post(
+                    f"https://graph.instagram.com/v21.0/{ig_user_id}/media",
+                    data={
+                        "image_url": img_data['s3_url'],
+                        "is_carousel_item": "true",
+                        "access_token": access_token,
+                    },
+                    timeout=30,
+                )
+                container_data = container_response.json()
+
+                if "id" not in container_data:
+                    error_msg = container_data.get("error", {}).get(
+                        "message", "Failed to create image container"
+                    )
+                    return JsonResponse({'error': f'Instagram error: {error_msg}'}, status=400)
+
+                children_ids.append(container_data["id"])
+
+            # Step 2: Create carousel container
+            carousel_response = http_requests.post(
+                f"https://graph.instagram.com/v21.0/{ig_user_id}/media",
+                data={
+                    "media_type": "CAROUSEL",
+                    "children": ",".join(children_ids),
+                    "caption": caption,
+                    "access_token": access_token,
+                },
+                timeout=30,
+            )
+            carousel_data = carousel_response.json()
+
+            if "id" not in carousel_data:
+                error_msg = carousel_data.get("error", {}).get(
+                    "message", "Failed to create carousel"
+                )
+                return JsonResponse({'error': f'Instagram error: {error_msg}'}, status=400)
+
+            carousel_id = carousel_data["id"]
+
+            # Step 3: Wait for processing
+            for _ in range(30):
+                status_response = http_requests.get(
+                    f"https://graph.instagram.com/v21.0/{carousel_id}",
+                    params={
+                        "fields": "status_code,status",
+                        "access_token": access_token,
+                    },
+                    timeout=10,
+                )
+                status_data = status_response.json()
+                status_code = status_data.get("status_code")
+
+                if status_code == "FINISHED":
+                    break
+                elif status_code == "ERROR":
+                    return JsonResponse({
+                        'error': f'Processing failed: {status_data.get("status", "Unknown error")}'
+                    }, status=400)
+                else:
+                    time.sleep(5)
+            else:
+                return JsonResponse({'error': 'Processing timeout.'}, status=400)
+
+            # Step 4: Publish carousel
+            publish_response = http_requests.post(
+                f"https://graph.instagram.com/v21.0/{ig_user_id}/media_publish",
+                data={
+                    "creation_id": carousel_id,
+                    "access_token": access_token,
+                },
+                timeout=60,
+            )
+            publish_data = publish_response.json()
+
+            if "id" not in publish_data:
+                error_msg = publish_data.get("error", {}).get(
+                    "message", "Failed to publish"
+                )
+                return JsonResponse({'error': f'Instagram error: {error_msg}'}, status=400)
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Carousel posted to Instagram successfully!'
+            })
+
+        except http_requests.RequestException as e:
+            return JsonResponse({'error': f'Network error: {str(e)}'}, status=500)
+        except Exception as e:
+            return JsonResponse({'error': f'Error: {str(e)}'}, status=500)

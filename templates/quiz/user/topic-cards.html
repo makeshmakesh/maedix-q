@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Cards - {{ topic.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'user_topic_list' %}">My Topics</a></li>
+                <li class="breadcrumb-item active">{{ topic.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">{{ topic.title }}</h2>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    {% if topic.status == 'draft' %}
+                    <span class="badge bg-secondary">Draft</span>
+                    {% elif topic.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pending Approval</span>
+                    {% elif topic.status == 'approved' %}
+                    <span class="badge bg-info">Approved</span>
+                    {% elif topic.status == 'rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                    {% elif topic.status == 'published' %}
+                    <span class="badge bg-success">Published</span>
+                    {% endif %}
+                    <span class="text-muted small">{{ cards|length }} cards</span>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                {% if topic.can_be_edited %}
+                <a href="{% url 'user_card_create' topic.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Add Card
+                </a>
+                {% endif %}
+                {% if cards|length > 0 %}
+                <a href="{% url 'topic_export' topic.slug %}" class="btn btn-outline-info">
+                    <i class="bi bi-instagram"></i> Export as Carousel
+                </a>
+                {% endif %}
+                {% if topic.status == 'draft' or topic.status == 'rejected' %}
+                {% if cards|length > 0 %}
+                <form action="{% url 'user_topic_submit' topic.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-send"></i> Submit for Approval
+                    </button>
+                </form>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if topic.status == 'rejected' and topic.rejection_reason %}
+        <div class="alert alert-danger mb-4">
+            <h6 class="fw-bold"><i class="bi bi-exclamation-triangle"></i> Topic Rejected</h6>
+            <p class="mb-0">{{ topic.rejection_reason }}</p>
+            <small class="text-muted">Please fix the issues and resubmit.</small>
+        </div>
+        {% endif %}
+
+        {% if topic.status == 'approved' or topic.status == 'published' %}
+        <div class="alert alert-success mb-4">
+            <i class="bi bi-check-circle"></i>
+            This topic has been approved. It cannot be modified but you can export it as a carousel.
+        </div>
+        {% endif %}
+
+        {% if topic.status == 'pending' %}
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-hourglass-split"></i>
+            This topic is pending admin approval. You cannot modify it until it's reviewed.
+        </div>
+        {% endif %}
+
+        {% if cards %}
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Content Preview</th>
+                            {% if topic.can_be_edited %}
+                            <th class="text-end">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in cards %}
+                        <tr>
+                            <td><span class="badge bg-primary">{{ card.order }}</span></td>
+                            <td>
+                                <span class="fw-medium">{{ card.title|default:"Untitled" }}</span>
+                            </td>
+                            <td>
+                                {% if card.card_type == 'text' %}
+                                <span class="badge bg-light text-dark">Text</span>
+                                {% elif card.card_type == 'text_code' %}
+                                <span class="badge bg-info text-white"><i class="bi bi-code-slash"></i> Text + Code</span>
+                                {% elif card.card_type == 'text_image' %}
+                                <span class="badge bg-success text-white"><i class="bi bi-image"></i> Text + Image</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-muted small">{{ card.content|truncatewords:15 }}</span>
+                            </td>
+                            {% if topic.can_be_edited %}
+                            <td class="text-end">
+                                <a href="{% url 'user_card_edit' topic.pk card.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-card"
+                                        data-card-id="{{ card.pk }}" data-card-title="{{ card.title|default:'this card' }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="card p-5 text-center">
+            <i class="bi bi-layers text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">No cards yet</h5>
+            <p class="text-muted">Add cards (~100 words each) to your topic before submitting for approval.</p>
+            {% if topic.can_be_edited %}
+            <div>
+                <a href="{% url 'user_card_create' topic.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Add Card
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'user_topic_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to My Topics
+            </a>
+        </div>
+    </div>
+</section>
+
+{% if topic.can_be_edited %}
+<!-- Delete Card Modal -->
+<div class="modal fade" id="deleteCardModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteCardTitle"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteCardForm" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteCardModal');
+    const deleteForm = document.getElementById('deleteCardForm');
+    const deleteTitle = document.getElementById('deleteCardTitle');
+
+    document.querySelectorAll('.btn-delete-card').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const cardId = this.dataset.cardId;
+            const cardTitle = this.dataset.cardTitle;
+
+            deleteForm.action = '{% url "user_card_delete" topic.pk 0 %}'.replace('/0/', '/' + cardId + '/');
+            deleteTitle.textContent = cardTitle;
+
+            const modal = new bootstrap.Modal(deleteModal);
+            modal.show();
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

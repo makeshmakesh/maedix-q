@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit Topic{% else %}Create Topic{% endif %}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="{% url 'user_topic_list' %}">My Topics</a></li>
+                        <li class="breadcrumb-item active">{% if is_edit %}Edit{% else %}Create{% endif %}</li>
+                    </ol>
+                </nav>
+
+                <div class="card p-4">
+                    <h3 class="fw-bold mb-4">{% if is_edit %}Edit Topic{% else %}Create New Topic{% endif %}</h3>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">Topic Title *</label>
+                            <input type="text" name="title" id="id_title" class="form-control"
+                                   value="{{ form.title.value|default:'' }}" required
+                                   placeholder="e.g., Understanding Python Decorators">
+                            {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            <textarea name="description" id="id_description" class="form-control" rows="3"
+                                      placeholder="Brief description of what this topic covers..." maxlength="500">{{ form.description.value|default:'' }}</textarea>
+                            <small class="text-muted">Max 500 characters</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_category" class="form-label">Category *</label>
+                                <select name="category" id="id_category" class="form-select" required>
+                                    <option value="">Select category...</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="id_estimated_time" class="form-label">Estimated Time (minutes)</label>
+                                <input type="number" name="estimated_time" id="id_estimated_time" class="form-control"
+                                       value="{{ form.estimated_time.value|default:'2' }}" min="1" max="30">
+                                <small class="text-muted">Approx. reading time</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_thumbnail_url" class="form-label">Thumbnail URL</label>
+                            <input type="url" name="thumbnail_url" id="id_thumbnail_url" class="form-control"
+                                   value="{{ form.thumbnail_url.value|default:'' }}"
+                                   placeholder="https://example.com/image.jpg">
+                            <small class="text-muted">Optional: Add an image URL for the topic thumbnail</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check"></i> {% if is_edit %}Save Changes{% else %}Create Topic{% endif %}
+                            </button>
+                            <a href="{% url 'user_topic_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                {% if not is_edit %}
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle"></i>
+                    After creating the topic, you'll be able to add cards (~100 words each). Once ready, submit it for admin approval.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -26,11 +26,23 @@ urlpatterns = [
     path('my-quizzes/<int:quiz_id>/questions/<int:pk>/delete/', views.UserQuestionDeleteView.as_view(), name='user_question_delete'),
     path('my-quizzes/<int:pk>/submit/', views.UserQuizSubmitApprovalView.as_view(), name='user_quiz_submit'),
 
+    # User Topic Management (must be before slug patterns)
+    path('my-topics/', views.UserTopicListView.as_view(), name='user_topic_list'),
+    path('my-topics/create/', views.UserTopicCreateView.as_view(), name='user_topic_create'),
+    path('my-topics/<int:pk>/edit/', views.UserTopicEditView.as_view(), name='user_topic_edit'),
+    path('my-topics/<int:pk>/delete/', views.UserTopicDeleteView.as_view(), name='user_topic_delete'),
+    path('my-topics/<int:pk>/cards/', views.UserTopicCardsView.as_view(), name='user_topic_cards'),
+    path('my-topics/<int:topic_id>/cards/create/', views.UserCardCreateView.as_view(), name='user_card_create'),
+    path('my-topics/<int:topic_id>/cards/<int:pk>/edit/', views.UserCardEditView.as_view(), name='user_card_edit'),
+    path('my-topics/<int:topic_id>/cards/<int:pk>/delete/', views.UserCardDeleteView.as_view(), name='user_card_delete'),
+    path('my-topics/<int:pk>/submit/', views.UserTopicSubmitApprovalView.as_view(), name='user_topic_submit'),
+
     # Quiz attempt result (must be before slug patterns)
     path('attempt/<int:attempt_id>/result/', views.QuizResultView.as_view(), name='quiz_result'),
 
     # Staff Admin Portal (must be before slug patterns)
     path('staff/dashboard/', views.StaffDashboardView.as_view(), name='staff_dashboard'),
+    path('staff/upload-image/', views.StaffImageUploadView.as_view(), name='staff_image_upload'),
 
     # Category Management
     path('staff/categories/', views.StaffCategoryListView.as_view(), name='staff_category_list'),
@@ -56,6 +68,34 @@ urlpatterns = [
     path('staff/approvals/<int:pk>/preview/', views.StaffQuizPreviewView.as_view(), name='staff_quiz_preview'),
     path('staff/approvals/<int:pk>/approve/', views.StaffApproveQuizView.as_view(), name='staff_approve_quiz'),
     path('staff/approvals/<int:pk>/reject/', views.StaffRejectQuizView.as_view(), name='staff_reject_quiz'),
+
+    # Topic Approval
+    path('staff/approvals/topic/<int:pk>/preview/', views.StaffTopicPreviewView.as_view(), name='staff_topic_preview'),
+    path('staff/approvals/topic/<int:pk>/approve/', views.StaffApproveTopicView.as_view(), name='staff_approve_topic'),
+    path('staff/approvals/topic/<int:pk>/reject/', views.StaffRejectTopicView.as_view(), name='staff_reject_topic'),
+
+    # Staff Topic Management
+    path('staff/topics/', views.StaffTopicListView.as_view(), name='staff_topic_list'),
+    path('staff/topics/import/', views.StaffTopicImportView.as_view(), name='staff_topic_import'),
+    path('staff/topics/create/', views.StaffTopicCreateView.as_view(), name='staff_topic_create'),
+    path('staff/topics/<int:pk>/edit/', views.StaffTopicEditView.as_view(), name='staff_topic_edit'),
+    path('staff/topics/<int:pk>/delete/', views.StaffTopicDeleteView.as_view(), name='staff_topic_delete'),
+    path('staff/topics/<int:topic_id>/cards/', views.StaffTopicCardsView.as_view(), name='staff_topic_cards'),
+    path('staff/topics/<int:topic_id>/cards/create/', views.StaffCardCreateView.as_view(), name='staff_card_create'),
+    path('staff/topics/<int:topic_id>/cards/<int:pk>/edit/', views.StaffCardEditView.as_view(), name='staff_card_edit'),
+    path('staff/topics/<int:topic_id>/cards/<int:pk>/delete/', views.StaffCardDeleteView.as_view(), name='staff_card_delete'),
+
+    # Public Topics (must be before quiz slug patterns)
+    path('topics/', views.TopicsHomeView.as_view(), name='topics_home'),
+    path('topics/my-progress/', views.TopicProgressView.as_view(), name='topic_my_progress'),
+    path('topics/export/progress/<str:task_id>/', views.TopicExportProgressView.as_view(), name='topic_export_progress'),
+    path('topics/category/<slug:slug>/', views.TopicCategoryView.as_view(), name='topic_category'),
+    path('topics/<slug:slug>/', views.TopicDetailView.as_view(), name='topic_detail'),
+    path('topics/<slug:slug>/card/<int:card_num>/', views.TopicCardView.as_view(), name='topic_card'),
+    path('topics/<slug:slug>/complete/', views.TopicCompleteView.as_view(), name='topic_complete'),
+    path('topics/<slug:slug>/quiz/', views.TopicMiniQuizView.as_view(), name='topic_mini_quiz'),
+    path('topics/<slug:slug>/export/', views.TopicExportView.as_view(), name='topic_export'),
+    path('topics/<slug:slug>/post-instagram/', views.TopicPostInstagramView.as_view(), name='topic_post_instagram'),
 
     # Quiz detail and related pages (slug patterns MUST be last)
     path('<slug:slug>/', views.QuizDetailView.as_view(), name='quiz_detail'),

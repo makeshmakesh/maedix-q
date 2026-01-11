@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit Card{% else %}Add Card{% endif %} - {{ topic.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="{% url 'user_topic_list' %}">My Topics</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'user_topic_cards' topic.pk %}">{{ topic.title }}</a></li>
+                        <li class="breadcrumb-item active">{% if is_edit %}Edit{% else %}Add{% endif %} Card</li>
+                    </ol>
+                </nav>
+
+                <div class="card p-4">
+                    <h3 class="fw-bold mb-4">{% if is_edit %}Edit Card{% else %}Add New Card{% endif %}</h3>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="id_title" class="form-label">Card Title</label>
+                                <input type="text" name="title" id="id_title" class="form-control"
+                                       value="{{ form.title.value|default:'' }}"
+                                       placeholder="Optional heading for this card" maxlength="100">
+                                <small class="text-muted">Optional - max 100 characters</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_order" class="form-label">Order</label>
+                                <input type="number" name="order" id="id_order" class="form-control"
+                                       value="{{ form.order.value|default:'0' }}" min="0">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_card_type" class="form-label">Card Type *</label>
+                            <select name="card_type" id="id_card_type" class="form-select" required>
+                                <option value="text" {% if form.card_type.value == 'text' or not form.card_type.value %}selected{% endif %}>Text Only</option>
+                                <option value="text_code" {% if form.card_type.value == 'text_code' %}selected{% endif %}>Text + Code</option>
+                                <option value="text_image" {% if form.card_type.value == 'text_image' %}selected{% endif %}>Text + Image</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_content" class="form-label">Content * <small class="text-muted">(~100 words recommended)</small></label>
+                            <textarea name="content" id="id_content" class="form-control" rows="5"
+                                      placeholder="Write the card content here... Keep it concise (~100 words)"
+                                      required maxlength="600">{{ form.content.value|default:'' }}</textarea>
+                            <small class="text-muted">Max 600 characters</small>
+                            {% if form.content.errors %}
+                            <div class="text-danger small">{{ form.content.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Code snippet section (shown when text_code is selected) -->
+                        <div id="code-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="id_code_language" class="form-label">Code Language</label>
+                                <select name="code_language" id="id_code_language" class="form-select">
+                                    <option value="python" {% if form.code_language.value == 'python' %}selected{% endif %}>Python</option>
+                                    <option value="javascript" {% if form.code_language.value == 'javascript' %}selected{% endif %}>JavaScript</option>
+                                    <option value="java" {% if form.code_language.value == 'java' %}selected{% endif %}>Java</option>
+                                    <option value="cpp" {% if form.code_language.value == 'cpp' %}selected{% endif %}>C++</option>
+                                    <option value="c" {% if form.code_language.value == 'c' %}selected{% endif %}>C</option>
+                                    <option value="go" {% if form.code_language.value == 'go' %}selected{% endif %}>Go</option>
+                                    <option value="rust" {% if form.code_language.value == 'rust' %}selected{% endif %}>Rust</option>
+                                    <option value="sql" {% if form.code_language.value == 'sql' %}selected{% endif %}>SQL</option>
+                                    <option value="bash" {% if form.code_language.value == 'bash' %}selected{% endif %}>Bash</option>
+                                    <option value="html" {% if form.code_language.value == 'html' %}selected{% endif %}>HTML</option>
+                                    <option value="css" {% if form.code_language.value == 'css' %}selected{% endif %}>CSS</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_code_snippet" class="form-label">Code Snippet</label>
+                                <textarea name="code_snippet" id="id_code_snippet" class="form-control font-monospace" rows="6"
+                                          placeholder="Enter your code here...">{{ form.code_snippet.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Image section (shown when text_image is selected) -->
+                        <div id="image-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="id_image_url" class="form-label">Image URL</label>
+                                <input type="url" name="image_url" id="id_image_url" class="form-control"
+                                       value="{{ form.image_url.value|default:'' }}"
+                                       placeholder="https://example.com/image.jpg">
+                                <small class="text-muted">Enter a public image URL</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_image_caption" class="form-label">Image Caption</label>
+                                <input type="text" name="image_caption" id="id_image_caption" class="form-control"
+                                       value="{{ form.image_caption.value|default:'' }}"
+                                       placeholder="Optional caption for the image" maxlength="200">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check"></i> {% if is_edit %}Save Changes{% else %}Add Card{% endif %}
+                            </button>
+                            <a href="{% url 'user_topic_cards' topic.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="alert alert-light mt-4">
+                    <h6 class="fw-bold"><i class="bi bi-lightbulb"></i> Tips for great cards:</h6>
+                    <ul class="small mb-0">
+                        <li>Keep content to ~100 words for best readability</li>
+                        <li>Use clear, simple language</li>
+                        <li>One key concept per card</li>
+                        <li>Add code examples to illustrate programming concepts</li>
+                        <li>Use images sparingly - they should add value</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cardTypeSelect = document.getElementById('id_card_type');
+    const codeSection = document.getElementById('code-section');
+    const imageSection = document.getElementById('image-section');
+
+    function toggleSections() {
+        const cardType = cardTypeSelect.value;
+        codeSection.style.display = cardType === 'text_code' ? 'block' : 'none';
+        imageSection.style.display = cardType === 'text_image' ? 'block' : 'none';
+    }
+
+    cardTypeSelect.addEventListener('change', toggleSections);
+    toggleSections(); // Initial state
+});
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}My Topics{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+            <h2 class="fw-bold mb-0">My Topics</h2>
+            <a href="{% url 'user_topic_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus"></i> Create Topic
+            </a>
+        </div>
+
+        {% if topics %}
+        <div class="row g-4">
+            {% for topic in topics %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title fw-bold mb-0">{{ topic.title }}</h5>
+                            {% if topic.status == 'draft' %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% elif topic.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif topic.status == 'approved' %}
+                            <span class="badge bg-info">Approved</span>
+                            {% elif topic.status == 'rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% elif topic.status == 'published' %}
+                            <span class="badge bg-success">Published</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            {% if topic.category %}
+                            <span class="badge bg-light text-dark">{{ topic.category.name }}</span>
+                            {% endif %}
+                        </p>
+
+                        {% if topic.description %}
+                        <p class="card-text small text-muted">{{ topic.description|truncatewords:20 }}</p>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between align-items-center text-muted small mb-3">
+                            <span><i class="bi bi-layers"></i> {{ topic.card_count }} cards</span>
+                            <span><i class="bi bi-clock"></i> {{ topic.estimated_time }} min</span>
+                        </div>
+
+                        {% if topic.status == 'rejected' and topic.rejection_reason %}
+                        <div class="alert alert-danger small py-2 mb-3">
+                            <strong>Rejection reason:</strong> {{ topic.rejection_reason }}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if topic.can_be_edited %}
+                            <a href="{% url 'user_topic_cards' topic.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-layers"></i> Cards
+                            </a>
+                            <a href="{% url 'user_topic_edit' topic.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {% endif %}
+
+                            {% if topic.status == 'draft' or topic.status == 'rejected' %}
+                            {% if topic.card_count > 0 %}
+                            <form action="{% url 'user_topic_submit' topic.pk %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-send"></i> Submit
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% endif %}
+
+                            {% if topic.can_be_deleted %}
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-topic"
+                                    data-topic-id="{{ topic.pk }}" data-topic-title="{{ topic.title }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+
+                            {% if topic.status == 'approved' or topic.status == 'published' %}
+                            <a href="{% url 'topic_export' topic.slug %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-instagram"></i> Export
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent text-muted small">
+                        Created {{ topic.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card p-5 text-center">
+            <i class="bi bi-journal-plus text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">No topics yet</h5>
+            <p class="text-muted">Create your first topic and share bite-sized learning content!</p>
+            <div>
+                <a href="{% url 'user_topic_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Create Topic
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteTopicModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Topic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteTopicTitle"></strong>?</p>
+                <p class="text-danger small mb-0">This will delete all cards in this topic.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteTopicForm" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteTopicModal');
+    const deleteForm = document.getElementById('deleteTopicForm');
+    const deleteTitle = document.getElementById('deleteTopicTitle');
+
+    document.querySelectorAll('.btn-delete-topic').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const topicId = this.dataset.topicId;
+            const topicTitle = this.dataset.topicTitle;
+
+            deleteForm.action = '{% url "user_topic_delete" 0 %}'.replace('/0/', '/' + topicId + '/');
+            deleteTitle.textContent = topicTitle;
+
+            const modal = new bootstrap.Modal(deleteModal);
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

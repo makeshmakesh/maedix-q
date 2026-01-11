@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ topic.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'topics_home' %}">Topics</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'topic_category' topic.category.slug %}">{{ topic.category.name }}</a></li>
+                <li class="breadcrumb-item active">{{ topic.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card p-4 mb-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="badge bg-primary">{{ topic.category.name }}</span>
+                        <div>
+                            {% if topic.is_featured %}
+                            <span class="badge bg-warning"><i class="bi bi-star-fill"></i> Featured</span>
+                            {% endif %}
+                            {% if topic.has_mini_quiz %}
+                            <span class="badge bg-info"><i class="bi bi-question-circle"></i> Has Quiz</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h2 class="fw-bold mb-3">{{ topic.title }}</h2>
+
+                    {% if topic.description %}
+                    <p class="text-muted mb-4">{{ topic.description }}</p>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap gap-4 text-muted mb-4">
+                        <span><i class="bi bi-layers"></i> {{ topic.card_count }} cards</span>
+                        <span><i class="bi bi-clock"></i> ~{{ topic.estimated_time }} min read</span>
+                        {% if topic.linked_quiz %}
+                        <span><i class="bi bi-journal-text"></i> Linked Quiz</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Progress indicator -->
+                    {% if user_progress %}
+                    <div class="alert alert-success mb-4">
+                        {% if user_progress.is_completed %}
+                        <i class="bi bi-check-circle-fill"></i> You've completed this topic!
+                        <a href="{% url 'topic_card' topic.slug 1 %}" class="alert-link ms-2">Review cards</a>
+                        {% else %}
+                        <i class="bi bi-play-circle-fill"></i> You're on card {{ user_progress.current_card_index|add:1 }} of {{ topic.card_count }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Start button -->
+                    <div class="d-grid gap-2">
+                        {% if user_progress and not user_progress.is_completed %}
+                        <a href="{% url 'topic_card' topic.slug user_progress.current_card_index|add:1 %}" class="btn btn-success btn-lg">
+                            <i class="bi bi-play-fill"></i> Continue Learning
+                        </a>
+                        {% elif user_progress and user_progress.is_completed %}
+                        <a href="{% url 'topic_card' topic.slug 1 %}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-arrow-repeat"></i> Review Again
+                        </a>
+                        {% else %}
+                        <a href="{% url 'topic_card' topic.slug 1 %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-fill"></i> Start Learning
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Cards preview -->
+                {% if cards %}
+                <div class="card p-4">
+                    <h5 class="mb-3">What you'll learn</h5>
+                    <div class="list-group list-group-flush">
+                        {% for card in cards %}
+                        <div class="list-group-item px-0 d-flex align-items-center">
+                            <span class="badge bg-secondary me-3">{{ forloop.counter }}</span>
+                            <div>
+                                <strong>{{ card.title|default:"Card" }}</strong>
+                                {% if card.card_type == 'text_code' %}
+                                <span class="badge bg-info ms-2">Code</span>
+                                {% elif card.card_type == 'text_image' %}
+                                <span class="badge bg-warning ms-2">Image</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Related Quiz -->
+                {% if topic.linked_quiz %}
+                <div class="card p-4 mb-4">
+                    <h6 class="mb-3"><i class="bi bi-journal-text"></i> Dive Deeper</h6>
+                    <p class="small text-muted">Test your knowledge with the related quiz</p>
+                    <a href="{% url 'quiz_detail' topic.linked_quiz.slug %}" class="btn btn-outline-primary btn-sm">
+                        {{ topic.linked_quiz.title }}
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Topic Info -->
+                <div class="card p-4 mb-4">
+                    <h6 class="mb-3">About this topic</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-folder text-muted me-2"></i>
+                            {{ topic.category.name }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-layers text-muted me-2"></i>
+                            {{ topic.card_count }} learning cards
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-clock text-muted me-2"></i>
+                            ~{{ topic.estimated_time }} min read
+                        </li>
+                        {% if topic.has_mini_quiz %}
+                        <li>
+                            <i class="bi bi-question-circle text-muted me-2"></i>
+                            Includes mini-quiz
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Export -->
+                {% if user.is_authenticated %}
+                <div class="card p-4">
+                    <h6 class="mb-3"><i class="bi bi-share"></i> Share</h6>
+                    <a href="{% url 'topic_export' topic.slug %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-instagram"></i> Export as Carousel
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

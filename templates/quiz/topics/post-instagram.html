@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Post to Instagram - {{ topic.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'topics_home' %}">Topics</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'topic_detail' topic.slug %}">{{ topic.title }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'topic_export' topic.slug %}">Export</a></li>
+                <li class="breadcrumb-item active">Post to Instagram</li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="bi bi-instagram text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h3 class="fw-bold mb-0">Post to Instagram</h3>
+                            <p class="text-muted mb-0">Posting as @{{ instagram_username }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Preview Images -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Carousel Preview ({{ export.images|length }} images)</h6>
+                        <div class="row g-2">
+                            {% for img in export.images %}
+                            <div class="col-4 col-md-3">
+                                <img src="{{ img.s3_url }}" class="img-fluid rounded" alt="Card {{ forloop.counter }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Caption -->
+                    <form id="postForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="export_id" value="{{ export.id }}">
+
+                        <div class="mb-4">
+                            <label for="caption" class="form-label fw-bold">Caption</label>
+                            <textarea class="form-control" id="caption" name="caption" rows="5"
+                                      placeholder="Write your Instagram caption here...">{{ topic.title }}
+
+{{ topic.description }}
+
+#learning #education #{{ topic.category.name|slugify }} #shorts #carousel</textarea>
+                            <small class="text-muted">
+                                <span id="charCount">0</span> / 2,200 characters
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="postBtn">
+                                <i class="bi bi-send"></i> Post to Instagram
+                            </button>
+                            <a href="{% url 'topic_export' topic.slug %}" class="btn btn-outline-secondary btn-lg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Progress -->
+                    <div id="progressSection" class="mt-4" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border text-primary me-3" role="status"></div>
+                            <div>
+                                <strong id="progressTitle">Posting to Instagram...</strong>
+                                <p class="text-muted mb-0 small" id="progressMessage">This may take a moment.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success -->
+                    <div id="successSection" class="mt-4" style="display: none;">
+                        <div class="alert alert-success d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-3" style="font-size: 2rem;"></i>
+                            <div>
+                                <strong>Posted Successfully!</strong>
+                                <p class="mb-0">Your carousel has been posted to Instagram.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'topic_detail' topic.slug %}" class="btn btn-primary">
+                                Back to Topic
+                            </a>
+                            <a href="{% url 'topic_export' topic.slug %}" class="btn btn-outline-secondary">
+                                Create Another
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Error -->
+                    <div id="errorSection" class="mt-4" style="display: none;">
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <strong>Error:</strong> <span id="errorMessage"></span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="location.reload()">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// Character count
+const captionInput = document.getElementById('caption');
+const charCount = document.getElementById('charCount');
+
+function updateCharCount() {
+    charCount.textContent = captionInput.value.length;
+}
+captionInput.addEventListener('input', updateCharCount);
+updateCharCount();
+
+// Form submission
+document.getElementById('postForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+    const postBtn = document.getElementById('postBtn');
+    const progressSection = document.getElementById('progressSection');
+    const successSection = document.getElementById('successSection');
+    const errorSection = document.getElementById('errorSection');
+
+    // Reset
+    postBtn.disabled = true;
+    postBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Posting...';
+    progressSection.style.display = 'block';
+    successSection.style.display = 'none';
+    errorSection.style.display = 'none';
+
+    try {
+        const response = await fetch('{% url "topic_post_instagram" topic.slug %}', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            progressSection.style.display = 'none';
+            successSection.style.display = 'block';
+            // Hide the form on success
+            form.style.display = 'none';
+        } else {
+            throw new Error(data.error || 'Failed to post to Instagram');
+        }
+
+    } catch (error) {
+        progressSection.style.display = 'none';
+        errorSection.style.display = 'block';
+        document.getElementById('errorMessage').textContent = error.message;
+        // Reset button on error
+        postBtn.disabled = false;
+        postBtn.innerHTML = '<i class="bi bi-send"></i> Post to Instagram';
+    }
+});
+</script>
+{% endblock %}

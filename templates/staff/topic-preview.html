@@ -1,0 +1,159 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Preview - {{ topic.title }}{% endblock %}
+
+{% block staff_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'staff_pending_approvals' %}">Pending Approvals</a></li>
+        <li class="breadcrumb-item active">{{ topic.title }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold mb-1">{{ topic.title }}</h4>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge bg-info">Pending Review</span>
+            {% if topic.category %}
+            <span class="badge bg-light text-dark">{{ topic.category.name }}</span>
+            {% endif %}
+            <span class="text-muted small">{{ cards|length }} cards</span>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <form action="{% url 'staff_approve_topic' topic.pk %}" method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg"></i> Approve
+            </button>
+        </form>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+            <i class="bi bi-x-lg"></i> Reject
+        </button>
+        <a href="{% url 'staff_pending_approvals' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Topic Info -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Topic Details</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Created by:</strong> {{ topic.created_by.email }}</p>
+                <p><strong>Category:</strong> {{ topic.category.name|default:"-" }}</p>
+                <p><strong>Estimated time:</strong> {{ topic.estimated_time }} min</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Created:</strong> {{ topic.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Cards:</strong> {{ cards|length }}</p>
+                {% if topic.thumbnail_url %}
+                <p><strong>Thumbnail:</strong> <a href="{{ topic.thumbnail_url }}" target="_blank">View</a></p>
+                {% endif %}
+            </div>
+        </div>
+        {% if topic.description %}
+        <div class="mt-3">
+            <strong>Description:</strong>
+            <p class="text-muted mb-0">{{ topic.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Cards Preview -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-layers"></i> Cards ({{ cards|length }})</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if cards %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Content</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards %}
+                    <tr>
+                        <td><span class="badge bg-primary">{{ card.order }}</span></td>
+                        <td class="fw-medium">{{ card.title|default:"Untitled" }}</td>
+                        <td>
+                            {% if card.card_type == 'text' %}
+                            <span class="badge bg-light text-dark">Text</span>
+                            {% elif card.card_type == 'text_code' %}
+                            <span class="badge bg-info text-white"><i class="bi bi-code-slash"></i> Code</span>
+                            {% elif card.card_type == 'text_image' %}
+                            <span class="badge bg-success text-white"><i class="bi bi-image"></i> Image</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <p class="mb-0">{{ card.content|truncatewords:30 }}</p>
+                            {% if card.code_snippet %}
+                            <details class="mt-2">
+                                <summary class="small text-info">View code ({{ card.code_language }})</summary>
+                                <pre class="bg-dark text-light p-2 rounded mt-2 small"><code>{{ card.code_snippet }}</code></pre>
+                            </details>
+                            {% endif %}
+                            {% if card.image_url %}
+                            <div class="mt-2">
+                                <a href="{{ card.image_url }}" target="_blank" class="small">
+                                    <i class="bi bi-image"></i> View image
+                                </a>
+                                {% if card.image_caption %}
+                                <span class="text-muted small ms-2">{{ card.image_caption }}</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-layers"></i> No cards in this topic.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Topic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'staff_reject_topic' topic.pk %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Rejecting: <strong>{{ topic.title }}</strong></p>
+                    <div class="mb-3">
+                        <label for="rejectReason" class="form-label">Reason for rejection</label>
+                        <textarea name="reason" id="rejectReason" class="form-control" rows="3"
+                                  placeholder="Please explain why this topic is being rejected..."></textarea>
+                        <small class="text-muted">This will be shown to the topic creator.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Topic</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

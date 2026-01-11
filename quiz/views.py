@@ -2949,8 +2949,33 @@ class TopicExportView(LoginRequiredMixin, View):
         if hasattr(request.user, 'instagram_account'):
             instagram_connected = request.user.instagram_account.is_connected
 
+        # Get subscription for feature checks
+        subscription = get_user_subscription(request.user)
+
+        # Check if user has custom handle name feature
+        can_custom_handle = False
+        if subscription and subscription.plan.has_feature('custom_handle_name_in_video_export'):
+            can_custom_handle = True
+        elif request.user.is_staff:
+            can_custom_handle = True
+
+        # Check premium templates access
+        has_premium_templates = (
+            (subscription and subscription.plan.has_feature('premium_video_templates'))
+            or request.user.is_staff
+        )
+
         # Get video templates for styling
         templates = VideoTemplate.objects.filter(is_active=True).order_by('sort_order')
+        templates_data = []
+        for t in templates:
+            templates_data.append({
+                'id': t.id,
+                'name': t.name,
+                'is_premium': t.is_premium,
+                'can_use': not t.is_premium or has_premium_templates,
+                'preview_url': t.preview_url if hasattr(t, 'preview_url') else None,
+            })
 
         # Get recent exports for this topic
         recent_exports = TopicCarouselExport.objects.filter(
@@ -2963,7 +2988,10 @@ class TopicExportView(LoginRequiredMixin, View):
             'cards': cards,
             'instagram_connected': instagram_connected,
             'templates': templates,
+            'templates_data': templates_data,
             'recent_exports': recent_exports,
+            'can_custom_handle': can_custom_handle,
+            'has_premium_templates': has_premium_templates,
         })
 
     def post(self, request, slug):
@@ -2984,6 +3012,7 @@ class TopicExportView(LoginRequiredMixin, View):
 
         # Check subscription for carousel export
         get_or_create_free_subscription(request.user)
+        subscription = get_user_subscription(request.user)
         can_access, message, _ = check_feature_access(request.user, 'carousel_export')
         if not can_access:
             return JsonResponse({'error': message}, status=403)
@@ -2991,16 +3020,37 @@ class TopicExportView(LoginRequiredMixin, View):
         # Use the feature (increment usage)
         use_feature(request.user, 'carousel_export')
 
+        # Check custom handle feature
+        can_custom_handle = False
+        if subscription and subscription.plan.has_feature('custom_handle_name_in_video_export'):
+            can_custom_handle = True
+        elif request.user.is_staff:
+            can_custom_handle = True
+
+        # Check premium templates access
+        has_premium_templates = (
+            (subscription and subscription.plan.has_feature('premium_video_templates'))
+            or request.user.is_staff
+        )
+
         # Get template
         template_id = request.POST.get('template_id')
         template = None
         if template_id:
             template = VideoTemplate.objects.filter(id=template_id, is_active=True).first()
+            # Check if user has access to premium template
+            if template and template.is_premium and not has_premium_templates:
+                return JsonResponse({
+                    'error': 'Premium templates require a Pro or Creator subscription.'
+                }, status=403)
 
-        # Get handle name
+        # Get handle name (only if user has the feature)
         handle_name = request.POST.get('handle_name', '@maedix-q').strip()
         if not handle_name.startswith('@'):
             handle_name = '@' + handle_name
+        # Reset to default if user doesn't have custom handle feature
+        if not can_custom_handle and handle_name != '@maedix-q':
+            handle_name = '@maedix-q'
 
         # Generate unique task ID
         task_id = str(uuid.uuid4())

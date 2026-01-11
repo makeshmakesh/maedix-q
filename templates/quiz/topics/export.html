@@ -50,14 +50,17 @@
                             <div class="row g-3">
                                 {% for template in templates %}
                                 <div class="col-6 col-md-4">
-                                    <div class="form-check card p-3 h-100">
+                                    <div class="form-check card p-3 h-100 {% if template.is_premium and not has_premium_templates %}opacity-50{% endif %}">
                                         <input class="form-check-input" type="radio" name="template_id"
                                                id="template_{{ template.id }}" value="{{ template.id }}"
-                                               {% if template.is_default %}checked{% endif %}>
+                                               {% if template.is_default %}checked{% endif %}
+                                               {% if template.is_premium and not has_premium_templates %}disabled{% endif %}>
                                         <label class="form-check-label w-100" for="template_{{ template.id }}">
                                             <strong>{{ template.name }}</strong>
                                             {% if template.is_premium %}
-                                            <span class="badge bg-warning">Pro</span>
+                                            <span class="badge bg-warning">
+                                                {% if has_premium_templates %}Pro{% else %}<i class="bi bi-lock-fill"></i> Pro{% endif %}
+                                            </span>
                                             {% endif %}
                                             <br>
                                             <small class="text-muted">{{ template.description }}</small>
@@ -70,14 +73,32 @@
                                 </div>
                                 {% endfor %}
                             </div>
+                            {% if not has_premium_templates %}
+                            <small class="text-muted mt-2 d-block">
+                                <i class="bi bi-lock-fill"></i> <a href="{% url 'pricing' %}">Upgrade to Pro</a> to access premium templates
+                            </small>
+                            {% endif %}
                         </div>
 
                         <!-- Handle Name -->
                         <div class="mb-4">
-                            <label for="handle_name" class="form-label fw-bold">Instagram Handle</label>
+                            <label for="handle_name" class="form-label fw-bold">
+                                Instagram Handle
+                                {% if not can_custom_handle %}
+                                <span class="badge bg-warning"><i class="bi bi-lock-fill"></i> Pro</span>
+                                {% endif %}
+                            </label>
+                            {% if can_custom_handle %}
                             <input type="text" class="form-control" id="handle_name" name="handle_name"
                                    value="@maedix-q" placeholder="@yourusername">
                             <small class="text-muted">Displayed on carousel images</small>
+                            {% else %}
+                            <input type="text" class="form-control" id="handle_name" name="handle_name"
+                                   value="@maedix-q" disabled>
+                            <small class="text-muted">
+                                <a href="{% url 'pricing' %}">Upgrade to Pro</a> to use your own handle name
+                            </small>
+                            {% endif %}
                         </div>
 
                         <!-- Generate Button -->

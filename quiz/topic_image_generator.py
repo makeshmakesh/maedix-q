@@ -103,26 +103,80 @@ class TopicCardImageGenerator:
         return self._get_font(size)
 
     def _wrap_text(self, text, font, max_width, draw):
-        """Wrap text to fit within max_width"""
-        words = text.split()
-        lines = []
-        current_line = []
+        """Wrap text to fit within max_width, preserving line breaks and bullet points"""
+        # First, split by newlines to preserve intentional line breaks
+        paragraphs = text.split('\n')
+        all_lines = []
 
-        for word in words:
-            test_line = ' '.join(current_line + [word])
-            bbox = draw.textbbox((0, 0), test_line, font=font)
-            width = bbox[2] - bbox[0]
-            if width <= max_width:
-                current_line.append(word)
-            else:
-                if current_line:
-                    lines.append(' '.join(current_line))
-                current_line = [word]
+        for para in paragraphs:
+            para = para.strip()
+            if not para:
+                # Preserve empty lines as spacing
+                all_lines.append('')
+                continue
 
-        if current_line:
-            lines.append(' '.join(current_line))
+            # Check if this is a bullet point line
+            is_bullet = False
+            bullet_char = ''
+            bullet_indent = '    '  # Indent for wrapped bullet lines
 
-        return lines if lines else [text]
+            # Detect various bullet formats
+            if para.startswith('• '):
+                is_bullet = True
+                bullet_char = '• '
+                para = para[2:]
+            elif para.startswith('- '):
+                is_bullet = True
+                bullet_char = '• '  # Convert dash to bullet
+                para = para[2:]
+            elif para.startswith('* '):
+                is_bullet = True
+                bullet_char = '• '  # Convert asterisk to bullet
+                para = para[2:]
+            elif len(para) > 2 and para[0].isdigit() and para[1] in '.):' and para[2] == ' ':
+                # Numbered list like "1. " or "1) "
+                is_bullet = True
+                bullet_char = para[:3]
+                para = para[3:]
+
+            # Calculate available width for text (less for bullets due to indent)
+            effective_width = max_width - (40 if is_bullet else 0)
+
+            # Wrap this paragraph
+            words = para.split()
+            current_line = []
+            first_line = True
+
+            for word in words:
+                test_line = ' '.join(current_line + [word])
+                bbox = draw.textbbox((0, 0), test_line, font=font)
+                width = bbox[2] - bbox[0]
+
+                if width <= effective_width:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        line_text = ' '.join(current_line)
+                        if is_bullet and first_line:
+                            all_lines.append(bullet_char + line_text)
+                            first_line = False
+                        elif is_bullet:
+                            all_lines.append(bullet_indent + line_text)
+                        else:
+                            all_lines.append(line_text)
+                    current_line = [word]
+
+            # Add remaining text
+            if current_line:
+                line_text = ' '.join(current_line)
+                if is_bullet and first_line:
+                    all_lines.append(bullet_char + line_text)
+                elif is_bullet:
+                    all_lines.append(bullet_indent + line_text)
+                else:
+                    all_lines.append(line_text)
+
+        return all_lines if all_lines else [text]
 
     def _draw_swipe_dots(self, draw, current_index, total, y_position):
         """Draw swipe indicator dots at the bottom"""
@@ -282,10 +336,15 @@ class TopicCardImageGenerator:
         max_width = self.WIDTH - 120
         content_lines = self._wrap_text(content, content_font, max_width, draw)
         line_height = 52
+        empty_line_height = 26  # Half height for empty lines (paragraph spacing)
 
         for line in content_lines:
-            draw.text((60, y_offset), line, font=content_font, fill=self.TEXT_COLOR)
-            y_offset += line_height
+            if line == '':
+                # Empty line for paragraph spacing
+                y_offset += empty_line_height
+            else:
+                draw.text((60, y_offset), line, font=content_font, fill=self.TEXT_COLOR)
+                y_offset += line_height
 
         # Swipe dots
         self._draw_swipe_dots(draw, card_index, total_cards, self.HEIGHT - 120)
@@ -358,10 +417,18 @@ class TopicCardImageGenerator:
         max_width = self.WIDTH - 120
         content_lines = self._wrap_text(content, content_font, max_width, draw)
         line_height = 42
+        empty_line_height = 20
 
-        for line in content_lines[:4]:  # Limit to 4 lines for code cards
-            draw.text((60, y_offset), line, font=content_font, fill=self.TEXT_COLOR)
-            y_offset += line_height
+        lines_drawn = 0
+        for line in content_lines:
+            if lines_drawn >= 4:  # Limit to 4 lines for code cards
+                break
+            if line == '':
+                y_offset += empty_line_height
+            else:
+                draw.text((60, y_offset), line, font=content_font, fill=self.TEXT_COLOR)
+                y_offset += line_height
+                lines_drawn += 1
 
         y_offset += 30
 
@@ -471,10 +538,18 @@ class TopicCardImageGenerator:
         max_width = self.WIDTH - 120
         content_lines = self._wrap_text(content, content_font, max_width, draw)
         line_height = 42
+        empty_line_height = 20
 
-        for line in content_lines[:3]:  # Limit to 3 lines for image cards
-            draw.text((60, y_offset), line, font=content_font, fill=self.TEXT_COLOR)
-            y_offset += line_height
+        lines_drawn = 0
+        for line in content_lines:
+            if lines_drawn >= 3:  # Limit to 3 lines for image cards
+                break
+            if line == '':
+                y_offset += empty_line_height
+            else:
+                draw.text((60, y_offset), line, font=content_font, fill=self.TEXT_COLOR)
+                y_offset += line_height
+                lines_drawn += 1
 
         y_offset += 30
 

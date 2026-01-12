@@ -17,13 +17,17 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'topics_home' %}">
-                        <i class="bi bi-journal-text d-lg-none"></i> Topics
+                        <i class="bi bi-journal-text d-lg-none"></i> Learn
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'categories' %}">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-grid d-lg-none"></i> Categories
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'categories' %}"><i class="bi bi-patch-question me-2"></i>Quiz Categories</a></li>
+                        <li><a class="dropdown-item" href="{% url 'topics_home' %}"><i class="bi bi-layers me-2"></i>Learn Categories</a></li>
+                    </ul>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'leaderboard' %}">
@@ -53,8 +57,8 @@
                             <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
                             <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>Subscription</a></li>
                             <li><a class="dropdown-item" href="{% url 'user_quiz_list' %}"><i class="bi bi-journal-plus me-2"></i>My Quizzes</a></li>
-                            <li><a class="dropdown-item" href="{% url 'user_topic_list' %}"><i class="bi bi-layers me-2"></i>My Topics</a></li>
-                            <li><a class="dropdown-item" href="{% url 'topic_my_progress' %}"><i class="bi bi-book me-2"></i>My Topic Progress</a></li>
+                            <li><a class="dropdown-item" href="{% url 'user_topic_list' %}"><i class="bi bi-layers me-2"></i>My Shorts</a></li>
+                            <li><a class="dropdown-item" href="{% url 'topic_my_progress' %}"><i class="bi bi-book me-2"></i>My Learning Progress</a></li>
                             <li><a class="dropdown-item" href="{% url 'quiz_history' %}"><i class="bi bi-clock-history me-2"></i>Quiz History</a></li>
                             <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>
                             {% if user.is_staff %}

@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,172.31.10.91,maedix.com,www.maedix.com').split(',')
+ALLOWED_HOSTS = ["*"]
 
 # CSRF Trusted Origins (required for HTTPS)
 CSRF_TRUSTED_ORIGINS = [

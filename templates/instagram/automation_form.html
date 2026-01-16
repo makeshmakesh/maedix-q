@@ -432,41 +432,6 @@
                             </small>
                         </div>
 
-                        <hr class="my-4">
-
-                        <!-- Follow Check Section -->
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="require_follow" name="require_follow"
-                                       {% if automation.require_follow %}checked{% endif %}
-                                       onchange="toggleFollowRequestMessage()">
-                                <label class="form-check-label fw-bold" for="require_follow">
-                                    <i class="bi bi-person-plus me-1"></i>Require Follow Before Sending DM
-                                </label>
-                            </div>
-                            <small class="text-muted">
-                                If enabled, users must follow you before receiving the follow-up DM
-                            </small>
-                        </div>
-
-                        <!-- Follow Request Message (shown when require_follow is checked) -->
-                        <div class="mb-4" id="followRequestSection" style="display: none;">
-                            <label for="follow_request_message" class="form-label fw-bold">
-                                <i class="bi bi-chat-heart me-1"></i>Follow Request Message
-                            </label>
-                            <textarea class="form-control" id="follow_request_message" name="follow_request_message"
-                                      rows="4" placeholder="e.g., Hey! To get the exclusive content, please follow our page first and tap 'I Followed' below. We'll send it right over!">{% if automation.follow_request_message %}{{ automation.follow_request_message }}{% endif %}</textarea>
-                            <small class="text-muted">
-                                Message sent to non-followers. They'll see an "I Followed" button to confirm and receive the DM.
-                            </small>
-
-                            <div class="alert alert-light mt-3 small">
-                                <i class="bi bi-info-circle me-1"></i>
-                                <strong>How it works:</strong> Non-followers receive this message with an "I Followed" button.
-                                When they click it, they'll receive the follow-up DM above.
-                            </div>
-                        </div>
-
                         {% if editing %}
                         <!-- Active Toggle (only for editing) -->
                         <div class="mb-4">
@@ -530,25 +495,7 @@
 </div>
 
 <script>
-// ========== Follow Request Toggle ==========
-function toggleFollowRequestMessage() {
-    const checkbox = document.getElementById('require_follow');
-    const section = document.getElementById('followRequestSection');
-    const messageInput = document.getElementById('follow_request_message');
-
-    if (checkbox.checked) {
-        section.style.display = 'block';
-        messageInput.required = true;
-    } else {
-        section.style.display = 'none';
-        messageInput.required = false;
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize follow request section visibility
-    toggleFollowRequestMessage();
-
     // ========== Keyword Tag Input ==========
     const keywordInput = document.getElementById('keywordInput');
     const keywordTags = document.getElementById('keywordTags');

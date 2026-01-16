@@ -36,16 +36,6 @@ class InstagramAccount(models.Model):
         help_text="Default follow-up DM to send after comment reply"
     )
 
-    # Follow-check settings for account-level automation
-    account_require_follow = models.BooleanField(
-        default=False,
-        help_text="Require user to follow before sending follow-up DM"
-    )
-    account_follow_request_message = models.TextField(
-        blank=True,
-        help_text="Message to send when user is not following (include call-to-action to follow)"
-    )
-
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -96,16 +86,6 @@ class InstagramAutomation(models.Model):
         help_text="Follow-up DM text to send to the commenter"
     )
 
-    # Follow-check settings
-    require_follow = models.BooleanField(
-        default=False,
-        help_text="Require user to follow before sending follow-up DM"
-    )
-    follow_request_message = models.TextField(
-        blank=True,
-        help_text="Message to send when user is not following (include call-to-action to follow)"
-    )
-
     # Status
     is_active = models.BooleanField(default=True)
 
@@ -142,7 +122,9 @@ class InstagramCommentEvent(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='instagram_comment_events'
+        related_name='instagram_comment_events',
+        null=True,
+        blank=True
     )
     automation = models.ForeignKey(
         InstagramAutomation,
@@ -163,30 +145,20 @@ class InstagramCommentEvent(models.Model):
     reply_text = models.TextField(blank=True)
     dm_text = models.TextField(blank=True)
 
-    # Follow-check tracking
-    waiting_for_follow = models.BooleanField(
-        default=False,
-        help_text="User hasn't followed yet, waiting for confirmation"
-    )
-    pending_followup_dm = models.TextField(
-        blank=True,
-        help_text="DM text to send after user confirms they followed"
-    )
-
     # Status
     status = models.CharField(
         max_length=20,
         choices=[
+            ('processing', 'Processing'),
             ('received', 'Received'),
             ('processed', 'Processed'),
             ('replied', 'Replied'),
-            ('waiting_follow', 'Waiting for Follow'),
             ('dm_sent', 'DM Sent'),
             ('completed', 'Completed'),
             ('failed', 'Failed'),
             ('skipped', 'Skipped'),
         ],
-        default='received'
+        default='processing'
     )
     error_message = models.TextField(blank=True)
 

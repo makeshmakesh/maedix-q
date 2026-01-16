@@ -2,7 +2,11 @@ import json
 import logging
 import requests
 import urllib.parse
-from datetime import datetime, timedelta
+import base64
+import hmac
+import hashlib
+import uuid
+from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -69,6 +73,7 @@ class InstagramOAuthRedirectView(LoginRequiredMixin, View):
             "instagram_business_content_publish",
             "instagram_business_manage_comments",
             "instagram_business_manage_messages",
+            "instagram_business_manage_insights",
         ]
 
         params = {
@@ -88,6 +93,45 @@ class InstagramOAuthRedirectView(LoginRequiredMixin, View):
 
 class InstagramCallbackView(LoginRequiredMixin, View):
     """Handle Instagram OAuth callback"""
+
+    def subscribe_to_webhook_events(self, ig_user_id, access_token, user):
+        """Subscribe to Instagram webhook events (comments and messages)"""
+        try:
+            url = f"https://graph.instagram.com/v21.0/{ig_user_id}/subscribed_apps"
+
+            params = {
+                "subscribed_fields": "comments,messages",
+                "access_token": access_token,
+            }
+
+            logger.info(f"Subscribing to webhook events for Instagram account: {ig_user_id}")
+
+            response = requests.post(url, params=params, timeout=10)
+            response_data = response.json()
+
+            logger.info(f"Instagram subscription response: {response_data}")
+
+            if response.status_code == 200 and response_data.get("success"):
+                # Update the webhook_subscribed field in instagram_data
+                if hasattr(user, 'instagram_account'):
+                    instagram_account = user.instagram_account
+                    if instagram_account.instagram_data:
+                        instagram_account.instagram_data["webhook_subscribed"] = True
+                        instagram_account.save(update_fields=["instagram_data"])
+
+                logger.info(f"Successfully subscribed to webhook events for {ig_user_id}")
+                return True
+            else:
+                error_message = response_data.get("error", {}).get("message", "Unknown error")
+                logger.error(f"Failed to subscribe to webhook events: {error_message}")
+                return False
+
+        except requests.RequestException as e:
+            logger.error(f"Request error during webhook subscription: {str(e)}")
+            return False
+        except Exception as e:
+            logger.error(f"Error subscribing to webhook events: {str(e)}")
+            return False
 
     def get(self, request):
         state = request.GET.get("state")
@@ -164,11 +208,12 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             expires_in = long_lived_data.get("expires_in", 5184000)  # 60 days
             token_expires_at = timezone.now() + timedelta(seconds=expires_in)
 
-            # Step 3: Fetch user details
+            # Step 3: Fetch user details with all available fields
+            # Request comprehensive fields including those available with insights permission
             user_info_response = requests.get(
                 "https://graph.instagram.com/v21.0/me",
                 params={
-                    "fields": "id,username",
+                    "fields": "id,username,account_type,user_id,name,profile_picture_url,followers_count,follows_count,media_count",
                     "access_token": access_token,
                 },
                 timeout=10,
@@ -180,13 +225,39 @@ class InstagramCallbackView(LoginRequiredMixin, View):
                 )
 
             user_info = user_info_response.json()
+            logger.info(f"Instagram /me response: {user_info}")
+
+            # The ID from /me endpoint with instagram_business_* scopes
+            # is the Instagram Professional Account ID (same as webhook entry.id)
+            ig_account_id = str(user_info.get("id", ""))
+
+            # Some accounts might have a separate user_id field
+            ig_user_id = str(user_info.get("user_id", "")) or ig_account_id
+
+            # Also try to fetch from the account endpoint directly for additional info
+            try:
+                account_info_response = requests.get(
+                    f"https://graph.instagram.com/v21.0/{ig_account_id}",
+                    params={
+                        "fields": "id,username,account_type,ig_id",
+                        "access_token": access_token,
+                    },
+                    timeout=10,
+                )
+                if account_info_response.ok:
+                    account_info = account_info_response.json()
+                    logger.info(f"Instagram account info response: {account_info}")
+                    # ig_id might be a different ID format
+                    if account_info.get("ig_id"):
+                        ig_user_id = str(account_info.get("ig_id"))
+            except Exception as e:
+                logger.warning(f"Could not fetch additional account info: {e}")
 
             # Step 4: Save or update InstagramAccount
-            # The ID from /me endpoint IS the Instagram Business Account ID
-            # when using instagram_business_* scopes
-            business_account_id = str(user_info.get("id", ""))
+            # Store the main ID which should match webhook entry.id
+            business_account_id = ig_account_id
 
-            instagram_account, created = InstagramAccount.objects.update_or_create(
+            _, created = InstagramAccount.objects.update_or_create(
                 user=request.user,
                 defaults={
                     "instagram_user_id": business_account_id,
@@ -196,16 +267,40 @@ class InstagramCallbackView(LoginRequiredMixin, View):
                     "is_active": True,
                     "instagram_data": {
                         "user_info": user_info,
-                        "business_account_id": business_account_id,  # Store explicitly
+                        "account_id": ig_account_id,  # Main ID from /me
+                        "user_id": ig_user_id,  # User ID or ig_id if different
+                        "ig_id": ig_user_id,  # Explicit ig_id for webhook matching
+                        "business_account_id": business_account_id,  # For webhook matching
+                        "account_type": user_info.get("account_type", ""),
                         "connected_at": str(timezone.now()),
                     },
                 },
             )
 
-            logger.info(f"Instagram connected for user {request.user.id}: business_account_id={business_account_id}")
+            logger.info(
+                f"Instagram connected for user {request.user.id}: "
+                f"account_id={ig_account_id}, user_id={ig_user_id}, "
+                f"username={user_info.get('username')}, account_type={user_info.get('account_type')}"
+            )
+
+            # Step 5: Auto-subscribe to webhook events (comments and messages)
+            subscription_success = self.subscribe_to_webhook_events(
+                ig_account_id, access_token, request.user
+            )
 
             action = "connected" if created else "reconnected"
-            messages.success(request, f"Instagram account @{user_info.get('username')} {action}!")
+            if subscription_success:
+                messages.success(
+                    request,
+                    f"Instagram account @{user_info.get('username')} {action} "
+                    f"and subscribed to comments & messages!"
+                )
+            else:
+                messages.warning(
+                    request,
+                    f"Instagram account @{user_info.get('username')} {action}, "
+                    f"but webhook subscription failed. You can retry from settings."
+                )
 
         except requests.RequestException as e:
             messages.error(request, f"Network error connecting to Instagram: {str(e)}")
@@ -232,6 +327,83 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
         except Exception as e:
             messages.error(request, f"Error disconnecting: {str(e)}")
             return redirect("instagram_connect")
+
+
+class InstagramWebhookSubscribeView(LoginRequiredMixin, View):
+    """Manually subscribe to Instagram webhook events"""
+
+    def post(self, request):
+        try:
+            if not hasattr(request.user, 'instagram_account'):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No Instagram account connected'
+                }, status=400)
+
+            instagram_account = request.user.instagram_account
+
+            if not instagram_account.is_connected:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Instagram account not active'
+                }, status=400)
+
+            ig_user_id = instagram_account.instagram_user_id
+            access_token = instagram_account.access_token
+
+            if not ig_user_id or not access_token:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Missing account credentials'
+                }, status=400)
+
+            # Subscribe to webhook events
+            url = f"https://graph.instagram.com/v21.0/{ig_user_id}/subscribed_apps"
+
+            params = {
+                "subscribed_fields": "comments,messages",
+                "access_token": access_token,
+            }
+
+            logger.info(f"Manual subscription to webhook events for: {ig_user_id}")
+
+            response = requests.post(url, params=params, timeout=10)
+            response_data = response.json()
+
+            logger.info(f"Instagram subscription response: {response_data}")
+
+            if response.status_code == 200 and response_data.get("success"):
+                # Update the webhook_subscribed field
+                if instagram_account.instagram_data:
+                    instagram_account.instagram_data["webhook_subscribed"] = True
+                else:
+                    instagram_account.instagram_data = {"webhook_subscribed": True}
+                instagram_account.save(update_fields=["instagram_data"])
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Successfully subscribed to comments & messages'
+                })
+            else:
+                error_message = response_data.get("error", {}).get("message", "Unknown error")
+                logger.error(f"Failed to subscribe: {error_message}")
+                return JsonResponse({
+                    'success': False,
+                    'error': error_message
+                }, status=400)
+
+        except requests.RequestException as e:
+            logger.error(f"Request error during subscription: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Network error: {str(e)}'
+            }, status=500)
+        except Exception as e:
+            logger.error(f"Error subscribing to webhook events: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
 
 
 class InstagramPostPageView(LoginRequiredMixin, View):
@@ -476,8 +648,6 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
         keywords = request.POST.get('keywords', '').strip()
         comment_reply = request.POST.get('comment_reply', '').strip()
         followup_dm = request.POST.get('followup_dm', '').strip()
-        require_follow = request.POST.get('require_follow') == 'on'
-        follow_request_message = request.POST.get('follow_request_message', '').strip()
 
         # Validation
         errors = []
@@ -491,8 +661,6 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
             errors.append('Comment reply text is required.')
         if not followup_dm:
             errors.append('Follow-up DM text is required.')
-        if require_follow and not follow_request_message:
-            errors.append('Follow request message is required when "Require Follow" is enabled.')
 
         if errors:
             for error in errors:
@@ -505,8 +673,6 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
                     'keywords': keywords,
                     'comment_reply': comment_reply,
                     'followup_dm': followup_dm,
-                    'require_follow': require_follow,
-                    'follow_request_message': follow_request_message,
                 },
             }
             return render(request, self.template_name, context)
@@ -519,8 +685,6 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
             keywords=keywords,
             comment_reply=comment_reply,
             followup_dm=followup_dm,
-            require_follow=require_follow,
-            follow_request_message=follow_request_message,
         )
 
         messages.success(request, f'Automation "{title}" created successfully!')
@@ -552,8 +716,6 @@ class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
         keywords = request.POST.get('keywords', '').strip()
         comment_reply = request.POST.get('comment_reply', '').strip()
         followup_dm = request.POST.get('followup_dm', '').strip()
-        require_follow = request.POST.get('require_follow') == 'on'
-        follow_request_message = request.POST.get('follow_request_message', '').strip()
         is_active = request.POST.get('is_active') == 'on'
 
         # Validation
@@ -568,8 +730,6 @@ class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
             errors.append('Comment reply text is required.')
         if not followup_dm:
             errors.append('Follow-up DM text is required.')
-        if require_follow and not follow_request_message:
-            errors.append('Follow request message is required when "Require Follow" is enabled.')
 
         if errors:
             for error in errors:
@@ -586,8 +746,6 @@ class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
         automation.keywords = keywords
         automation.comment_reply = comment_reply
         automation.followup_dm = followup_dm
-        automation.require_follow = require_follow
-        automation.follow_request_message = follow_request_message
         automation.is_active = is_active
         automation.save()
 
@@ -638,21 +796,11 @@ class AccountAutomationView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin
         account_automation_enabled = request.POST.get('account_automation_enabled') == 'on'
         account_comment_reply = request.POST.get('account_comment_reply', '').strip()
         account_followup_dm = request.POST.get('account_followup_dm', '').strip()
-        account_require_follow = request.POST.get('account_require_follow') == 'on'
-        account_follow_request_message = request.POST.get('account_follow_request_message', '').strip()
-
-        # Validation
-        if account_require_follow and not account_follow_request_message:
-            messages.error(request, 'Follow request message is required when "Require Follow" is enabled.')
-            context = {'instagram_account': instagram_account}
-            return render(request, self.template_name, context)
 
         # Update account settings
         instagram_account.account_automation_enabled = account_automation_enabled
         instagram_account.account_comment_reply = account_comment_reply
         instagram_account.account_followup_dm = account_followup_dm
-        instagram_account.account_require_follow = account_require_follow
-        instagram_account.account_follow_request_message = account_follow_request_message
         instagram_account.save()
 
         messages.success(request, 'Account automation settings saved!')
@@ -686,22 +834,21 @@ class InstagramWebhookView(View):
         """Process incoming webhook events"""
         try:
             payload = json.loads(request.body)
-            logger.info(f"Instagram webhook received: {json.dumps(payload)[:500]}")
+            logger.info(f"Instagram webhook received full payload: {json.dumps(payload)}")
 
             # Process each entry
             for entry in payload.get('entry', []):
                 # The entry 'id' is the Instagram Business Account ID
-                ig_business_account_id = entry.get('id', '')
+                ig_business_account_id = str(entry.get('id', ''))
+                logger.info(
+                    f"Processing webhook entry: id={ig_business_account_id}, "
+                    f"time={entry.get('time')}, changes_count={len(entry.get('changes', []))}"
+                )
 
                 # Handle comment changes
                 for change in entry.get('changes', []):
                     if change.get('field') == 'comments':
                         self.handle_comment(change.get('value', {}), ig_business_account_id)
-
-                # Handle messaging events (for "I Followed" button clicks)
-                for messaging in entry.get('messaging', []):
-                    if 'postback' in messaging:
-                        self.handle_postback(messaging)
 
             return JsonResponse({'status': 'ok'})
 
@@ -719,21 +866,43 @@ class InstagramWebhookView(View):
         comment_text = comment_data.get('text', '')
         commenter_id = comment_data.get('from', {}).get('id', '')
         commenter_username = comment_data.get('from', {}).get('username', '')
+        parent_id = comment_data.get('parent_id', '')
+
+        # Skip if this is a reply to another comment (not a top-level comment)
+        if parent_id:
+            logger.info(f"Skipping comment {comment_id} - it's a reply to {parent_id}")
+            return
 
         if not comment_id:
             logger.warning("Comment event missing comment_id")
             return
 
-        # Check if already processed (deduplication)
+        # Simple deduplication check first
         if InstagramCommentEvent.objects.filter(comment_id=comment_id).exists():
             logger.info(f"Comment {comment_id} already processed, skipping")
             return
 
-        # Find the Instagram account this comment belongs to
-        logger.info(f"Looking for Instagram account with ID: {ig_business_account_id}")
+        # Create event record immediately for deduplication
+        from django.db import IntegrityError
+        try:
+            event = InstagramCommentEvent.objects.create(
+                comment_id=comment_id,
+                post_id=post_id,
+                commenter_username=commenter_username,
+                commenter_id=commenter_id,
+                comment_text=comment_text,
+                status='processing'
+            )
+        except IntegrityError:
+            logger.info(f"Comment {comment_id} already being processed (race condition), skipping")
+            return
 
-        # Try matching by instagram_user_id first (for direct IG OAuth)
-        # Also try matching by business_account_id in instagram_data (for FB OAuth)
+        # Find the Instagram account this comment belongs to
+        logger.info(f"Looking for Instagram account with webhook ID: {ig_business_account_id}")
+
+        instagram_account = None
+
+        # Method 1: Direct match on instagram_user_id
         try:
             instagram_account = InstagramAccount.objects.get(
                 instagram_user_id=ig_business_account_id,
@@ -741,38 +910,91 @@ class InstagramWebhookView(View):
             )
             logger.info(f"Found account by instagram_user_id: {instagram_account.username}")
         except InstagramAccount.DoesNotExist:
-            # Try to find by business_account_id stored in instagram_data
+            pass
+
+        # Method 2: Match by account_id in instagram_data
+        if not instagram_account:
+            try:
+                instagram_account = InstagramAccount.objects.get(
+                    instagram_data__account_id=ig_business_account_id,
+                    is_active=True
+                )
+                logger.info(f"Found account by instagram_data.account_id: {instagram_account.username}")
+            except InstagramAccount.DoesNotExist:
+                pass
+
+        # Method 3: Match by business_account_id in instagram_data
+        if not instagram_account:
             try:
                 instagram_account = InstagramAccount.objects.get(
                     instagram_data__business_account_id=ig_business_account_id,
                     is_active=True
                 )
-                logger.info(f"Found account by business_account_id: {instagram_account.username}")
+                logger.info(f"Found account by instagram_data.business_account_id: {instagram_account.username}")
             except InstagramAccount.DoesNotExist:
-                # Log all accounts for debugging
-                all_accounts = InstagramAccount.objects.filter(is_active=True).values_list('instagram_user_id', flat=True)
-                logger.warning(f"No active Instagram account found for ID: {ig_business_account_id}. Active accounts: {list(all_accounts)}")
-                return
+                pass
+
+        # Method 4: Match by user_id in instagram_data
+        if not instagram_account:
+            try:
+                instagram_account = InstagramAccount.objects.get(
+                    instagram_data__user_id=ig_business_account_id,
+                    is_active=True
+                )
+                logger.info(f"Found account by instagram_data.user_id: {instagram_account.username}")
+            except InstagramAccount.DoesNotExist:
+                pass
+
+        # Method 5: Match by ig_id in instagram_data
+        if not instagram_account:
+            try:
+                instagram_account = InstagramAccount.objects.get(
+                    instagram_data__ig_id=ig_business_account_id,
+                    is_active=True
+                )
+                logger.info(f"Found account by instagram_data.ig_id: {instagram_account.username}")
+            except InstagramAccount.DoesNotExist:
+                pass
+
+        # If still no match, log debug info and return
+        if not instagram_account:
+            all_accounts = InstagramAccount.objects.filter(is_active=True)
+            debug_info = []
+            for acc in all_accounts:
+                debug_info.append({
+                    'user_id': acc.instagram_user_id,
+                    'username': acc.username,
+                    'data': acc.instagram_data
+                })
+            logger.warning(
+                f"No active Instagram account found for webhook ID: {ig_business_account_id}. "
+                f"Active accounts: {debug_info}"
+            )
+            # Mark event as failed since we couldn't find the account
+            event.status = 'failed'
+            event.error_message = f'No matching Instagram account for ID: {ig_business_account_id}'
+            event.save()
+            return
 
         user = instagram_account.user
 
-        # Create event record for tracking
-        event = InstagramCommentEvent.objects.create(
-            comment_id=comment_id,
-            post_id=post_id,
-            user=user,
-            commenter_username=commenter_username,
-            commenter_id=commenter_id,
-            comment_text=comment_text,
-            status='received'
-        )
+        # Skip comments from the account itself (our own replies)
+        if commenter_id == ig_business_account_id or commenter_id == instagram_account.instagram_user_id:
+            logger.info(f"Skipping comment {comment_id} - from account owner")
+            event.status = 'skipped'
+            event.error_message = 'Comment from account owner'
+            event.save()
+            return
+
+        # Update event with user association
+        event.user = user
+        event.status = 'received'
+        event.save()
 
         # Find matching automation
         automation = None
         comment_reply = None
         followup_dm = None
-        require_follow = False
-        follow_request_message = None
 
         # First, try to find post-level automation
         automations = InstagramAutomation.objects.filter(
@@ -790,16 +1012,12 @@ class InstagramWebhookView(View):
                 automation = auto
                 comment_reply = auto.comment_reply
                 followup_dm = auto.followup_dm
-                require_follow = auto.require_follow
-                follow_request_message = auto.follow_request_message
                 break
 
         # If no post-level automation matched, check account-level
         if not automation and instagram_account.account_automation_enabled:
             comment_reply = instagram_account.account_comment_reply
             followup_dm = instagram_account.account_followup_dm
-            require_follow = instagram_account.account_require_follow
-            follow_request_message = instagram_account.account_follow_request_message
 
         # If no automation configured, skip
         if not comment_reply:
@@ -834,44 +1052,11 @@ class InstagramWebhookView(View):
             event.save()
             return
 
-        # Handle follow-up DM with optional follow check
+        # Send follow-up DM
         if followup_dm:
-            # Check if follow is required
-            if require_follow and follow_request_message:
-                # Check if user follows
-                is_following = self.check_if_user_follows(
-                    commenter_id=commenter_id,
-                    ig_business_account_id=instagram_account.instagram_user_id,
-                    access_token=instagram_account.access_token
-                )
-
-                if not is_following:
-                    # User doesn't follow - send follow request message with button
-                    try:
-                        self.send_dm_with_follow_button(
-                            commenter_id=commenter_id,
-                            message=follow_request_message,
-                            comment_id=comment_id,
-                            ig_business_account_id=instagram_account.instagram_user_id,
-                            access_token=instagram_account.access_token
-                        )
-                        # Save pending DM for when they click "I Followed"
-                        event.waiting_for_follow = True
-                        event.pending_followup_dm = followup_dm
-                        event.status = 'waiting_follow'
-                        event.save()
-                        logger.info(f"Follow request sent for comment {comment_id}")
-                        return
-                    except Exception as e:
-                        logger.error(f"Failed to send follow request for {comment_id}: {str(e)}")
-                        event.error_message = f"Follow request failed: {str(e)}"
-                        event.save()
-                        return
-
-            # User follows (or follow not required) - send DM directly
             try:
                 self.send_dm_to_commenter(
-                    commenter_id=commenter_id,
+                    comment_id=comment_id,
                     message=followup_dm,
                     ig_business_account_id=instagram_account.instagram_user_id,
                     access_token=instagram_account.access_token
@@ -884,121 +1069,6 @@ class InstagramWebhookView(View):
                 logger.error(f"Failed to send DM for comment {comment_id}: {str(e)}")
                 event.error_message = f"DM failed: {str(e)}"
                 event.save()
-
-    def handle_postback(self, messaging_data):
-        """Handle postback from quick reply button (e.g., 'I Followed')"""
-        sender_id = messaging_data.get('sender', {}).get('id', '')
-        recipient_id = messaging_data.get('recipient', {}).get('id', '')
-        postback = messaging_data.get('postback', {})
-        payload = postback.get('payload', '')
-
-        logger.info(f"Postback received: payload={payload}, sender={sender_id}")
-
-        # Check if this is an "I Followed" postback
-        if not payload.startswith('I_FOLLOWED_'):
-            return
-
-        # Extract comment_id from payload
-        comment_id = payload.replace('I_FOLLOWED_', '')
-
-        try:
-            # Find the event waiting for follow confirmation
-            event = InstagramCommentEvent.objects.get(
-                comment_id=comment_id,
-                waiting_for_follow=True
-            )
-        except InstagramCommentEvent.DoesNotExist:
-            logger.warning(f"No waiting event found for comment {comment_id}")
-            return
-
-        # Get Instagram account
-        try:
-            instagram_account = InstagramAccount.objects.get(
-                instagram_user_id=recipient_id,
-                is_active=True
-            )
-        except InstagramAccount.DoesNotExist:
-            logger.warning(f"No Instagram account found for {recipient_id}")
-            return
-
-        # Send the pending follow-up DM
-        if event.pending_followup_dm:
-            try:
-                self.send_dm_to_commenter(
-                    commenter_id=sender_id,
-                    message=event.pending_followup_dm,
-                    ig_business_account_id=instagram_account.instagram_user_id,
-                    access_token=instagram_account.access_token
-                )
-                event.dm_sent = True
-                event.waiting_for_follow = False
-                event.status = 'completed'
-                event.save()
-                logger.info(f"Follow-up DM sent after 'I Followed' for comment {comment_id}")
-            except Exception as e:
-                logger.error(f"Failed to send follow-up DM for {comment_id}: {str(e)}")
-                event.error_message = f"Follow-up DM failed: {str(e)}"
-                event.save()
-
-    def check_if_user_follows(self, commenter_id, ig_business_account_id, access_token):
-        """Check if a user follows the Instagram business account"""
-        # Note: Instagram API doesn't have a direct "check follower" endpoint.
-        # We use the followers endpoint with a user search.
-        # This is a simplified check - for production, consider caching.
-        try:
-            # Get recent followers and check if commenter is in the list
-            # This only checks recent followers due to API limitations
-            url = f"https://graph.instagram.com/v21.0/{ig_business_account_id}/followers"
-            response = requests.get(
-                url,
-                params={
-                    'access_token': access_token,
-                    'limit': 100  # Check recent 100 followers
-                },
-                timeout=30
-            )
-
-            if response.ok:
-                data = response.json()
-                followers = data.get('data', [])
-                follower_ids = [f.get('id') for f in followers]
-                return commenter_id in follower_ids
-
-            # If API call fails, assume not following (safer)
-            logger.warning(f"Follower check failed: {response.text}")
-            return False
-
-        except Exception as e:
-            logger.error(f"Error checking follower status: {str(e)}")
-            return False
-
-    def send_dm_with_follow_button(self, commenter_id, message, comment_id, ig_business_account_id, access_token):
-        """Send a DM with 'I Followed' quick reply button"""
-        url = f"https://graph.instagram.com/v21.0/{ig_business_account_id}/messages"
-
-        # Use quick_replies for interactive button
-        payload = {
-            'recipient': {'id': commenter_id},
-            'message': {
-                'text': message,
-                'quick_replies': [
-                    {
-                        'content_type': 'text',
-                        'title': 'I Followed ✓',
-                        'payload': f'I_FOLLOWED_{comment_id}'
-                    }
-                ]
-            },
-            'access_token': access_token
-        }
-
-        response = requests.post(url, json=payload, timeout=30)
-
-        if not response.ok:
-            error = response.json().get('error', {}).get('message', response.text)
-            raise Exception(error)
-
-        return response.json()
 
     def reply_to_comment(self, comment_id, message, access_token):
         """Reply to an Instagram comment"""
@@ -1018,20 +1088,167 @@ class InstagramWebhookView(View):
 
         return response.json()
 
-    def send_dm_to_commenter(self, commenter_id, message, ig_business_account_id, access_token):
-        """Send a DM to the person who commented"""
+    def send_dm_to_commenter(self, comment_id, message, ig_business_account_id, access_token):
+        """Send a DM to the person who commented using comment_id as reference"""
         url = f"https://graph.instagram.com/v21.0/{ig_business_account_id}/messages"
 
+        # Instagram requires using comment_id to identify recipient for DM
         payload = {
-            'recipient': {'id': commenter_id},
+            'recipient': {'comment_id': comment_id},
             'message': {'text': message},
-            'access_token': access_token
         }
 
-        response = requests.post(url, json=payload, timeout=30)
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+        }
+
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
 
         if not response.ok:
             error = response.json().get('error', {}).get('message', response.text)
             raise Exception(error)
 
         return response.json()
+
+
+# =============================================================================
+# Facebook/Instagram App Callback Endpoints (Required for App Review)
+# =============================================================================
+
+def parse_signed_request(signed_request, app_secret):
+    """Parse and verify a signed_request from Facebook."""
+    try:
+        encoded_sig, payload = signed_request.split('.', 1)
+
+        # Decode signature
+        sig = base64.urlsafe_b64decode(encoded_sig + '==')
+
+        # Decode payload
+        data = json.loads(base64.urlsafe_b64decode(payload + '=='))
+
+        # Verify signature
+        expected_sig = hmac.new(
+            app_secret.encode('utf-8'),
+            payload.encode('utf-8'),
+            hashlib.sha256
+        ).digest()
+
+        if hmac.compare_digest(sig, expected_sig):
+            return data
+        return None
+    except Exception as e:
+        logger.error(f"Error parsing signed_request: {e}")
+        return None
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DataDeletionCallbackView(View):
+    """
+    Handle Facebook/Instagram Data Deletion Requests.
+    URL to configure in Facebook App: {your_domain}/instagram/data-deletion/
+    """
+
+    def post(self, request):
+        try:
+            signed_request = request.POST.get('signed_request', '')
+
+            if not signed_request:
+                return JsonResponse({'error': 'Missing signed_request'}, status=400)
+
+            app_secret = Configuration.get_value('instagram_app_secret', '')
+
+            if not app_secret:
+                logger.error("Instagram app secret not configured for data deletion")
+                return JsonResponse({'error': 'App not configured'}, status=500)
+
+            data = parse_signed_request(signed_request, app_secret)
+
+            if not data:
+                return JsonResponse({'error': 'Invalid signed_request'}, status=400)
+
+            user_id = data.get('user_id', '')
+            logger.info(f"Data deletion request received for user_id: {user_id}")
+
+            # Delete user's Instagram data if it exists
+            if user_id:
+                try:
+                    instagram_account = InstagramAccount.objects.filter(
+                        instagram_user_id=user_id
+                    ).first()
+
+                    if instagram_account:
+                        InstagramAutomation.objects.filter(
+                            user=instagram_account.user
+                        ).delete()
+                        InstagramCommentEvent.objects.filter(
+                            user=instagram_account.user
+                        ).delete()
+                        instagram_account.delete()
+                        logger.info(f"Deleted Instagram data for user_id: {user_id}")
+                except Exception as e:
+                    logger.error(f"Error deleting data for user_id {user_id}: {e}")
+
+            # Generate confirmation code
+            confirmation_code = str(uuid.uuid4())[:8].upper()
+
+            app_root_url = Configuration.get_value('app_root_url', 'https://example.com')
+
+            return JsonResponse({
+                'url': f'{app_root_url}/privacy/data-deletion-status/?code={confirmation_code}',
+                'confirmation_code': confirmation_code
+            })
+
+        except Exception as e:
+            logger.error(f"Data deletion callback error: {e}")
+            return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DeauthorizationCallbackView(View):
+    """
+    Handle Facebook/Instagram Deauthorization Callbacks.
+    URL to configure in Facebook App: {your_domain}/instagram/deauthorize/
+    """
+
+    def post(self, request):
+        try:
+            signed_request = request.POST.get('signed_request', '')
+
+            if not signed_request:
+                return JsonResponse({'error': 'Missing signed_request'}, status=400)
+
+            app_secret = Configuration.get_value('instagram_app_secret', '')
+
+            if not app_secret:
+                logger.error("Instagram app secret not configured for deauthorization")
+                return JsonResponse({'error': 'App not configured'}, status=500)
+
+            data = parse_signed_request(signed_request, app_secret)
+
+            if not data:
+                return JsonResponse({'error': 'Invalid signed_request'}, status=400)
+
+            user_id = data.get('user_id', '')
+            logger.info(f"Deauthorization request received for user_id: {user_id}")
+
+            # Deactivate user's Instagram connection
+            if user_id:
+                try:
+                    instagram_account = InstagramAccount.objects.filter(
+                        instagram_user_id=user_id
+                    ).first()
+
+                    if instagram_account:
+                        instagram_account.access_token = None
+                        instagram_account.is_active = False
+                        instagram_account.save()
+                        logger.info(f"Deauthorized Instagram account for user_id: {user_id}")
+                except Exception as e:
+                    logger.error(f"Error deauthorizing user_id {user_id}: {e}")
+
+            return JsonResponse({'success': True})
+
+        except Exception as e:
+            logger.error(f"Deauthorization callback error: {e}")
+            return JsonResponse({'error': 'Internal server error'}, status=500)

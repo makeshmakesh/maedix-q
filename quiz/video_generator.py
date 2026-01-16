@@ -43,7 +43,8 @@ class QuizVideoGenerator:
 
     def __init__(self, handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
                  intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
-                 pre_outro_text=None, template_config=None):
+                 pre_outro_text=None, template_config=None, quiz_heading=None,
+                 answer_reveal_audio_url=None, answer_reveal_audio_volume=0.5):
         self.temp_dir = tempfile.mkdtemp()
         self._font_cache = {}
         self.handle_name = handle_name
@@ -57,6 +58,12 @@ class QuizVideoGenerator:
         self._intro_audio_path = None
         # Pre-outro settings (call-to-action before outro)
         self.pre_outro_text = pre_outro_text
+        # Quiz heading displayed above timer during questions
+        self.quiz_heading = quiz_heading
+        # Answer reveal audio settings
+        self.answer_reveal_audio_url = answer_reveal_audio_url
+        self.answer_reveal_audio_volume = answer_reveal_audio_volume
+        self._answer_reveal_audio_path = None
         # Load template colors
         self._load_template_colors(template_config)
 
@@ -238,6 +245,85 @@ class QuizVideoGenerator:
             traceback.print_exc()
             return video_clip
 
+    def _download_answer_reveal_audio(self):
+        """Download answer reveal audio file from URL and cache locally"""
+        print(f"Answer reveal audio URL configured: '{self.answer_reveal_audio_url}'")
+
+        if not self.answer_reveal_audio_url:
+            print("No answer reveal audio URL configured")
+            return None
+
+        if self._answer_reveal_audio_path and os.path.exists(self._answer_reveal_audio_path):
+            print(f"Using cached answer reveal audio: {self._answer_reveal_audio_path}")
+            return self._answer_reveal_audio_path
+
+        try:
+            # Determine file extension from URL
+            ext = '.mp3'
+            if '.wav' in self.answer_reveal_audio_url.lower():
+                ext = '.wav'
+            elif '.ogg' in self.answer_reveal_audio_url.lower():
+                ext = '.ogg'
+
+            audio_path = os.path.join(self.temp_dir, f'answer_reveal_audio{ext}')
+
+            # Download audio file
+            print(f"Downloading answer reveal audio from: {self.answer_reveal_audio_url}")
+            response = requests.get(self.answer_reveal_audio_url, timeout=30)
+            response.raise_for_status()
+            print(f"Downloaded {len(response.content)} bytes for answer reveal")
+
+            with open(audio_path, 'wb') as f:
+                f.write(response.content)
+
+            self._answer_reveal_audio_path = audio_path
+            print(f"Answer reveal audio saved to: {audio_path}")
+            return audio_path
+
+        except Exception as e:
+            print(f"Warning: Failed to download answer reveal audio: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    def _add_answer_reveal_audio_to_clip(self, video_clip):
+        """Add answer reveal audio to video clip (plays once, no loop)"""
+        audio_path = self._download_answer_reveal_audio()
+        if not audio_path:
+            print("No answer reveal audio path available, skipping")
+            return video_clip
+
+        try:
+            print(f"Loading answer reveal audio from: {audio_path}")
+            audio_clip = AudioFileClip(audio_path)
+
+            # Get durations
+            video_duration = video_clip.duration
+            audio_duration = audio_clip.duration
+            print(f"Reveal video duration: {video_duration}s, Audio duration: {audio_duration}s")
+
+            # Adjust volume (no looping - play once only)
+            print(f"Setting answer reveal volume to: {self.answer_reveal_audio_volume}")
+            audio_clip = audio_clip.with_effects([
+                MultiplyVolume(factor=self.answer_reveal_audio_volume)
+            ])
+
+            # If audio is longer than video, trim it
+            if audio_duration > video_duration:
+                audio_clip = audio_clip.with_duration(video_duration)
+
+            # Set audio on video (audio plays once from start, silence after it ends)
+            video_with_audio = video_clip.with_audio(audio_clip)
+            print("Answer reveal audio successfully added (no loop)")
+
+            return video_with_audio
+
+        except Exception as e:
+            print(f"Warning: Failed to add answer reveal audio: {e}")
+            import traceback
+            traceback.print_exc()
+            return video_clip
+
     def _add_audio_to_video(self, video_clip):
         """Add background audio to video clip"""
         audio_path = self._download_audio()
@@ -311,7 +397,7 @@ class QuizVideoGenerator:
 
     def _create_question_frame(self, question_num, total, question_text, options,
                                 timer_value=None, reveal_answer=False, correct_indices=None,
-                                code_snippet=None):
+                                code_snippet=None, explanation=None):
         """Create a single frame for a question with modern dark theme"""
         if correct_indices is None:
             correct_indices = []
@@ -332,6 +418,19 @@ class QuizVideoGenerator:
 
         # Top accent bar
         draw.rectangle([0, 0, self.WIDTH, 8], fill=self.ACCENT_COLOR)
+
+        # Quiz heading (displayed at top, above question index)
+        if self.quiz_heading:
+            heading_font = self._get_font(38)
+            heading_text = self.quiz_heading[:40]  # Limit to 40 chars
+            draw.text(
+                (self.WIDTH // 2, y_offset),
+                heading_text,
+                font=heading_font,
+                fill=self.ACCENT_COLOR,
+                anchor="mm"
+            )
+            y_offset += 60
 
         # Question number badge with gradient-like effect
         badge_text = f"QUESTION {question_num}/{total}"
@@ -535,6 +634,44 @@ class QuizVideoGenerator:
                     fill=self.TEXT_COLOR
                 )
 
+        # Explanation (shown during answer reveal if exists)
+        if reveal_answer and explanation and explanation.strip():
+            explanation_font = self._get_font(28)
+            explanation_y = y_offset + (len(options[:4]) * (option_height + option_margin)) + 20
+
+            # Wrap explanation text
+            max_explanation_width = self.WIDTH - 160
+            explanation_lines = self._wrap_text(
+                explanation.strip(), explanation_font, max_explanation_width, draw
+            )[:3]  # Max 3 lines
+
+            # Calculate explanation box height
+            exp_line_height = 36
+            exp_padding = 16
+            exp_box_height = len(explanation_lines) * exp_line_height + exp_padding * 2
+
+            # Draw explanation box
+            draw.rounded_rectangle(
+                [60, explanation_y, self.WIDTH - 60, explanation_y + exp_box_height],
+                radius=12,
+                fill=self.CARD_BG,
+                outline=self.CORRECT_COLOR,
+                width=2
+            )
+
+            # Draw explanation text
+            exp_text_y = explanation_y + exp_padding
+            for line in explanation_lines:
+                bbox = draw.textbbox((0, 0), line, font=explanation_font)
+                line_width = bbox[2] - bbox[0]
+                draw.text(
+                    ((self.WIDTH - line_width) // 2, exp_text_y),
+                    line,
+                    font=explanation_font,
+                    fill=self.TEXT_COLOR
+                )
+                exp_text_y += exp_line_height
+
         # Bottom branding
         brand_text = self.handle_name
         bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
@@ -726,14 +863,16 @@ class QuizVideoGenerator:
         Returns:
             Path to the generated video
         """
-        question_clips = []
+        all_countdown_clips = []  # All countdown clips for cleanup
+        all_reveal_clips = []     # All reveal clips for cleanup
+        question_sections = []    # List of (countdown_video, reveal_video) per question
         total_questions = len(questions)
 
         def report_progress(percent, message):
             if progress_callback:
                 progress_callback(percent, message)
 
-        # Create question clips
+        # Create question clips - separated by countdown and reveal for different audio
         for q_idx, question in enumerate(questions):
             question_num = q_idx + 1
             total = len(questions)
@@ -748,10 +887,12 @@ class QuizVideoGenerator:
                 if opt.get('is_correct', False):
                     correct_indices.append(i)
 
-            # Get code snippet if present
+            # Get code snippet and explanation if present
             code_snippet = question.get('code_snippet', '')
+            explanation = question.get('explanation', '')
 
-            # Create question frames with countdown (1 frame per second for countdown)
+            # Create countdown clips for this question
+            q_countdown_clips = []
             for timer in range(self.QUESTION_DURATION, 0, -1):
                 frame = self._create_question_frame(
                     question_num=question_num,
@@ -764,9 +905,11 @@ class QuizVideoGenerator:
                     code_snippet=code_snippet
                 )
                 clip = ImageClip(frame, duration=1)
-                question_clips.append(clip)
+                q_countdown_clips.append(clip)
+                all_countdown_clips.append(clip)
 
-            # Create answer reveal frame (only if show_answer is True)
+            # Create answer reveal clip (only if show_answer is True)
+            q_reveal_clip = None
             if show_answer:
                 reveal_frame = self._create_question_frame(
                     question_num=question_num,
@@ -776,10 +919,13 @@ class QuizVideoGenerator:
                     timer_value=None,
                     reveal_answer=True,
                     correct_indices=correct_indices,
-                    code_snippet=code_snippet
+                    code_snippet=code_snippet,
+                    explanation=explanation
                 )
-                reveal_clip = ImageClip(reveal_frame, duration=self.ANSWER_REVEAL_DURATION)
-                question_clips.append(reveal_clip)
+                q_reveal_clip = ImageClip(reveal_frame, duration=self.ANSWER_REVEAL_DURATION)
+                all_reveal_clips.append(q_reveal_clip)
+
+            question_sections.append((q_countdown_clips, q_reveal_clip))
 
         # Create intro clip if configured
         report_progress(15, "Creating intro...")
@@ -803,11 +949,32 @@ class QuizVideoGenerator:
         # Handle audio and concatenation
         report_progress(25, "Assembling clips...")
 
-        # Concatenate question clips and add main background music
-        questions_video = concatenate_videoclips(question_clips, method="compose")
-        if self.audio_url:
-            report_progress(28, "Adding background music to questions...")
-            questions_video = self._add_audio_to_video(questions_video)
+        # Build question videos with proper audio assignment
+        # Each question: countdown (bg music) -> reveal (intro audio)
+        question_videos = []
+        for q_countdown_clips, q_reveal_clip in question_sections:
+            # Concatenate countdown clips for this question
+            q_countdown_video = concatenate_videoclips(q_countdown_clips, method="compose")
+            if self.audio_url:
+                q_countdown_video = self._add_audio_to_video(q_countdown_video)
+
+            # Add reveal clip with answer reveal audio (if exists)
+            if q_reveal_clip:
+                if self.answer_reveal_audio_url:
+                    q_reveal_clip = self._add_answer_reveal_audio_to_clip(q_reveal_clip)
+                # Combine countdown + reveal for this question
+                q_video = concatenate_videoclips(
+                    [q_countdown_video, q_reveal_clip], method="compose"
+                )
+            else:
+                q_video = q_countdown_video
+
+            question_videos.append(q_video)
+
+        report_progress(28, "Combining question sections...")
+
+        # Concatenate all question videos
+        questions_video = concatenate_videoclips(question_videos, method="compose")
 
         # Create ending section (pre-outro if exists + outro) with intro music
         ending_clips = []
@@ -894,7 +1061,9 @@ class QuizVideoGenerator:
 
         # Cleanup clips
         final_video.close()
-        for clip in question_clips:
+        for clip in all_countdown_clips:
+            clip.close()
+        for clip in all_reveal_clips:
             clip.close()
         if intro_clip:
             intro_clip.close()
@@ -913,7 +1082,8 @@ class QuizVideoGenerator:
 def generate_quiz_video(questions, output_path, progress_callback=None, show_answer=True,
                         handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
                         intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
-                        pre_outro_text=None, template_config=None):
+                        pre_outro_text=None, template_config=None, quiz_heading=None,
+                        answer_reveal_audio_url=None, answer_reveal_audio_volume=0.5):
     """
     Convenience function to generate quiz video.
 
@@ -930,6 +1100,9 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
         intro_audio_volume: Volume level for intro audio (0.0 to 1.0, default: 0.5)
         pre_outro_text: Text for pre-outro call-to-action (default: "Comment your answer!")
         template_config: Template configuration dict with 'colors' key (optional)
+        quiz_heading: Text displayed above the timer during questions (max 40 chars)
+        answer_reveal_audio_url: URL to answer reveal audio file (mp3/wav) - optional
+        answer_reveal_audio_volume: Volume level for answer reveal audio (0.0 to 1.0, default: 0.5)
 
     Returns:
         Path to generated video
@@ -942,7 +1115,10 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
         intro_audio_url=intro_audio_url,
         intro_audio_volume=intro_audio_volume,
         pre_outro_text=pre_outro_text,
-        template_config=template_config
+        template_config=template_config,
+        quiz_heading=quiz_heading,
+        answer_reveal_audio_url=answer_reveal_audio_url,
+        answer_reveal_audio_volume=answer_reveal_audio_volume
     )
 
     try:
@@ -955,6 +1131,7 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
                     'text': q.text,
                     'code_snippet': getattr(q, 'code_snippet', '') or '',
                     'code_language': getattr(q, 'code_language', 'python') or 'python',
+                    'explanation': getattr(q, 'explanation', '') or '',
                     'options': [
                         {'text': opt.text, 'is_correct': opt.is_correct}
                         for opt in q.options.all()

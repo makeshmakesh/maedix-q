@@ -140,6 +140,30 @@
 
                             <hr class="my-3">
 
+                            <!-- Quiz Heading Section -->
+                            <div class="mb-3">
+                                <label for="quizHeading" class="form-label">
+                                    <strong><i class="bi bi-card-heading me-1"></i>Quiz Heading (Optional)</strong>
+                                    <br>
+                                    <small class="text-muted">Display a heading above the timer during questions</small>
+                                </label>
+                                {% if can_custom_intro_outro %}
+                                <input type="text" class="form-control" id="quizHeading" name="quiz_heading"
+                                       placeholder="e.g., Tricky Python Quiz" maxlength="40">
+                                <small class="text-muted">Appears above the countdown timer. Max 40 characters.</small>
+                                {% else %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="text" class="form-control bg-light" id="quizHeading" placeholder="Quiz heading" disabled readonly>
+                                    <a href="{% url 'pricing' %}" class="btn btn-outline-primary btn-sm text-nowrap">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Upgrade
+                                    </a>
+                                </div>
+                                <small class="text-muted"><i class="bi bi-lock me-1"></i>Upgrade your plan to add quiz heading</small>
+                                {% endif %}
+                            </div>
+
+                            <hr class="my-3">
+
                             <!-- Pre-Outro Section -->
                             <div class="mb-3">
                                 <label for="preOutroText" class="form-label">

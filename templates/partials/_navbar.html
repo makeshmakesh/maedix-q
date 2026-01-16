@@ -44,6 +44,13 @@
                         <i class="bi bi-tag d-lg-none"></i> Pricing
                     </a>
                 </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'instagram_automation_list' %}">
+                        <i class="bi bi-instagram d-lg-none"></i> IG Automation
+                    </a>
+                </li>
+                {% endif %}
             </ul>
 
             <ul class="navbar-nav">
@@ -58,6 +65,7 @@
                             <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>Subscription</a></li>
                             <li><a class="dropdown-item" href="{% url 'user_quiz_list' %}"><i class="bi bi-journal-plus me-2"></i>My Quizzes</a></li>
                             <li><a class="dropdown-item" href="{% url 'user_topic_list' %}"><i class="bi bi-layers me-2"></i>My Shorts</a></li>
+                            <li><a class="dropdown-item" href="{% url 'instagram_automation_list' %}"><i class="bi bi-robot me-2"></i>Instagram Automation</a></li>
                             <li><a class="dropdown-item" href="{% url 'topic_my_progress' %}"><i class="bi bi-book me-2"></i>My Learning Progress</a></li>
                             <li><a class="dropdown-item" href="{% url 'quiz_history' %}"><i class="bi bi-clock-history me-2"></i>Quiz History</a></li>
                             <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>

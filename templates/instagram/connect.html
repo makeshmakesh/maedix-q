@@ -47,6 +47,19 @@
                                 <td class="text-muted">Status</td>
                                 <td><span class="badge bg-success">Active</span></td>
                             </tr>
+                            <tr>
+                                <td class="text-muted">Webhook Events</td>
+                                <td>
+                                    {% if instagram_account.instagram_data.webhook_subscribed %}
+                                    <span class="badge bg-success">Subscribed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Not Subscribed</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="subscribeBtn">
+                                        Subscribe Now
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
                             {% if instagram_account.token_expires_at %}
                             <tr>
                                 <td class="text-muted">Token Expires</td>
@@ -55,6 +68,50 @@
                             {% endif %}
                         </table>
                     </div>
+
+                    <!-- Debug Info for Webhook Troubleshooting -->
+                    {% if user.is_staff %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-bug me-1"></i>Debug Info (Staff Only)</h6>
+                        <table class="table table-sm table-bordered">
+                            <tr>
+                                <td class="text-muted">Instagram User ID</td>
+                                <td><code>{{ instagram_account.instagram_user_id }}</code></td>
+                            </tr>
+                            {% if instagram_account.instagram_data.account_id %}
+                            <tr>
+                                <td class="text-muted">Account ID</td>
+                                <td><code>{{ instagram_account.instagram_data.account_id }}</code></td>
+                            </tr>
+                            {% endif %}
+                            {% if instagram_account.instagram_data.user_id %}
+                            <tr>
+                                <td class="text-muted">User ID (from API)</td>
+                                <td><code>{{ instagram_account.instagram_data.user_id }}</code></td>
+                            </tr>
+                            {% endif %}
+                            {% if instagram_account.instagram_data.ig_id %}
+                            <tr>
+                                <td class="text-muted">IG ID (ig_id)</td>
+                                <td><code>{{ instagram_account.instagram_data.ig_id }}</code></td>
+                            </tr>
+                            {% endif %}
+                            {% if instagram_account.instagram_data.account_type %}
+                            <tr>
+                                <td class="text-muted">Account Type</td>
+                                <td><code>{{ instagram_account.instagram_data.account_type }}</code></td>
+                            </tr>
+                            {% endif %}
+                            {% if instagram_account.instagram_data.connected_at %}
+                            <tr>
+                                <td class="text-muted">Connected At</td>
+                                <td><code>{{ instagram_account.instagram_data.connected_at }}</code></td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                        <p class="text-muted small">These IDs should match what webhooks send in <code>entry.id</code>.</p>
+                    </div>
+                    {% endif %}
 
                     <div class="d-grid gap-2">
                         <form method="post" action="{% url 'instagram_oauth' %}">
@@ -108,4 +165,44 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    if (subscribeBtn) {
+        subscribeBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Subscribing...';
+
+            fetch('{% url "instagram_subscribe" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Replace button with success badge
+                    btn.parentElement.innerHTML = '<span class="badge bg-success">Subscribed</span>';
+                } else {
+                    alert('Subscription failed: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -7,6 +7,7 @@ urlpatterns = [
     path('oauth/', views.InstagramOAuthRedirectView.as_view(), name='instagram_oauth'),
     path('callback/', views.InstagramCallbackView.as_view(), name='instagram_callback'),
     path('disconnect/', views.InstagramDisconnectView.as_view(), name='instagram_disconnect'),
+    path('subscribe/', views.InstagramWebhookSubscribeView.as_view(), name='instagram_subscribe'),
     path('post/', views.InstagramPostPageView.as_view(), name='instagram_post_page'),
 
     # Automation management
@@ -19,4 +20,8 @@ urlpatterns = [
 
     # Webhook
     path('webhook/', views.InstagramWebhookView.as_view(), name='instagram_webhook'),
+
+    # Facebook App Callback URLs (Required for App Review)
+    path('data-deletion/', views.DataDeletionCallbackView.as_view(), name='instagram_data_deletion'),
+    path('deauthorize/', views.DeauthorizationCallbackView.as_view(), name='instagram_deauthorize'),
 ]

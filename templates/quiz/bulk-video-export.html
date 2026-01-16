@@ -131,7 +131,7 @@
                                 </div>
                                 <div class="card-body question-config d-none">
                                     <div class="row g-3">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check form-switch">
                                                 <input class="form-check-input" type="checkbox"
                                                        name="reveal_answer_{{ question.id }}"
@@ -141,12 +141,18 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <input type="text" class="form-control form-control-sm"
                                                    name="intro_text_{{ question.id }}"
                                                    placeholder="Intro text (optional)" maxlength="100">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   name="quiz_heading_{{ question.id }}"
+                                                   placeholder="Quiz heading (optional)" maxlength="40"
+                                                   title="Displayed above timer (max 40 chars)">
+                                        </div>
+                                        <div class="col-md-3">
                                             <input type="text" class="form-control form-control-sm"
                                                    name="outro_text_{{ question.id }}"
                                                    placeholder="Outro text (optional)" maxlength="100">

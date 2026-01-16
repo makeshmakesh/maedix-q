@@ -764,7 +764,9 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
                          handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
                          user_id=None, quiz_id=None,
                          intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
-                         pre_outro_text="Comment your answer!", template_config=None):
+                         pre_outro_text="Comment your answer!", template_config=None,
+                         quiz_heading=None, answer_reveal_audio_url=None,
+                         answer_reveal_audio_volume=0.5):
     """Background task to generate video with progress updates"""
     import shutil
     from .video_generator import generate_quiz_video
@@ -794,7 +796,10 @@ def _generate_video_task(task_id, question_data, output_path, quiz_slug, show_an
             intro_text=intro_text, intro_audio_url=intro_audio_url,
             intro_audio_volume=intro_audio_volume,
             pre_outro_text=pre_outro_text,
-            template_config=template_config
+            template_config=template_config,
+            quiz_heading=quiz_heading,
+            answer_reveal_audio_url=answer_reveal_audio_url,
+            answer_reveal_audio_volume=answer_reveal_audio_volume
         )
 
         # Read video content first (before cleanup)
@@ -1031,6 +1036,7 @@ class QuizVideoExportView(LoginRequiredMixin, View):
                 'text': q.text,
                 'code_snippet': q.code_snippet or '',
                 'code_language': q.code_language or 'python',
+                'explanation': q.explanation or '',
                 'options': [
                     {'text': opt.text, 'is_correct': opt.is_correct}
                     for opt in q.options.all()
@@ -1055,16 +1061,27 @@ class QuizVideoExportView(LoginRequiredMixin, View):
         audio_url = Configuration.get_value('video_background_music_url', '')
         audio_volume = float(Configuration.get_value('video_background_music_volume', '0.5'))
 
-        # Get intro and pre-outro settings (only if user has the feature)
+        # Get intro, pre-outro, and quiz heading settings (only if user has the feature)
         intro_text = None
         pre_outro_text = None
+        quiz_heading = None
         if can_custom_intro_outro:
             intro_text = request.POST.get('intro_text', '').strip() or None
             pre_outro_text = request.POST.get('pre_outro_text', '').strip() or None
+            # Quiz heading displayed above timer (max 40 chars)
+            quiz_heading_raw = request.POST.get('quiz_heading', '').strip()
+            if quiz_heading_raw:
+                quiz_heading = quiz_heading_raw[:40]  # Limit to 40 characters
 
         # Get intro audio from configuration (separate from main audio)
         intro_audio_url = Configuration.get_value('video_intro_music_url', '')
         intro_audio_volume = float(Configuration.get_value('video_intro_music_volume', '0.5'))
+
+        # Get answer reveal audio from configuration
+        answer_reveal_audio_url = Configuration.get_value('video_answer_reveal_music_url', '')
+        answer_reveal_audio_volume = float(
+            Configuration.get_value('video_answer_reveal_music_volume', '0.5')
+        )
 
         # Get selected template
         template_config = None
@@ -1101,7 +1118,10 @@ class QuizVideoExportView(LoginRequiredMixin, View):
                 'intro_audio_url': intro_audio_url,
                 'intro_audio_volume': intro_audio_volume,
                 'pre_outro_text': pre_outro_text,
-                'template_config': template_config
+                'template_config': template_config,
+                'quiz_heading': quiz_heading,
+                'answer_reveal_audio_url': answer_reveal_audio_url,
+                'answer_reveal_audio_volume': answer_reveal_audio_volume
             }
         )
         thread.daemon = True
@@ -2093,6 +2113,10 @@ def _process_bulk_video_job(job_id):
         audio_volume = float(Configuration.get_value('video_background_music_volume', '0.5'))
         intro_audio_url = Configuration.get_value('video_intro_music_url', '')
         intro_audio_volume = float(Configuration.get_value('video_intro_music_volume', '0.5'))
+        answer_reveal_audio_url = Configuration.get_value('video_answer_reveal_music_url', '')
+        answer_reveal_audio_volume = float(
+            Configuration.get_value('video_answer_reveal_music_volume', '0.5')
+        )
 
         # Get template config
         template_config = None
@@ -2118,6 +2142,7 @@ def _process_bulk_video_job(job_id):
                     'text': question.text,
                     'code_snippet': question.code_snippet or '',
                     'code_language': question.code_language or 'python',
+                    'explanation': question.explanation or '',
                     'options': [
                         {'text': opt.text, 'is_correct': opt.is_correct}
                         for opt in question.options.all()
@@ -2143,7 +2168,10 @@ def _process_bulk_video_job(job_id):
                         intro_audio_url=intro_audio_url,
                         intro_audio_volume=intro_audio_volume,
                         pre_outro_text=config.get('outro_text') or None,
-                        template_config=template_config
+                        template_config=template_config,
+                        quiz_heading=config.get('quiz_heading') or None,
+                        answer_reveal_audio_url=answer_reveal_audio_url,
+                        answer_reveal_audio_volume=answer_reveal_audio_volume
                     )
                 finally:
                     VIDEO_GENERATION_SEMAPHORE.release()
@@ -2362,6 +2390,7 @@ class BulkVideoExportView(LoginRequiredMixin, View):
                 'reveal_answer': request.POST.get(f'reveal_answer_{qid}') == 'on',
                 'intro_text': request.POST.get(f'intro_text_{qid}', '').strip()[:100],
                 'outro_text': request.POST.get(f'outro_text_{qid}', '').strip()[:100],
+                'quiz_heading': request.POST.get(f'quiz_heading_{qid}', '').strip()[:40],
             })
 
         # Validate platform connections if selected

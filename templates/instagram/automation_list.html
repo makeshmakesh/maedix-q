@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Instagram Comment Automation{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">
+                            <i class="bi bi-robot text-primary me-2"></i>Comment Automation
+                        </h2>
+                        <p class="text-muted mb-0">Auto-reply to Instagram comments with DM follow-ups</p>
+                    </div>
+                    {% if instagram_connected %}
+                    <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Create Automation
+                    </a>
+                    {% endif %}
+                </div>
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if not instagram_connected %}
+                <!-- Not Connected Warning -->
+                <div class="card p-4 text-center">
+                    <i class="bi bi-instagram text-danger" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Connect Instagram First</h4>
+                    <p class="text-muted">You need to connect your Instagram account to use comment automation.</p>
+                    <a href="{% url 'instagram_connect' %}" class="btn btn-primary">
+                        <i class="bi bi-link-45deg me-1"></i>Connect Instagram
+                    </a>
+                </div>
+                {% else %}
+
+                <div class="row">
+                    <!-- Left Column: Automations -->
+                    <div class="col-lg-8">
+                        <!-- Account-Level Settings Card -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-gear me-2"></i>Account-Level Automation
+                                </h6>
+                                <a href="{% url 'instagram_automation_account' %}" class="btn btn-sm btn-outline-primary">
+                                    Configure
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                {% if instagram_account.account_automation_enabled %}
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2">Enabled</span>
+                                    <span class="text-muted small">
+                                        Fallback automation for comments without specific rules
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-secondary me-2">Disabled</span>
+                                    <span class="text-muted small">
+                                        Enable to auto-reply to comments on any post
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Post-Level Automations -->
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-collection me-2"></i>Post-Level Automations
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {% if automations %}
+                                <div class="list-group list-group-flush">
+                                    {% for automation in automations %}
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <h6 class="mb-0 me-2">{{ automation.title }}</h6>
+                                                    {% if automation.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted small mb-1">
+                                                    <strong>Keywords:</strong>
+                                                    {% if automation.keywords %}
+                                                        {{ automation.keywords|truncatechars:50 }}
+                                                    {% else %}
+                                                        <span class="text-info">All comments</span>
+                                                    {% endif %}
+                                                </p>
+                                                {% if automation.instagram_post_id %}
+                                                <p class="text-muted small mb-0">
+                                                    <strong>Post ID:</strong> {{ automation.instagram_post_id }}
+                                                </p>
+                                                {% endif %}
+                                            </div>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'instagram_automation_edit' automation.pk %}"
+                                                   class="btn btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form method="post" action="{% url 'instagram_automation_delete' automation.pk %}"
+                                                      class="d-inline" onsubmit="return confirm('Delete this automation?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2 mb-0">No automations created yet</p>
+                                    <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary mt-3">
+                                        <i class="bi bi-plus-lg me-1"></i>Create Your First Automation
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Recent Activity -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-clock-history me-2"></i>Recent Activity
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if recent_events %}
+                                <div class="list-group list-group-flush">
+                                    {% for event in recent_events %}
+                                    <div class="list-group-item py-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <small class="text-muted">@{{ event.commenter_username|default:"unknown" }}</small>
+                                                <p class="mb-0 small">{{ event.comment_text|truncatechars:40 }}</p>
+                                            </div>
+                                            <div>
+                                                {% if event.status == 'completed' %}
+                                                <span class="badge bg-success">Done</span>
+                                                {% elif event.status == 'failed' %}
+                                                <span class="badge bg-danger">Failed</span>
+                                                {% elif event.status == 'skipped' %}
+                                                <span class="badge bg-secondary">Skipped</span>
+                                                {% else %}
+                                                <span class="badge bg-warning">{{ event.status }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ event.created_at|timesince }} ago</small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="bi bi-chat-dots text-muted" style="font-size: 1.5rem;"></i>
+                                    <p class="text-muted small mt-2 mb-0">No activity yet</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Help Card -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6 class="fw-bold"><i class="bi bi-lightbulb me-2"></i>How it works</h6>
+                                <ol class="small text-muted mb-0 ps-3">
+                                    <li class="mb-1">Create an automation with trigger keywords</li>
+                                    <li class="mb-1">When someone comments with those keywords...</li>
+                                    <li class="mb-1">Bot replies to the comment automatically</li>
+                                    <li>Then sends a DM with your message</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Back Link -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,815 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if editing %}Edit{% else %}Create{% endif %} Automation{% endblock %}
+
+{% block content %}
+<style>
+    /* Post Browser Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-content-custom {
+        background: var(--bg-white);
+        border-radius: 16px;
+        max-width: 900px;
+        width: 100%;
+        max-height: 80vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header-custom h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .modal-body-custom {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-muted);
+        line-height: 1;
+    }
+
+    .btn-close-modal:hover {
+        color: var(--text-dark);
+    }
+
+    /* Posts Grid */
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+
+    .post-card {
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--bg-white);
+    }
+
+    .post-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+    }
+
+    .post-card.selected {
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .post-card img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+    }
+
+    .post-card .post-info {
+        padding: 0.5rem;
+    }
+
+    .post-card .post-caption {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .post-card .post-date {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin: 0.25rem 0 0;
+    }
+
+    /* Selected Post Preview */
+    .selected-post-preview {
+        display: none;
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 8px;
+    }
+
+    .selected-post-preview.show {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .selected-post-preview img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    /* Instagram Post Input Group */
+    .instagram-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .instagram-input-group input {
+        flex: 1;
+    }
+
+    .btn-browse-posts {
+        white-space: nowrap;
+    }
+
+    /* Keyword Tag Input */
+    .keyword-input-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-white);
+        min-height: 50px;
+        align-items: center;
+        transition: all 0.3s ease;
+        cursor: text;
+    }
+
+    .keyword-input-container:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .keyword-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .keyword-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.625rem;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: white;
+        animation: tagIn 0.2s ease;
+    }
+
+    @keyframes tagIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .keyword-tag .tag-remove {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: background 0.2s;
+    }
+
+    .keyword-tag .tag-remove:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .keyword-input {
+        flex: 1;
+        min-width: 120px;
+        border: none;
+        background: transparent;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+        outline: none;
+        padding: 0.25rem;
+    }
+
+    .keyword-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        align-items: center;
+    }
+
+    .suggestion-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .keyword-suggestion {
+        padding: 0.3rem 0.6rem;
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 15px;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .keyword-suggestion:hover {
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--text-dark);
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+
+    .keyword-suggestion.added {
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.3);
+        color: var(--secondary);
+    }
+
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .error-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+</style>
+
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'instagram_automation_list' %}">Automation</a></li>
+                        <li class="breadcrumb-item active">{% if editing %}Edit{% else %}Create{% endif %}</li>
+                    </ol>
+                </nav>
+
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-robot text-primary" style="font-size: 2.5rem;"></i>
+                        <h3 class="fw-bold mt-3">
+                            {% if editing %}Edit Automation{% else %}Create Automation{% endif %}
+                        </h3>
+                        <p class="text-muted">Set up keyword triggers and auto-replies for a specific Instagram post</p>
+                    </div>
+
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <!-- Info Alert -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i>Post-Level vs Account-Level Automation</h6>
+                        <p class="mb-0 small">
+                            This form creates automation for a <strong>specific post</strong>. For posts without specific automations,
+                            use <a href="{% url 'instagram_automation_account' %}">Account-Level Automation</a> as a fallback.
+                        </p>
+                    </div>
+
+                    <form method="post" id="automationForm">
+                        {% csrf_token %}
+
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-bold">
+                                <i class="bi bi-tag me-1"></i>Automation Title
+                            </label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                   value="{% if automation.title %}{{ automation.title }}{% endif %}"
+                                   placeholder="e.g., Python Quiz Promo" maxlength="100" required>
+                            <small class="text-muted">Give your automation a descriptive name</small>
+                        </div>
+
+                        <!-- Instagram Post Selection -->
+                        <div class="mb-3">
+                            <label for="instagram_post_id" class="form-label fw-bold">
+                                <i class="bi bi-image me-1"></i>Instagram Post
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="instagram-input-group">
+                                <input type="text" class="form-control" id="instagram_post_id" name="instagram_post_id"
+                                       value="{% if automation.instagram_post_id %}{{ automation.instagram_post_id }}{% endif %}"
+                                       placeholder="Select from your Instagram posts" readonly required>
+                                <button type="button" class="btn btn-outline-primary btn-browse-posts" id="browsePostsBtn">
+                                    <i class="bi bi-grid me-1"></i>Browse Posts
+                                </button>
+                            </div>
+                            <div class="selected-post-preview" id="selectedPostPreview">
+                                <img id="previewImage" src="" alt="Post preview">
+                                <div>
+                                    <p class="mb-0 text-success fw-bold"><i class="bi bi-check-circle me-1"></i>Post Selected</p>
+                                    <p id="previewCaption" class="text-muted small mb-0"></p>
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                Select the post where this automation will be active
+                            </small>
+                        </div>
+
+                        <!-- Keywords -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-key me-1"></i>Trigger Keywords
+                                <span class="badge bg-secondary ms-1">Optional</span>
+                            </label>
+                            <div class="keyword-input-container" id="keywordContainer">
+                                <div class="keyword-tags" id="keywordTags"></div>
+                                <input type="text" class="keyword-input" id="keywordInput"
+                                       placeholder="Type keyword and press Enter...">
+                            </div>
+                            <input type="hidden" name="keywords" id="keywordHidden"
+                                   value="{% if automation.keywords %}{{ automation.keywords }}{% endif %}">
+
+                            <div class="keyword-suggestions">
+                                <span class="suggestion-label">Quick add:</span>
+                                <button type="button" class="keyword-suggestion" data-keyword="interested">interested</button>
+                                <button type="button" class="keyword-suggestion" data-keyword="link">link</button>
+                                <button type="button" class="keyword-suggestion" data-keyword="send">send</button>
+                                <button type="button" class="keyword-suggestion" data-keyword="dm">dm</button>
+                                <button type="button" class="keyword-suggestion" data-keyword="price">price</button>
+                                <button type="button" class="keyword-suggestion" data-keyword="info">info</button>
+                                <button type="button" class="keyword-suggestion" data-keyword="details">details</button>
+                            </div>
+                            <small class="text-muted">
+                                Add keywords that trigger this automation. <strong>Leave empty to reply to every comment</strong> on this post.
+                            </small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Comment Reply -->
+                        <div class="mb-3">
+                            <label for="comment_reply" class="form-label fw-bold">
+                                <i class="bi bi-chat-left-text me-1"></i>Comment Reply
+                            </label>
+                            <textarea class="form-control" id="comment_reply" name="comment_reply"
+                                      rows="3" placeholder="e.g., Thanks for your interest! Check your DMs for the link."
+                                      required>{% if automation.comment_reply %}{{ automation.comment_reply }}{% endif %}</textarea>
+                            <small class="text-muted">
+                                Public reply posted under the user's comment
+                            </small>
+                        </div>
+
+                        <!-- Follow-up DM -->
+                        <div class="mb-4">
+                            <label for="followup_dm" class="form-label fw-bold">
+                                <i class="bi bi-envelope me-1"></i>Follow-up DM
+                            </label>
+                            <textarea class="form-control" id="followup_dm" name="followup_dm"
+                                      rows="4" placeholder="e.g., Hey! Here's the link you requested: https://..."
+                                      required>{% if automation.followup_dm %}{{ automation.followup_dm }}{% endif %}</textarea>
+                            <small class="text-muted">
+                                Private message sent to the commenter after the comment reply
+                            </small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Follow Check Section -->
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="require_follow" name="require_follow"
+                                       {% if automation.require_follow %}checked{% endif %}
+                                       onchange="toggleFollowRequestMessage()">
+                                <label class="form-check-label fw-bold" for="require_follow">
+                                    <i class="bi bi-person-plus me-1"></i>Require Follow Before Sending DM
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                If enabled, users must follow you before receiving the follow-up DM
+                            </small>
+                        </div>
+
+                        <!-- Follow Request Message (shown when require_follow is checked) -->
+                        <div class="mb-4" id="followRequestSection" style="display: none;">
+                            <label for="follow_request_message" class="form-label fw-bold">
+                                <i class="bi bi-chat-heart me-1"></i>Follow Request Message
+                            </label>
+                            <textarea class="form-control" id="follow_request_message" name="follow_request_message"
+                                      rows="4" placeholder="e.g., Hey! To get the exclusive content, please follow our page first and tap 'I Followed' below. We'll send it right over!">{% if automation.follow_request_message %}{{ automation.follow_request_message }}{% endif %}</textarea>
+                            <small class="text-muted">
+                                Message sent to non-followers. They'll see an "I Followed" button to confirm and receive the DM.
+                            </small>
+
+                            <div class="alert alert-light mt-3 small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>How it works:</strong> Non-followers receive this message with an "I Followed" button.
+                                When they click it, they'll receive the follow-up DM above.
+                            </div>
+                        </div>
+
+                        {% if editing %}
+                        <!-- Active Toggle (only for editing) -->
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                       {% if automation.is_active %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="is_active">
+                                    Automation Active
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                Disable to pause this automation without deleting it
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Submit Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-lg me-2"></i>
+                                {% if editing %}Save Changes{% else %}Create Automation{% endif %}
+                            </button>
+                            <a href="{% url 'instagram_automation_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Help Card -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold"><i class="bi bi-question-circle me-2"></i>Tips for Effective Automations</h6>
+                        <ul class="small text-muted mb-0">
+                            <li class="mb-1">Use common request keywords like "link", "send", "dm", "interested"</li>
+                            <li class="mb-1">Keep comment replies short and friendly (visible to everyone)</li>
+                            <li class="mb-1">Include the actual content/link in your DM message</li>
+                            <li>Create separate automations for different posts or campaigns</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Instagram Posts Modal -->
+<div class="modal-overlay" id="instagramModal">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5><i class="bi bi-instagram me-2"></i>Select Instagram Post</h5>
+            <button type="button" class="btn-close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-body-custom" id="modalBody">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading your Instagram posts...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== Follow Request Toggle ==========
+function toggleFollowRequestMessage() {
+    const checkbox = document.getElementById('require_follow');
+    const section = document.getElementById('followRequestSection');
+    const messageInput = document.getElementById('follow_request_message');
+
+    if (checkbox.checked) {
+        section.style.display = 'block';
+        messageInput.required = true;
+    } else {
+        section.style.display = 'none';
+        messageInput.required = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize follow request section visibility
+    toggleFollowRequestMessage();
+
+    // ========== Keyword Tag Input ==========
+    const keywordInput = document.getElementById('keywordInput');
+    const keywordTags = document.getElementById('keywordTags');
+    const keywordHidden = document.getElementById('keywordHidden');
+    const keywordSuggestions = document.querySelectorAll('.keyword-suggestion');
+    const keywordContainer = document.getElementById('keywordContainer');
+    let keywords = [];
+
+    // Initialize with existing keywords
+    if (keywordHidden.value) {
+        keywordHidden.value.split(',').forEach(kw => {
+            const trimmed = kw.trim();
+            if (trimmed) keywords.push(trimmed.toLowerCase());
+        });
+        renderTags();
+        updateSuggestionButtons();
+    }
+
+    function normalizeKeyword(keyword) {
+        return keyword.trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function addKeyword(keyword) {
+        const normalized = normalizeKeyword(keyword);
+        if (!normalized) return false;
+        if (normalized.length < 2) return false;
+        if (normalized.length > 50) return false;
+        if (keywords.includes(normalized)) return false;
+
+        keywords.push(normalized);
+        renderTags();
+        updateHiddenInput();
+        updateSuggestionButtons();
+        return true;
+    }
+
+    function removeKeyword(keyword) {
+        keywords = keywords.filter(k => k !== keyword);
+        renderTags();
+        updateHiddenInput();
+        updateSuggestionButtons();
+    }
+
+    function renderTags() {
+        keywordTags.innerHTML = keywords.map(keyword => `
+            <span class="keyword-tag">
+                <span>${escapeHtml(keyword)}</span>
+                <span class="tag-remove" data-keyword="${escapeHtml(keyword)}">&times;</span>
+            </span>
+        `).join('');
+
+        keywordTags.querySelectorAll('.tag-remove').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeKeyword(this.dataset.keyword);
+            });
+        });
+    }
+
+    function updateHiddenInput() {
+        keywordHidden.value = keywords.join(', ');
+    }
+
+    function updateSuggestionButtons() {
+        keywordSuggestions.forEach(btn => {
+            const keyword = normalizeKeyword(btn.dataset.keyword);
+            if (keywords.includes(keyword)) {
+                btn.classList.add('added');
+                btn.innerHTML = '<i class="bi bi-check"></i> ' + btn.dataset.keyword;
+            } else {
+                btn.classList.remove('added');
+                btn.textContent = btn.dataset.keyword;
+            }
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    keywordInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const value = this.value.trim();
+            if (value) {
+                value.split(',').forEach(kw => addKeyword(kw));
+                this.value = '';
+            }
+        } else if (e.key === 'Backspace' && !this.value && keywords.length > 0) {
+            removeKeyword(keywords[keywords.length - 1]);
+        }
+    });
+
+    keywordInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pasted = (e.clipboardData || window.clipboardData).getData('text');
+        pasted.split(',').forEach(kw => addKeyword(kw));
+    });
+
+    keywordInput.addEventListener('blur', function() {
+        if (this.value.trim()) {
+            addKeyword(this.value);
+            this.value = '';
+        }
+    });
+
+    keywordSuggestions.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const keyword = this.dataset.keyword;
+            const normalized = normalizeKeyword(keyword);
+
+            if (keywords.includes(normalized)) {
+                removeKeyword(normalized);
+            } else {
+                addKeyword(keyword);
+            }
+        });
+    });
+
+    keywordContainer.addEventListener('click', function() {
+        keywordInput.focus();
+    });
+
+    // ========== Instagram Posts Modal ==========
+    const modal = document.getElementById('instagramModal');
+    const browseBtn = document.getElementById('browsePostsBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const modalBody = document.getElementById('modalBody');
+    let postsData = {};
+    let selectedPost = null;
+
+    // Check if post was pre-selected (editing mode)
+    const existingPostId = document.getElementById('instagram_post_id').value;
+    if (existingPostId) {
+        // We'll load the post details when modal opens
+    }
+
+    browseBtn.addEventListener('click', async function() {
+        modal.classList.add('active');
+        await loadInstagramPosts();
+    });
+
+    closeBtn.addEventListener('click', function() {
+        modal.classList.remove('active');
+    });
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+
+    async function loadInstagramPosts() {
+        modalBody.innerHTML = `
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading your Instagram posts...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('{% url "instagram_api_posts" %}');
+            const data = await response.json();
+
+            if (!data.success) {
+                modalBody.innerHTML = `
+                    <div class="error-state">
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                        <p class="mt-2">${data.error || 'Failed to load posts'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (!data.posts || data.posts.length === 0) {
+                modalBody.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mt-2">No posts found on your Instagram account</p>
+                    </div>
+                `;
+                return;
+            }
+
+            renderPosts(data.posts);
+        } catch (error) {
+            modalBody.innerHTML = `
+                <div class="error-state">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                    <p class="mt-2">Network error loading posts</p>
+                </div>
+            `;
+        }
+    }
+
+    function renderPosts(posts) {
+        const currentPostId = document.getElementById('instagram_post_id').value;
+        postsData = {};
+        posts.forEach(post => {
+            postsData[post.id] = post;
+        });
+
+        const postsHtml = posts.map(post => {
+            const imageUrl = post.media_type === 'VIDEO' ? (post.thumbnail_url || post.media_url) : post.media_url;
+            const caption = post.caption ? post.caption.substring(0, 40) + '...' : 'No caption';
+            const date = new Date(post.timestamp).toLocaleDateString();
+            const isSelected = currentPostId === post.id;
+
+            return `
+                <div class="post-card ${isSelected ? 'selected' : ''}" data-post-id="${post.id}">
+                    <img src="${imageUrl}" alt="Instagram post" onerror="this.src='https://via.placeholder.com/200?text=No+Image'">
+                    <div class="post-info">
+                        <p class="post-caption">${escapeHtml(caption)}</p>
+                        <p class="post-date">${date}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        modalBody.innerHTML = `<div class="posts-grid">${postsHtml}</div>`;
+
+        document.querySelectorAll('.post-card').forEach(card => {
+            card.addEventListener('click', function() {
+                selectPost(this);
+            });
+        });
+    }
+
+    function selectPost(cardElement) {
+        document.querySelectorAll('.post-card').forEach(c => c.classList.remove('selected'));
+        cardElement.classList.add('selected');
+
+        const postId = cardElement.dataset.postId;
+        const postData = postsData[postId];
+        selectedPost = postData;
+
+        document.getElementById('instagram_post_id').value = postData.id;
+
+        const preview = document.getElementById('selectedPostPreview');
+        const imageUrl = postData.media_type === 'VIDEO' ? (postData.thumbnail_url || postData.media_url) : postData.media_url;
+
+        document.getElementById('previewImage').src = imageUrl;
+        document.getElementById('previewCaption').textContent = postData.caption ? postData.caption.substring(0, 60) + '...' : 'No caption';
+        preview.classList.add('show');
+
+        setTimeout(() => {
+            modal.classList.remove('active');
+        }, 400);
+    }
+
+    // Form validation
+    document.getElementById('automationForm').addEventListener('submit', function(e) {
+        if (!document.getElementById('instagram_post_id').value) {
+            e.preventDefault();
+            alert('Please select an Instagram post.');
+            return false;
+        }
+        // Keywords are optional - empty keywords will reply to all comments
+    });
+});
+</script>
+{% endblock %}

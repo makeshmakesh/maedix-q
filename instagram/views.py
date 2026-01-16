@@ -182,20 +182,27 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             user_info = user_info_response.json()
 
             # Step 4: Save or update InstagramAccount
+            # The ID from /me endpoint IS the Instagram Business Account ID
+            # when using instagram_business_* scopes
+            business_account_id = str(user_info.get("id", ""))
+
             instagram_account, created = InstagramAccount.objects.update_or_create(
                 user=request.user,
                 defaults={
-                    "instagram_user_id": user_info.get("id", ""),
+                    "instagram_user_id": business_account_id,
                     "username": user_info.get("username", ""),
                     "access_token": access_token,
                     "token_expires_at": token_expires_at,
                     "is_active": True,
                     "instagram_data": {
                         "user_info": user_info,
+                        "business_account_id": business_account_id,  # Store explicitly
                         "connected_at": str(timezone.now()),
                     },
                 },
             )
+
+            logger.info(f"Instagram connected for user {request.user.id}: business_account_id={business_account_id}")
 
             action = "connected" if created else "reconnected"
             messages.success(request, f"Instagram account @{user_info.get('username')} {action}!")
@@ -683,10 +690,13 @@ class InstagramWebhookView(View):
 
             # Process each entry
             for entry in payload.get('entry', []):
+                # The entry 'id' is the Instagram Business Account ID
+                ig_business_account_id = entry.get('id', '')
+
                 # Handle comment changes
                 for change in entry.get('changes', []):
                     if change.get('field') == 'comments':
-                        self.handle_comment(change.get('value', {}))
+                        self.handle_comment(change.get('value', {}), ig_business_account_id)
 
                 # Handle messaging events (for "I Followed" button clicks)
                 for messaging in entry.get('messaging', []):
@@ -702,7 +712,7 @@ class InstagramWebhookView(View):
             logger.error(f"Webhook processing error: {str(e)}")
             return JsonResponse({'status': 'error'}, status=500)
 
-    def handle_comment(self, comment_data):
+    def handle_comment(self, comment_data, ig_business_account_id):
         """Process a new comment and trigger automation"""
         comment_id = comment_data.get('id')
         post_id = comment_data.get('media', {}).get('id', '')
@@ -720,16 +730,29 @@ class InstagramWebhookView(View):
             return
 
         # Find the Instagram account this comment belongs to
-        ig_business_account_id = comment_data.get('media', {}).get('owner', {}).get('id', '')
+        logger.info(f"Looking for Instagram account with ID: {ig_business_account_id}")
 
+        # Try matching by instagram_user_id first (for direct IG OAuth)
+        # Also try matching by business_account_id in instagram_data (for FB OAuth)
         try:
             instagram_account = InstagramAccount.objects.get(
                 instagram_user_id=ig_business_account_id,
                 is_active=True
             )
+            logger.info(f"Found account by instagram_user_id: {instagram_account.username}")
         except InstagramAccount.DoesNotExist:
-            logger.warning(f"No active Instagram account found for ID: {ig_business_account_id}")
-            return
+            # Try to find by business_account_id stored in instagram_data
+            try:
+                instagram_account = InstagramAccount.objects.get(
+                    instagram_data__business_account_id=ig_business_account_id,
+                    is_active=True
+                )
+                logger.info(f"Found account by business_account_id: {instagram_account.username}")
+            except InstagramAccount.DoesNotExist:
+                # Log all accounts for debugging
+                all_accounts = InstagramAccount.objects.filter(is_active=True).values_list('instagram_user_id', flat=True)
+                logger.warning(f"No active Instagram account found for ID: {ig_business_account_id}. Active accounts: {list(all_accounts)}")
+                return
 
         user = instagram_account.user
 

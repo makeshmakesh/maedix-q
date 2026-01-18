@@ -590,6 +590,20 @@ class InstagramPostsAPIView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin
             })
 
 
+class AutomationLandingView(View):
+    """Public landing page for Instagram automation feature"""
+    template_name = 'instagram/automation_landing.html'
+
+    def get(self, request):
+        # If user is authenticated and has feature access, redirect to dashboard
+        if request.user.is_authenticated:
+            can_access, _, _ = check_feature_access(request.user, 'ig_automation')
+            if can_access:
+                return redirect('instagram_automation_list')
+
+        return render(request, self.template_name)
+
+
 class AutomationListView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
     """List all Instagram automations for the user"""
     template_name = 'instagram/automation_list.html'

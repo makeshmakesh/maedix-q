@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Video Generation Lambda for Quiz App (Container Image)
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+  S3BucketName:
+    Type: String
+    Default: maedix-q
+    Description: S3 bucket for video storage
+  DynamoDBTableName:
+    Type: String
+    Default: video_generation_jobs
+    Description: DynamoDB table for job tracking
+
+Globals:
+  Function:
+    Timeout: 600  # 10 minutes max
+    MemorySize: 3008  # 3GB for video processing
+
+Resources:
+  # DynamoDB Table for Job Tracking
+  VideoJobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref DynamoDBTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: task_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: maedix-video-gen
+
+  # Video Generator Lambda Function (Container Image)
+  VideoGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub maedix-video-generator-${Environment}
+      Description: Generates quiz videos for Instagram Reels
+      PackageType: Image
+      ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/maedix-video-generator:latest
+      EphemeralStorage:
+        Size: 1024  # 1GB temp storage for video files
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          S3_BUCKET: !Ref S3BucketName
+          DYNAMODB_TABLE: !Ref DynamoDBTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VideoJobsTable
+        - S3WritePolicy:
+            BucketName: !Ref S3BucketName
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+      Tags:
+        Environment: !Ref Environment
+        Application: maedix-video-gen
+    Metadata:
+      DockerTag: latest
+      DockerContext: ../lambda
+      Dockerfile: Dockerfile
+
+  # Lambda Function URL (optional - for direct invocation testing)
+  VideoGeneratorFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: AWS_IAM
+      TargetFunctionArn: !GetAtt VideoGeneratorFunction.Arn
+
+Outputs:
+  VideoGeneratorFunctionArn:
+    Description: Video Generator Lambda ARN
+    Value: !GetAtt VideoGeneratorFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-VideoGeneratorArn
+
+  VideoGeneratorFunctionName:
+    Description: Video Generator Lambda function name
+    Value: !Ref VideoGeneratorFunction
+    Export:
+      Name: !Sub ${AWS::StackName}-VideoGeneratorName
+
+  DynamoDBTableArn:
+    Description: DynamoDB Jobs Table ARN
+    Value: !GetAtt VideoJobsTable.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-DynamoDBTableArn
+
+  DynamoDBTableName:
+    Description: DynamoDB Jobs Table Name
+    Value: !Ref VideoJobsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-DynamoDBTableName

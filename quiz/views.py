@@ -16,7 +16,7 @@ from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db.models import Count, Avg
 from .models import (
     Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer,
-    Leaderboard, GeneratedVideo, VideoTemplate,
+    GeneratedVideo, VideoTemplate,
     Topic, TopicCard, TopicProgress, TopicCarouselExport, VideoJob
 )
 from .forms import CategoryForm, QuizForm, QuestionForm, OptionFormSet, TopicForm, TopicCardForm, TopicCardFormSet, UserTopicForm
@@ -395,76 +395,6 @@ class QuizHistoryView(LoginRequiredMixin, View):
         ).select_related('quiz', 'quiz__category')
 
         return render(request, self.template_name, {'attempts': attempts})
-
-
-class LeaderboardView(View):
-    """Overall leaderboard"""
-    template_name = 'quiz/leaderboard.html'
-
-    def get(self, request):
-        from users.models import UserStats
-
-        sort_by = request.GET.get('sort', 'xp')
-
-        # Get top users by XP or quizzes passed
-        if sort_by == 'quizzes':
-            leaderboard = UserStats.objects.select_related('user').order_by(
-                '-total_quizzes_passed', '-xp_points'
-            )[:100]
-        elif sort_by == 'streak':
-            leaderboard = UserStats.objects.select_related('user').order_by(
-                '-longest_streak', '-xp_points'
-            )[:100]
-        else:  # default: xp
-            leaderboard = UserStats.objects.select_related('user').order_by(
-                '-xp_points', '-total_quizzes_passed'
-            )[:100]
-
-        # Get current user's rank if authenticated
-        user_rank = None
-        user_stats = None
-        if request.user.is_authenticated:
-            user_stats = UserStats.objects.filter(user=request.user).first()
-            if user_stats:
-                if sort_by == 'quizzes':
-                    user_rank = UserStats.objects.filter(
-                        total_quizzes_passed__gt=user_stats.total_quizzes_passed
-                    ).count() + 1
-                elif sort_by == 'streak':
-                    user_rank = UserStats.objects.filter(
-                        longest_streak__gt=user_stats.longest_streak
-                    ).count() + 1
-                else:
-                    user_rank = UserStats.objects.filter(
-                        xp_points__gt=user_stats.xp_points
-                    ).count() + 1
-
-        return render(request, self.template_name, {
-            'leaderboard': leaderboard,
-            'sort_by': sort_by,
-            'user_rank': user_rank,
-            'user_stats': user_stats,
-        })
-
-
-class CategoryLeaderboardView(View):
-    """Category-specific leaderboard"""
-    template_name = 'quiz/category-leaderboard.html'
-
-    def get(self, request, slug):
-        category = get_object_or_404(Category, slug=slug, is_active=True)
-        period = request.GET.get('period', 'all_time')
-
-        leaderboard = Leaderboard.objects.filter(
-            category=category,
-            period=period
-        ).select_related('user')[:100]
-
-        return render(request, self.template_name, {
-            'category': category,
-            'leaderboard': leaderboard,
-            'period': period,
-        })
 
 
 # =============================================================================

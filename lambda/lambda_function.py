@@ -218,7 +218,7 @@ def post_to_instagram(s3_url, credentials, caption):
         return {'success': False, 'error': str(e)}
 
 
-def post_to_youtube(s3_url, credentials, title, description):
+def post_to_youtube(s3_url, credentials, title, description, tags=None):
     """
     Post video to YouTube as a Short.
 
@@ -227,6 +227,7 @@ def post_to_youtube(s3_url, credentials, title, description):
         credentials: Dict with 'access_token', 'refresh_token', 'client_id', 'client_secret'
         title: Video title
         description: Video description
+        tags: Comma-separated string or list of tags
 
     Returns:
         dict with 'success' and optionally 'video_id' or 'error'
@@ -265,11 +266,20 @@ def post_to_youtube(s3_url, credentials, title, description):
             # Add #Shorts to description for YouTube Shorts algorithm
             full_description = f"{description}\n\n#Shorts" if description else "#Shorts"
 
+            # Parse tags - can be comma-separated string or list
+            if tags:
+                if isinstance(tags, str):
+                    video_tags = [t.strip() for t in tags.split(',') if t.strip()]
+                else:
+                    video_tags = list(tags)
+            else:
+                video_tags = ['quiz', 'education', 'shorts']
+
             body = {
                 'snippet': {
                     'title': title[:100],  # YouTube title limit
                     'description': full_description,
-                    'tags': ['quiz', 'education', 'shorts'],
+                    'tags': video_tags,
                     'categoryId': '27',  # Education
                 },
                 'status': {
@@ -426,11 +436,13 @@ def handler(event, context):
             update_progress(task_id, 'processing', 96, 'Posting to YouTube...')
             title = social_posting.get('title', f'{quiz_title} - Quiz')
             description = social_posting.get('description', '')
+            tags = social_posting.get('tags', '')
             yt_result = post_to_youtube(
                 s3_url,
                 social_posting['youtube_credentials'],
                 title,
-                description
+                description,
+                tags
             )
             social_results['youtube_posted'] = yt_result['success']
             if not yt_result['success']:

@@ -595,13 +595,16 @@ class AutomationLandingView(View):
     template_name = 'instagram/automation_landing.html'
 
     def get(self, request):
-        # If user is authenticated and has feature access, redirect to dashboard
+        context = {
+            'has_feature_access': False,
+        }
+
+        # Check if user has feature access
         if request.user.is_authenticated:
             can_access, _, _ = check_feature_access(request.user, 'ig_automation')
-            if can_access:
-                return redirect('instagram_automation_list')
+            context['has_feature_access'] = can_access
 
-        return render(request, self.template_name)
+        return render(request, self.template_name, context)
 
 
 class AutomationListView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):

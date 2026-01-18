@@ -197,6 +197,7 @@ def invoke_video_generation(user, quiz, questions, config, social_posting=None):
             'caption': social_posting.get('caption', ''),
             'title': social_posting.get('title', quiz.title),
             'description': social_posting.get('description', ''),
+            'tags': social_posting.get('tags', ''),  # Comma-separated tags for YouTube
         }
 
         # Add Instagram credentials if posting to Instagram

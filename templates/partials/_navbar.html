@@ -29,14 +29,14 @@
                         <li><a class="dropdown-item" href="{% url 'topics_home' %}"><i class="bi bi-layers me-2"></i>Learn Categories</a></li>
                     </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'leaderboard' %}">
-                        <i class="bi bi-trophy d-lg-none"></i> Leaderboard
-                    </a>
-                </li>
                                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'roleplay:home' %}">
                         <i class="bi bi-mic d-lg-none"></i> Convo Practice
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'instagram_automation_list' %}">
+                        <i class="bi bi-instagram d-lg-none"></i> IG Automation
                     </a>
                 </li>
                 <li class="nav-item">
@@ -44,13 +44,6 @@
                         <i class="bi bi-tag d-lg-none"></i> Pricing
                     </a>
                 </li>
-                {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'instagram_automation_list' %}">
-                        <i class="bi bi-instagram d-lg-none"></i> IG Automation
-                    </a>
-                </li>
-                {% endif %}
             </ul>
 
             <ul class="navbar-nav">

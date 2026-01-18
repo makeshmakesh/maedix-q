@@ -1,5 +1,6 @@
 """
 Video generator for quiz export to Instagram Reels format.
+Adapted for AWS Lambda execution with fonts from /opt/fonts layer.
 Generates vertical videos (1080x1920) with questions, options, timer, and answer reveal.
 """
 import os
@@ -88,11 +89,16 @@ class QuizVideoGenerator:
         self.OPTION_HOVER = tuple(c + 17 for c in self.OPTION_BG)  # Slightly lighter than option bg
 
     def _get_font(self, size):
-        """Get a font with caching"""
+        """Get a font with caching - checks container and standard paths"""
         if size in self._font_cache:
             return self._font_cache[size]
 
+        # Container fonts (dnf dejavu-sans-fonts), then standard Linux paths
         font_paths = [
+            # Lambda container fonts (Amazon Linux 2023)
+            "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf",
+            # Standard Linux paths (Ubuntu/Debian for local testing)
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
@@ -624,15 +630,6 @@ class QuizVideoGenerator:
                 fill=text_color
             )
 
-            # Checkmark for correct answers during reveal
-            if reveal_answer and is_correct:
-                check_font = self._get_font(40)
-                draw.text(
-                    (option_x + option_width - 55, option_y + option_height // 2 - 18),
-                    "✓",
-                    font=check_font,
-                    fill=self.TEXT_COLOR
-                )
 
         # Explanation (shown during answer reveal if exists)
         if reveal_answer and explanation and explanation.strip():
@@ -1003,59 +1000,20 @@ class QuizVideoGenerator:
 
         report_progress(35, "Preparing encoder...")
 
-        # Start a background thread to simulate smooth progress during encoding
-        import threading
-        import time
-
-        encoding_done = threading.Event()
-        encoding_error = [None]  # Use list to allow modification in nested function
-
-        def simulate_encoding_progress():
-            """Gradually increase progress while encoding runs"""
-            current = 40
-            messages = [
-                (40, "Encoding frames..."),
-                (50, "Processing video..."),
-                (60, "Rendering frames..."),
-                (70, "Compressing video..."),
-                (80, "Optimizing output..."),
-                (85, "Final Rendering (This may take time)..."),
-            ]
-            msg_index = 0
-
-            while not encoding_done.is_set() and current < 90:
-                # Update message at thresholds
-                while msg_index < len(messages) and current >= messages[msg_index][0]:
-                    report_progress(current, messages[msg_index][1])
-                    msg_index += 1
-
-                time.sleep(0.8)  # Update every 800ms
-                if not encoding_done.is_set():
-                    current += 2  # Increment by 2%
-                    if msg_index > 0:
-                        report_progress(min(current, 90), messages[min(msg_index, len(messages)-1)][1])
-
-        # Start progress simulation thread
-        progress_thread = threading.Thread(target=simulate_encoding_progress)
-        progress_thread.daemon = True
-        progress_thread.start()
-
-        # Write video file
+        # Write video file (no background thread in Lambda - just write directly)
+        report_progress(40, "Encoding video...")
         has_audio = final_video.audio is not None
-        try:
-            final_video.write_videofile(
-                output_path,
-                fps=self.FPS,
-                codec='libx264',
-                audio=has_audio,
-                audio_codec='aac' if has_audio else None,
-                preset='ultrafast',
-                threads=2,
-                logger=None
-            )
-        finally:
-            encoding_done.set()
-            progress_thread.join(timeout=1)
+
+        final_video.write_videofile(
+            output_path,
+            fps=self.FPS,
+            codec='libx264',
+            audio=has_audio,
+            audio_codec='aac' if has_audio else None,
+            preset='ultrafast',
+            threads=2,
+            logger=None
+        )
 
         report_progress(95, "Finalizing...")
 
@@ -1088,7 +1046,7 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
     Convenience function to generate quiz video.
 
     Args:
-        questions: List of Question model instances or dicts
+        questions: List of question dicts with 'text', 'options', etc.
         output_path: Path to save video
         progress_callback: Optional callback function(percent, message) for progress updates
         show_answer: Whether to reveal the correct answer after the timer (default: True)
@@ -1122,25 +1080,6 @@ def generate_quiz_video(questions, output_path, progress_callback=None, show_ans
     )
 
     try:
-        # Convert Question models to dicts if needed
-        question_data = []
-        for q in questions:
-            if hasattr(q, 'text'):
-                # It's a model instance
-                question_data.append({
-                    'text': q.text,
-                    'code_snippet': getattr(q, 'code_snippet', '') or '',
-                    'code_language': getattr(q, 'code_language', 'python') or 'python',
-                    'explanation': getattr(q, 'explanation', '') or '',
-                    'options': [
-                        {'text': opt.text, 'is_correct': opt.is_correct}
-                        for opt in q.options.all()
-                    ]
-                })
-            else:
-                # Already a dict
-                question_data.append(q)
-
-        return generator.generate_video(question_data, output_path, progress_callback, show_answer=show_answer)
+        return generator.generate_video(questions, output_path, progress_callback, show_answer=show_answer)
     finally:
         generator.cleanup()

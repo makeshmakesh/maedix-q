@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Single Video - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="{% url 'quiz_home' %}">Quizzes</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'quiz_detail' quiz.slug %}">{{ quiz.title }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'video_export_choice' quiz.slug %}">Export Video</a></li>
+                        <li class="breadcrumb-item active">Single Video</li>
+                    </ol>
+                </nav>
+
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-film text-primary" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mt-3">Create Single Video</h3>
+                        <p class="text-muted">Select up to 3 questions and configure your video</p>
+                    </div>
+
+                    <form method="post" id="videoForm">
+                        {% csrf_token %}
+
+                        <!-- Question Selection -->
+                        <div class="mb-4" id="questionSection">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Select Questions (1-3)</h5>
+                            <div class="list-group" id="questionList">
+                                {% for question in questions %}
+                                <label class="list-group-item list-group-item-action d-flex align-items-start">
+                                    <input type="checkbox" name="questions" value="{{ question.id }}" class="form-check-input me-3 mt-1 question-checkbox">
+                                    <div class="flex-grow-1">
+                                        <span class="badge bg-light text-dark me-2">Q{{ forloop.counter }}</span>
+                                        <span>{{ question.text|truncatewords:20 }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ question.options.count }} options</small>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">Selected: <span id="selectedCount">0</span> <span class="text-danger" id="selectionHint">(select 1-3 questions)</span></small>
+                            </div>
+                        </div>
+
+                        <!-- Video Options -->
+                        <div class="card mb-4" id="videoOptions">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>Video Options</h5>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="showAnswer" name="show_answer" checked>
+                                    <label class="form-check-label" for="showAnswer">
+                                        <strong>Show correct answer</strong>
+                                        <br><small class="text-muted">Reveal the correct answer after the timer</small>
+                                    </label>
+                                </div>
+
+                                {% if can_custom_intro_outro %}
+                                <div class="mb-3">
+                                    <label for="introText" class="form-label"><strong>Intro Text (Optional)</strong></label>
+                                    <input type="text" class="form-control" id="introText" name="intro_text" maxlength="100" placeholder="e.g., Can you guess?">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="quizHeading" class="form-label"><strong>Quiz Heading (Optional)</strong></label>
+                                    <input type="text" class="form-control" id="quizHeading" name="quiz_heading" maxlength="40" placeholder="e.g., Python Quiz">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="preOutroText" class="form-label"><strong>Call-to-Action (Optional)</strong></label>
+                                    <input type="text" class="form-control" id="preOutroText" name="pre_outro_text" maxlength="100" placeholder="e.g., Comment your answer!">
+                                </div>
+                                {% endif %}
+
+                                {% if can_custom_handle %}
+                                <div class="mb-3">
+                                    <label for="handleName" class="form-label"><strong>Handle Name</strong></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">@</span>
+                                        <input type="text" class="form-control" id="handleName" name="handle_name" maxlength="29" placeholder="your-handle">
+                                    </div>
+                                    <small class="text-muted">Leave empty for default (@maedix-q)</small>
+                                </div>
+                                {% endif %}
+
+                                {% if templates %}
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Video Template</strong></label>
+                                    <input type="hidden" name="template_id" id="templateId" value="{{ default_template_id }}">
+                                    <div class="row g-2">
+                                        {% for template in templates %}
+                                        <div class="col-4 col-md-3">
+                                            <div class="template-card {% if template.is_default %}selected{% endif %} {% if not template.can_use %}locked{% endif %}"
+                                                 data-template-id="{{ template.id }}" data-can-use="{{ template.can_use|yesno:'true,false' }}">
+                                                <div class="template-preview template-{{ template.slug }}">
+                                                    {% if not template.can_use %}<div class="template-lock"><i class="bi bi-lock-fill"></i></div>{% endif %}
+                                                </div>
+                                                <div class="template-name">{{ template.name }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Social Media Posting -->
+                        <div class="card mb-4" id="socialSection">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3"><i class="bi bi-share me-2"></i>Auto-Post to Social Media</h5>
+                                <p class="text-muted small">Video will be generated and automatically posted. You can close this page after submitting.</p>
+
+                                {% if instagram_connected %}
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="postToInstagram" name="post_to_instagram">
+                                    <label class="form-check-label" for="postToInstagram">
+                                        <i class="bi bi-instagram text-danger me-2"></i><strong>Post to Instagram Reels</strong>
+                                    </label>
+                                </div>
+                                {% else %}
+                                <div class="mb-3 text-muted">
+                                    <i class="bi bi-instagram me-2"></i>Instagram not connected.
+                                    <a href="{% url 'instagram_connect' %}">Connect now</a>
+                                </div>
+                                {% endif %}
+
+                                {% if youtube_connected %}
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="postToYouTube" name="post_to_youtube">
+                                    <label class="form-check-label" for="postToYouTube">
+                                        <i class="bi bi-youtube text-danger me-2"></i><strong>Post to YouTube Shorts</strong>
+                                    </label>
+                                </div>
+                                {% else %}
+                                <div class="mb-3 text-muted">
+                                    <i class="bi bi-youtube me-2"></i>YouTube not connected.
+                                    <a href="{% url 'youtube_connect' %}">Connect now</a>
+                                </div>
+                                {% endif %}
+
+                                <!-- Instagram Details (shown when Instagram is checked) -->
+                                <div id="instagramDetails" class="d-none mt-3 p-3 bg-light rounded">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-instagram text-danger me-2"></i>Instagram Details</h6>
+                                    <div class="mb-3">
+                                        <label for="instagramCaption" class="form-label"><strong>Caption</strong></label>
+                                        <textarea class="form-control" id="instagramCaption" name="instagram_caption" rows="3" maxlength="2200" placeholder="Enter caption with hashtags..."></textarea>
+                                        <small class="text-muted">Include hashtags for better reach</small>
+                                    </div>
+                                </div>
+
+                                <!-- YouTube Details (shown when YouTube is checked) -->
+                                <div id="youtubeDetails" class="d-none mt-3 p-3 bg-light rounded">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-youtube text-danger me-2"></i>YouTube Details</h6>
+                                    <div class="mb-3">
+                                        <label for="youtubeTitle" class="form-label"><strong>Title</strong></label>
+                                        <input type="text" class="form-control" id="youtubeTitle" name="youtube_title" maxlength="100" placeholder="Video title">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="youtubeDescription" class="form-label"><strong>Description</strong></label>
+                                        <textarea class="form-control" id="youtubeDescription" name="youtube_description" rows="2" maxlength="5000" placeholder="Video description"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="youtubeTags" class="form-label"><strong>Tags</strong></label>
+                                        <input type="text" class="form-control" id="youtubeTags" name="youtube_tags" maxlength="500" placeholder="tag1, tag2, tag3">
+                                        <small class="text-muted">Comma-separated tags for better discoverability</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Section (hidden) -->
+                        <div class="d-none" id="progressSection">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h5 class="fw-bold">Submitting Job...</h5>
+                                <p class="text-muted">Your video job is being submitted. You can close this page once submitted.</p>
+                            </div>
+                        </div>
+
+                        <!-- Success Section (hidden) -->
+                        <div class="d-none" id="successSection">
+                            <div class="alert alert-success text-center">
+                                <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                                <h5 class="fw-bold mt-3">Job Submitted!</h5>
+                                <p>Your video is being generated in the background. You can safely close this page.</p>
+                                <a href="#" id="viewJobLink" class="btn btn-success">View Job Status</a>
+                                <a href="{% url 'video_export_choice' quiz.slug %}" class="btn btn-outline-primary">Back to Export</a>
+                            </div>
+                        </div>
+
+                        <!-- Error Section (hidden) -->
+                        <div class="alert alert-danger d-none" id="errorSection">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <span id="errorMessage"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2" id="buttonSection">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                                <i class="bi bi-rocket me-2"></i>Submit Video Job
+                            </button>
+                            <a href="{% url 'video_export_choice' quiz.slug %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('videoForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const checkboxes = document.querySelectorAll('.question-checkbox');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const selectionHint = document.getElementById('selectionHint');
+
+    // Question selection
+    function updateSelection() {
+        const checked = document.querySelectorAll('.question-checkbox:checked').length;
+        selectedCountEl.textContent = checked;
+
+        if (checked >= 1 && checked <= 3) {
+            submitBtn.disabled = false;
+            selectionHint.textContent = '(valid)';
+            selectionHint.classList.remove('text-danger');
+            selectionHint.classList.add('text-success');
+        } else {
+            submitBtn.disabled = true;
+            selectionHint.textContent = '(select 1-3 questions)';
+            selectionHint.classList.remove('text-success');
+            selectionHint.classList.add('text-danger');
+        }
+    }
+
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            const checked = document.querySelectorAll('.question-checkbox:checked').length;
+            if (checked > 3) {
+                this.checked = false;
+            }
+            updateSelection();
+        });
+    });
+
+    // Social media details toggle - show/hide each section independently
+    const instagramCheckbox = document.getElementById('postToInstagram');
+    const youtubeCheckbox = document.getElementById('postToYouTube');
+    const instagramDetails = document.getElementById('instagramDetails');
+    const youtubeDetails = document.getElementById('youtubeDetails');
+
+    if (instagramCheckbox && instagramDetails) {
+        instagramCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                instagramDetails.classList.remove('d-none');
+            } else {
+                instagramDetails.classList.add('d-none');
+            }
+        });
+    }
+
+    if (youtubeCheckbox && youtubeDetails) {
+        youtubeCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                youtubeDetails.classList.remove('d-none');
+            } else {
+                youtubeDetails.classList.add('d-none');
+            }
+        });
+    }
+
+    // Template selection
+    const templateCards = document.querySelectorAll('.template-card');
+    const templateIdInput = document.getElementById('templateId');
+
+    templateCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            if (this.dataset.canUse !== 'true') {
+                alert('Upgrade to Pro to use this template.');
+                return;
+            }
+            templateCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            if (templateIdInput) templateIdInput.value = this.dataset.templateId;
+        });
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        document.getElementById('questionSection').classList.add('d-none');
+        document.getElementById('videoOptions').classList.add('d-none');
+        document.getElementById('socialSection').classList.add('d-none');
+        document.getElementById('buttonSection').classList.add('d-none');
+        document.getElementById('progressSection').classList.remove('d-none');
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('progressSection').classList.add('d-none');
+
+            if (data.error) {
+                document.getElementById('errorMessage').textContent = data.error;
+                document.getElementById('errorSection').classList.remove('d-none');
+                document.getElementById('questionSection').classList.remove('d-none');
+                document.getElementById('videoOptions').classList.remove('d-none');
+                document.getElementById('socialSection').classList.remove('d-none');
+                document.getElementById('buttonSection').classList.remove('d-none');
+            } else {
+                document.getElementById('successSection').classList.remove('d-none');
+                document.getElementById('viewJobLink').href = '/quiz/video/jobs/' + data.job_id + '/';
+            }
+        })
+        .catch(error => {
+            document.getElementById('progressSection').classList.add('d-none');
+            document.getElementById('errorMessage').textContent = 'Failed to submit job: ' + error.message;
+            document.getElementById('errorSection').classList.remove('d-none');
+            document.getElementById('questionSection').classList.remove('d-none');
+            document.getElementById('videoOptions').classList.remove('d-none');
+            document.getElementById('socialSection').classList.remove('d-none');
+            document.getElementById('buttonSection').classList.remove('d-none');
+        });
+    });
+});
+</script>
+
+<style>
+.template-card { border: 2px solid #dee2e6; border-radius: 8px; padding: 6px; cursor: pointer; }
+.template-card:hover { border-color: #6c757d; }
+.template-card.selected { border-color: #0d6efd; box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25); }
+.template-card.locked { opacity: 0.7; cursor: not-allowed; }
+.template-preview { height: 50px; border-radius: 4px; position: relative; }
+.template-lock { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.template-name { text-align: center; font-size: 11px; margin-top: 4px; }
+.template-dark-purple { background: linear-gradient(135deg, #121212, #8a2be2); }
+.template-clean-light { background: linear-gradient(135deg, #fafafa, #3b82f6); border: 1px solid #e0e0e0; }
+.template-neon-glow { background: linear-gradient(135deg, #0a0a14, #00ffff); }
+.template-sunset { background: linear-gradient(135deg, #1e141e, #ff6432); }
+.template-ocean-blue { background: linear-gradient(135deg, #0a192f, #00c8c8); }
+</style>
+{% endblock %}

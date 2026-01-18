@@ -633,3 +633,133 @@ class TopicCarouselExport(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class VideoJob(models.Model):
+    """
+    Tracks all video generation jobs - both single videos and bulk video items.
+    Each job represents one video being generated.
+    For bulk generation, multiple VideoJob records share the same bulk_group_id.
+    """
+    JOB_TYPE_CHOICES = [
+        ('single', 'Single Video'),
+        ('bulk_item', 'Bulk Video Item'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='video_jobs'
+    )
+    quiz = models.ForeignKey(
+        Quiz,
+        on_delete=models.CASCADE,
+        related_name='video_jobs'
+    )
+
+    # Job identification
+    job_type = models.CharField(max_length=20, choices=JOB_TYPE_CHOICES, default='single')
+    bulk_group_id = models.UUIDField(null=True, blank=True, db_index=True)
+    task_id = models.CharField(max_length=100, unique=True, db_index=True)
+
+    # Questions included in this video
+    question_ids = models.JSONField(default=list)  # List of question IDs
+    questions_data = models.JSONField(default=list)  # Serialized question data sent to Lambda
+
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    progress_percent = models.IntegerField(default=0)
+    progress_message = models.CharField(max_length=255, blank=True)
+    error_message = models.TextField(blank=True)
+
+    # Social media options
+    post_to_instagram = models.BooleanField(default=False)
+    post_to_youtube = models.BooleanField(default=False)
+    instagram_caption = models.TextField(blank=True)
+    youtube_title = models.CharField(max_length=200, blank=True)
+    youtube_description = models.TextField(blank=True)
+    youtube_tags = models.CharField(max_length=500, blank=True)  # Comma-separated tags
+
+    # Social media results
+    instagram_posted = models.BooleanField(default=False)
+    youtube_posted = models.BooleanField(default=False)
+    instagram_error = models.TextField(blank=True)
+    youtube_error = models.TextField(blank=True)
+
+    # Video result
+    s3_url = models.URLField(max_length=500, blank=True)
+    s3_key = models.CharField(max_length=255, blank=True)
+
+    # Video configuration
+    template = models.ForeignKey(
+        VideoTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='video_jobs'
+    )
+    video_config = models.JSONField(default=dict)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        questions_count = len(self.question_ids)
+        return f"VideoJob {self.task_id[:8]} - {self.quiz.title} ({questions_count} questions)"
+
+    @property
+    def is_pending(self):
+        return self.status == 'pending'
+
+    @property
+    def is_processing(self):
+        return self.status == 'processing'
+
+    @property
+    def is_completed(self):
+        return self.status == 'completed'
+
+    @property
+    def is_failed(self):
+        return self.status == 'failed'
+
+    @property
+    def questions_count(self):
+        return len(self.question_ids)
+
+    def sync_from_dynamodb(self, job_data):
+        """Update job status from DynamoDB data"""
+        if not job_data:
+            return
+
+        self.status = job_data.get('status', self.status)
+        if self.status == 'failed':
+            self.status = 'failed'
+        elif self.status == 'completed':
+            self.status = 'completed'
+        elif self.status in ['pending', 'processing']:
+            self.status = 'processing'
+
+        self.progress_percent = job_data.get('progress_percent', self.progress_percent)
+        self.progress_message = job_data.get('progress_message', self.progress_message)
+        self.s3_url = job_data.get('s3_url', '') or self.s3_url
+        self.s3_key = job_data.get('s3_key', '') or self.s3_key
+        self.instagram_posted = job_data.get('instagram_posted', self.instagram_posted)
+        self.youtube_posted = job_data.get('youtube_posted', self.youtube_posted)
+        self.instagram_error = job_data.get('instagram_error', '') or self.instagram_error
+        self.youtube_error = job_data.get('youtube_error', '') or self.youtube_error
+        self.save()
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['bulk_group_id']),
+        ]

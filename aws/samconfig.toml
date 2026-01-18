@@ -1,0 +1,57 @@
+# SAM deployment configuration for video generation Lambda
+# Usage:
+#   sam build
+#   sam deploy --guided  (first time)
+#   sam deploy           (subsequent deployments)
+
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "maedix-video-gen"
+region = "us-east-1"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+image_repositories = ["VideoGeneratorFunction=061051221530.dkr.ecr.us-east-1.amazonaws.com/maedixvideogenc50004d2/videogeneratorfunctionafa1e4farepo"]
+parameter_overrides = "Environment=\"production\" S3BucketName=\"maedix-q\" DynamoDBTableName=\"video_generation_jobs\""
+s3_prefix = "maedix-video-gen"
+disable_rollback = true
+
+[default.sync.parameters]
+watch = true
+
+[default.local_invoke.parameters]
+env_vars = "env.json"
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+# Development environment configuration
+[dev]
+[dev.deploy.parameters]
+stack_name = "maedix-video-gen-dev"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+region = "ap-south-1"
+parameter_overrides = "Environment=development S3BucketName=maedix-q-dev DynamoDBTableName=video_generation_jobs_dev"
+
+# Staging environment configuration
+[staging]
+[staging.deploy.parameters]
+stack_name = "maedix-video-gen-staging"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+region = "ap-south-1"
+parameter_overrides = "Environment=staging S3BucketName=maedix-q-staging DynamoDBTableName=video_generation_jobs_staging"

@@ -13,7 +13,11 @@ urlpatterns = [
     path('video/progress/<str:task_id>/', views.VideoProgressView.as_view(), name='video_progress'),
     path('video/download/<str:task_id>/', views.VideoDownloadView.as_view(), name='video_download'),
     path('video/url/<str:task_id>/', views.VideoUrlView.as_view(), name='video_url'),
-    path('video/bulk/progress/<int:job_id>/', views.BulkVideoJobProgressView.as_view(), name='bulk_video_progress'),
+    # New Video Job Management endpoints
+    path('video/jobs/', views.VideoJobListView.as_view(), name='video_job_list'),
+    path('video/jobs/<int:job_id>/', views.VideoJobDetailView.as_view(), name='video_job_detail'),
+    path('video/jobs/<int:job_id>/status/', views.VideoJobStatusAPIView.as_view(), name='video_job_status'),
+    path('video/bulk-group/<uuid:bulk_group_id>/status/', views.BulkGroupStatusAPIView.as_view(), name='bulk_group_status'),
 
     # User Quiz Management (must be before slug patterns)
     path('my-quizzes/', views.UserQuizListView.as_view(), name='user_quiz_list'),
@@ -101,6 +105,12 @@ urlpatterns = [
     path('<slug:slug>/', views.QuizDetailView.as_view(), name='quiz_detail'),
     path('<slug:slug>/export-video/', views.QuizVideoExportView.as_view(), name='quiz_video_export'),
     path('<slug:slug>/bulk-export/', views.BulkVideoExportView.as_view(), name='quiz_bulk_video_export'),
+
+    # New video export flow
+    path('<slug:slug>/video/', views.VideoExportChoiceView.as_view(), name='video_export_choice'),
+    path('<slug:slug>/video/single/', views.SingleVideoCreateView.as_view(), name='single_video_create'),
+    path('<slug:slug>/video/bulk/', views.BulkVideoCreateView.as_view(), name='bulk_video_create'),
+
     path('<slug:slug>/start/', views.QuizStartView.as_view(), name='quiz_start'),
     path('<slug:slug>/question/<int:q_num>/', views.QuizQuestionView.as_view(), name='quiz_question'),
     path('<slug:slug>/submit/', views.QuizSubmitView.as_view(), name='quiz_submit'),

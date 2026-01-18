@@ -1,0 +1,45 @@
+{
+  "task_id": "test-event-001",
+  "quiz_slug": "test-quiz",
+  "questions": [
+    {
+      "text": "What is the capital of France?",
+      "code_snippet": "",
+      "explanation": "Paris is the capital and largest city of France.",
+      "options": [
+        {"text": "London", "is_correct": false},
+        {"text": "Paris", "is_correct": true},
+        {"text": "Berlin", "is_correct": false},
+        {"text": "Madrid", "is_correct": false}
+      ]
+    },
+    {
+      "text": "Which programming language is known as the 'language of the web'?",
+      "code_snippet": "console.log('Hello World');",
+      "explanation": "JavaScript is the primary language used for web development.",
+      "options": [
+        {"text": "Python", "is_correct": false},
+        {"text": "Java", "is_correct": false},
+        {"text": "JavaScript", "is_correct": true},
+        {"text": "C++", "is_correct": false}
+      ]
+    }
+  ],
+  "config": {
+    "show_answer": true,
+    "handle_name": "@maedix-q",
+    "audio_url": null,
+    "audio_volume": 0.3,
+    "intro_text": "Test Your Knowledge!",
+    "intro_audio_url": null,
+    "intro_audio_volume": 0.5,
+    "pre_outro_text": "Follow for more quizzes!",
+    "quiz_heading": "General Knowledge",
+    "template_config": null,
+    "answer_reveal_audio_url": null,
+    "answer_reveal_audio_volume": 0.5
+  },
+  "s3_output_key": "videos/test-event-001/test-quiz_reel.mp4",
+  "user_id": 1,
+  "quiz_id": 1
+}

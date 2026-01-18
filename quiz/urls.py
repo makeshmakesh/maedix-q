@@ -5,8 +5,6 @@ urlpatterns = [
     path('', views.QuizHomeView.as_view(), name='quiz_home'),
     path('categories/', views.CategoriesView.as_view(), name='categories'),
     path('category/<slug:slug>/', views.CategoryDetailView.as_view(), name='category_detail'),
-    path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
-    path('leaderboard/<slug:slug>/', views.CategoryLeaderboardView.as_view(), name='category_leaderboard'),
     path('history/', views.QuizHistoryView.as_view(), name='quiz_history'),
 
     # Video export endpoints (must be before slug patterns)

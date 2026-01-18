@@ -26,7 +26,7 @@
                 <div class="d-flex gap-4 justify-content-center justify-content-lg-start text-muted small flex-wrap">
                     <span><i class="bi bi-check-circle-fill text-success me-1"></i> No credit card</span>
                     <span><i class="bi bi-check-circle-fill text-success me-1"></i> Direct to Instagram</span>
-                    <span><i class="bi bi-check-circle-fill text-success me-1"></i> Direct to YouTube</span>
+                    <span><i class="bi bi-check-circle-fill text-success me-1"></i> IG Comment Automation</span>
                 </div>
             </div>
             <div class="col-lg-6 mt-5 mt-lg-0">
@@ -89,8 +89,11 @@
                     <div class="position-absolute d-none d-md-block" style="top: 30%; right: -10px;">
                         <span class="badge bg-dark p-2 shadow"><i class="bi bi-youtube me-1"></i> Shorts</span>
                     </div>
-                    <div class="position-absolute d-none d-md-block" style="bottom: 0; left: 20%;">
+                    <div class="position-absolute d-none d-md-block" style="bottom: 0; left: 10%;">
                         <span class="badge bg-success p-2 shadow"><i class="bi bi-images me-1"></i> Carousel</span>
+                    </div>
+                    <div class="position-absolute d-none d-md-block" style="bottom: 0; right: 5%;">
+                        <span class="badge bg-warning text-dark p-2 shadow"><i class="bi bi-robot me-1"></i> Auto DM</span>
                     </div>
                 </div>
             </div>
@@ -103,19 +106,23 @@
     <div class="container">
         <div class="row align-items-center text-center">
             <div class="col-12 mb-3">
-                <small class="text-white-50 text-uppercase" style="letter-spacing: 2px;">Direct posting to</small>
+                <small class="text-white-50 text-uppercase" style="letter-spacing: 2px;">Direct posting & automation</small>
             </div>
-            <div class="col-4">
+            <div class="col-6 col-md-3 mb-3 mb-md-0">
                 <i class="bi bi-instagram fs-2"></i>
                 <div class="small mt-1">Instagram Reels</div>
             </div>
-            <div class="col-4">
-                <i class="bi bi-instagram fs-2"></i>
+            <div class="col-6 col-md-3 mb-3 mb-md-0">
+                <i class="bi bi-images fs-2"></i>
                 <div class="small mt-1">Instagram Carousels</div>
             </div>
-            <div class="col-4">
+            <div class="col-6 col-md-3">
                 <i class="bi bi-youtube fs-2"></i>
                 <div class="small mt-1">YouTube Shorts</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <i class="bi bi-robot fs-2 text-danger"></i>
+                <div class="small mt-1">IG Automation <span class="badge bg-danger" style="font-size: 8px;">NEW</span></div>
             </div>
         </div>
     </div>
@@ -512,6 +519,136 @@
     </div>
 </section>
 
+<!-- ==================== INSTAGRAM AUTOMATION ==================== -->
+<section class="py-5 bg-dark text-white">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-danger mb-3 px-3 py-2"><i class="bi bi-robot me-1"></i> NEW</span>
+                <h2 class="fw-bold display-6 mb-4">Instagram Comment Automation</h2>
+                <p class="text-white-50 mb-4">
+                    Automatically reply to comments and send DMs when followers use trigger keywords.
+                    Turn every comment into a lead. Grow your engagement on autopilot.
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Keyword Triggers</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Auto Comment Reply</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Auto DM with Links</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Per-Post Rules</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Account-Level Fallback</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Activity Logs</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'signup' %}" class="btn btn-danger btn-lg">
+                    <i class="bi bi-lightning-charge me-2"></i>Start Automating
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg p-4" style="border-radius: 24px; background: #1a1a2e;">
+                    <!-- Simulated Instagram Post -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-gradient rounded-circle me-2" style="width: 32px; height: 32px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);"></div>
+                            <span class="text-white small fw-bold">@yourhandle</span>
+                        </div>
+                        <div class="bg-dark rounded p-3 text-center" style="height: 120px;">
+                            <i class="bi bi-play-circle text-white-50" style="font-size: 2.5rem;"></i>
+                            <p class="text-white-50 small mt-2 mb-0">Your Quiz Video</p>
+                        </div>
+                    </div>
+                    <!-- Comments Section -->
+                    <div class="border-top border-secondary pt-3">
+                        <p class="text-white-50 small mb-2"><i class="bi bi-chat me-1"></i> Comments</p>
+
+                        <!-- User Comment -->
+                        <div class="d-flex mb-2">
+                            <div class="bg-secondary rounded-circle me-2 flex-shrink-0" style="width: 24px; height: 24px;"></div>
+                            <div>
+                                <span class="text-white small"><strong>@user123</strong> Send me the link!</span>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 9px;">TRIGGER</span>
+                            </div>
+                        </div>
+
+                        <!-- Auto Reply -->
+                        <div class="d-flex mb-2 ps-4">
+                            <div class="bg-gradient rounded-circle me-2 flex-shrink-0" style="width: 24px; height: 24px; background: linear-gradient(45deg, #f09433, #dc2743);"></div>
+                            <div>
+                                <span class="text-white small"><strong>@yourhandle</strong> Check your DMs! <i class="bi bi-robot text-success"></i></span>
+                                <span class="badge bg-success ms-1" style="font-size: 9px;">AUTO</span>
+                            </div>
+                        </div>
+
+                        <!-- DM Indicator -->
+                        <div class="bg-success bg-opacity-10 rounded p-2 mt-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-envelope-check text-success me-2"></i>
+                                <span class="text-success small">DM sent to @user123 with your link</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How Automation Works -->
+        <div class="row mt-5 pt-4 border-top border-secondary">
+            <div class="col-12 text-center mb-4">
+                <h4 class="fw-bold">How It Works</h4>
+            </div>
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="bg-danger bg-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">1</span>
+                </div>
+                <h6 class="fw-bold">Set Keywords</h6>
+                <p class="text-white-50 small mb-0">Define trigger words like "link", "send", "dm", "info"</p>
+            </div>
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="bg-danger bg-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">2</span>
+                </div>
+                <h6 class="fw-bold">User Comments</h6>
+                <p class="text-white-50 small mb-0">Someone comments with your trigger keyword</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="bg-danger bg-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">3</span>
+                </div>
+                <h6 class="fw-bold">Auto Reply + DM</h6>
+                <p class="text-white-50 small mb-0">Instant comment reply and DM with your link</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ==================== WHO IS THIS FOR ==================== -->
 <section class="py-5 bg-light">
     <div class="container">
@@ -603,6 +740,13 @@
                 <div class="card h-100 border-0 bg-light p-3 text-center">
                     <i class="bi bi-youtube text-danger fs-4 mb-2"></i>
                     <small class="fw-bold">YouTube Post</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100 border-0 bg-danger bg-opacity-10 p-3 text-center position-relative">
+                    <span class="badge bg-danger position-absolute" style="top: -8px; right: -8px; font-size: 9px;">NEW</span>
+                    <i class="bi bi-robot text-danger fs-4 mb-2"></i>
+                    <small class="fw-bold">IG Automation</small>
                 </div>
             </div>
             <div class="col-6 col-md-4 col-lg-3">

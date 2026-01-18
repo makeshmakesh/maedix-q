@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer,
-    Leaderboard, VideoTemplate, Topic, TopicCard, TopicProgress, TopicCarouselExport
+    VideoTemplate, Topic, TopicCard, TopicProgress, TopicCarouselExport
 )
 @admin.register(VideoTemplate)
 class VideoTemplateAdmin(admin.ModelAdmin):
@@ -73,14 +73,6 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
     list_display = ['attempt', 'question', 'is_correct', 'points_earned', 'answered_at']
     list_filter = ['is_correct', 'attempt__quiz']
     search_fields = ['attempt__user__email']
-
-
-@admin.register(Leaderboard)
-class LeaderboardAdmin(admin.ModelAdmin):
-    list_display = ['user', 'category', 'period', 'score', 'quizzes_completed', 'rank']
-    list_filter = ['period', 'category']
-    search_fields = ['user__email']
-    ordering = ['period', 'rank']
 
 
 class TopicCardInline(admin.TabularInline):

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Code Word{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-5 text-center">
+                    <div style="font-size: 4rem;" class="mb-3">🔧</div>
+                    <h3 class="fw-bold mb-3">No Words Available</h3>
+                    <p class="text-muted mb-4">
+                        {% if category and category != 'all' %}
+                        There are no words available in this category. Try another category!
+                        {% else %}
+                        We're setting up the word bank. Please check back soon!
+                        {% endif %}
+                    </p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'codeword_home' %}" class="btn btn-primary">
+                            <i class="bi bi-grid me-1"></i> Choose Category
+                        </a>
+                        <a href="{% url 'games_home' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Games
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

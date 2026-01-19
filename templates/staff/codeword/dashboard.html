@@ -1,0 +1,134 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Code Word Dashboard{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Code Word Dashboard</h4>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-folder text-primary fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ stats.active_categories }}</h3>
+            <small class="text-muted">Categories</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-fonts text-info fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ stats.active_words }}</h3>
+            <small class="text-muted">Active Words</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-controller text-success fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ stats.total_games }}</h3>
+            <small class="text-muted">Games Played</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-people text-warning fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ stats.total_players }}</h3>
+            <small class="text-muted">Players</small>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <a href="{% url 'staff_codeword_category_create' %}" class="card p-3 text-decoration-none h-100">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-plus-circle text-primary fs-4 me-3"></i>
+                <div>
+                    <h6 class="mb-0">New Category</h6>
+                    <small class="text-muted">Create category</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'staff_codeword_word_create' %}" class="card p-3 text-decoration-none h-100">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-plus-circle text-info fs-4 me-3"></i>
+                <div>
+                    <h6 class="mb-0">New Word</h6>
+                    <small class="text-muted">Add word to bank</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'staff_codeword_import' %}" class="card p-3 text-decoration-none h-100">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-upload text-warning fs-4 me-3"></i>
+                <div>
+                    <h6 class="mb-0">Import JSON</h6>
+                    <small class="text-muted">Bulk import words</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'staff_codeword_word_list' %}" class="card p-3 text-decoration-none h-100">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-list-ul text-success fs-4 me-3"></i>
+                <div>
+                    <h6 class="mb-0">Manage Words</h6>
+                    <small class="text-muted">View all words</small>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Categories -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Categories</h5>
+                <a href="{% url 'staff_codeword_category_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            {% for cat in categories %}
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="d-flex align-items-center">
+                    <i class="bi {{ cat.icon }} {{ cat.color }} me-2"></i>
+                    <span>{{ cat.name }}</span>
+                </div>
+                <span class="badge bg-secondary">{{ cat.word_count }} words</span>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No categories yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Games -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3">Recent Games</h5>
+            {% for game in recent_games %}
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <span class="fw-bold">{{ game.user.email|default:"Anonymous" }}</span>
+                    <br><small class="text-muted">{{ game.word.word }} - {{ game.category.name|default:"General" }}</small>
+                </div>
+                {% if game.is_won %}
+                <span class="badge bg-success">{{ game.attempts_used }}/6</span>
+                {% else %}
+                <span class="badge bg-danger">Failed</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No games yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

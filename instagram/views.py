@@ -1071,6 +1071,23 @@ class InstagramWebhookView(View):
 
         # Send follow-up DM
         if followup_dm:
+            # For account-level automation (automation is None), check if we've already
+            # sent a DM to this commenter before - only send once per user
+            if automation is None:
+                already_sent = InstagramCommentEvent.objects.filter(
+                    user=user,
+                    commenter_id=commenter_id,
+                    automation__isnull=True,  # Account-level automation only
+                    dm_sent=True
+                ).exclude(pk=event.pk).exists()
+
+                if already_sent:
+                    logger.info(f"Skipping account-level DM for comment {comment_id} - already sent to commenter {commenter_id}")
+                    event.status = 'completed'
+                    event.error_message = 'Account-level DM already sent to this user'
+                    event.save()
+                    return
+
             try:
                 self.send_dm_to_commenter(
                     comment_id=comment_id,

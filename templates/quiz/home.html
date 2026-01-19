@@ -39,7 +39,7 @@
                         <span><i class="bi bi-question-circle"></i> {{ quiz.question_count }}</span>
                         <span><i class="bi bi-clock"></i> {{ quiz.time_limit|divisibleby:60 }} min</span>
                     </div>
-                    <a href="{% url 'quiz_detail' quiz.slug %}" class="btn btn-primary btn-sm mt-auto">Start Quiz</a>
+                    <a href="{% url 'quiz_detail' quiz.slug %}" class="btn btn-primary btn-sm mt-auto">View Quiz</a>
                 </div>
             </div>
             {% endfor %}

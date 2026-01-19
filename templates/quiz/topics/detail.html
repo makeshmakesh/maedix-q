@@ -1,6 +1,30 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ topic.title }}{% endblock %}
+{% block title %}{{ topic.title }} - Learn{% endblock %}
+{% block meta_description %}{{ topic.description|default:"Learn about this topic with swipeable learning cards."|truncatechars:160 }}{% endblock %}
+{% block og_title %}{{ topic.title }}{% endblock %}
+{% block og_description %}{{ topic.description|default:"Learn about this topic with swipeable learning cards." }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block twitter_title %}{{ topic.title }} | Maedix-Q{% endblock %}
+{% block twitter_description %}{{ topic.description|default:"Learn about this topic with swipeable learning cards." }}{% endblock %}
+{% block keywords %}{{ topic.title }}, {{ topic.category.name }}, learning, tutorial, {{ topic.card_count }} cards{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    "name": "{{ topic.title }}",
+    "description": "{{ topic.description|escapejs }}",
+    "educationalLevel": "General",
+    "timeRequired": "PT{{ topic.estimated_time }}M",
+    "about": {
+        "@type": "Thing",
+        "name": "{{ topic.category.name }}"
+    }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="py-4 py-md-5">

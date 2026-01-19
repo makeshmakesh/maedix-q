@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Code Word Stats{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Your Statistics</h2>
+                    <a href="{% url 'codeword_home' %}" class="btn btn-primary">
+                        <i class="bi bi-play-fill me-1"></i> Play
+                    </a>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 text-center">
+                            <div class="h2 fw-bold mb-0">{{ player_stats.total_games }}</div>
+                            <small class="text-muted">Played</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 text-center">
+                            <div class="h2 fw-bold mb-0">{{ player_stats.win_rate }}%</div>
+                            <small class="text-muted">Win Rate</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 text-center">
+                            <div class="h2 fw-bold text-warning mb-0">{{ player_stats.current_streak }}</div>
+                            <small class="text-muted">Current Streak</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 text-center">
+                            <div class="h2 fw-bold text-success mb-0">{{ player_stats.longest_streak }}</div>
+                            <small class="text-muted">Best Streak</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- XP Card -->
+                <div class="card p-4 mb-4 text-center bg-primary text-white">
+                    <div class="h1 fw-bold mb-0">{{ player_stats.total_xp }}</div>
+                    <div>Total XP Earned</div>
+                </div>
+
+                <!-- Guess Distribution -->
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3">Guess Distribution</h5>
+                    <div id="guessDistribution">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+                </div>
+
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const distribution = {{ player_stats.guess_distribution|safe|default:"{}" }};
+                    const totalWins = {{ player_stats.total_wins|default:0 }};
+                    const container = document.getElementById('guessDistribution');
+
+                    for (let i = 1; i <= 6; i++) {
+                        const count = distribution[i] || distribution[String(i)] || 0;
+                        const percentage = totalWins > 0 ? Math.round((count / totalWins) * 100) : 0;
+
+                        container.innerHTML += `
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="me-2" style="width: 20px;">${i}</span>
+                                <div class="progress flex-grow-1" style="height: 24px;">
+                                    <div class="progress-bar bg-success" style="width: ${percentage}%; min-width: ${count > 0 ? '24px' : '0'};">
+                                        ${count}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                </script>
+
+                <!-- Category Breakdown -->
+                {% if category_breakdown %}
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3">Category Performance</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Played</th>
+                                    <th>Won</th>
+                                    <th>Win Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cat in category_breakdown %}
+                                <tr>
+                                    <td class="fw-bold">{{ cat.name }}</td>
+                                    <td>{{ cat.played }}</td>
+                                    <td>{{ cat.won }}</td>
+                                    <td>
+                                        <div class="progress" style="width: 100px; height: 20px;">
+                                            <div class="progress-bar bg-success" style="width: {{ cat.win_rate }}%;">
+                                                {{ cat.win_rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Recent Games -->
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3">Recent Games</h5>
+                    {% if recent_games %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Word</th>
+                                    <th>Category</th>
+                                    <th>Result</th>
+                                    <th>Attempts</th>
+                                    <th>XP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for game in recent_games %}
+                                <tr>
+                                    <td>{{ game.completed_at|date:"M d" }}</td>
+                                    <td class="fw-bold">{{ game.word.word }}</td>
+                                    <td><span class="badge bg-secondary">{{ game.get_category_display }}</span></td>
+                                    <td>
+                                        {% if game.is_won %}
+                                        <span class="badge bg-success">Won</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Lost</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ game.attempts_used }}/6</td>
+                                    <td>+{{ game.xp_earned }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No games played yet. Start playing to see your history!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

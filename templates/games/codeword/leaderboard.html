@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Code Word Leaderboard{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Leaderboard</h2>
+            <a href="{% url 'codeword_home' %}" class="btn btn-primary">
+                <i class="bi bi-play-fill me-1"></i> Play
+            </a>
+        </div>
+
+        <!-- Filters -->
+        <div class="card p-3 mb-4">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Category</label>
+                    <select name="category" class="form-select" onchange="this.form.submit()">
+                        {% for code, name in categories %}
+                        <option value="{{ code }}" {% if code == current_category %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Period</label>
+                    <select name="period" class="form-select" onchange="this.form.submit()">
+                        {% for code, name in periods %}
+                        <option value="{{ code }}" {% if code == current_period %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <noscript>
+                        <button type="submit" class="btn btn-secondary w-100">Apply</button>
+                    </noscript>
+                </div>
+            </form>
+        </div>
+
+        {% if user_rank %}
+        <div class="alert alert-primary mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            Your current rank: <strong>#{{ user_rank }}</strong>
+        </div>
+        {% endif %}
+
+        <!-- Leaderboard Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy me-2"></i>
+                    Top Players
+                    {% if current_category != 'all' %}
+                    - {{ current_category|title }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if leaderboard %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Rank</th>
+                                <th>Player</th>
+                                <th>XP</th>
+                                <th>Games</th>
+                                <th>Wins</th>
+                                <th>Win Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in leaderboard %}
+                            <tr {% if request.user == entry.user %}class="table-primary"{% endif %}>
+                                <td class="ps-3">
+                                    {% if entry.rank == 1 %}
+                                    <span style="font-size: 1.5rem;">🥇</span>
+                                    {% elif entry.rank == 2 %}
+                                    <span style="font-size: 1.5rem;">🥈</span>
+                                    {% elif entry.rank == 3 %}
+                                    <span style="font-size: 1.5rem;">🥉</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ entry.rank }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ entry.user.get_full_name|default:entry.user.email|truncatechars:25 }}</strong>
+                                    {% if request.user == entry.user %}
+                                    <span class="badge bg-primary ms-1">You</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        {{ entry.total_xp }} XP
+                                    </span>
+                                </td>
+                                <td>{{ entry.games_played }}</td>
+                                <td>{{ entry.games_won }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-success" style="width: {{ entry.win_rate }}%;"></div>
+                                        </div>
+                                        <small>{{ entry.win_rate|floatformat:0 }}%</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-trophy display-4 text-muted mb-3"></i>
+                    <p class="text-muted mb-3">No players on the leaderboard yet.</p>
+                    <a href="{% url 'codeword_home' %}" class="btn btn-primary">
+                        Be the first to play!
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- How scoring works -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i> How Scoring Works</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">XP Rewards</h6>
+                        <ul class="mb-0">
+                            <li>1st try: <span class="badge bg-success">100 XP</span></li>
+                            <li>2nd try: <span class="badge bg-success">80 XP</span></li>
+                            <li>3rd try: <span class="badge bg-success">60 XP</span></li>
+                            <li>4th try: <span class="badge bg-warning text-dark">40 XP</span></li>
+                            <li>5th try: <span class="badge bg-warning text-dark">25 XP</span></li>
+                            <li>6th try: <span class="badge bg-secondary">15 XP</span></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Ranking</h6>
+                        <p class="text-muted mb-0">
+                            Players are ranked by total XP earned. Play more games and solve them in fewer attempts to climb the leaderboard!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

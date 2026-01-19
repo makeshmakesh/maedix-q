@@ -33,6 +33,7 @@ urlpatterns = [
     path('instagram/', include('instagram.urls')),
     path('youtube/', include('youtube.urls')),
     path('roleplay/', include('roleplay.urls')),
+    path('games/', include('games.urls')),
 ]
 
 if settings.DEBUG:

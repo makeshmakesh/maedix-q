@@ -1,0 +1,93 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Import Words{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Import Words</h4>
+    <a href="{% url 'staff_codeword_word_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="default_category" class="form-label">Default Category</label>
+                    <select class="form-select" id="default_category" name="default_category">
+                        <option value="">-- No Default Category --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Used when word doesn't specify a category</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="json_data" class="form-label">JSON Data <span class="text-danger">*</span></label>
+                    <textarea class="form-control font-monospace" id="json_data" name="json_data" rows="15" required placeholder='[
+  "REACT",
+  "FLASK",
+  {"word": "NGINX", "category": "web", "difficulty": "medium", "hint": "Web server"}
+]'></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-upload me-1"></i> Import Words
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">JSON Format</h5>
+            <p class="text-muted">You can use two formats:</p>
+
+            <h6 class="mt-3">Simple (array of strings):</h6>
+            <pre class="bg-light p-2 rounded small"><code>[
+  "REACT",
+  "FLASK",
+  "NGINX"
+]</code></pre>
+
+            <h6 class="mt-3">Detailed (array of objects):</h6>
+            <pre class="bg-light p-2 rounded small"><code>[
+  {
+    "word": "REACT",
+    "category": "web",
+    "difficulty": "easy",
+    "hint": "JavaScript library"
+  },
+  {
+    "word": "FLASK",
+    "category": "web",
+    "difficulty": "medium",
+    "hint": "Python framework"
+  }
+]</code></pre>
+
+            <h6 class="mt-3">Fields:</h6>
+            <ul class="small text-muted">
+                <li><code>word</code> - 5 letters, required</li>
+                <li><code>category</code> - category slug (optional)</li>
+                <li><code>difficulty</code> - easy, medium, hard (default: medium)</li>
+                <li><code>hint</code> - brief description (optional)</li>
+            </ul>
+
+            <h6 class="mt-3">Available Categories:</h6>
+            <ul class="small text-muted mb-0">
+                {% for cat in categories %}
+                <li><code>{{ cat.slug }}</code> - {{ cat.name }}</li>
+                {% empty %}
+                <li>No categories available</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

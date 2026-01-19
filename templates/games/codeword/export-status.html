@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Video Export Status{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-4 text-center">
+                    {% if export.status == 'pending' or export.status == 'processing' %}
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <h4 class="fw-bold mb-2">Generating Video...</h4>
+                    <p class="text-muted mb-4">This usually takes about 30 seconds</p>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 60%"></div>
+                    </div>
+
+                    {% elif export.status == 'completed' %}
+                    <div style="font-size: 4rem;" class="mb-3">🎬</div>
+                    <h4 class="fw-bold mb-2">Video Ready!</h4>
+                    <p class="text-muted mb-4">Your Code Word video is ready to download and share</p>
+
+                    {% if export.video_url %}
+                    <video src="{{ export.video_url }}" class="w-100 mb-4 rounded" controls style="max-height: 400px;"></video>
+
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ export.video_url }}" download class="btn btn-primary">
+                            <i class="bi bi-download me-1"></i> Download
+                        </a>
+                        <button class="btn btn-outline-primary" onclick="shareVideo()">
+                            <i class="bi bi-share me-1"></i> Share
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% elif export.status == 'failed' %}
+                    <div style="font-size: 4rem;" class="mb-3">😢</div>
+                    <h4 class="fw-bold mb-2">Export Failed</h4>
+                    <p class="text-muted mb-4">{{ export.error_message|default:"An error occurred while generating the video." }}</p>
+                    <a href="{% url 'codeword_export' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-repeat me-1"></i> Try Again
+                    </a>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <a href="{% url 'codeword_play' %}" class="text-muted">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Game
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if export.status == 'pending' or export.status == 'processing' %}
+<script>
+// Poll for status updates
+setInterval(async function() {
+    const response = await fetch('{% url "codeword_export_api" export.id %}');
+    const data = await response.json();
+
+    if (data.status === 'completed' || data.status === 'failed') {
+        location.reload();
+    }
+}, 3000);
+</script>
+{% endif %}
+
+<script>
+function shareVideo() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Code Word Result',
+            text: 'Check out my Code Word game!',
+            url: '{{ export.video_url }}'
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -28,6 +28,19 @@
                         </a>
                     </nav>
                     <hr>
+                    <h6 class="fw-bold text-muted mb-3">Code Word</h6>
+                    <nav class="nav flex-column">
+                        <a href="{% url 'staff_codeword_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'staff_codeword_dashboard' %}text-primary fw-bold{% else %}text-dark{% endif %}">
+                            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        </a>
+                        <a href="{% url 'staff_codeword_category_list' %}" class="nav-link {% if 'codeword_category' in request.resolver_match.url_name %}text-primary fw-bold{% else %}text-dark{% endif %}">
+                            <i class="bi bi-folder me-2"></i> Categories
+                        </a>
+                        <a href="{% url 'staff_codeword_word_list' %}" class="nav-link {% if 'codeword_word' in request.resolver_match.url_name %}text-primary fw-bold{% else %}text-dark{% endif %}">
+                            <i class="bi bi-fonts me-2"></i> Words
+                        </a>
+                    </nav>
+                    <hr>
                     <a href="{% url 'quiz_home' %}" class="nav-link text-muted small">
                         <i class="bi bi-arrow-left me-2"></i> Back to Site
                     </a>

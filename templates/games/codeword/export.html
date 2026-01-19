@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Export Code Word Video{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">Export as Video</h2>
+                    <p class="text-muted">Create a shareable video of your Code Word game</p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Preview -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark text-white p-4" style="aspect-ratio: 9/16; max-height: 500px;">
+                            <div class="d-flex flex-column h-100 justify-content-center align-items-center">
+                                <h5 class="mb-3">CODE WORD</h5>
+                                <p class="small text-white-50 mb-4">{{ daily_word.date }}</p>
+
+                                <!-- Game Preview -->
+                                <div class="mb-4">
+                                    {% for guess in attempt.guesses %}
+                                    <div class="d-flex justify-content-center gap-1 mb-1">
+                                        {% for i in "01234" %}
+                                        <div style="width: 40px; height: 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold;"
+                                             class="{% if guess.result|slice:forloop.counter0|first == 'correct' %}bg-success{% elif guess.result|slice:forloop.counter0|first == 'present' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ guess.word|slice:forloop.counter0|first }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <p class="h4 mb-3">
+                                    {% if attempt.is_won %}
+                                    🎉 {{ attempt.attempts_used }}/6
+                                    {% else %}
+                                    😢 X/6
+                                    {% endif %}
+                                </p>
+
+                                <p class="small text-white-50" id="previewHandle">
+                                    {% if handle_name %}@{{ handle_name }}{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="col-md-6">
+                        <div class="card p-4">
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Your Handle</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">@</span>
+                                        <input type="text" name="handle_name" class="form-control"
+                                               id="handleInput"
+                                               placeholder="your_handle"
+                                               value="{{ handle_name }}"
+                                               maxlength="30">
+                                    </div>
+                                    <small class="text-muted">Shown at the bottom of the video</small>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Video Template</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="template" id="tplDefault" value="default" checked>
+                                            <label class="btn btn-outline-primary w-100" for="tplDefault">
+                                                <i class="bi bi-grid me-1"></i> Default
+                                            </label>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="template" id="tplDark" value="dark">
+                                            <label class="btn btn-outline-primary w-100" for="tplDark">
+                                                <i class="bi bi-moon me-1"></i> Dark
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="include_answer" id="includeAnswer" checked>
+                                        <label class="form-check-label" for="includeAnswer">
+                                            Show answer at the end
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                    <i class="bi bi-camera-reels me-2"></i> Generate Video
+                                </button>
+
+                                <p class="text-muted small text-center mt-3 mb-0">
+                                    Video will be ready in ~30 seconds
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('handleInput').addEventListener('input', function() {
+    const preview = document.getElementById('previewHandle');
+    preview.textContent = this.value ? '@' + this.value : '';
+});
+</script>
+{% endblock %}

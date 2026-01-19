@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'instagram',
     'youtube',
     'roleplay',
+    'games',
     # 'courses',       # Phase 2
     # 'assessments',   # Phase 2
     # 'hr',            # Phase 3

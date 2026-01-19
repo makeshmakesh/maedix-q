@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Code Word - Tech Word Puzzle{% endblock %}
+{% block meta_description %}Guess the 5-letter tech term in 6 tries. Choose a category and test your programming vocabulary!{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h1 class="h2 fw-bold mb-2">Code Word</h1>
+                    <p class="text-muted">Guess the 5-letter tech term in 6 tries</p>
+                    {% if player_stats %}
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <span class="badge bg-primary">{{ player_stats.total_xp }} XP</span>
+                        <span class="badge bg-success">{{ player_stats.total_wins }} Wins</span>
+                        {% if player_stats.current_streak > 0 %}
+                        <span class="badge bg-warning text-dark">{{ player_stats.current_streak }} Streak</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Play -->
+                <div class="card p-4 mb-4 text-center">
+                    <h5 class="fw-bold mb-3">Quick Play</h5>
+                    <p class="text-muted mb-3">Play with words from all categories ({{ total_words }} words)</p>
+                    <a href="{% url 'codeword_play' %}?category=all" class="btn btn-primary btn-lg">
+                        <i class="bi bi-play-fill me-2"></i> Start Game
+                    </a>
+                </div>
+
+                <!-- Category Selection -->
+                <h5 class="fw-bold mb-3">Play by Category</h5>
+                <div class="row g-3 mb-4">
+                    {% for cat in categories %}
+                    {% if cat.count > 0 %}
+                    <div class="col-6 col-md-4">
+                        <a href="{% url 'codeword_play' %}?category={{ cat.code }}" class="card p-3 text-decoration-none h-100 category-card">
+                            <div class="d-flex align-items-center">
+                                <div class="category-icon me-3">
+                                    <i class="bi {{ cat.icon|default:'bi-puzzle' }} {{ cat.color|default:'text-primary' }}"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">{{ cat.name }}</h6>
+                                    <small class="text-muted">{{ cat.count }} words</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'codeword_stats' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-bar-chart me-1"></i> My Stats
+                    </a>
+                    <a href="{% url 'codeword_leaderboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-trophy me-1"></i> Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .category-icon {
+        font-size: 1.5rem;
+    }
+    .text-purple { color: #8b5cf6; }
+    .text-teal { color: #14b8a6; }
+    .text-orange { color: #f97316; }
+</style>
+{% endblock %}

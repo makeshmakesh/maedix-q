@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Pricing{% endblock %}
+{% block title %}Pricing Plans{% endblock %}
+{% block meta_description %}Choose the perfect Maedix-Q plan for your needs. Create quiz videos, learning carousels, and post to Instagram and YouTube. Free, Pro, and Enterprise plans available.{% endblock %}
+{% block og_description %}Choose the perfect Maedix-Q plan for your needs. Create quiz videos, learning carousels, and post to Instagram and YouTube.{% endblock %}
+{% block twitter_title %}Pricing Plans | Maedix-Q{% endblock %}
+{% block twitter_description %}Choose the perfect Maedix-Q plan for your needs. Free, Pro, and Enterprise plans available.{% endblock %}
 
 {% block content %}
 <section class="py-5">
@@ -295,6 +299,24 @@
                                 {% endif %}
                             {% endfor %}
                             {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- IG Automation -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-robot text-danger me-1"></i>
+                            Instagram automation (comments & auto-DM)
+                            <span class="badge bg-danger ms-1" style="font-size: 9px;">NEW</span>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% for f in plan.features %}
+                                {% if f.code == 'ig_automation' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
                         </td>
                         {% endfor %}
                     </tr>

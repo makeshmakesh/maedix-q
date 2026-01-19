@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /users/
+Disallow: /admin/
+Disallow: /quiz/staff/
+Disallow: /instagram/webhook/
+Disallow: /youtube/webhook/
+Disallow: /payment/
+Disallow: /quiz/my-quizzes/
+Disallow: /quiz/my-topics/
+Disallow: /quiz/video/
+
+Sitemap: https://maedix.com/sitemap.xml

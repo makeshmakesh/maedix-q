@@ -16,4 +16,10 @@ urlpatterns = [
     path('payment/success/page/', views.PaymentSuccessPageView.as_view(), name='payment_success_page'),
     path('payment/failed/', views.PaymentFailedView.as_view(), name='payment_failed'),
     path('payment/webhook/', views.PaymentWebhookView.as_view(), name='payment_webhook'),
+
+    # Credits
+    path('credits/', views.PurchaseCreditsView.as_view(), name='purchase_credits'),
+    path('credits/checkout/', views.CreditCheckoutView.as_view(), name='credit_checkout'),
+    path('credits/success/', views.CreditPaymentSuccessView.as_view(), name='credit_success'),
+    path('credits/failed/', views.CreditPaymentFailedView.as_view(), name='credit_failed'),
 ]

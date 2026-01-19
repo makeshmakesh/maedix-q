@@ -68,7 +68,7 @@ class RoleplayStartView(LoginRequiredMixin, View):
 
         if not request.user.profile.has_credits(bot.required_credits):
             messages.warning(request, f'You need at least {bot.required_credits} credits to start. Please buy credits first.')
-            return redirect('roleplay:purchase_credits')
+            return redirect('purchase_credits')
 
         # Create a new session
         session = RoleplaySession.objects.create(
@@ -240,7 +240,7 @@ class CreditPaymentSuccessView(LoginRequiredMixin, View):
             )
         except CreditTransaction.DoesNotExist:
             messages.error(request, 'Transaction not found.')
-            return redirect('roleplay:purchase_credits')
+            return redirect('purchase_credits')
 
         # Verify signature
         try:
@@ -256,7 +256,7 @@ class CreditPaymentSuccessView(LoginRequiredMixin, View):
             if expected_signature != razorpay_signature:
                 logger.error(f"Credit payment signature verification failed for user {request.user.id}")
                 messages.error(request, 'Payment verification failed. Please contact support.')
-                return redirect('roleplay:purchase_credits')
+                return redirect('purchase_credits')
 
             # Update transaction
             transaction.status = 'completed'
@@ -270,14 +270,14 @@ class CreditPaymentSuccessView(LoginRequiredMixin, View):
                 messages.success(request, f'Successfully added {transaction.credits} credits to your account!')
             else:
                 messages.error(request, 'Profile not found. Please contact support.')
-                return redirect('roleplay:purchase_credits')
+                return redirect('purchase_credits')
 
             return redirect('roleplay:home')
 
         except Exception as e:
             logger.error(f"Credit payment verification error for user {request.user.id}: {e}")
             messages.error(request, 'Payment verification error. Please contact support.')
-            return redirect('roleplay:purchase_credits')
+            return redirect('purchase_credits')
 
 
 @method_decorator(csrf_exempt, name='dispatch')

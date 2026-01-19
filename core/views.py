@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from .models import Plan, ContactMessage, Configuration, Subscription, Transaction
+from roleplay.models import CreditTransaction
 from .forms import ContactForm
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,11 @@ class RefundPolicyPage(View):
 
     def get(self, request):
         return render(request, self.template_name)
+
+
+def robots_txt(request):
+    """Serve robots.txt file"""
+    return render(request, 'robots.txt', content_type='text/plain')
 
 
 class CheckoutView(LoginRequiredMixin, View):
@@ -392,3 +398,198 @@ class PaymentWebhookView(View):
         except Exception as e:
             logger.error(f"Webhook error: {e}")
             return JsonResponse({'status': 'error'}, status=500)
+
+
+# Credit package configuration
+CREDIT_PACKAGES = [
+    {
+        'id': 'starter',
+        'name': 'Starter Pack',
+        'credits': 100,
+        'price_inr': 99,
+        'description': 'Great for trying out AI features',
+    },
+    {
+        'id': 'popular',
+        'name': 'Popular Pack',
+        'credits': 500,
+        'price_inr': 449,
+        'description': 'Best value for regular users',
+    },
+    {
+        'id': 'pro',
+        'name': 'Pro Pack',
+        'credits': 1200,
+        'price_inr': 999,
+        'description': 'For power users and creators',
+    },
+]
+
+
+class PurchaseCreditsView(LoginRequiredMixin, View):
+    """Display credit packages for purchase"""
+    template_name = 'core/purchase-credits.html'
+    login_url = '/users/login/'
+
+    def get(self, request):
+        credits = 0
+        if hasattr(request.user, 'profile'):
+            credits = request.user.profile.credits
+
+        transactions = CreditTransaction.objects.filter(
+            user=request.user,
+            status='completed'
+        )[:5]
+
+        context = {
+            'packages': CREDIT_PACKAGES,
+            'credits': credits,
+            'transactions': transactions,
+        }
+        return render(request, self.template_name, context)
+
+
+class CreditCheckoutView(LoginRequiredMixin, View):
+    """Create Razorpay order for credit purchase"""
+    login_url = '/users/login/'
+
+    def post(self, request):
+        package_id = request.POST.get('package_id')
+
+        package = None
+        for p in CREDIT_PACKAGES:
+            if p['id'] == package_id:
+                package = p
+                break
+
+        if not package:
+            return JsonResponse({'error': 'Invalid package'}, status=400)
+
+        try:
+            import razorpay
+
+            razorpay_key = Configuration.get_value('razorpay_api_key')
+            razorpay_secret = Configuration.get_value('razorpay_api_secret')
+
+            if not razorpay_key or not razorpay_secret:
+                return JsonResponse({'error': 'Payment system not configured'}, status=500)
+
+            client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
+
+            amount_paise = int(package['price_inr'] * 100)
+
+            razorpay_order = client.order.create({
+                'amount': amount_paise,
+                'currency': 'INR',
+                'notes': {
+                    'user_id': str(request.user.id),
+                    'package_id': package_id,
+                    'credits': package['credits'],
+                    'type': 'credits',
+                }
+            })
+
+            transaction = CreditTransaction.objects.create(
+                user=request.user,
+                credits=package['credits'],
+                amount=Decimal(str(package['price_inr'])),
+                currency='INR',
+                status='pending',
+                razorpay_order_id=razorpay_order['id'],
+            )
+
+            return JsonResponse({
+                'order_id': razorpay_order['id'],
+                'amount': amount_paise,
+                'currency': 'INR',
+                'key_id': razorpay_key,
+                'package_name': package['name'],
+                'credits': package['credits'],
+            })
+
+        except Exception as e:
+            logger.error(f"Error creating credit order: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+class CreditPaymentSuccessView(LoginRequiredMixin, View):
+    """Verify payment and add credits"""
+    login_url = '/users/login/'
+
+    def post(self, request):
+        razorpay_payment_id = request.POST.get('razorpay_payment_id')
+        razorpay_order_id = request.POST.get('razorpay_order_id')
+        razorpay_signature = request.POST.get('razorpay_signature')
+
+        try:
+            transaction = CreditTransaction.objects.get(
+                razorpay_order_id=razorpay_order_id,
+                user=request.user,
+                status='pending'
+            )
+        except CreditTransaction.DoesNotExist:
+            messages.error(request, 'Transaction not found.')
+            return redirect('purchase_credits')
+
+        try:
+            razorpay_secret = Configuration.get_value('razorpay_api_secret')
+
+            sign_string = f"{razorpay_order_id}|{razorpay_payment_id}"
+            expected_signature = hmac.new(
+                razorpay_secret.encode(),
+                sign_string.encode(),
+                hashlib.sha256
+            ).hexdigest()
+
+            if expected_signature != razorpay_signature:
+                logger.error(f"Credit payment signature verification failed for user {request.user.id}")
+                messages.error(request, 'Payment verification failed. Please contact support.')
+                return redirect('purchase_credits')
+
+            transaction.status = 'completed'
+            transaction.razorpay_payment_id = razorpay_payment_id
+            transaction.razorpay_signature = razorpay_signature
+            transaction.save()
+
+            if hasattr(request.user, 'profile'):
+                request.user.profile.add_credits(transaction.credits)
+                messages.success(request, f'Successfully added {transaction.credits} credits to your account!')
+            else:
+                messages.error(request, 'Profile not found. Please contact support.')
+                return redirect('purchase_credits')
+
+            return redirect('profile')
+
+        except Exception as e:
+            logger.error(f"Credit payment verification error for user {request.user.id}: {e}")
+            messages.error(request, 'Payment verification error. Please contact support.')
+            return redirect('purchase_credits')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CreditPaymentFailedView(View):
+    """Handle credit payment failure"""
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            logger.warning(f"Credit payment failed: {data}")
+
+            order_id = data.get('order_id', '')
+            if order_id and request.user.is_authenticated:
+                try:
+                    transaction = CreditTransaction.objects.get(
+                        razorpay_order_id=order_id,
+                        user=request.user,
+                        status='pending'
+                    )
+                    transaction.status = 'failed'
+                    transaction.save()
+                except CreditTransaction.DoesNotExist:
+                    pass
+
+            return JsonResponse({'status': 'logged'})
+
+        except Exception as e:
+            logger.error(f"Error logging credit payment failure: {e}")
+            return JsonResponse({'status': 'error'}, status=400)

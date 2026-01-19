@@ -1,6 +1,31 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ quiz.title }}{% endblock %}
+{% block title %}{{ quiz.title }} Quiz{% endblock %}
+{% block meta_description %}{{ quiz.description|default:"Test your knowledge with this interactive quiz."|truncatechars:160 }}{% endblock %}
+{% block og_title %}{{ quiz.title }} Quiz{% endblock %}
+{% block og_description %}{{ quiz.description|default:"Test your knowledge with this interactive quiz." }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block twitter_title %}{{ quiz.title }} Quiz | Maedix-Q{% endblock %}
+{% block twitter_description %}{{ quiz.description|default:"Test your knowledge with this interactive quiz." }}{% endblock %}
+{% block keywords %}{{ quiz.title }}, {{ quiz.category.name }}, quiz, test, {{ quiz.difficulty }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Quiz",
+    "name": "{{ quiz.title }}",
+    "description": "{{ quiz.description|escapejs }}",
+    "educationalLevel": "{{ quiz.get_difficulty_display }}",
+    "numberOfQuestions": {{ quiz.question_count }},
+    "timeRequired": "PT{{ quiz.time_limit|divisibleby:60 }}M",
+    "about": {
+        "@type": "Thing",
+        "name": "{{ quiz.category.name }}"
+    }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="py-4 py-md-5">

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'channels',
+    'django.contrib.sitemaps',
 
     # Local apps
     'core',

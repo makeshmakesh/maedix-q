@@ -28,10 +28,22 @@
         border-radius: 16px;
         max-width: 900px;
         width: 100%;
-        max-height: 80vh;
+        max-height: 90vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+    }
+
+    @media (max-width: 575.98px) {
+        .modal-content-custom {
+            border-radius: 12px 12px 0 0;
+            max-height: 85vh;
+            margin-top: auto;
+        }
+        .modal-overlay {
+            align-items: flex-end;
+            padding: 0;
+        }
     }
 
     .modal-header-custom {
@@ -69,8 +81,15 @@
     /* Posts Grid */
     .posts-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 576px) {
+        .posts-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
     }
 
     .post-card {
@@ -144,11 +163,17 @@
     /* Instagram Post Input Group */
     .instagram-input-group {
         display: flex;
+        flex-direction: column;
         gap: 0.5rem;
     }
 
-    .instagram-input-group input {
-        flex: 1;
+    @media (min-width: 576px) {
+        .instagram-input-group {
+            flex-direction: row;
+        }
+        .instagram-input-group input {
+            flex: 1;
+        }
     }
 
     .btn-browse-posts {
@@ -238,6 +263,13 @@
     .suggestion-label {
         font-size: 0.8rem;
         color: var(--text-muted);
+        width: 100%;
+    }
+
+    @media (min-width: 576px) {
+        .suggestion-label {
+            width: auto;
+        }
     }
 
     .keyword-suggestion {

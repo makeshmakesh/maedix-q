@@ -12,7 +12,6 @@ urlpatterns = [
     path('codeword/guess/', views.CodeWordGuessView.as_view(), name='codeword_guess'),
     path('codeword/results/<uuid:session_id>/', views.CodeWordResultsView.as_view(), name='codeword_results'),
     path('codeword/stats/', views.CodeWordStatsView.as_view(), name='codeword_stats'),
-    path('codeword/leaderboard/', views.CodeWordLeaderboardView.as_view(), name='codeword_leaderboard'),
 
     # Staff Code Word Management
     path('staff/codeword/', views.StaffCodeWordDashboardView.as_view(), name='staff_codeword_dashboard'),

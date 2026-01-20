@@ -46,6 +46,7 @@
                 <div class="card p-4 mb-4 text-center bg-primary text-white">
                     <div class="h1 fw-bold mb-0">{{ player_stats.total_xp }}</div>
                     <div>Total XP Earned</div>
+                    <small class="opacity-75">Across all categories</small>
                 </div>
 
                 <!-- Guess Distribution -->
@@ -125,9 +126,9 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Word</th>
-                                    <th>Category</th>
                                     <th>Result</th>
                                     <th>Attempts</th>
+                                    <th>Time</th>
                                     <th>XP</th>
                                 </tr>
                             </thead>
@@ -136,7 +137,6 @@
                                 <tr>
                                     <td>{{ game.completed_at|date:"M d" }}</td>
                                     <td class="fw-bold">{{ game.word.word }}</td>
-                                    <td><span class="badge bg-secondary">{{ game.get_category_display }}</span></td>
                                     <td>
                                         {% if game.is_won %}
                                         <span class="badge bg-success">Won</span>
@@ -145,6 +145,7 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ game.attempts_used }}/6</td>
+                                    <td>{{ game.time_taken_formatted|default:"-" }}</td>
                                     <td>+{{ game.xp_earned }}</td>
                                 </tr>
                                 {% endfor %}

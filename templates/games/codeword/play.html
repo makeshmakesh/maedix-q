@@ -161,28 +161,33 @@
 <section class="py-4">
     <div class="container">
         <!-- Header -->
-        <div class="text-center mb-4">
-            <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
+        <div class="text-center mb-3">
+            <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
                 <a href="{% url 'codeword_home' %}" class="text-muted">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <h1 class="h3 fw-bold mb-0">Code Word</h1>
             </div>
-            <p class="text-muted mb-2">
-                Guess the {{ word_length }}-letter tech term in {{ max_attempts }} tries
-                <span class="badge bg-secondary ms-1">{{ session.get_category_display }}</span>
-            </p>
-            {% if player_stats %}
-            <div class="d-flex justify-content-center gap-2">
-                <span class="badge bg-primary">{{ player_stats.total_xp }} XP</span>
-                {% if player_stats.current_streak > 0 %}
-                <span class="badge bg-warning text-dark">
-                    <i class="bi bi-fire me-1"></i> {{ player_stats.current_streak }} streak
-                </span>
-                {% endif %}
+            <!-- Timer -->
+            <div class="d-inline-block px-3 py-1 bg-light rounded-pill">
+                <i class="bi bi-stopwatch me-1"></i>
+                <span id="timer" class="fw-bold">00:00</span>
             </div>
-            {% endif %}
         </div>
+
+        <!-- Hint (above game board) -->
+        {% if session.word.hint %}
+        <div class="text-center mb-3">
+            <div class="d-inline-block">
+                <button class="btn btn-outline-warning btn-sm" id="hintBtn" onclick="showHint()">
+                    <i class="bi bi-lightbulb me-1"></i> Show Hint
+                </button>
+                <div id="hintText" class="alert alert-warning py-2 px-3 mt-2 mb-0" style="display: none;">
+                    <i class="bi bi-lightbulb-fill me-1"></i> {{ session.word.hint }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Game Board -->
         <div class="game-board mb-4" id="gameBoard">
@@ -218,30 +223,6 @@
             </div>
         </div>
 
-        <!-- Hint -->
-        {% if session.word.hint %}
-        <div class="text-center mb-3">
-            <button class="btn btn-outline-warning btn-sm" id="hintBtn" onclick="showHint()">
-                <i class="bi bi-lightbulb me-1"></i> Show Hint
-            </button>
-            <div id="hintText" class="alert alert-warning mt-2" style="display: none;">
-                <i class="bi bi-lightbulb-fill me-1"></i> <strong>Hint:</strong> {{ session.word.hint }}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Actions -->
-        <div class="text-center">
-            <a href="{% url 'codeword_home' %}" class="btn btn-outline-secondary btn-sm me-2">
-                <i class="bi bi-grid"></i> Categories
-            </a>
-            <a href="{% url 'codeword_stats' %}" class="btn btn-outline-secondary btn-sm me-2">
-                <i class="bi bi-bar-chart"></i> Stats
-            </a>
-            <a href="{% url 'codeword_leaderboard' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-trophy"></i> Leaderboard
-            </a>
-        </div>
     </div>
 </section>
 
@@ -277,18 +258,10 @@
 
             <hr class="my-3">
 
-            <div class="row text-center small">
-                <div class="col-4">
-                    <div class="fw-bold" id="statPlayed">0</div>
-                    <div class="text-muted">Played</div>
-                </div>
-                <div class="col-4">
-                    <div class="fw-bold" id="statWinPct">0%</div>
-                    <div class="text-muted">Win %</div>
-                </div>
-                <div class="col-4">
-                    <div class="fw-bold" id="statStreak">0</div>
-                    <div class="text-muted">Streak</div>
+            <div class="text-center">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 bg-light rounded-pill">
+                    <i class="bi bi-stopwatch"></i>
+                    <span class="fw-bold" id="resultTime">00:00</span>
                 </div>
             </div>
         </div>
@@ -320,6 +293,33 @@ document.addEventListener('DOMContentLoaded', function() {
     let gameOver = false;
     let isRevealing = false;
 
+    // Timer - initialize with elapsed time from server (for resume)
+    let timerInterval;
+    let elapsedSeconds = {{ elapsed_seconds }};
+    const timerDisplay = document.getElementById('timer');
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Display initial time
+    timerDisplay.textContent = formatTime(elapsedSeconds);
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            elapsedSeconds++;
+            timerDisplay.textContent = formatTime(elapsedSeconds);
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+    }
+
     // Load existing guesses if any
     {% if session.guesses %}
     const existingGuesses = {{ session.guesses|safe }};
@@ -336,9 +336,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     {% if session.is_completed %}
     gameOver = true;
-    setTimeout(() => showResult({{ session.is_won|yesno:"true,false" }}, {% if not session.is_won %}"{{ session.word.word }}"{% else %}null{% endif %}), 500);
+    elapsedSeconds = {{ session.time_taken_seconds|default:0 }};
+    timerDisplay.textContent = formatTime(elapsedSeconds);
+    setTimeout(() => showResult({{ session.is_won|yesno:"true,false" }}, {% if not session.is_won %}"{{ session.word.word }}"{% else %}null{% endif %}, 0, elapsedSeconds), 500);
     {% endif %}
     {% endif %}
+
+    // Start timer if game not completed
+    if (!gameOver) {
+        startTimer();
+    }
 
     // Handle keyboard input
     document.addEventListener('keydown', handleKeydown);
@@ -435,7 +442,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.completed) {
                 gameOver = true;
-                setTimeout(() => showResult(data.won, data.answer, data.xp_earned), 500);
+                stopTimer();
+                setTimeout(() => showResult(data.won, data.answer, data.xp_earned, data.time_taken), 500);
             } else {
                 currentRow++;
                 currentCol = 0;
@@ -479,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function showResult(won, answer, xpEarned = 0) {
+    function showResult(won, answer, xpEarned = 0, timeTaken = null) {
         const modal = new bootstrap.Modal(document.getElementById('resultModal'));
 
         document.getElementById('resultEmoji').textContent = won ? '🎉' : '😢';
@@ -492,6 +500,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('answerReveal').style.display = 'block';
             document.getElementById('answerWord').textContent = answer;
         }
+
+        // Display time
+        const displayTime = timeTaken || elapsedSeconds;
+        document.getElementById('resultTime').textContent = formatTime(displayTime);
 
         // Build guess preview
         const preview = document.getElementById('guessPreview');
@@ -509,15 +521,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             preview.appendChild(guessDiv);
         }
-
-        {% if player_stats %}
-        document.getElementById('statPlayed').textContent = {{ player_stats.total_games }};
-        document.getElementById('statWinPct').textContent =
-            {{ player_stats.total_games }} > 0
-                ? Math.round(({{ player_stats.total_wins }} / {{ player_stats.total_games }}) * 100) + '%'
-                : '0%';
-        document.getElementById('statStreak').textContent = {{ player_stats.current_streak }};
-        {% endif %}
 
         modal.show();
     }
@@ -550,8 +553,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function generateShareText() {
-        let text = `Code Word - ${CATEGORY.charAt(0).toUpperCase() + CATEGORY.slice(1)}\n`;
-        text += `${gameOver && document.getElementById('resultEmoji').textContent === '🎉' ? '🎉' : '😢'} ${currentRow + 1}/6\n\n`;
+        const won = document.getElementById('resultEmoji').textContent === '🎉';
+        const timeStr = document.getElementById('resultTime').textContent;
+
+        let text = `Code Word\n`;
+        text += `${won ? '🎉' : '😢'} ${currentRow + 1}/6 ⏱️ ${timeStr}\n\n`;
 
         for (let i = 0; i <= currentRow; i++) {
             const row = document.querySelector(`[data-row="${i}"]`);

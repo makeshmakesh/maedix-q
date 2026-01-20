@@ -377,5 +377,56 @@ document.addEventListener('DOMContentLoaded', function() {
 .template-sunset { background: linear-gradient(135deg, #1e141e, #ff6432); }
 .template-ocean-blue { background: linear-gradient(135deg, #0a192f, #00c8c8); }
 .question-options { background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #198754; }
+
+/* Mobile responsiveness */
+@media (max-width: 575.98px) {
+    .breadcrumb {
+        font-size: 0.75rem;
+    }
+    .card.p-4 {
+        padding: 1rem !important;
+    }
+    #questionSection .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    #questionSection .d-flex.justify-content-between h5 {
+        margin-bottom: 0;
+    }
+    #questionList .list-group-item {
+        padding: 0.75rem;
+    }
+    .question-options {
+        padding: 8px;
+    }
+    .question-options .row.g-2 > div {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    .question-options .row.g-2 > div:last-child {
+        margin-bottom: 0;
+    }
+    #successSection .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    #successSection .btn:last-child {
+        margin-bottom: 0;
+    }
+    .card-body h5 {
+        font-size: 1rem;
+    }
+    .template-card {
+        padding: 3px;
+    }
+    .template-preview {
+        height: 35px;
+    }
+    .template-name {
+        font-size: 9px;
+    }
+}
 </style>
 {% endblock %}

@@ -663,8 +663,10 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
         title = request.POST.get('title', '').strip()
         instagram_post_id = request.POST.get('instagram_post_id', '').strip()
         keywords = request.POST.get('keywords', '').strip()
-        comment_reply = request.POST.get('comment_reply', '').strip()
-        followup_dm = request.POST.get('followup_dm', '').strip()
+
+        # Get multiple replies/DMs as lists (filter out empty values)
+        comment_replies = [r.strip() for r in request.POST.getlist('comment_replies[]') if r.strip()]
+        followup_dms = [d.strip() for d in request.POST.getlist('followup_dms[]') if d.strip()]
 
         # Validation
         errors = []
@@ -674,10 +676,12 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
             errors.append('Title must be 100 characters or less.')
         if not instagram_post_id:
             errors.append('Please select an Instagram post.')
-        if not comment_reply:
-            errors.append('Comment reply text is required.')
-        if not followup_dm:
-            errors.append('Follow-up DM text is required.')
+        if not comment_replies:
+            errors.append('At least one comment reply is required.')
+        if len(comment_replies) > 5:
+            errors.append('Maximum 5 comment replies allowed.')
+        if len(followup_dms) > 5:
+            errors.append('Maximum 5 follow-up DMs allowed.')
 
         if errors:
             for error in errors:
@@ -688,8 +692,8 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
                     'title': title,
                     'instagram_post_id': instagram_post_id,
                     'keywords': keywords,
-                    'comment_reply': comment_reply,
-                    'followup_dm': followup_dm,
+                    'comment_replies': comment_replies,
+                    'followup_dms': followup_dms,
                 },
             }
             return render(request, self.template_name, context)
@@ -700,8 +704,8 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
             title=title,
             instagram_post_id=instagram_post_id,
             keywords=keywords,
-            comment_reply=comment_reply,
-            followup_dm=followup_dm,
+            comment_replies=comment_replies,
+            followup_dms=followup_dms,
         )
 
         messages.success(request, f'Automation "{title}" created successfully!')
@@ -731,9 +735,11 @@ class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
         title = request.POST.get('title', '').strip()
         instagram_post_id = request.POST.get('instagram_post_id', '').strip()
         keywords = request.POST.get('keywords', '').strip()
-        comment_reply = request.POST.get('comment_reply', '').strip()
-        followup_dm = request.POST.get('followup_dm', '').strip()
         is_active = request.POST.get('is_active') == 'on'
+
+        # Get multiple replies/DMs as lists (filter out empty values)
+        comment_replies = [r.strip() for r in request.POST.getlist('comment_replies[]') if r.strip()]
+        followup_dms = [d.strip() for d in request.POST.getlist('followup_dms[]') if d.strip()]
 
         # Validation
         errors = []
@@ -743,10 +749,12 @@ class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
             errors.append('Title must be 100 characters or less.')
         if not instagram_post_id:
             errors.append('Please select an Instagram post.')
-        if not comment_reply:
-            errors.append('Comment reply text is required.')
-        if not followup_dm:
-            errors.append('Follow-up DM text is required.')
+        if not comment_replies:
+            errors.append('At least one comment reply is required.')
+        if len(comment_replies) > 5:
+            errors.append('Maximum 5 comment replies allowed.')
+        if len(followup_dms) > 5:
+            errors.append('Maximum 5 follow-up DMs allowed.')
 
         if errors:
             for error in errors:
@@ -761,8 +769,8 @@ class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
         automation.title = title
         automation.instagram_post_id = instagram_post_id
         automation.keywords = keywords
-        automation.comment_reply = comment_reply
-        automation.followup_dm = followup_dm
+        automation.comment_replies = comment_replies
+        automation.followup_dms = followup_dms
         automation.is_active = is_active
         automation.save()
 
@@ -811,13 +819,27 @@ class AccountAutomationView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin
         instagram_account = request.user.instagram_account
 
         account_automation_enabled = request.POST.get('account_automation_enabled') == 'on'
-        account_comment_reply = request.POST.get('account_comment_reply', '').strip()
-        account_followup_dm = request.POST.get('account_followup_dm', '').strip()
+
+        # Get multiple replies/DMs as lists (filter out empty values)
+        account_comment_replies = [r.strip() for r in request.POST.getlist('account_comment_replies[]') if r.strip()]
+        account_followup_dms = [d.strip() for d in request.POST.getlist('account_followup_dms[]') if d.strip()]
+
+        # Validate max 5 items
+        if len(account_comment_replies) > 5:
+            account_comment_replies = account_comment_replies[:5]
+        if len(account_followup_dms) > 5:
+            account_followup_dms = account_followup_dms[:5]
+
+        # Require at least one reply when enabling
+        if account_automation_enabled and not account_comment_replies:
+            messages.error(request, 'Please add at least one comment reply to enable automation.')
+            context = {'instagram_account': instagram_account}
+            return render(request, self.template_name, context)
 
         # Update account settings
         instagram_account.account_automation_enabled = account_automation_enabled
-        instagram_account.account_comment_reply = account_comment_reply
-        instagram_account.account_followup_dm = account_followup_dm
+        instagram_account.account_comment_replies = account_comment_replies
+        instagram_account.account_followup_dms = account_followup_dms
         instagram_account.save()
 
         messages.success(request, 'Account automation settings saved!')
@@ -1027,14 +1049,16 @@ class InstagramWebhookView(View):
             # Check if keywords match
             if auto.matches_comment(comment_text):
                 automation = auto
-                comment_reply = auto.comment_reply
-                followup_dm = auto.followup_dm
+                # Randomly select from available replies/DMs
+                comment_reply = auto.get_random_comment_reply()
+                followup_dm = auto.get_random_followup_dm()  # Returns None if empty list
                 break
 
         # If no post-level automation matched, check account-level
         if not automation and instagram_account.account_automation_enabled:
-            comment_reply = instagram_account.account_comment_reply
-            followup_dm = instagram_account.account_followup_dm
+            # Randomly select from account-level replies/DMs
+            comment_reply = instagram_account.get_random_comment_reply()
+            followup_dm = instagram_account.get_random_followup_dm()  # Returns None if empty list
 
         # If no automation configured, skip
         if not comment_reply:

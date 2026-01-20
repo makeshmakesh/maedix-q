@@ -1,7 +1,18 @@
+import json
 from django import template
+from django.utils.safestring import mark_safe
 from core.subscription_utils import get_user_subscription
 
 register = template.Library()
+
+
+@register.filter
+def jsonify(value):
+    """
+    Convert a Python object to JSON for use in JavaScript.
+    Usage: {{ my_list|jsonify }}
+    """
+    return mark_safe(json.dumps(value))
 
 
 @register.simple_tag

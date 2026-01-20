@@ -15,25 +15,25 @@
                 </nav>
 
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header d-flex justify-content-between align-items-center card-header-content">
                         <div>
-                            <h5 class="mb-0">
+                            <h5 class="mb-0 h6">
                                 {% if job.status == 'completed' %}
-                                <span class="badge bg-success me-2">Completed</span>
+                                <span class="badge bg-success me-1">Completed</span>
                                 {% elif job.status == 'failed' %}
-                                <span class="badge bg-danger me-2">Failed</span>
+                                <span class="badge bg-danger me-1">Failed</span>
                                 {% elif job.status == 'processing' %}
-                                <span class="badge bg-warning text-dark me-2">
+                                <span class="badge bg-warning text-dark me-1">
                                     <span class="spinner-border spinner-border-sm me-1" style="width: 12px; height: 12px;"></span>
                                     Processing
                                 </span>
                                 {% else %}
-                                <span class="badge bg-secondary me-2">Pending</span>
+                                <span class="badge bg-secondary me-1">Pending</span>
                                 {% endif %}
-                                Video Job #{{ job.id }}
+                                Job #{{ job.id }}
                             </h5>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 card-header-actions">
                             {% if job.status == 'processing' or job.status == 'pending' %}
                             <span class="badge bg-light text-muted" id="autoRefreshBadge" title="Auto-refresh countdown">
                                 <i class="bi bi-clock me-1"></i><span id="countdown">30</span>s
@@ -42,7 +42,7 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshBtn" onclick="refreshPage()">
                                 <i class="bi bi-arrow-clockwise" id="refreshIcon"></i>
                             </button>
-                            <small class="text-muted">{{ job.created_at|date:"M d, Y H:i" }}</small>
+                            <small class="text-muted">{{ job.created_at|date:"M d, H:i" }}</small>
                         </div>
                     </div>
 
@@ -62,31 +62,31 @@
                         {% endif %}
 
                         <!-- Video Info -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <h6 class="fw-bold mb-2">Quiz</h6>
-                                <p><a href="{% url 'quiz_detail' job.quiz.slug %}">{{ job.quiz.title }}</a></p>
+                        <div class="row mb-3">
+                            <div class="col-6 col-md-6">
+                                <h6 class="fw-bold mb-2 small">Quiz</h6>
+                                <p class="small"><a href="{% url 'quiz_detail' job.quiz.slug %}">{{ job.quiz.title|truncatechars:25 }}</a></p>
                             </div>
-                            <div class="col-md-6">
-                                <h6 class="fw-bold mb-2">Type</h6>
+                            <div class="col-6 col-md-6">
+                                <h6 class="fw-bold mb-2 small">Type</h6>
                                 <p>
                                     {% if job.job_type == 'single' %}
-                                    <span class="badge bg-primary">Single Video</span>
+                                    <span class="badge bg-primary">Single</span>
                                     {% else %}
-                                    <span class="badge bg-success">Bulk Item</span>
+                                    <span class="badge bg-success">Bulk</span>
                                     {% endif %}
                                 </p>
                             </div>
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <h6 class="fw-bold mb-2">Questions</h6>
-                                <p>{{ job.questions_count }} question{{ job.questions_count|pluralize }}</p>
+                            <div class="col-6 col-md-6">
+                                <h6 class="fw-bold mb-2 small">Questions</h6>
+                                <p class="small">{{ job.questions_count }} question{{ job.questions_count|pluralize }}</p>
                             </div>
-                            <div class="col-md-6">
-                                <h6 class="fw-bold mb-2">Task ID</h6>
-                                <code class="small">{{ job.task_id }}</code>
+                            <div class="col-6 col-md-6">
+                                <h6 class="fw-bold mb-2 small">Task ID</h6>
+                                <code class="small task-id-code">{{ job.task_id|truncatechars:20 }}</code>
                             </div>
                         </div>
 
@@ -186,13 +186,15 @@
                         {% endif %}
                     </div>
 
-                    <div class="card-footer text-center">
-                        <a href="{% url 'video_job_list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Back to Jobs
-                        </a>
-                        <a href="{% url 'video_export_choice' job.quiz.slug %}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle me-2"></i>Create New Video
-                        </a>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-center gap-2 footer-buttons">
+                            <a href="{% url 'video_job_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-left me-1"></i>Back
+                            </a>
+                            <a href="{% url 'video_export_choice' job.quiz.slug %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i>New Video
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -270,6 +272,30 @@ document.addEventListener('DOMContentLoaded', function() {
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 575.98px) {
+    .card-header-content {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    .card-header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .task-id-code {
+        word-break: break-all;
+        font-size: 0.7rem;
+    }
+    .footer-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .footer-buttons .btn {
+        width: 100%;
+    }
 }
 </style>
 {% endblock %}

@@ -351,5 +351,35 @@ document.addEventListener('DOMContentLoaded', function() {
 .template-neon-glow { background: linear-gradient(135deg, #0a0a14, #00ffff); }
 .template-sunset { background: linear-gradient(135deg, #1e141e, #ff6432); }
 .template-ocean-blue { background: linear-gradient(135deg, #0a192f, #00c8c8); }
+
+/* Mobile responsiveness */
+@media (max-width: 575.98px) {
+    .breadcrumb {
+        font-size: 0.75rem;
+    }
+    .card.p-4 {
+        padding: 1rem !important;
+    }
+    #questionList .list-group-item {
+        padding: 0.75rem;
+    }
+    #questionList .form-check-input {
+        margin-top: 0.25rem;
+    }
+    #successSection .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    #successSection .btn:last-child {
+        margin-bottom: 0;
+    }
+    .card-body h5 {
+        font-size: 1rem;
+    }
+    #instagramDetails, #youtubeDetails {
+        padding: 0.75rem !important;
+    }
+}
 </style>
 {% endblock %}

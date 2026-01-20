@@ -102,6 +102,7 @@ class GameSession(models.Model):
     is_won = models.BooleanField(default=False)
     attempts_used = models.IntegerField(default=0)
     xp_earned = models.IntegerField(default=0)
+    time_taken_seconds = models.IntegerField(null=True, blank=True)
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
@@ -111,6 +112,15 @@ class GameSession(models.Model):
     def __str__(self):
         user_str = self.user.email if self.user else 'Anonymous'
         return f"{user_str} - {self.word.word}"
+
+    @property
+    def time_taken_formatted(self):
+        """Return time taken as MM:SS format"""
+        if self.time_taken_seconds is None:
+            return None
+        mins = self.time_taken_seconds // 60
+        secs = self.time_taken_seconds % 60
+        return f"{mins}:{secs:02d}"
 
     def add_guess(self, guess):
         """Add a guess and return the result"""
@@ -137,11 +147,13 @@ class GameSession(models.Model):
             self.is_won = True
             self.is_completed = True
             self.completed_at = timezone.now()
+            self.time_taken_seconds = int((self.completed_at - self.started_at).total_seconds())
             self._calculate_xp()
             self._update_word_stats(won=True)
         elif self.attempts_used >= 6:
             self.is_completed = True
             self.completed_at = timezone.now()
+            self.time_taken_seconds = int((self.completed_at - self.started_at).total_seconds())
             self._update_word_stats(won=False)
 
         self.save()
@@ -267,38 +279,3 @@ class PlayerStats(models.Model):
         self.last_played_at = timezone.now()
         self.save()
 
-
-class Leaderboard(models.Model):
-    """Leaderboard entries - updated periodically"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='leaderboard_entries',
-        help_text='Null means all categories'
-    )
-    period = models.CharField(
-        max_length=20,
-        choices=[
-            ('all_time', 'All Time'),
-            ('monthly', 'Monthly'),
-            ('weekly', 'Weekly'),
-        ],
-        default='all_time'
-    )
-    rank = models.IntegerField(default=0)
-    games_won = models.IntegerField(default=0)
-    games_played = models.IntegerField(default=0)
-    total_xp = models.IntegerField(default=0)
-    win_rate = models.FloatField(default=0)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ['user', 'category', 'period']
-        ordering = ['rank']
-
-    def __str__(self):
-        cat_name = self.category.name if self.category else 'All'
-        return f"#{self.rank} {self.user.email} ({cat_name})"

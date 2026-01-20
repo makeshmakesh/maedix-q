@@ -23,6 +23,23 @@
                     {% endif %}
                 </div>
 
+                {% if active_game %}
+                <!-- Resume Game -->
+                <div class="card p-4 mb-4 text-center border-warning">
+                    <h5 class="fw-bold mb-2">Game in Progress</h5>
+                    <p class="text-muted mb-3">
+                        {{ active_game.category.name|default:"All Categories" }}
+                        <span class="badge bg-secondary">{{ active_game.attempts_used }}/6 attempts</span>
+                    </p>
+                    <a href="{% url 'codeword_play' %}?session={{ active_game.id }}" class="btn btn-warning btn-lg">
+                        <i class="bi bi-play-fill me-2"></i> Resume Game
+                    </a>
+                </div>
+
+                <!-- New Game Options -->
+                <h5 class="fw-bold mb-3">Start New Game</h5>
+                <p class="text-muted small mb-3">This will abandon your current game</p>
+                {% else %}
                 <!-- Quick Play -->
                 <div class="card p-4 mb-4 text-center">
                     <h5 class="fw-bold mb-3">Quick Play</h5>
@@ -34,10 +51,49 @@
 
                 <!-- Category Selection -->
                 <h5 class="fw-bold mb-3">Play by Category</h5>
+                {% endif %}
+
                 <div class="row g-3 mb-4">
+                    {% if active_game %}
+                    <!-- All Categories option for new game -->
+                    <div class="col-6 col-md-4">
+                        <form action="{% url 'codeword_new' %}" method="post" class="h-100">
+                            {% csrf_token %}
+                            <input type="hidden" name="category" value="all">
+                            <button type="submit" class="card p-3 text-decoration-none h-100 w-100 category-card border-0 text-start" onclick="return confirm('Abandon current game?')">
+                                <div class="d-flex align-items-center">
+                                    <div class="category-icon me-3">
+                                        <i class="bi bi-shuffle text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">All Categories</h6>
+                                        <small class="text-muted">{{ total_words }} words</small>
+                                    </div>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
                     {% for cat in categories %}
                     {% if cat.count > 0 %}
                     <div class="col-6 col-md-4">
+                        {% if active_game %}
+                        <form action="{% url 'codeword_new' %}" method="post" class="h-100">
+                            {% csrf_token %}
+                            <input type="hidden" name="category" value="{{ cat.code }}">
+                            <button type="submit" class="card p-3 text-decoration-none h-100 w-100 category-card border-0 text-start" onclick="return confirm('Abandon current game?')">
+                                <div class="d-flex align-items-center">
+                                    <div class="category-icon me-3">
+                                        <i class="bi {{ cat.icon|default:'bi-puzzle' }} {{ cat.color|default:'text-primary' }}"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">{{ cat.name }}</h6>
+                                        <small class="text-muted">{{ cat.count }} words</small>
+                                    </div>
+                                </div>
+                            </button>
+                        </form>
+                        {% else %}
                         <a href="{% url 'codeword_play' %}?category={{ cat.code }}" class="card p-3 text-decoration-none h-100 category-card">
                             <div class="d-flex align-items-center">
                                 <div class="category-icon me-3">
@@ -49,6 +105,7 @@
                                 </div>
                             </div>
                         </a>
+                        {% endif %}
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -58,9 +115,6 @@
                 <div class="d-flex justify-content-center gap-3">
                     <a href="{% url 'codeword_stats' %}" class="btn btn-outline-secondary">
                         <i class="bi bi-bar-chart me-1"></i> My Stats
-                    </a>
-                    <a href="{% url 'codeword_leaderboard' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-trophy me-1"></i> Leaderboard
                     </a>
                 </div>
             </div>

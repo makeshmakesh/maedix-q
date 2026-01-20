@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
-from .models import Category, WordBank, GameSession, PlayerStats, Leaderboard
+from .models import Category, WordBank, GameSession, PlayerStats
 
 logger = logging.getLogger(__name__)
 
@@ -55,15 +55,21 @@ class CodeWordHomeView(View):
         # Get total word count
         total_words = WordBank.objects.filter(is_active=True).count()
 
-        # Get user stats if logged in
+        # Get user stats and active game if logged in
         player_stats = None
+        active_game = None
         if request.user.is_authenticated:
             player_stats, _ = PlayerStats.objects.get_or_create(user=request.user)
+            active_game = GameSession.objects.filter(
+                user=request.user,
+                is_completed=False
+            ).first()
 
         context = {
             'categories': categories_with_counts,
             'total_words': total_words,
             'player_stats': player_stats,
+            'active_game': active_game,
         }
         return render(request, self.template_name, context)
 
@@ -75,50 +81,63 @@ class CodeWordPlayView(LoginRequiredMixin, View):
 
     def get(self, request):
         category_slug = request.GET.get('category', 'all')
+        session_id = request.GET.get('session')
 
-        # Check for active game
-        active_query = GameSession.objects.filter(
-            user=request.user,
-            is_completed=False
-        )
-        if category_slug != 'all':
-            active_query = active_query.filter(category__slug=category_slug)
-
-        active_session = active_query.first()
-
-        if active_session:
-            # Resume existing game
-            session = active_session
+        # If session_id provided, validate and use it
+        if session_id:
+            try:
+                session = GameSession.objects.get(
+                    id=session_id,
+                    user=request.user
+                )
+            except GameSession.DoesNotExist:
+                # Invalid session, redirect to home
+                return redirect('codeword_home')
         else:
-            # Start new game
-            # Get words the user has already played recently to avoid repeats
-            recent_word_ids = GameSession.objects.filter(
-                user=request.user
-            ).order_by('-started_at')[:50].values_list('word_id', flat=True)
-
-            word = WordBank.get_random_word(
-                category_slug=category_slug if category_slug != 'all' else None,
-                exclude_ids=list(recent_word_ids)
-            )
-
-            if not word:
-                categories = Category.objects.filter(is_active=True).order_by('order', 'name')
-                return render(request, 'games/codeword/no-word.html', {
-                    'category': category_slug,
-                    'categories': categories,
-                })
-
-            session = GameSession.objects.create(
+            # Check for active game to resume
+            active_session = GameSession.objects.filter(
                 user=request.user,
-                word=word,
-                category=word.category,
-            )
+                is_completed=False
+            ).first()
+
+            if active_session:
+                # Redirect with session_id in URL
+                return redirect(f'/games/codeword/play/?session={active_session.id}')
+            else:
+                # Start new game
+                # Get words the user has already played recently to avoid repeats
+                recent_word_ids = GameSession.objects.filter(
+                    user=request.user
+                ).order_by('-started_at')[:50].values_list('word_id', flat=True)
+
+                word = WordBank.get_random_word(
+                    category_slug=category_slug if category_slug != 'all' else None,
+                    exclude_ids=list(recent_word_ids)
+                )
+
+                if not word:
+                    categories = Category.objects.filter(is_active=True).order_by('order', 'name')
+                    return render(request, 'games/codeword/no-word.html', {
+                        'category': category_slug,
+                        'categories': categories,
+                    })
+
+                session = GameSession.objects.create(
+                    user=request.user,
+                    word=word,
+                    category=word.category,
+                )
+                # Redirect with session_id in URL
+                return redirect(f'/games/codeword/play/?session={session.id}')
 
         # Get player stats
         player_stats, _ = PlayerStats.objects.get_or_create(user=request.user)
 
         # Get category name for display
         category_name = session.category.name if session.category else 'General'
+
+        # Calculate elapsed seconds for timer (for resuming games)
+        elapsed_seconds = int((timezone.now() - session.started_at).total_seconds())
 
         context = {
             'session': session,
@@ -127,6 +146,7 @@ class CodeWordPlayView(LoginRequiredMixin, View):
             'max_attempts': 6,
             'category': session.category.slug if session.category else 'all',
             'category_name': category_name,
+            'elapsed_seconds': elapsed_seconds,
         }
         return render(request, self.template_name, context)
 
@@ -191,6 +211,7 @@ class CodeWordGuessView(LoginRequiredMixin, View):
             'completed': session.is_completed,
             'won': session.is_won,
             'xp_earned': session.xp_earned if session.is_completed else 0,
+            'time_taken': session.time_taken_seconds if session.is_completed else None,
         }
 
         if session.is_completed and not session.is_won:
@@ -258,112 +279,6 @@ class CodeWordStatsView(LoginRequiredMixin, View):
             'category_breakdown': category_breakdown,
         }
         return render(request, self.template_name, context)
-
-
-class CodeWordLeaderboardView(View):
-    """Code Word leaderboard"""
-    template_name = 'games/codeword/leaderboard.html'
-
-    def get(self, request):
-        category_slug = request.GET.get('category', 'all')
-        period = request.GET.get('period', 'all_time')
-
-        # Get category object if not 'all'
-        category_obj = None
-        if category_slug != 'all':
-            category_obj = Category.objects.filter(slug=category_slug).first()
-
-        # Get leaderboard entries
-        leaderboard_query = Leaderboard.objects.filter(period=period)
-        if category_slug == 'all':
-            leaderboard_query = leaderboard_query.filter(category__isnull=True)
-        else:
-            leaderboard_query = leaderboard_query.filter(category=category_obj)
-
-        leaderboard = leaderboard_query.select_related('user').order_by('rank')[:50]
-
-        # If leaderboard is empty, generate it from PlayerStats
-        if not leaderboard.exists():
-            leaderboard = self._generate_leaderboard(category_slug, category_obj, period)
-
-        # Get current user's rank if logged in
-        user_rank = None
-        if request.user.is_authenticated:
-            user_query = Leaderboard.objects.filter(user=request.user, period=period)
-            if category_slug == 'all':
-                user_query = user_query.filter(category__isnull=True)
-            else:
-                user_query = user_query.filter(category=category_obj)
-            user_entry = user_query.first()
-            if user_entry:
-                user_rank = user_entry.rank
-
-        # Build categories list for filter
-        categories = Category.objects.filter(is_active=True).order_by('order', 'name')
-        category_list = [{'slug': 'all', 'name': 'All Categories'}]
-        for cat in categories:
-            category_list.append({'slug': cat.slug, 'name': cat.name})
-
-        context = {
-            'leaderboard': leaderboard,
-            'user_rank': user_rank,
-            'current_category': category_slug,
-            'current_period': period,
-            'categories': category_list,
-            'periods': [
-                ('all_time', 'All Time'),
-                ('monthly', 'This Month'),
-                ('weekly', 'This Week'),
-            ],
-        }
-        return render(request, self.template_name, context)
-
-    def _generate_leaderboard(self, category_slug, category_obj, period):
-        """Generate leaderboard from PlayerStats"""
-        # Get all players with games
-        players = PlayerStats.objects.filter(total_games__gte=1)
-
-        # Build leaderboard entries
-        entries = []
-        for stats in players:
-            if category_slug != 'all':
-                cat_stats = stats.category_stats.get(category_slug, {})
-                games_played = cat_stats.get('played', 0)
-                games_won = cat_stats.get('won', 0)
-            else:
-                games_played = stats.total_games
-                games_won = stats.total_wins
-
-            if games_played > 0:
-                entries.append({
-                    'user': stats.user,
-                    'games_played': games_played,
-                    'games_won': games_won,
-                    'total_xp': stats.total_xp,
-                    'win_rate': round((games_won / games_played) * 100, 1),
-                })
-
-        # Sort by XP
-        entries.sort(key=lambda x: x['total_xp'], reverse=True)
-
-        # Create leaderboard entries
-        leaderboard_entries = []
-        for i, entry in enumerate(entries[:50], 1):
-            lb_entry, _ = Leaderboard.objects.update_or_create(
-                user=entry['user'],
-                category=category_obj,  # None for 'all'
-                period=period,
-                defaults={
-                    'rank': i,
-                    'games_won': entry['games_won'],
-                    'games_played': entry['games_played'],
-                    'total_xp': entry['total_xp'],
-                    'win_rate': entry['win_rate'],
-                }
-            )
-            leaderboard_entries.append(lb_entry)
-
-        return leaderboard_entries
 
 
 class CodeWordNewGameView(LoginRequiredMixin, View):

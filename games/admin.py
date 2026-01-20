@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, WordBank, GameSession, PlayerStats, Leaderboard
+from .models import Category, WordBank, GameSession, PlayerStats
 
 
 @admin.register(Category)
@@ -55,9 +55,3 @@ class PlayerStatsAdmin(admin.ModelAdmin):
     readonly_fields = ['guess_distribution', 'category_stats']
 
 
-@admin.register(Leaderboard)
-class LeaderboardAdmin(admin.ModelAdmin):
-    list_display = ['rank', 'user', 'category', 'period', 'games_won', 'games_played', 'total_xp', 'win_rate']
-    list_filter = ['category', 'period']
-    search_fields = ['user__email']
-    ordering = ['category', 'period', 'rank']

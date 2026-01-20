@@ -8,15 +8,15 @@
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <!-- Header -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
                     <div>
-                        <h2 class="fw-bold mb-1">
+                        <h2 class="fw-bold mb-1 h4 h2-md">
                             <i class="bi bi-robot text-primary me-2"></i>Comment Automation
                         </h2>
-                        <p class="text-muted mb-0">Auto-reply to Instagram comments with DM follow-ups</p>
+                        <p class="text-muted mb-0 small">Auto-reply to Instagram comments with DM follow-ups</p>
                     </div>
                     {% if instagram_connected %}
-                    <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary">
+                    <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary w-100 w-sm-auto">
                         <i class="bi bi-plus-lg me-1"></i>Create Automation
                     </a>
                     {% endif %}
@@ -86,11 +86,11 @@
                                 {% if automations %}
                                 <div class="list-group list-group-flush">
                                     {% for automation in automations %}
-                                    <div class="list-group-item px-0">
-                                        <div class="d-flex justify-content-between align-items-start">
+                                    <div class="list-group-item px-0 py-3">
+                                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2">
                                             <div class="flex-grow-1">
-                                                <div class="d-flex align-items-center mb-1">
-                                                    <h6 class="mb-0 me-2">{{ automation.title }}</h6>
+                                                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                                    <h6 class="mb-0">{{ automation.title }}</h6>
                                                     {% if automation.is_active %}
                                                     <span class="badge bg-success">Active</span>
                                                     {% else %}
@@ -107,20 +107,20 @@
                                                 </p>
                                                 {% if automation.instagram_post_id %}
                                                 <p class="text-muted small mb-0">
-                                                    <strong>Post ID:</strong> {{ automation.instagram_post_id }}
+                                                    <strong>Post ID:</strong> <span class="text-break">{{ automation.instagram_post_id }}</span>
                                                 </p>
                                                 {% endif %}
                                             </div>
-                                            <div class="btn-group btn-group-sm">
+                                            <div class="d-flex gap-2">
                                                 <a href="{% url 'instagram_automation_edit' automation.pk %}"
-                                                   class="btn btn-outline-primary" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
+                                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil me-1"></i><span class="d-none d-sm-inline">Edit</span>
                                                 </a>
                                                 <form method="post" action="{% url 'instagram_automation_delete' automation.pk %}"
                                                       class="d-inline" onsubmit="return confirm('Delete this automation?');">
                                                     {% csrf_token %}
-                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                                        <i class="bi bi-trash"></i>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        <i class="bi bi-trash me-1"></i><span class="d-none d-sm-inline">Delete</span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -210,4 +210,20 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Mobile responsiveness */
+    @media (max-width: 575.98px) {
+        .w-sm-auto {
+            width: 100% !important;
+        }
+    }
+    @media (min-width: 576px) {
+        .w-sm-auto {
+            width: auto !important;
+        }
+    }
+</style>
 {% endblock %}

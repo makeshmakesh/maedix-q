@@ -2,38 +2,60 @@
 
 {% block title %}Buy Credits{% endblock %}
 
+{% block extra_css %}
+<style>
+    @media (max-width: 575.98px) {
+        .package-card .d-flex {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        .package-card .text-end {
+            text-align: center !important;
+        }
+        .balance-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem !important;
+        }
+        .balance-badge i {
+            font-size: 1.25rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="py-5">
+<section class="py-4 py-md-5">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <!-- Header -->
-                <div class="text-center mb-5">
-                    <h1 class="fw-bold">Buy Credits</h1>
-                    <p class="text-muted">Credits are used for AI-powered features like voice roleplay, content generation & more</p>
-                    <div class="d-inline-flex align-items-center bg-primary-soft rounded-pill px-4 py-2">
+                <div class="text-center mb-4 mb-md-5">
+                    <h1 class="fw-bold h2">Buy Credits</h1>
+                    <p class="text-muted small px-2">Credits are used for AI-powered features like voice roleplay, content generation & more</p>
+                    <div class="d-inline-flex align-items-center bg-primary-soft rounded-pill px-3 px-md-4 py-2 balance-badge">
                         <i class="bi bi-coin text-warning me-2" style="font-size: 1.5rem;"></i>
-                        <span class="fw-semibold">Current Balance: {{ credits }} credits</span>
+                        <span class="fw-semibold">Balance: {{ credits }} credits</span>
                     </div>
                 </div>
 
-                <div class="row g-4">
+                <div class="row g-3 g-md-4">
                     <!-- Credit Packages -->
                     <div class="col-md-7">
-                        <h5 class="fw-bold mb-3">Choose a Package</h5>
+                        <h5 class="fw-bold mb-3 h6">Choose a Package</h5>
 
                         {% for package in packages %}
-                        <div class="card p-4 mb-3 package-card" data-package-id="{{ package.id }}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
+                        <div class="card p-3 p-md-4 mb-3 package-card" data-package-id="{{ package.id }}">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+                                <div class="text-center text-sm-start">
                                     <h5 class="mb-1">{{ package.name }}</h5>
-                                    <p class="text-muted mb-2">{{ package.description }}</p>
+                                    <p class="text-muted mb-2 small">{{ package.description }}</p>
                                     <span class="badge bg-primary-soft text-primary">
                                         <i class="bi bi-coin me-1"></i>{{ package.credits }} credits
                                     </span>
                                 </div>
-                                <div class="text-end">
-                                    <div class="fs-3 fw-bold text-primary">&#8377;{{ package.price_inr }}</div>
+                                <div class="text-center text-sm-end">
+                                    <div class="fs-4 fs-md-3 fw-bold text-primary">&#8377;{{ package.price_inr }}</div>
                                     <button class="btn btn-primary mt-2 buy-btn"
                                             data-package-id="{{ package.id }}"
                                             data-package-name="{{ package.name }}"
@@ -63,7 +85,7 @@
 
                     <!-- Recent Transactions -->
                     <div class="col-md-5">
-                        <h5 class="fw-bold mb-3">Recent Purchases</h5>
+                        <h5 class="fw-bold mb-3 h6">Recent Purchases</h5>
 
                         {% if transactions %}
                         <div class="card">

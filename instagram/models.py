@@ -27,13 +27,15 @@ class InstagramAccount(models.Model):
         default=False,
         help_text="Enable automation for comments on posts without specific automation rules"
     )
-    account_comment_reply = models.TextField(
+    account_comment_replies = models.JSONField(
+        default=list,
         blank=True,
-        help_text="Default reply to comments (used when no post-level automation matches)"
+        help_text="List of reply messages (1-5). One will be randomly selected."
     )
-    account_followup_dm = models.TextField(
+    account_followup_dms = models.JSONField(
+        default=list,
         blank=True,
-        help_text="Default follow-up DM to send after comment reply"
+        help_text="List of follow-up DM messages (1-5). One will be randomly selected."
     )
 
     # Metadata
@@ -52,6 +54,18 @@ class InstagramAccount(models.Model):
         if self.token_expires_at and self.token_expires_at < timezone.now():
             return False
         return True
+
+    def get_random_comment_reply(self):
+        """Get a random comment reply from the list"""
+        import random
+        replies = self.account_comment_replies or []
+        return random.choice(replies) if replies else None
+
+    def get_random_followup_dm(self):
+        """Get a random follow-up DM from the list"""
+        import random
+        dms = self.account_followup_dms or []
+        return random.choice(dms) if dms else None
 
     class Meta:
         verbose_name = "Instagram Account"
@@ -79,11 +93,14 @@ class InstagramAutomation(models.Model):
     keywords = models.TextField(
         help_text="Comma-separated keywords to trigger this automation (e.g., 'link, send, dm')"
     )
-    comment_reply = models.TextField(
-        help_text="Reply text to post as a comment response"
+    comment_replies = models.JSONField(
+        default=list,
+        help_text="List of reply messages (1-5). One will be randomly selected."
     )
-    followup_dm = models.TextField(
-        help_text="Follow-up DM text to send to the commenter"
+    followup_dms = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of follow-up DM messages (0-5). One will be randomly selected. Empty = no DM."
     )
 
     # Status
@@ -108,6 +125,18 @@ class InstagramAutomation(models.Model):
             return True
         comment_lower = comment_text.lower()
         return any(keyword in comment_lower for keyword in keywords)
+
+    def get_random_comment_reply(self):
+        """Get a random comment reply from the list"""
+        import random
+        replies = self.comment_replies or []
+        return random.choice(replies) if replies else None
+
+    def get_random_followup_dm(self):
+        """Get a random follow-up DM from the list (None if empty = no DM)"""
+        import random
+        dms = self.followup_dms or []
+        return random.choice(dms) if dms else None
 
     class Meta:
         verbose_name = "Instagram Automation"

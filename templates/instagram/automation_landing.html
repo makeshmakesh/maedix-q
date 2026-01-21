@@ -5,477 +5,727 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="landing-hero">
+<section class="hero">
+    <div class="hero-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
     <div class="container">
-        <div class="row align-items-center min-vh-75">
-            <div class="col-lg-6 order-2 order-lg-1">
-                <div class="hero-content">
-                    <div class="hero-badges">
-                        <span class="badge-meta">
-                            <i class="bi bi-patch-check-fill"></i> Meta Verified
-                        </span>
-                        <span class="badge-auto">
-                            <i class="bi bi-robot"></i> Auto Reply
-                        </span>
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="hero-pill">
+                    <span class="pill-icon"><i class="bi bi-patch-check-fill"></i></span>
+                    <span>Meta Verified Provider</span>
+                </div>
+
+                <h1 class="hero-headline">
+                    Auto-Reply to <br>
+                    <span class="gradient-text">Instagram Comments</span>
+                </h1>
+
+                <p class="hero-desc">
+                    Turn every comment into a lead. Set trigger keywords, auto-reply publicly, and send DMs with links — all on autopilot, 24/7.
+                </p>
+
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="stat-icon"><i class="bi bi-infinity"></i></span>
+                        <span class="stat-label">Unlimited Replies</span>
                     </div>
-
-                    <h1 class="hero-title">
-                        Turn Comments into <span class="text-gradient">Leads</span>
-                    </h1>
-
-                    <p class="hero-subtitle">
-                        Auto-reply to comments and send DMs when followers use your trigger keywords. Works 24/7.
-                    </p>
-
-                    <div class="hero-cta">
-                        {% if has_feature_access %}
-                        <a href="{% url 'instagram_automation_list' %}" class="btn-primary-landing">
-                            <i class="bi bi-grid-1x2"></i> Dashboard
-                        </a>
-                        {% elif user.is_authenticated %}
-                        <a href="{% url 'instagram_automation_list' %}" class="btn-primary-landing">
-                            <i class="bi bi-lightning-charge-fill"></i> Get Started
-                        </a>
-                        {% else %}
-                        <a href="{% url 'signup' %}" class="btn-primary-landing">
-                            <i class="bi bi-lightning-charge-fill"></i> Start Free
-                        </a>
-                        {% endif %}
-                        <a href="#how-it-works" class="btn-secondary-landing">
-                            How it works
-                        </a>
+                    <div class="hero-stat">
+                        <span class="stat-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                        <span class="stat-label">&lt;1s Response</span>
                     </div>
-
-                    <div class="hero-trust">
-                        <span><i class="bi bi-check2"></i> No credit card</span>
-                        <span><i class="bi bi-check2"></i> Official API</span>
-                        <span><i class="bi bi-check2"></i> Safe & Secure</span>
+                    <div class="hero-stat">
+                        <span class="stat-icon"><i class="bi bi-shield-check"></i></span>
+                        <span class="stat-label">Official API</span>
                     </div>
                 </div>
+
+                <div class="hero-actions">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'instagram_automation_list' %}" class="btn-hero-primary">
+                        Get Started <i class="bi bi-arrow-right"></i>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'signup' %}" class="btn-hero-primary">
+                        Start Free <i class="bi bi-arrow-right"></i>
+                    </a>
+                    {% endif %}
+                    <a href="#demo" class="btn-hero-secondary">
+                        <i class="bi bi-play-circle"></i> Watch Demo
+                    </a>
+                </div>
+
+                <p class="hero-note">
+                    <i class="bi bi-check-lg"></i> No credit card required
+                    <i class="bi bi-check-lg"></i> 3 free automations
+                </p>
             </div>
 
-            <div class="col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">
-                <div class="phone-mockup">
-                    <div class="phone-frame">
-                        <div class="phone-notch"></div>
-                        <div class="phone-content">
-                            <!-- IG Header -->
-                            <div class="ig-header">
-                                <div class="ig-avatar"></div>
-                                <div class="ig-user">
-                                    <span class="ig-username">@yourbrand</span>
-                                    <span class="ig-label">Sponsored</span>
+            <div class="hero-visual">
+                <div class="demo-card">
+                    <div class="demo-header">
+                        <div class="demo-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="demo-title">Live Preview</span>
+                    </div>
+
+                    <div class="demo-content">
+                        <!-- Instagram Post Mock -->
+                        <div class="ig-mock">
+                            <div class="ig-post-header">
+                                <div class="ig-avatar-ring">
+                                    <div class="ig-avatar"></div>
                                 </div>
+                                <div class="ig-meta">
+                                    <span class="ig-handle">@yourbrand</span>
+                                    <span class="ig-time">Just now</span>
+                                </div>
+                                <i class="bi bi-three-dots"></i>
                             </div>
 
-                            <!-- IG Post -->
-                            <div class="ig-post">
-                                <i class="bi bi-play-circle"></i>
-                                <span>Your Reel</span>
+                            <div class="ig-media">
+                                <i class="bi bi-play-btn-fill"></i>
+                                <span>Your Viral Reel</span>
                             </div>
 
-                            <!-- Comments -->
-                            <div class="ig-comments">
-                                <div class="comment user-comment">
-                                    <div class="comment-avatar"></div>
-                                    <div class="comment-body">
-                                        <strong>@sarah</strong> Send me the link!
-                                    </div>
-                                    <span class="trigger-badge">TRIGGER</span>
-                                </div>
+                            <div class="ig-actions">
+                                <i class="bi bi-heart"></i>
+                                <i class="bi bi-chat"></i>
+                                <i class="bi bi-send"></i>
+                                <i class="bi bi-bookmark ms-auto"></i>
+                            </div>
 
-                                <div class="comment auto-reply">
-                                    <div class="comment-avatar brand"></div>
-                                    <div class="comment-body">
-                                        <strong>@yourbrand</strong> Check your DMs! <i class="bi bi-robot"></i>
-                                    </div>
-                                    <span class="auto-badge">AUTO</span>
-                                </div>
+                            <div class="ig-likes">2,847 likes</div>
+                        </div>
 
-                                <div class="dm-sent">
-                                    <i class="bi bi-envelope-check-fill"></i>
-                                    DM sent with link!
+                        <!-- Comment Flow Animation -->
+                        <div class="comment-flow">
+                            <div class="flow-comment incoming">
+                                <div class="comment-avatar"></div>
+                                <div class="comment-bubble">
+                                    <strong>@sarah_creates</strong>
+                                    <p>Send me the link! 🔥</p>
                                 </div>
+                                <span class="comment-tag trigger">KEYWORD</span>
+                            </div>
+
+                            <div class="flow-arrow">
+                                <i class="bi bi-arrow-down"></i>
+                            </div>
+
+                            <div class="flow-comment outgoing">
+                                <div class="comment-avatar brand"></div>
+                                <div class="comment-bubble">
+                                    <strong>@yourbrand</strong>
+                                    <p>Check your DMs! 📩</p>
+                                </div>
+                                <span class="comment-tag auto"><i class="bi bi-robot"></i> AUTO</span>
+                            </div>
+
+                            <div class="flow-dm">
+                                <i class="bi bi-envelope-check-fill"></i>
+                                <span>DM sent with link!</span>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Floating Elements -->
+                <div class="floating-badge badge-1">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>+284% engagement</span>
+                </div>
+                <div class="floating-badge badge-2">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>47 leads today</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Stats Bar -->
-<section class="stats-bar">
+<!-- Brands/Trust Bar -->
+<section class="trust-bar">
     <div class="container">
-        <div class="stats-grid">
-            <div class="stat-item">
-                <i class="bi bi-patch-check-fill"></i>
-                <div class="stat-text">
-                    <strong>Meta Verified</strong>
-                    <span>Official Partner</span>
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">24/7</div>
-                <span>Always On</span>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">&lt;1s</div>
-                <span>Response</span>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">100%</div>
-                <span>Secure</span>
+        <div class="trust-content">
+            <span class="trust-label">Trusted by creators using</span>
+            <div class="trust-logos">
+                <span><i class="bi bi-instagram"></i> Instagram</span>
+                <span><i class="bi bi-meta"></i> Meta Business</span>
+                <span><i class="bi bi-facebook"></i> Facebook</span>
             </div>
         </div>
     </div>
 </section>
 
 <!-- How It Works -->
-<section class="section-light" id="how-it-works">
+<section class="section how-it-works" id="demo">
     <div class="container">
-        <div class="section-header">
-            <span class="section-badge">Simple Setup</span>
-            <h2>How It Works</h2>
-            <p>Get started in 3 easy steps</p>
+        <div class="section-intro">
+            <span class="section-label">How It Works</span>
+            <h2>Set Up in 60 Seconds</h2>
+            <p>No coding required. Just connect and configure.</p>
         </div>
 
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <h3>Connect Account</h3>
-                <p>Link your Instagram Business account securely via Meta OAuth</p>
+        <div class="steps-timeline">
+            <div class="step-item">
+                <div class="step-visual">
+                    <div class="step-icon">
+                        <i class="bi bi-link-45deg"></i>
+                    </div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="step-num">01</span>
+                    <h3>Connect Instagram</h3>
+                    <p>Link your Business or Creator account via Meta's secure OAuth. No passwords shared.</p>
+                </div>
             </div>
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <h3>Set Keywords</h3>
-                <p>Choose trigger words and write your auto-reply messages</p>
+
+            <div class="step-item">
+                <div class="step-visual">
+                    <div class="step-icon">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="step-num">02</span>
+                    <h3>Configure Triggers</h3>
+                    <p>Set keywords like "LINK" or "INFO". Write your auto-reply and DM message.</p>
+                </div>
             </div>
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <h3>Automate</h3>
-                <p>Comments get instant replies and DMs automatically 24/7</p>
+
+            <div class="step-item">
+                <div class="step-visual">
+                    <div class="step-icon">
+                        <i class="bi bi-rocket-takeoff"></i>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <span class="step-num">03</span>
+                    <h3>Go Live</h3>
+                    <p>Automation runs 24/7. Every matching comment gets an instant reply + DM.</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Features -->
-<section class="section-white">
+<!-- Features Bento Grid -->
+<section class="section features-section">
     <div class="container">
-        <div class="section-header">
-            <span class="section-badge blue">Features</span>
+        <div class="section-intro">
+            <span class="section-label">Features</span>
             <h2>Everything You Need</h2>
-            <p>Built on Meta's official Instagram API</p>
+            <p>Powerful automation built on Meta's official API</p>
         </div>
 
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon red">
-                    <i class="bi bi-chat-dots-fill"></i>
+        <div class="bento-grid">
+            <div class="bento-card bento-large">
+                <div class="bento-icon"><i class="bi bi-infinity"></i></div>
+                <h3>Unlimited Replies</h3>
+                <p>No cap on responses. Every comment with your trigger gets a reply — free plan included.</p>
+                <div class="bento-visual">
+                    <div class="reply-counter">
+                        <span class="counter-num">∞</span>
+                        <span class="counter-label">replies/post</span>
+                    </div>
                 </div>
-                <h4>Auto Comment Reply</h4>
-                <p>Instantly reply to comments with your trigger keywords</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon blue">
-                    <i class="bi bi-envelope-paper-fill"></i>
-                </div>
-                <h4>Auto DM</h4>
-                <p>Send DMs with links, codes, or info automatically</p>
+
+            <div class="bento-card">
+                <div class="bento-icon pink"><i class="bi bi-chat-heart"></i></div>
+                <h3>Auto Comment Reply</h3>
+                <p>Instant public replies to engage your audience</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon green">
-                    <i class="bi bi-shuffle"></i>
-                </div>
-                <h4>Reply Variations</h4>
-                <p>Add up to 5 variations for natural responses</p>
+
+            <div class="bento-card">
+                <div class="bento-icon blue"><i class="bi bi-send-check"></i></div>
+                <h3>Auto DM</h3>
+                <p>Send links, codes, or info via direct message</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon orange">
-                    <i class="bi bi-bullseye"></i>
-                </div>
-                <h4>Per-Post Rules</h4>
-                <p>Different automation for different posts</p>
+
+            <div class="bento-card">
+                <div class="bento-icon green"><i class="bi bi-shuffle"></i></div>
+                <h3>Message Variations</h3>
+                <p>Up to 5 reply variations for natural responses</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon purple">
-                    <i class="bi bi-globe"></i>
-                </div>
-                <h4>Account Fallback</h4>
-                <p>Default rules for all posts when no match</p>
+
+            <div class="bento-card">
+                <div class="bento-icon orange"><i class="bi bi-bullseye"></i></div>
+                <h3>Multi-Keyword</h3>
+                <p>Multiple trigger words per automation</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon gray">
-                    <i class="bi bi-shield-check"></i>
+
+            <div class="bento-card bento-wide">
+                <div class="bento-icon purple"><i class="bi bi-shield-lock"></i></div>
+                <h3>100% Safe & Compliant</h3>
+                <p>Official Meta API integration. No third-party hacks. Your account stays secure.</p>
+                <div class="security-badges">
+                    <span><i class="bi bi-patch-check-fill"></i> Meta Verified</span>
+                    <span><i class="bi bi-lock-fill"></i> OAuth 2.0</span>
+                    <span><i class="bi bi-shield-fill-check"></i> No Password</span>
                 </div>
-                <h4>Safe & Compliant</h4>
-                <p>Official API keeps your account safe</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Highlight -->
+<section class="section pricing-highlight">
+    <div class="container">
+        <div class="pricing-card">
+            <div class="pricing-left">
+                <span class="pricing-label"><i class="bi bi-gift"></i> Free Forever</span>
+                <h2>Start with 3 Active Posts</h2>
+                <p>Each post gets <strong>unlimited replies</strong>. No limits on how many comments we respond to.</p>
+
+                <ul class="pricing-features">
+                    <li><i class="bi bi-check-circle-fill"></i> 3 posts with automation</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Unlimited auto-replies</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Unlimited DMs</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Keyword triggers</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Message variations</li>
+                </ul>
+            </div>
+
+            <div class="pricing-right">
+                <div class="price-box">
+                    <span class="price-amount">₹0</span>
+                    <span class="price-period">forever free</span>
+                </div>
+
+                {% if user.is_authenticated %}
+                <a href="{% url 'instagram_automation_list' %}" class="btn-pricing">
+                    Get Started <i class="bi bi-arrow-right"></i>
+                </a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="btn-pricing">
+                    Sign Up Free <i class="bi bi-arrow-right"></i>
+                </a>
+                {% endif %}
+
+                <p class="pricing-note">No credit card required</p>
+
+                <a href="{% url 'pricing' %}" class="pricing-link">
+                    Compare all plans <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Use Cases -->
-<section class="section-light">
+<section class="section use-cases">
     <div class="container">
-        <div class="section-header">
-            <span class="section-badge green">Use Cases</span>
-            <h2>Perfect For</h2>
-            <p>Creators and businesses who scale</p>
+        <div class="section-intro">
+            <span class="section-label">Use Cases</span>
+            <h2>Built for Creators & Brands</h2>
         </div>
 
-        <div class="usecase-grid">
-            <div class="usecase-card">
-                <div class="usecase-icon"><i class="bi bi-camera-reels-fill"></i></div>
-                <h4>Creators</h4>
-                <p>"Comment LINK" to send free guides</p>
+        <div class="cases-grid">
+            <div class="case-card">
+                <div class="case-emoji">🎬</div>
+                <h4>Content Creators</h4>
+                <p class="case-example">"Comment <strong>LINK</strong> for the free guide"</p>
+                <span class="case-result">→ Auto-send resources to followers</span>
             </div>
-            <div class="usecase-card">
-                <div class="usecase-icon"><i class="bi bi-shop"></i></div>
+
+            <div class="case-card">
+                <div class="case-emoji">🛍️</div>
                 <h4>E-commerce</h4>
-                <p>"Comment PRICE" to share product details</p>
+                <p class="case-example">"Comment <strong>PRICE</strong> for details"</p>
+                <span class="case-result">→ Share product links instantly</span>
             </div>
-            <div class="usecase-card">
-                <div class="usecase-icon"><i class="bi bi-mortarboard-fill"></i></div>
+
+            <div class="case-card">
+                <div class="case-emoji">🎓</div>
                 <h4>Coaches</h4>
-                <p>"Comment COURSE" to capture leads</p>
+                <p class="case-example">"Comment <strong>JOIN</strong> to enroll"</p>
+                <span class="case-result">→ Capture leads automatically</span>
             </div>
-            <div class="usecase-card">
-                <div class="usecase-icon"><i class="bi bi-briefcase-fill"></i></div>
-                <h4>Services</h4>
-                <p>"Comment BOOK" for appointments</p>
+
+            <div class="case-card">
+                <div class="case-emoji">💼</div>
+                <h4>Service Providers</h4>
+                <p class="case-example">"Comment <strong>BOOK</strong> for slots"</p>
+                <span class="case-result">→ Share booking links 24/7</span>
             </div>
         </div>
     </div>
 </section>
 
-<!-- CTA -->
-<section class="cta-section">
+<!-- FAQ -->
+<section class="section faq-section">
     <div class="container">
-        <div class="cta-card">
-            <span class="cta-badge">
-                <i class="bi bi-patch-check-fill"></i> Meta Verified Provider
-            </span>
-            <h2>Start Automating Today</h2>
-            <p>Turn every comment into a potential lead</p>
-            <div class="cta-buttons">
-                {% if has_feature_access %}
-                <a href="{% url 'instagram_automation_list' %}" class="btn-cta-primary">
-                    <i class="bi bi-grid-1x2-fill"></i> Go to Dashboard
-                </a>
-                {% elif user.is_authenticated %}
-                <a href="{% url 'instagram_automation_list' %}" class="btn-cta-primary">
-                    <i class="bi bi-rocket-takeoff-fill"></i> Get Started
-                </a>
-                {% else %}
-                <a href="{% url 'signup' %}" class="btn-cta-primary">
-                    <i class="bi bi-rocket-takeoff-fill"></i> Start Free
-                </a>
-                {% endif %}
+        <div class="section-intro">
+            <span class="section-label">FAQ</span>
+            <h2>Quick Answers</h2>
+        </div>
+
+        <div class="faq-grid">
+            <div class="faq-card">
+                <h4><i class="bi bi-question-circle"></i> What's "3 active automations"?</h4>
+                <p>You can enable automation on <strong>3 posts at once</strong>. Each gets <strong>unlimited replies</strong> — no cap on how many comments we respond to!</p>
             </div>
-            <span class="cta-note">No credit card required</span>
+
+            <div class="faq-card">
+                <h4><i class="bi bi-question-circle"></i> Are replies limited?</h4>
+                <p><strong>No limits.</strong> Every matching comment gets an auto-reply and DM. Even on the free plan.</p>
+            </div>
+
+            <div class="faq-card">
+                <h4><i class="bi bi-question-circle"></i> Is it safe?</h4>
+                <p>100% safe. We use Meta's official API — no password sharing, no risky third-party access.</p>
+            </div>
+
+            <div class="faq-card">
+                <h4><i class="bi bi-question-circle"></i> What accounts work?</h4>
+                <p>Instagram Business or Creator accounts connected to a Facebook Page.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="section final-cta">
+    <div class="container">
+        <div class="cta-box">
+            <div class="cta-content">
+                <span class="cta-badge"><i class="bi bi-patch-check-fill"></i> Meta Verified Provider</span>
+                <h2>Ready to Automate?</h2>
+                <p>Turn comments into leads while you sleep.</p>
+
+                <div class="cta-actions">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'instagram_automation_list' %}" class="btn-cta">
+                        Go to Dashboard <i class="bi bi-arrow-right"></i>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'signup' %}" class="btn-cta">
+                        Start Free Today <i class="bi bi-arrow-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <p class="cta-subtext">No credit card • 3 free automations • Unlimited replies</p>
+            </div>
         </div>
     </div>
 </section>
 
 <style>
-/* Landing page specific variables */
+/* ========== Variables ========== */
 :root {
-    --dark: #1a1a2e;
-    --dark-light: #16213e;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    --gradient-warm: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-instagram: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    --glow-primary: 0 0 60px rgba(102, 126, 234, 0.4);
+    --glow-pink: 0 0 60px rgba(240, 147, 251, 0.3);
 }
 
-/* Hero Section */
-.landing-hero {
-    background: linear-gradient(180deg, #fef7f7 0%, #fff 100%);
-    padding: 2rem 0 3rem;
+/* ========== Hero ========== */
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 0 4rem;
     overflow: hidden;
+    background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
 }
 
-.min-vh-75 {
-    min-height: 75vh;
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+    animation: float 20s ease-in-out infinite;
+}
+
+.orb-1 {
+    width: 600px;
+    height: 600px;
+    background: var(--gradient-primary);
+    top: -200px;
+    right: -100px;
+}
+
+.orb-2 {
+    width: 400px;
+    height: 400px;
+    background: var(--gradient-warm);
+    bottom: -100px;
+    left: -100px;
+    animation-delay: -5s;
+}
+
+.orb-3 {
+    width: 300px;
+    height: 300px;
+    background: #667eea;
+    top: 50%;
+    left: 30%;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.05); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
 .hero-content {
-    padding: 1rem 0;
+    color: white;
 }
 
-.hero-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
-}
-
-.badge-meta, .badge-auto {
+.hero-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.75rem;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
     border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
 }
 
-.badge-meta {
-    background: #0d6efd;
-    color: white;
+.pill-icon {
+    color: #60a5fa;
 }
 
-.badge-auto {
-    background: var(--primary);
-    color: white;
-}
-
-.hero-title {
-    font-size: clamp(2rem, 6vw, 3.25rem);
+.hero-headline {
+    font-size: clamp(2.5rem, 5vw, 4rem);
     font-weight: 800;
-    line-height: 1.15;
-    margin-bottom: 1rem;
-    color: var(--text-dark);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
 }
 
-.text-gradient {
-    background: var(--gradient);
+.gradient-text {
+    background: var(--gradient-instagram);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-.hero-subtitle {
-    font-size: 1.05rem;
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
+.hero-desc {
+    font-size: 1.15rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    max-width: 480px;
 }
 
-.hero-cta {
+.hero-stats {
     display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
 }
 
-.btn-primary-landing, .btn-secondary-landing {
+.hero-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+}
+
+.stat-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f093fb;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-hero-primary {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
-    border-radius: 50px;
+    background: var(--gradient-instagram);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 0.95rem;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(225, 48, 108, 0.4);
 }
 
-.btn-primary-landing {
-    background: var(--gradient);
-    color: white;
-    box-shadow: 0 4px 16px rgba(225, 48, 108, 0.35);
-}
-
-.btn-primary-landing:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(225, 48, 108, 0.45);
+.btn-hero-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(225, 48, 108, 0.5);
     color: white;
 }
 
-.btn-secondary-landing {
-    background: white;
-    color: var(--text-dark);
-    border: 1.5px solid var(--border-color);
+.btn-hero-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
 }
 
-.btn-secondary-landing:hover {
-    border-color: var(--text-muted);
-    color: var(--text-dark);
+.btn-hero-secondary:hover {
+    background: rgba(255,255,255,0.2);
+    color: white;
 }
 
-.hero-trust {
+.hero-note {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    gap: 1.5rem;
 }
 
-.hero-trust span {
+.hero-note i {
+    color: #22c55e;
+    margin-right: 0.25rem;
+}
+
+/* Hero Visual / Demo Card */
+.hero-visual {
+    position: relative;
+}
+
+.demo-card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--glow-primary);
+}
+
+.demo-header {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.hero-trust i {
-    color: #22c55e;
-}
-
-/* Phone Mockup */
-.phone-mockup {
+.demo-dots {
     display: flex;
-    justify-content: center;
-    padding: 1rem;
+    gap: 6px;
 }
 
-.phone-frame {
-    width: 100%;
-    max-width: 280px;
-    background: var(--dark);
-    border-radius: 32px;
-    padding: 0.5rem;
-    box-shadow: var(--shadow-lg);
+.demo-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
 }
 
-.phone-notch {
-    width: 80px;
-    height: 24px;
+.demo-dots span:first-child { background: #ff5f57; }
+.demo-dots span:nth-child(2) { background: #ffbd2e; }
+.demo-dots span:last-child { background: #28c840; }
+
+.demo-title {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+}
+
+.demo-content {
+    padding: 1.5rem;
+}
+
+/* Instagram Mock */
+.ig-mock {
     background: #000;
-    border-radius: 0 0 16px 16px;
-    margin: 0 auto 0.75rem;
-}
-
-.phone-content {
-    background: var(--dark-light);
-    border-radius: 24px;
+    border-radius: 16px;
     padding: 1rem;
-    min-height: 360px;
+    margin-bottom: 1rem;
 }
 
-.ig-header {
+.ig-post-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1rem;
 }
 
-.ig-avatar {
+.ig-avatar-ring {
     width: 36px;
     height: 36px;
+    background: var(--gradient-instagram);
     border-radius: 50%;
-    background: var(--gradient);
+    padding: 2px;
 }
 
-.ig-user {
+.ig-avatar {
+    width: 100%;
+    height: 100%;
+    background: #1a1a1a;
+    border-radius: 50%;
+}
+
+.ig-meta {
+    flex: 1;
     display: flex;
     flex-direction: column;
 }
 
-.ig-username {
+.ig-handle {
     color: white;
     font-weight: 600;
     font-size: 0.85rem;
 }
 
-.ig-label {
+.ig-time {
     color: rgba(255,255,255,0.5);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
 }
 
-.ig-post {
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-sm);
-    height: 100px;
+.ig-post-header > i {
+    color: rgba(255,255,255,0.5);
+}
+
+.ig-media {
+    background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+    border-radius: 8px;
+    height: 120px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -485,480 +735,834 @@
     margin-bottom: 1rem;
 }
 
-.ig-post i {
+.ig-media i {
     font-size: 2rem;
 }
 
-.ig-post span {
-    font-size: 0.75rem;
+.ig-media span {
+    font-size: 0.8rem;
 }
 
-.ig-comments {
+.ig-actions {
+    display: flex;
+    gap: 1rem;
+    color: white;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.ig-likes {
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Comment Flow */
+.comment-flow {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.comment {
+.flow-comment {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
     position: relative;
+    animation: slideIn 0.5s ease-out;
+}
+
+.flow-comment.outgoing {
+    animation-delay: 0.5s;
+    animation-fill-mode: both;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 .comment-avatar {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: rgba(255,255,255,0.2);
     flex-shrink: 0;
 }
 
 .comment-avatar.brand {
-    background: var(--gradient);
+    background: var(--gradient-instagram);
 }
 
-.comment-body {
-    background: rgba(255,255,255,0.08);
+.comment-bubble {
+    background: rgba(255,255,255,0.1);
     padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.9);
+    border-radius: 12px;
     flex: 1;
 }
 
-.comment-body strong {
+.comment-bubble strong {
     color: white;
-    margin-right: 0.25rem;
+    font-size: 0.8rem;
 }
 
-.auto-reply .comment-body {
-    border: 1px solid #22c55e;
+.comment-bubble p {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0;
 }
 
-.trigger-badge, .auto-badge {
+.comment-tag {
     position: absolute;
     right: 0;
-    top: -6px;
-    font-size: 0.55rem;
-    padding: 0.15rem 0.4rem;
+    top: -8px;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
     border-radius: 4px;
     font-weight: 700;
 }
 
-.trigger-badge {
+.comment-tag.trigger {
     background: #fbbf24;
-    color: #1a1a2e;
+    color: #1a1a1a;
 }
 
-.auto-badge {
+.comment-tag.auto {
     background: #22c55e;
     color: white;
 }
 
-.dm-sent {
+.flow-arrow {
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+}
+
+.flow-dm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 0.75rem;
+    border-radius: 12px;
+    color: #22c55e;
+    font-weight: 600;
+    font-size: 0.85rem;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+}
+
+/* Floating Badges */
+.floating-badge {
+    position: absolute;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(34, 197, 94, 0.15);
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    color: #22c55e;
+    background: rgba(255,255,255,0.95);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
     font-weight: 600;
+    color: #1a1a2e;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: floatBadge 3s ease-in-out infinite;
 }
 
-/* Stats Bar */
-.stats-bar {
-    background: var(--dark);
-    padding: 1.25rem 0;
+.badge-1 {
+    top: 10%;
+    right: -20px;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+.badge-1 i { color: #22c55e; }
+
+.badge-2 {
+    bottom: 20%;
+    left: -30px;
+    animation-delay: -1.5s;
 }
 
-@media (min-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
+.badge-2 i { color: #f093fb; }
+
+@keyframes floatBadge {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
-.stat-item {
+/* ========== Trust Bar ========== */
+.trust-bar {
+    background: #0f0f1a;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 1.5rem 0;
+}
+
+.trust-content {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
-    gap: 0.25rem;
-    color: white;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
-.stat-item > i {
-    font-size: 1.25rem;
-    color: #0d6efd;
-}
-
-.stat-text {
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-text strong {
+.trust-label {
+    color: rgba(255,255,255,0.4);
     font-size: 0.85rem;
 }
 
-.stat-text span {
-    font-size: 0.7rem;
-    opacity: 0.6;
+.trust-logos {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--primary);
+.trust-logos span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.9rem;
 }
 
-.stat-item > span {
-    font-size: 0.7rem;
-    opacity: 0.6;
+.trust-logos i {
+    font-size: 1.25rem;
 }
 
-/* Sections */
-.section-light {
-    background: var(--bg-light);
-    padding: 3rem 0;
+/* ========== Sections ========== */
+.section {
+    padding: 5rem 0;
 }
 
-.section-white {
-    background: var(--bg-white);
-    padding: 3rem 0;
-}
-
-.section-header {
+.section-intro {
     text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-label {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.section-intro h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.section-intro p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* ========== How It Works ========== */
+.how-it-works {
+    background: var(--bg-light);
+}
+
+.steps-timeline {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.step-item {
+    display: flex;
+    gap: 2rem;
     margin-bottom: 2rem;
 }
 
-.section-badge {
-    display: inline-block;
-    background: rgba(225, 48, 108, 0.1);
+.step-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.step-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--gradient-instagram);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.step-line {
+    width: 2px;
+    flex: 1;
+    background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
+    margin: 0.5rem 0;
+}
+
+.step-content {
+    padding-bottom: 1rem;
+}
+
+.step-num {
     color: var(--primary);
-    padding: 0.35rem 0.85rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.step-content h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0.5rem;
+}
+
+.step-content p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ========== Bento Grid ========== */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.bento-card {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.75rem;
+    transition: all 0.3s ease;
+}
+
+.bento-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border-color: var(--primary);
+}
+
+.bento-large {
+    grid-column: span 2;
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.bento-wide {
+    grid-column: span 2;
+}
+
+.bento-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-instagram);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.bento-icon.pink { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.bento-icon.blue { background: linear-gradient(135deg, #667eea, #764ba2); }
+.bento-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.bento-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.bento-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+.bento-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.bento-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.bento-visual {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.reply-counter {
+    text-align: center;
+}
+
+.counter-num {
+    font-size: 5rem;
+    font-weight: 800;
+    background: var(--gradient-instagram);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+}
+
+.counter-label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.security-badges {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.security-badges span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.security-badges i {
+    color: #22c55e;
+}
+
+/* ========== Pricing Highlight ========== */
+.pricing-highlight {
+    background: linear-gradient(180deg, var(--bg-light) 0%, white 100%);
+}
+
+.pricing-card {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 3rem;
+    background: white;
+    border: 2px solid var(--primary);
+    border-radius: 24px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: var(--gradient-instagram);
+    opacity: 0.05;
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+}
+
+.pricing-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
     border-radius: 50px;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.pricing-left h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.pricing-left > p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.pricing-features i {
+    color: #22c55e;
+    font-size: 1.1rem;
+}
+
+.pricing-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.price-box {
+    margin-bottom: 1.5rem;
+}
+
+.price-amount {
+    font-size: 4rem;
+    font-weight: 800;
+    background: var(--gradient-instagram);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+}
+
+.price-period {
+    display: block;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.btn-pricing {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--gradient-instagram);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.btn-pricing:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(225, 48, 108, 0.4);
+    color: white;
+}
+
+.pricing-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.pricing-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pricing-link:hover {
+    text-decoration: underline;
+}
+
+/* ========== Use Cases ========== */
+.use-cases {
+    background: var(--bg-light);
+}
+
+.cases-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.case-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.75rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.case-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.case-emoji {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.case-card h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.case-example {
+    background: var(--bg-light);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+}
+
+.case-result {
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ========== FAQ ========== */
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.faq-card {
+    background: var(--bg-light);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.faq-card h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
     font-weight: 600;
     margin-bottom: 0.75rem;
 }
 
-.section-badge.blue {
-    background: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
-}
-
-.section-badge.green {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-}
-
-.section-header h2 {
-    font-size: clamp(1.5rem, 4vw, 2rem);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: var(--text-dark);
-}
-
-.section-header p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-}
-
-/* Steps */
-.steps-grid {
-    display: grid;
-    gap: 1rem;
-}
-
-@media (min-width: 768px) {
-    .steps-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.step-card {
-    background: var(--bg-white);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    text-align: center;
-    box-shadow: var(--shadow);
-}
-
-.step-number {
-    width: 48px;
-    height: 48px;
-    background: var(--gradient);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0 auto 1rem;
-}
-
-.step-card h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: var(--text-dark);
-}
-
-.step-card p {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin: 0;
-    line-height: 1.5;
-}
-
-/* Features */
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-@media (min-width: 768px) {
-    .features-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.feature-card {
-    background: var(--bg-light);
-    padding: 1.25rem;
-    border-radius: var(--radius);
-    transition: transform 0.2s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-2px);
-}
-
-.feature-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-    font-size: 1.1rem;
-}
-
-.feature-icon.red { background: rgba(225, 48, 108, 0.1); color: var(--primary); }
-.feature-icon.blue { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
-.feature-icon.green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-.feature-icon.orange { background: rgba(251, 191, 36, 0.1); color: #f59e0b; }
-.feature-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-.feature-icon.gray { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
-
-.feature-card h4 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    margin-bottom: 0.35rem;
-    color: var(--text-dark);
-}
-
-.feature-card p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin: 0;
-    line-height: 1.45;
-}
-
-/* Use Cases */
-.usecase-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-@media (min-width: 768px) {
-    .usecase-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-.usecase-card {
-    background: var(--bg-white);
-    padding: 1.25rem;
-    border-radius: var(--radius);
-    text-align: center;
-    box-shadow: var(--shadow);
-}
-
-.usecase-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--bg-light);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 0.75rem;
-    font-size: 1.25rem;
+.faq-card h4 i {
     color: var(--primary);
 }
 
-.usecase-card h4 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    margin-bottom: 0.35rem;
-    color: var(--text-dark);
-}
-
-.usecase-card p {
-    font-size: 0.75rem;
+.faq-card p {
     color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
     margin: 0;
-    line-height: 1.4;
 }
 
-/* CTA */
-.cta-section {
-    padding: 3rem 0;
-    background: var(--bg-white);
+/* ========== Final CTA ========== */
+.final-cta {
+    padding: 4rem 0;
 }
 
-.cta-card {
-    background: var(--gradient);
-    padding: 2.5rem 1.5rem;
-    border-radius: var(--radius);
+.cta-box {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+    border-radius: 24px;
+    padding: 4rem 2rem;
     text-align: center;
-    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: var(--gradient-instagram);
+    opacity: 0.15;
+    border-radius: 50%;
+    filter: blur(100px);
+}
+
+.cta-content {
+    position: relative;
+    z-index: 1;
 }
 
 .cta-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    background: rgba(255,255,255,0.2);
-    padding: 0.4rem 0.85rem;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding: 0.5rem 1rem;
     border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
 }
 
-.cta-card h2 {
-    font-size: clamp(1.5rem, 4vw, 2rem);
+.cta-box h2 {
+    color: white;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 700;
     margin-bottom: 0.5rem;
 }
 
-.cta-card > p {
-    opacity: 0.9;
+.cta-box > .cta-content > p {
+    color: rgba(255,255,255,0.7);
+    font-size: 1.15rem;
+    margin-bottom: 2rem;
+}
+
+.cta-actions {
     margin-bottom: 1.5rem;
-    font-size: 1rem;
 }
 
-.cta-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-bottom: 1rem;
-}
-
-.btn-cta-primary {
+.btn-cta {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     background: white;
-    color: var(--primary-dark);
-    padding: 0.875rem 1.75rem;
-    border-radius: 50px;
+    color: var(--primary);
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-.btn-cta-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    color: var(--primary-dark);
+.btn-cta:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    color: var(--primary);
 }
 
-.cta-note {
-    font-size: 0.8rem;
-    opacity: 0.75;
+.cta-subtext {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9rem;
 }
 
-/* Responsive Tweaks */
-@media (max-width: 575px) {
-    .landing-hero {
-        padding: 1.5rem 0 2rem;
+/* ========== Responsive ========== */
+@media (max-width: 1024px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
     }
 
-    .min-vh-75 {
+    .hero-visual {
+        order: -1;
+    }
+
+    .floating-badge {
+        display: none;
+    }
+
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bento-large {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+
+    .cases-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pricing-card {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 4rem 0 3rem;
         min-height: auto;
     }
 
-    .phone-frame {
-        max-width: 240px;
+    .hero-stats {
+        flex-direction: column;
+        gap: 0.75rem;
     }
 
-    .phone-content {
-        min-height: 300px;
-    }
-
-    .hero-cta {
+    .hero-actions {
         flex-direction: column;
     }
 
-    .btn-primary-landing, .btn-secondary-landing {
-        justify-content: center;
+    .btn-hero-primary, .btn-hero-secondary {
         width: 100%;
+        justify-content: center;
     }
 
-    .features-grid {
+    .hero-note {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .step-item {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .step-visual {
+        flex-direction: row;
+        gap: 1rem;
+    }
+
+    .step-line {
+        width: 100%;
+        height: 2px;
+        margin: 0;
+    }
+
+    .bento-grid {
         grid-template-columns: 1fr;
     }
 
-    .feature-card {
-        display: flex;
-        gap: 1rem;
-        align-items: flex-start;
+    .bento-large, .bento-wide {
+        grid-column: span 1;
     }
 
-    .feature-icon {
-        margin-bottom: 0;
-        flex-shrink: 0;
+    .faq-grid, .cases-grid {
+        grid-template-columns: 1fr;
     }
 
-    .feature-card h4 {
-        margin-bottom: 0.25rem;
-    }
-}
-
-@media (min-width: 992px) {
-    .landing-hero {
-        padding: 3rem 0 4rem;
+    .pricing-card {
+        padding: 2rem 1.5rem;
     }
 
-    .section-light, .section-white {
-        padding: 4rem 0;
+    .price-amount {
+        font-size: 3rem;
     }
 
-    .cta-section {
-        padding: 4rem 0;
-    }
-
-    .cta-card {
-        padding: 3.5rem 2rem;
+    .cta-box {
+        padding: 3rem 1.5rem;
     }
 }
 </style>

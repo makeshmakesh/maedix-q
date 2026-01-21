@@ -155,23 +155,38 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Post Automations -->
+                    <!-- Active Automations -->
                     <tr>
                         <td class="py-3">
                             <i class="bi bi-chat-left-text text-primary me-1"></i>
-                            Post-level automations
+                            Active automations (posts)
+                            <br><small class="text-muted">Posts with automation enabled</small>
                         </td>
                         {% for plan in plans %}
                         <td class="py-3 text-center">
                             {% for f in plan.features %}
                                 {% if f.code == 'ig_post_automation' %}
                                     {% if f.limit %}
-                                    <strong>{{ f.limit }}</strong>
+                                    <strong>{{ f.limit }} posts</strong>
                                     {% else %}
                                     <span class="text-success fw-bold">Unlimited</span>
                                     {% endif %}
                                 {% endif %}
                             {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Replies per post -->
+                    <tr class="table-light">
+                        <td class="py-3">
+                            <i class="bi bi-infinity text-success me-1"></i>
+                            Replies per post
+                            <br><small class="text-muted">Auto-replies sent per automation</small>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            <span class="text-success fw-bold">Unlimited</span>
                         </td>
                         {% endfor %}
                     </tr>
@@ -284,12 +299,14 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                What is a "post-level automation"?
+                                What does "3 active automations" mean on the Free plan?
                             </button>
                         </h2>
                         <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                A post-level automation is an auto-reply configuration for a specific Instagram post. You can set unique comment replies and DMs for each post. The Free plan allows 3 active automations, Pro allows 100, and Creator has unlimited.
+                                <strong>It means you can have automation enabled on 3 different posts at a time.</strong> Each post gets <strong>unlimited replies</strong> - there's no cap on how many comments we auto-reply to. You can disable an old automation and enable it on a new post anytime.
+                                <br><br>
+                                <em>Example: If you have 3 Reels with automation, all incoming comments on those 3 posts get auto-replies and DMs - no limits on the number of replies!</em>
                             </div>
                         </div>
                     </div>
@@ -297,10 +314,23 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                What is "account-level automation"?
+                                Are replies limited per post?
                             </button>
                         </h2>
                         <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <strong>No! Replies are unlimited on all plans.</strong> Whether you're on Free, Pro, or Creator - every comment with your trigger keywords gets an auto-reply and DM. The only difference between plans is how many posts can have automation active simultaneously.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2b">
+                                What is "account-level automation"?
+                            </button>
+                        </h2>
+                        <div id="faq2b" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
                                 Account-level automation acts as a fallback. When someone comments on any of your posts that don't have specific automations, the account-level settings will automatically respond. This is available on the Creator plan.
                             </div>
@@ -315,7 +345,7 @@
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Yes, Instagram automation requires a Business or Creator account connected to a Facebook Page. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
+                                Yes, Instagram automation requires a Business or Creator account. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
                             </div>
                         </div>
                     </div>
@@ -328,7 +358,7 @@
                         </h2>
                         <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Yes! You can cancel your subscription at any time from your dashboard. Your access continues until the end of your billing period, and you won't be charged again.
+                                Yes! This is not auto-renewing. You don't need to worry about being charged again. Simply upgrade again when you're ready.
                             </div>
                         </div>
                     </div>

@@ -3,26 +3,26 @@
         <div class="row">
             <div class="col-lg-4 mb-4">
                 <h5 class="mb-3">
-                    <i class="bi bi-lightning-charge-fill text-primary"></i> Maedix-Q
+                    <i class="bi bi-lightning-charge-fill text-primary"></i> Maedix
                 </h5>
                 <p class="text-muted small">
-                    Interactive quiz platform for learners and content creators.
-                    Take quizzes to test your knowledge or create quiz videos for social media.
+                    Automate your Instagram engagement with smart comment replies and DMs.
+                    Save time and grow your audience with personalized automation.
                 </p>
                 <div class="d-flex gap-2 mt-3 flex-wrap">
-                    <span class="badge bg-light text-dark"><i class="bi bi-patch-question text-primary"></i> Quizzes</span>
-                    <span class="badge bg-light text-dark"><i class="bi bi-camera-reels text-danger"></i> Videos</span>
-                    <span class="badge bg-light text-dark"><i class="bi bi-robot text-danger"></i> IG Automation</span>
+                    <span class="badge bg-light text-dark"><i class="bi bi-instagram text-danger"></i> Instagram</span>
+                    <span class="badge bg-light text-dark"><i class="bi bi-robot text-primary"></i> Automation</span>
+                    <span class="badge bg-light text-dark"><i class="bi bi-chat-dots text-success"></i> Auto DM</span>
                 </div>
             </div>
 
             <div class="col-6 col-lg-2 mb-4">
                 <h6 class="mb-3">Platform</h6>
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="{% url 'quiz_home' %}" class="footer-link">Quizzes</a></li>
-                    <li class="mb-2"><a href="{% url 'categories' %}" class="footer-link">Categories</a></li>
-                    <li class="mb-2"><a href="{% url 'topics_home' %}" class="footer-link">Learning Topics</a></li>
+                    <li class="mb-2"><a href="{% url 'instagram_automation_landing' %}" class="footer-link">IG Automation</a></li>
                     <li class="mb-2"><a href="{% url 'pricing' %}" class="footer-link">Pricing</a></li>
+                    <li class="mb-2"><a href="{% url 'login' %}" class="footer-link">Login</a></li>
+                    <li class="mb-2"><a href="{% url 'signup' %}" class="footer-link">Sign Up</a></li>
                 </ul>
             </div>
 
@@ -31,8 +31,8 @@
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="{% url 'about' %}" class="footer-link">About Us</a></li>
                     <li class="mb-2"><a href="{% url 'contact' %}" class="footer-link">Contact</a></li>
-                    <li class="mb-2"><a href="#" class="footer-link">Blog</a></li>
-                    <li class="mb-2"><a href="#" class="footer-link">Careers</a></li>
+                    {% comment %} <li class="mb-2"><a href="#" class="footer-link">Blog</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Careers</a></li> {% endcomment %}
                 </ul>
             </div>
 
@@ -48,10 +48,10 @@
             <div class="col-6 col-lg-2 mb-4">
                 <h6 class="mb-3">Connect</h6>
                 <div class="d-flex gap-3">
-                    <a href="#" class="footer-link fs-5"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="footer-link fs-5"><i class="bi bi-youtube"></i></a>
+                    <a href="https://www.instagram.com/maedix_.official/" class="footer-link fs-5"><i class="bi bi-instagram"></i></a>
+                    {% comment %} <a href="#" class="footer-link fs-5"><i class="bi bi-youtube"></i></a>
                     <a href="#" class="footer-link fs-5"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#" class="footer-link fs-5"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="footer-link fs-5"><i class="bi bi-linkedin"></i></a> {% endcomment %}
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
 
         <div class="row align-items-center">
             <div class="col-md-6 text-center text-md-start">
-                <p class="text-muted small mb-0">&copy; {% now "Y" %} Maedix-Q. All rights reserved.</p>
+                <p class="text-muted small mb-0">&copy; {% now "Y" %} Maedix. All rights reserved.</p>
             </div>
             <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
                 <p class="text-muted small mb-0">Made with <i class="bi bi-heart-fill text-danger"></i> in India</p>

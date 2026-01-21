@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Privacy Policy{% endblock %}
-{% block meta_description %}Read Maedix-Q's Privacy Policy. Learn how we collect, use, and protect your personal information when you use our quiz platform and video generation service.{% endblock %}
+{% block meta_description %}Read Maedix's Privacy Policy. Learn how we collect, use, and protect your personal information when you use our Instagram automation service.{% endblock %}
 {% block robots %}index, follow{% endblock %}
 
 {% block content %}
@@ -13,7 +13,7 @@
                 <p class="text-muted mb-4">Last updated: {% now "F j, Y" %}</p>
 
                 <div class="card p-4 mb-4">
-                    <p>This Privacy Policy describes how Maedix-Q ("we", "us", or "our") collects, uses, and shares your personal information when you use our quiz platform and video generation service.</p>
+                    <p>This Privacy Policy describes how Maedix ("we", "us", or "our") collects, uses, and shares your personal information when you use our Instagram automation service for comment replies and direct messages.</p>
                 </div>
 
                 <div class="card p-4 mb-4">
@@ -25,23 +25,25 @@
                         <li>Email address</li>
                         <li>First and last name</li>
                         <li>Password (encrypted)</li>
-                        <li>Profile information (bio, location, social links) - optional</li>
+                        <li>Profile information (bio, location) - optional</li>
                     </ul>
 
-                    <h6 class="mt-3 fw-semibold">1.2 Usage Data</h6>
-                    <p class="text-muted">We automatically collect:</p>
+                    <h6 class="mt-3 fw-semibold">1.2 Instagram Account Data</h6>
+                    <p class="text-muted">When you connect your Instagram account, we collect:</p>
                     <ul class="text-muted">
-                        <li>Quiz attempts and performance data</li>
-                        <li>XP points and streak information</li>
-                        <li>Generated videos and export history</li>
-                        <li>Feature usage and interaction data</li>
+                        <li>Instagram Business/Creator Account ID and username</li>
+                        <li>Access tokens for API interactions</li>
+                        <li>Post IDs for automation configuration</li>
+                        <li>Comment data (to trigger automated responses)</li>
                     </ul>
 
-                    <h6 class="mt-3 fw-semibold">1.3 Third-Party Account Data</h6>
-                    <p class="text-muted">When you connect third-party accounts, we collect:</p>
+                    <h6 class="mt-3 fw-semibold">1.3 Automation Data</h6>
+                    <p class="text-muted">We store your automation configurations:</p>
                     <ul class="text-muted">
-                        <li><strong>Instagram:</strong> Instagram Business Account ID, username, and access tokens for posting content on your behalf</li>
-                        <li><strong>YouTube:</strong> YouTube Channel ID, channel name, and OAuth tokens for uploading videos on your behalf</li>
+                        <li>Comment reply messages you configure</li>
+                        <li>Follow-up DM messages you configure</li>
+                        <li>Trigger keywords and settings</li>
+                        <li>Automation activity logs</li>
                     </ul>
 
                     <h6 class="mt-3 fw-semibold">1.4 Payment Information</h6>
@@ -57,13 +59,12 @@
                     <h5 class="fw-bold">2. How We Use Your Information</h5>
                     <p class="text-muted">We use the collected information to:</p>
                     <ul class="text-muted">
-                        <li>Provide and maintain our services</li>
-                        <li>Process quiz attempts and track your learning progress</li>
-                        <li>Generate and store video exports</li>
-                        <li>Post content to Instagram and YouTube on your behalf (when authorized)</li>
+                        <li>Provide and maintain our Instagram automation service</li>
+                        <li>Automatically reply to comments on your Instagram posts</li>
+                        <li>Send automated direct messages to commenters on your behalf</li>
                         <li>Process payments and manage subscriptions</li>
                         <li>Send verification emails and important service updates</li>
-                        <li>Automate Instagram comment replies and DMs (when authorized)</li>
+                        <li>Monitor automation performance and provide analytics</li>
                         <li>Improve and personalize your experience</li>
                     </ul>
                 </div>
@@ -73,18 +74,21 @@
                     <p class="text-muted">We integrate with the following third-party services:</p>
 
                     <h6 class="mt-3 fw-semibold">3.1 Instagram (Meta)</h6>
-                    <p class="text-muted">When you connect your Instagram account, we use Meta's Instagram Graph API to post videos as Reels on your behalf. We access your Instagram Business Account according to Meta's Platform Terms. You can disconnect your account at any time from your profile settings.</p>
+                    <p class="text-muted">When you connect your Instagram account, we use Meta's Instagram Graph API to:</p>
+                    <ul class="text-muted">
+                        <li>Receive webhook notifications for new comments</li>
+                        <li>Post comment replies on your behalf</li>
+                        <li>Send direct messages to users who comment on your posts</li>
+                    </ul>
+                    <p class="text-muted">We access your Instagram Business/Creator Account according to Meta's Platform Terms. You can disconnect your account at any time from your dashboard.</p>
 
-                    <h6 class="mt-3 fw-semibold">3.2 YouTube (Google)</h6>
-                    <p class="text-muted">When you connect your YouTube account, we use YouTube Data API v3 to upload videos to your channel. We comply with Google's API Services User Data Policy and YouTube's Terms of Service. You can revoke access anytime via your Google Account settings or our platform.</p>
-
-                    <h6 class="mt-3 fw-semibold">3.3 Razorpay</h6>
+                    <h6 class="mt-3 fw-semibold">3.2 Razorpay</h6>
                     <p class="text-muted">We use Razorpay for payment processing. Your payment information is handled directly by Razorpay according to their privacy policy. We only receive confirmation of successful transactions.</p>
 
-                    <h6 class="mt-3 fw-semibold">3.4 Amazon Web Services (AWS)</h6>
-                    <p class="text-muted">We use AWS S3 to securely store your generated videos. Videos are stored with unique identifiers and are accessible only to you through your account.</p>
+                    <h6 class="mt-3 fw-semibold">3.3 Amazon Web Services (AWS)</h6>
+                    <p class="text-muted">We use AWS to host our application and securely store your data with industry-standard encryption and access controls.</p>
 
-                    <h6 class="mt-3 fw-semibold">3.5 Email Service</h6>
+                    <h6 class="mt-3 fw-semibold">3.4 Email Service</h6>
                     <p class="text-muted">We use email services to send verification codes (OTP), password reset links, and important account notifications.</p>
                 </div>
 
@@ -93,9 +97,9 @@
                     <ul class="text-muted">
                         <li>All data is transmitted over HTTPS encryption</li>
                         <li>Passwords are hashed using industry-standard algorithms</li>
-                        <li>OAuth tokens for third-party services are encrypted at rest</li>
-                        <li>Videos are stored securely on AWS S3 with access controls</li>
+                        <li>Instagram OAuth tokens are encrypted at rest</li>
                         <li>We regularly review and update our security practices</li>
+                        <li>Access to user data is restricted to authorized personnel only</li>
                     </ul>
                 </div>
 
@@ -103,6 +107,7 @@
                     <h5 class="fw-bold">5. Data Sharing</h5>
                     <p class="text-muted">We do NOT sell your personal information. We may share data:</p>
                     <ul class="text-muted">
+                        <li>With Instagram/Meta to perform automation actions on your behalf</li>
                         <li>With service providers who assist in our operations (as listed above)</li>
                         <li>To comply with legal obligations or court orders</li>
                         <li>To protect our rights and prevent fraud</li>
@@ -113,11 +118,11 @@
                     <h5 class="fw-bold">6. Your Rights and Choices</h5>
                     <p class="text-muted">You have the right to:</p>
                     <ul class="text-muted">
-                        <li><strong>Access:</strong> View your personal data through your profile</li>
+                        <li><strong>Access:</strong> View your personal data through your dashboard</li>
                         <li><strong>Correct:</strong> Update your profile information anytime</li>
                         <li><strong>Delete:</strong> Request deletion of your account and associated data</li>
-                        <li><strong>Disconnect:</strong> Remove Instagram or YouTube connections from your profile</li>
-                        <li><strong>Export:</strong> Request a copy of your data</li>
+                        <li><strong>Disconnect:</strong> Remove your Instagram connection from your dashboard</li>
+                        <li><strong>Disable:</strong> Turn off automations at any time</li>
                         <li><strong>Opt-out:</strong> Unsubscribe from marketing emails</li>
                     </ul>
                 </div>
@@ -127,9 +132,9 @@
                     <p class="text-muted">We retain your data for as long as your account is active. After account deletion:</p>
                     <ul class="text-muted">
                         <li>Personal data is deleted within 30 days</li>
-                        <li>Generated videos are deleted from our storage</li>
+                        <li>Automation configurations are deleted immediately</li>
+                        <li>Instagram access tokens are revoked</li>
                         <li>Anonymized usage statistics may be retained for analytics</li>
-                        <li>Content posted to third-party platforms remains on those platforms</li>
                     </ul>
                 </div>
 
@@ -138,7 +143,7 @@
                     <p class="text-muted">We use essential cookies for:</p>
                     <ul class="text-muted">
                         <li>Session management and authentication</li>
-                        <li>Remembering your preferences (e.g., learner/creator view)</li>
+                        <li>Remembering your preferences</li>
                         <li>Security and fraud prevention</li>
                     </ul>
                 </div>

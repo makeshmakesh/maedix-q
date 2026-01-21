@@ -5,8 +5,8 @@
 {% block content %}
 <section class="py-5">
     <div class="container">
-        <div class="row">
-            <div class="col-md-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
                 <div class="card p-4 text-center">
                     <i class="bi bi-person-circle text-muted mx-auto mb-3" style="font-size: 6rem;"></i>
                     <h4>{{ user.get_full_name }}</h4>
@@ -24,7 +24,7 @@
                 <!-- Connected Accounts -->
                 <div class="card p-4 mt-3">
                     <h6 class="fw-bold mb-3">Connected Accounts</h6>
-                    <a href="{% url 'instagram_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border mb-2 {% if instagram_connected %}border-success{% endif %}">
+                    <a href="{% url 'instagram_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border {% if instagram_connected %}border-success{% endif %}">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-instagram text-danger me-2" style="font-size: 1.5rem;"></i>
                             <div>
@@ -42,7 +42,8 @@
                         <span class="badge bg-secondary">Connect</span>
                         {% endif %}
                     </a>
-                    <a href="{% url 'youtube_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border {% if youtube_connected %}border-success{% endif %}">
+                    {% if user.is_staff %}
+                    <a href="{% url 'youtube_connect' %}" class="d-flex align-items-center justify-content-between text-decoration-none text-dark p-2 rounded border mt-2 {% if youtube_connected %}border-success{% endif %}">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-youtube text-danger me-2" style="font-size: 1.5rem;"></i>
                             <div>
@@ -60,9 +61,11 @@
                         <span class="badge bg-secondary">Connect</span>
                         {% endif %}
                     </a>
+                    {% endif %}
                 </div>
 
-                <!-- Credits -->
+                {% if user.is_staff %}
+                <!-- Credits (Staff only) -->
                 <div class="card p-4 mt-3">
                     <h6 class="fw-bold mb-3">
                         <i class="bi bi-coin text-warning me-2"></i>Credits
@@ -83,25 +86,43 @@
                         </a>
                     </div>
                 </div>
+                {% endif %}
+
+                <!-- Quick Links -->
+                <div class="card p-4 mt-3">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'instagram_automation_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-robot me-1"></i> Automation Dashboard
+                        </a>
+                        <a href="{% url 'subscription' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-credit-card me-1"></i> Subscription
+                        </a>
+                        <a href="{% url 'settings' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-gear me-1"></i> Settings
+                        </a>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-8">
+            {% if user.is_staff %}
+            <div class="col-md-6 col-lg-5">
                 <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-4">Statistics</h5>
+                    <h5 class="fw-bold mb-4">Quiz Statistics</h5>
                     <div class="row g-4">
-                        <div class="col-6 col-md-3 text-center">
+                        <div class="col-6 text-center">
                             <h3 class="fw-bold text-primary">{{ stats.xp_points }}</h3>
                             <small class="text-muted">XP Points</small>
                         </div>
-                        <div class="col-6 col-md-3 text-center">
+                        <div class="col-6 text-center">
                             <h3 class="fw-bold text-success">{{ stats.total_quizzes_passed }}</h3>
                             <small class="text-muted">Quizzes Passed</small>
                         </div>
-                        <div class="col-6 col-md-3 text-center">
+                        <div class="col-6 text-center">
                             <h3 class="fw-bold text-warning">{{ stats.accuracy }}%</h3>
                             <small class="text-muted">Accuracy</small>
                         </div>
-                        <div class="col-6 col-md-3 text-center">
+                        <div class="col-6 text-center">
                             <h3 class="fw-bold text-danger">{{ stats.longest_streak }}</h3>
                             <small class="text-muted">Best Streak</small>
                         </div>
@@ -119,6 +140,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 </section>

@@ -1,93 +1,101 @@
 {% extends 'base.html' %}
 
-{% block title %}Instagram Comment Automation - Auto Reply & DM{% endblock %}
+{% block title %}Instagram Automation - Auto Reply & DM | Maedix{% endblock %}
+{% block meta_description %}Automate Instagram comment replies and DMs. Turn comments into leads with keyword triggers. Meta verified provider. Start free today.{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="py-5 hero-gradient">
-    <div class="container py-4 py-lg-5">
-        <div class="row align-items-center">
-            <div class="col-lg-6 text-center text-lg-start">
-                <span class="badge bg-danger mb-3 px-3 py-2"><i class="bi bi-robot me-1"></i> Instagram Automation</span>
-                <h1 class="display-4 fw-bold mb-4">
-                    Turn Comments into <span class="text-danger">Leads</span> Automatically
-                </h1>
-                <p class="lead text-muted mb-4">
-                    Auto-reply to comments and send DMs when followers use trigger keywords.
-                    Grow your engagement and capture leads on autopilot.
-                </p>
-                <div class="d-grid d-sm-flex gap-3 justify-content-center justify-content-lg-start mb-4">
-                    {% if has_feature_access %}
-                    <a href="{% url 'instagram_automation_list' %}" class="btn btn-danger btn-lg px-4">
-                        <i class="bi bi-gear me-2"></i>Go to Dashboard
-                    </a>
-                    {% elif user.is_authenticated %}
-                    <a href="{% url 'pricing' %}" class="btn btn-danger btn-lg px-4">
-                        <i class="bi bi-lightning-charge me-2"></i>Upgrade to Unlock
-                    </a>
-                    {% else %}
-                    <a href="{% url 'signup' %}" class="btn btn-danger btn-lg px-4">
-                        <i class="bi bi-lightning-charge me-2"></i>Start Automating Free
-                    </a>
-                    {% endif %}
-                    <a href="#how-it-works" class="btn btn-outline-dark btn-lg px-4">
-                        <i class="bi bi-play-circle me-2"></i>See How It Works
-                    </a>
-                </div>
-                <div class="d-flex gap-4 justify-content-center justify-content-lg-start text-muted small flex-wrap">
-                    <span><i class="bi bi-check-circle-fill text-success me-1"></i> No credit card</span>
-                    <span><i class="bi bi-check-circle-fill text-success me-1"></i> Works 24/7</span>
-                    <span><i class="bi bi-check-circle-fill text-success me-1"></i> Real-time replies</span>
-                </div>
-            </div>
-            <div class="col-lg-6 mt-5 mt-lg-0">
-                <div class="card border-0 shadow-lg p-4 mx-auto" style="max-width: 380px; border-radius: 24px; background: #1a1a2e;">
-                    <!-- Simulated Instagram Post -->
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="rounded-circle me-2" style="width: 40px; height: 40px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);"></div>
-                            <div>
-                                <span class="text-white fw-bold">@yourhandle</span>
-                                <div class="text-white-50 small">Sponsored</div>
-                            </div>
-                        </div>
-                        <div class="bg-dark rounded p-4 text-center" style="height: 140px;">
-                            <i class="bi bi-play-circle text-white-50" style="font-size: 3rem;"></i>
-                            <p class="text-white-50 small mt-2 mb-0">Your Reel / Post</p>
-                        </div>
+<section class="landing-hero">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 order-2 order-lg-1">
+                <div class="hero-content">
+                    <div class="hero-badges">
+                        <span class="badge-meta">
+                            <i class="bi bi-patch-check-fill"></i> Meta Verified
+                        </span>
+                        <span class="badge-auto">
+                            <i class="bi bi-robot"></i> Auto Reply
+                        </span>
                     </div>
 
-                    <!-- Comments Section -->
-                    <div class="border-top border-secondary pt-3">
-                        <p class="text-white-50 small mb-3"><i class="bi bi-chat me-1"></i> Comments</p>
+                    <h1 class="hero-title">
+                        Turn Comments into <span class="text-gradient">Leads</span>
+                    </h1>
 
-                        <!-- User Comment 1 -->
-                        <div class="d-flex mb-3 animate-fade-in" style="animation-delay: 0.5s;">
-                            <div class="bg-secondary rounded-circle me-2 flex-shrink-0" style="width: 28px; height: 28px;"></div>
-                            <div class="flex-grow-1">
-                                <div class="bg-dark rounded-3 p-2">
-                                    <span class="text-white small"><strong>@sarah_k</strong> Send me the link please!</span>
+                    <p class="hero-subtitle">
+                        Auto-reply to comments and send DMs when followers use your trigger keywords. Works 24/7.
+                    </p>
+
+                    <div class="hero-cta">
+                        {% if has_feature_access %}
+                        <a href="{% url 'instagram_automation_list' %}" class="btn-primary-landing">
+                            <i class="bi bi-grid-1x2"></i> Dashboard
+                        </a>
+                        {% elif user.is_authenticated %}
+                        <a href="{% url 'instagram_automation_list' %}" class="btn-primary-landing">
+                            <i class="bi bi-lightning-charge-fill"></i> Get Started
+                        </a>
+                        {% else %}
+                        <a href="{% url 'signup' %}" class="btn-primary-landing">
+                            <i class="bi bi-lightning-charge-fill"></i> Start Free
+                        </a>
+                        {% endif %}
+                        <a href="#how-it-works" class="btn-secondary-landing">
+                            How it works
+                        </a>
+                    </div>
+
+                    <div class="hero-trust">
+                        <span><i class="bi bi-check2"></i> No credit card</span>
+                        <span><i class="bi bi-check2"></i> Official API</span>
+                        <span><i class="bi bi-check2"></i> Safe & Secure</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-content">
+                            <!-- IG Header -->
+                            <div class="ig-header">
+                                <div class="ig-avatar"></div>
+                                <div class="ig-user">
+                                    <span class="ig-username">@yourbrand</span>
+                                    <span class="ig-label">Sponsored</span>
                                 </div>
-                                <span class="badge bg-warning text-dark ms-1 mt-1" style="font-size: 9px;">TRIGGER: "link"</span>
                             </div>
-                        </div>
 
-                        <!-- Auto Reply -->
-                        <div class="d-flex mb-3 ps-4 animate-fade-in" style="animation-delay: 1s;">
-                            <div class="rounded-circle me-2 flex-shrink-0" style="width: 28px; height: 28px; background: linear-gradient(45deg, #f09433, #dc2743);"></div>
-                            <div class="flex-grow-1">
-                                <div class="bg-dark rounded-3 p-2 border border-success">
-                                    <span class="text-white small"><strong>@yourhandle</strong> Check your DMs! <i class="bi bi-robot text-success"></i></span>
+                            <!-- IG Post -->
+                            <div class="ig-post">
+                                <i class="bi bi-play-circle"></i>
+                                <span>Your Reel</span>
+                            </div>
+
+                            <!-- Comments -->
+                            <div class="ig-comments">
+                                <div class="comment user-comment">
+                                    <div class="comment-avatar"></div>
+                                    <div class="comment-body">
+                                        <strong>@sarah</strong> Send me the link!
+                                    </div>
+                                    <span class="trigger-badge">TRIGGER</span>
                                 </div>
-                                <span class="badge bg-success ms-1 mt-1" style="font-size: 9px;">AUTO REPLY</span>
-                            </div>
-                        </div>
 
-                        <!-- DM Sent Indicator -->
-                        <div class="bg-success bg-opacity-20 rounded p-2 mt-3 animate-fade-in" style="animation-delay: 1.5s;">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-envelope-check text-success me-2"></i>
-                                <span class="text-success small fw-bold">DM sent with your link!</span>
+                                <div class="comment auto-reply">
+                                    <div class="comment-avatar brand"></div>
+                                    <div class="comment-body">
+                                        <strong>@yourbrand</strong> Check your DMs! <i class="bi bi-robot"></i>
+                                    </div>
+                                    <span class="auto-badge">AUTO</span>
+                                </div>
+
+                                <div class="dm-sent">
+                                    <i class="bi bi-envelope-check-fill"></i>
+                                    DM sent with link!
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -98,311 +106,859 @@
 </section>
 
 <!-- Stats Bar -->
-<section class="py-4 bg-dark text-white">
+<section class="stats-bar">
     <div class="container">
-        <div class="row text-center">
-            <div class="col-4">
-                <div class="fs-3 fw-bold text-danger">24/7</div>
-                <div class="small text-white-50">Always Active</div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <i class="bi bi-patch-check-fill"></i>
+                <div class="stat-text">
+                    <strong>Meta Verified</strong>
+                    <span>Official Partner</span>
+                </div>
             </div>
-            <div class="col-4">
-                <div class="fs-3 fw-bold text-danger">&lt;1s</div>
-                <div class="small text-white-50">Response Time</div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <span>Always On</span>
             </div>
-            <div class="col-4">
-                <div class="fs-3 fw-bold text-danger">100%</div>
-                <div class="small text-white-50">Automated</div>
+            <div class="stat-item">
+                <div class="stat-number">&lt;1s</div>
+                <span>Response</span>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <span>Secure</span>
             </div>
         </div>
     </div>
 </section>
 
 <!-- How It Works -->
-<section class="py-5" id="how-it-works">
+<section class="section-light" id="how-it-works">
     <div class="container">
-        <div class="text-center mb-5">
-            <span class="badge bg-danger-subtle text-danger mb-3 px-3 py-2">Simple Setup</span>
-            <h2 class="fw-bold display-6">How It Works</h2>
-            <p class="text-muted">Set up once, let it work forever</p>
+        <div class="section-header">
+            <span class="section-badge">Simple Setup</span>
+            <h2>How It Works</h2>
+            <p>Get started in 3 easy steps</p>
         </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                        <span class="fs-2 fw-bold">1</span>
-                    </div>
-                    <h4 class="fw-bold">Set Keywords</h4>
-                    <p class="text-muted mb-0">Define trigger words like "link", "send", "dm", "info", "price" - whatever makes sense for your content.</p>
-                </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Connect Account</h3>
+                <p>Link your Instagram Business account securely via Meta OAuth</p>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                        <span class="fs-2 fw-bold">2</span>
-                    </div>
-                    <h4 class="fw-bold">Create Response</h4>
-                    <p class="text-muted mb-0">Write your auto-reply comment and DM message. Include links, discount codes, or any info you want to share.</p>
-                </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Set Keywords</h3>
+                <p>Choose trigger words and write your auto-reply messages</p>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                        <span class="fs-2 fw-bold">3</span>
-                    </div>
-                    <h4 class="fw-bold">Sit Back & Relax</h4>
-                    <p class="text-muted mb-0">When someone comments with your keyword, they instantly get a reply and a DM. Automatically. 24/7.</p>
-                </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Automate</h3>
+                <p>Comments get instant replies and DMs automatically 24/7</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Features -->
-<section class="py-5 bg-light">
+<section class="section-white">
     <div class="container">
-        <div class="text-center mb-5">
-            <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2">Features</span>
-            <h2 class="fw-bold display-6">Everything You Need</h2>
-            <p class="text-muted">Powerful automation tools for Instagram creators</p>
+        <div class="section-header">
+            <span class="section-badge blue">Features</span>
+            <h2>Everything You Need</h2>
+            <p>Built on Meta's official Instagram API</p>
         </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="bg-danger bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
-                        <i class="bi bi-chat-dots text-danger fs-3"></i>
-                    </div>
-                    <h5 class="fw-bold">Auto Comment Reply</h5>
-                    <p class="text-muted mb-0">Instantly reply to comments containing your trigger keywords. Keep your audience engaged even when you're offline.</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon red">
+                    <i class="bi bi-chat-dots-fill"></i>
                 </div>
+                <h4>Auto Comment Reply</h4>
+                <p>Instantly reply to comments with your trigger keywords</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
-                        <i class="bi bi-envelope-paper text-primary fs-3"></i>
-                    </div>
-                    <h5 class="fw-bold">Auto DM with Links</h5>
-                    <p class="text-muted mb-0">Send personalized DMs with links, codes, or info. Perfect for lead generation and driving traffic.</p>
+            <div class="feature-card">
+                <div class="feature-icon blue">
+                    <i class="bi bi-envelope-paper-fill"></i>
                 </div>
+                <h4>Auto DM</h4>
+                <p>Send DMs with links, codes, or info automatically</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="bg-success bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
-                        <i class="bi bi-bullseye text-success fs-3"></i>
-                    </div>
-                    <h5 class="fw-bold">Per-Post Rules</h5>
-                    <p class="text-muted mb-0">Create different automation rules for different posts. Each post can have unique keywords and responses.</p>
+            <div class="feature-card">
+                <div class="feature-icon green">
+                    <i class="bi bi-shuffle"></i>
                 </div>
+                <h4>Reply Variations</h4>
+                <p>Add up to 5 variations for natural responses</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
-                        <i class="bi bi-globe text-warning fs-3"></i>
-                    </div>
-                    <h5 class="fw-bold">Account-Level Fallback</h5>
-                    <p class="text-muted mb-0">Set default responses for all posts. If no specific rule matches, the fallback kicks in.</p>
+            <div class="feature-card">
+                <div class="feature-icon orange">
+                    <i class="bi bi-bullseye"></i>
                 </div>
+                <h4>Per-Post Rules</h4>
+                <p>Different automation for different posts</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="bg-info bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
-                        <i class="bi bi-activity text-info fs-3"></i>
-                    </div>
-                    <h5 class="fw-bold">Activity Logs</h5>
-                    <p class="text-muted mb-0">Track every automated reply and DM. See what's working and optimize your strategy.</p>
+            <div class="feature-card">
+                <div class="feature-icon purple">
+                    <i class="bi bi-globe"></i>
                 </div>
+                <h4>Account Fallback</h4>
+                <p>Default rules for all posts when no match</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm p-4">
-                    <div class="bg-secondary bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
-                        <i class="bi bi-lightning-charge text-secondary fs-3"></i>
-                    </div>
-                    <h5 class="fw-bold">Real-Time Webhooks</h5>
-                    <p class="text-muted mb-0">Powered by Instagram's official API with real-time webhooks. Responses happen in seconds, not minutes.</p>
+            <div class="feature-card">
+                <div class="feature-icon gray">
+                    <i class="bi bi-shield-check"></i>
                 </div>
+                <h4>Safe & Compliant</h4>
+                <p>Official API keeps your account safe</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Use Cases -->
-<section class="py-5">
+<section class="section-light">
     <div class="container">
-        <div class="text-center mb-5">
-            <span class="badge bg-success-subtle text-success mb-3 px-3 py-2">Use Cases</span>
-            <h2 class="fw-bold display-6">Perfect For</h2>
-            <p class="text-muted">Creators and businesses who want to scale engagement</p>
+        <div class="section-header">
+            <span class="section-badge green">Use Cases</span>
+            <h2>Perfect For</h2>
+            <p>Creators and businesses who scale</p>
         </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 70px; height: 70px;">
-                        <i class="bi bi-camera-reels text-danger fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold">Content Creators</h5>
-                    <p class="text-muted small mb-0">"Comment LINK for the tutorial" - automatically send links to interested followers.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 70px; height: 70px;">
-                        <i class="bi bi-shop text-primary fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold">E-commerce</h5>
-                    <p class="text-muted small mb-0">"Comment PRICE for details" - share product links and discount codes automatically.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 70px; height: 70px;">
-                        <i class="bi bi-mortarboard text-success fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold">Educators</h5>
-                    <p class="text-muted small mb-0">"Comment COURSE for enrollment" - capture leads and share course links instantly.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 70px; height: 70px;">
-                        <i class="bi bi-briefcase text-warning fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold">Service Providers</h5>
-                    <p class="text-muted small mb-0">"Comment BOOK for appointments" - share booking links and availability automatically.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- Example -->
-<section class="py-5 bg-dark text-white">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6">
-                <span class="badge bg-danger mb-3 px-3 py-2">Example Setup</span>
-                <h2 class="fw-bold display-6 mb-4">See It In Action</h2>
-                <p class="text-white-50 mb-4">Here's a real example of how a creator might set up automation for a quiz video post:</p>
-
-                <div class="bg-white bg-opacity-10 rounded-3 p-4 mb-4">
-                    <h6 class="fw-bold text-white mb-3"><i class="bi bi-gear me-2"></i>Automation Settings</h6>
-                    <div class="mb-3">
-                        <span class="text-white-50 small">Trigger Keywords:</span>
-                        <div class="mt-1">
-                            <span class="badge bg-warning text-dark me-1">link</span>
-                            <span class="badge bg-warning text-dark me-1">send</span>
-                            <span class="badge bg-warning text-dark me-1">dm</span>
-                            <span class="badge bg-warning text-dark">answer</span>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <span class="text-white-50 small">Auto Reply:</span>
-                        <div class="bg-dark rounded p-2 mt-1">
-                            <span class="text-white small">"Thanks for your interest! Check your DMs for the answer and more quiz videos!"</span>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="text-white-50 small">DM Message:</span>
-                        <div class="bg-dark rounded p-2 mt-1">
-                            <span class="text-white small">"Hey! Here's the answer: B) Python<br><br>Want more quizzes? Check out: https://maedix.com/quiz"</span>
-                        </div>
-                    </div>
-                </div>
+        <div class="usecase-grid">
+            <div class="usecase-card">
+                <div class="usecase-icon"><i class="bi bi-camera-reels-fill"></i></div>
+                <h4>Creators</h4>
+                <p>"Comment LINK" to send free guides</p>
             </div>
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-lg p-4" style="border-radius: 24px; background: #16213e;">
-                    <h6 class="text-white-50 mb-3"><i class="bi bi-clock-history me-2"></i>Activity Log</h6>
-                    <div class="list-group list-group-flush bg-transparent">
-                        <div class="list-group-item bg-transparent border-secondary text-white px-0">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <span class="badge bg-success me-2">Replied + DM</span>
-                                    <strong>@mike_learns</strong>
-                                    <div class="small text-white-50 mt-1">Commented: "Send me the answer!"</div>
-                                </div>
-                                <small class="text-white-50">2m ago</small>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent border-secondary text-white px-0">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <span class="badge bg-success me-2">Replied + DM</span>
-                                    <strong>@code_newbie</strong>
-                                    <div class="small text-white-50 mt-1">Commented: "Link please!"</div>
-                                </div>
-                                <small class="text-white-50">5m ago</small>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent border-secondary text-white px-0">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <span class="badge bg-success me-2">Replied + DM</span>
-                                    <strong>@tech_sarah</strong>
-                                    <div class="small text-white-50 mt-1">Commented: "dm me the answer"</div>
-                                </div>
-                                <small class="text-white-50">12m ago</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center mt-3 pt-3 border-top border-secondary">
-                        <span class="text-success"><i class="bi bi-check-circle me-1"></i> 47 automated responses today</span>
-                    </div>
-                </div>
+            <div class="usecase-card">
+                <div class="usecase-icon"><i class="bi bi-shop"></i></div>
+                <h4>E-commerce</h4>
+                <p>"Comment PRICE" to share product details</p>
+            </div>
+            <div class="usecase-card">
+                <div class="usecase-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <h4>Coaches</h4>
+                <p>"Comment COURSE" to capture leads</p>
+            </div>
+            <div class="usecase-card">
+                <div class="usecase-icon"><i class="bi bi-briefcase-fill"></i></div>
+                <h4>Services</h4>
+                <p>"Comment BOOK" for appointments</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- CTA -->
-<section class="py-5">
+<section class="cta-section">
     <div class="container">
-        <div class="card border-0 p-5 text-center text-white" style="background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 24px;">
-            <h2 class="fw-bold display-6 mb-3">Start Automating Today</h2>
-            <p class="mb-4 opacity-90 lead">Turn every comment into a potential lead. Set up in 5 minutes.</p>
-            <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <div class="cta-card">
+            <span class="cta-badge">
+                <i class="bi bi-patch-check-fill"></i> Meta Verified Provider
+            </span>
+            <h2>Start Automating Today</h2>
+            <p>Turn every comment into a potential lead</p>
+            <div class="cta-buttons">
                 {% if has_feature_access %}
-                <a href="{% url 'instagram_automation_list' %}" class="btn btn-light btn-lg px-4">
-                    <i class="bi bi-gear me-2"></i>Go to Dashboard
+                <a href="{% url 'instagram_automation_list' %}" class="btn-cta-primary">
+                    <i class="bi bi-grid-1x2-fill"></i> Go to Dashboard
                 </a>
                 {% elif user.is_authenticated %}
-                <a href="{% url 'pricing' %}" class="btn btn-light btn-lg px-4">
-                    <i class="bi bi-lightning-charge me-2"></i>Upgrade to Unlock
+                <a href="{% url 'instagram_automation_list' %}" class="btn-cta-primary">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Get Started
                 </a>
                 {% else %}
-                <a href="{% url 'signup' %}" class="btn btn-light btn-lg px-4">
-                    <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
-                </a>
-                <a href="{% url 'pricing' %}" class="btn btn-outline-light btn-lg px-4">
-                    <i class="bi bi-tag me-2"></i>View Pricing
+                <a href="{% url 'signup' %}" class="btn-cta-primary">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Start Free
                 </a>
                 {% endif %}
             </div>
-            {% if not has_feature_access %}
-            <p class="mt-4 mb-0 small opacity-75">No credit card required. Available on paid plans.</p>
-            {% endif %}
+            <span class="cta-note">No credit card required</span>
         </div>
     </div>
 </section>
 
 <style>
-.hero-gradient {
-    background: linear-gradient(135deg, #fff5f5 0%, #fff0f3 50%, #fff 100%);
+/* Landing page specific variables */
+:root {
+    --dark: #1a1a2e;
+    --dark-light: #16213e;
 }
 
-.animate-fade-in {
-    animation: fadeIn 0.5s ease-in forwards;
-    opacity: 0;
+/* Hero Section */
+.landing-hero {
+    background: linear-gradient(180deg, #fef7f7 0%, #fff 100%);
+    padding: 2rem 0 3rem;
+    overflow: hidden;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.min-vh-75 {
+    min-height: 75vh;
 }
 
-@media (max-width: 768px) {
-    .display-4 {
-        font-size: 1.8rem;
+.hero-content {
+    padding: 1rem 0;
+}
+
+.hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.badge-meta, .badge-auto {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-meta {
+    background: #0d6efd;
+    color: white;
+}
+
+.badge-auto {
+    background: var(--primary);
+    color: white;
+}
+
+.hero-title {
+    font-size: clamp(2rem, 6vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+}
+
+.text-gradient {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary-landing, .btn-secondary-landing {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-landing {
+    background: var(--gradient);
+    color: white;
+    box-shadow: 0 4px 16px rgba(225, 48, 108, 0.35);
+}
+
+.btn-primary-landing:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(225, 48, 108, 0.45);
+    color: white;
+}
+
+.btn-secondary-landing {
+    background: white;
+    color: var(--text-dark);
+    border: 1.5px solid var(--border-color);
+}
+
+.btn-secondary-landing:hover {
+    border-color: var(--text-muted);
+    color: var(--text-dark);
+}
+
+.hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.hero-trust span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.hero-trust i {
+    color: #22c55e;
+}
+
+/* Phone Mockup */
+.phone-mockup {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.phone-frame {
+    width: 100%;
+    max-width: 280px;
+    background: var(--dark);
+    border-radius: 32px;
+    padding: 0.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.phone-notch {
+    width: 80px;
+    height: 24px;
+    background: #000;
+    border-radius: 0 0 16px 16px;
+    margin: 0 auto 0.75rem;
+}
+
+.phone-content {
+    background: var(--dark-light);
+    border-radius: 24px;
+    padding: 1rem;
+    min-height: 360px;
+}
+
+.ig-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.ig-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gradient);
+}
+
+.ig-user {
+    display: flex;
+    flex-direction: column;
+}
+
+.ig-username {
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.ig-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.7rem;
+}
+
+.ig-post {
+    background: rgba(255,255,255,0.05);
+    border-radius: var(--radius-sm);
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 1rem;
+}
+
+.ig-post i {
+    font-size: 2rem;
+}
+
+.ig-post span {
+    font-size: 0.75rem;
+}
+
+.ig-comments {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.comment {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.comment-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    flex-shrink: 0;
+}
+
+.comment-avatar.brand {
+    background: var(--gradient);
+}
+
+.comment-body {
+    background: rgba(255,255,255,0.08);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.9);
+    flex: 1;
+}
+
+.comment-body strong {
+    color: white;
+    margin-right: 0.25rem;
+}
+
+.auto-reply .comment-body {
+    border: 1px solid #22c55e;
+}
+
+.trigger-badge, .auto-badge {
+    position: absolute;
+    right: 0;
+    top: -6px;
+    font-size: 0.55rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.trigger-badge {
+    background: #fbbf24;
+    color: #1a1a2e;
+}
+
+.auto-badge {
+    background: #22c55e;
+    color: white;
+}
+
+.dm-sent {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(34, 197, 94, 0.15);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+/* Stats Bar */
+.stats-bar {
+    background: var(--dark);
+    padding: 1.25rem 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
-    .display-6 {
-        font-size: 1.4rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+    color: white;
+}
+
+.stat-item > i {
+    font-size: 1.25rem;
+    color: #0d6efd;
+}
+
+.stat-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-text strong {
+    font-size: 0.85rem;
+}
+
+.stat-text span {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.stat-item > span {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+/* Sections */
+.section-light {
+    background: var(--bg-light);
+    padding: 3rem 0;
+}
+
+.section-white {
+    background: var(--bg-white);
+    padding: 3rem 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-badge {
+    display: inline-block;
+    background: rgba(225, 48, 108, 0.1);
+    color: var(--primary);
+    padding: 0.35rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.section-badge.blue {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.section-badge.green {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.section-header h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.section-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Steps */
+.steps-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.step-card {
+    background: var(--bg-white);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.step-number {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 auto 1rem;
+}
+
+.step-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.step-card p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Features */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.feature-card {
+    background: var(--bg-light);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.feature-icon.red { background: rgba(225, 48, 108, 0.1); color: var(--primary); }
+.feature-icon.blue { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+.feature-icon.green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.feature-icon.orange { background: rgba(251, 191, 36, 0.1); color: #f59e0b; }
+.feature-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+.feature-icon.gray { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+
+.feature-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--text-dark);
+}
+
+.feature-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* Use Cases */
+.usecase-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .usecase-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.usecase-card {
+    background: var(--bg-white);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.usecase-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--bg-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+    font-size: 1.25rem;
+    color: var(--primary);
+}
+
+.usecase-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--text-dark);
+}
+
+.usecase-card p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* CTA */
+.cta-section {
+    padding: 3rem 0;
+    background: var(--bg-white);
+}
+
+.cta-card {
+    background: var(--gradient);
+    padding: 2.5rem 1.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+    color: white;
+}
+
+.cta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255,255,255,0.2);
+    padding: 0.4rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.cta-card h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.cta-card > p {
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.btn-cta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    color: var(--primary-dark);
+    padding: 0.875rem 1.75rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    color: var(--primary-dark);
+}
+
+.cta-note {
+    font-size: 0.8rem;
+    opacity: 0.75;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 575px) {
+    .landing-hero {
+        padding: 1.5rem 0 2rem;
+    }
+
+    .min-vh-75 {
+        min-height: auto;
+    }
+
+    .phone-frame {
+        max-width: 240px;
+    }
+
+    .phone-content {
+        min-height: 300px;
+    }
+
+    .hero-cta {
+        flex-direction: column;
+    }
+
+    .btn-primary-landing, .btn-secondary-landing {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-card {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .feature-icon {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .feature-card h4 {
+        margin-bottom: 0.25rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .landing-hero {
+        padding: 3rem 0 4rem;
+    }
+
+    .section-light, .section-white {
+        padding: 4rem 0;
+    }
+
+    .cta-section {
+        padding: 4rem 0;
+    }
+
+    .cta-card {
+        padding: 3.5rem 2rem;
     }
 }
 </style>

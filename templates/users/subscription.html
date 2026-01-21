@@ -10,14 +10,18 @@
             <div class="col-lg-3 mb-4">
                 <div class="card p-3">
                     <nav class="nav flex-column">
-                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+                        <a class="nav-link" href="{% url 'instagram_automation_list' %}"><i class="bi bi-robot me-2"></i> Automation</a>
                         <a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a>
                         <a class="nav-link active" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i> Subscription</a>
                         <a class="nav-link" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i> Settings</a>
+                        {% if user.is_staff %}
+                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Old Dashboard</a>
+                        {% endif %}
                     </nav>
                 </div>
 
-                <!-- Credits -->
+                {% if user.is_staff %}
+                <!-- Credits (Staff only for now) -->
                 <div class="card p-3 mt-3">
                     <h6 class="fw-bold mb-3">
                         <i class="bi bi-coin text-warning me-2"></i>Credits
@@ -27,6 +31,7 @@
                         <i class="bi bi-plus-circle me-1"></i> Buy Credits
                     </a>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Main Content -->
@@ -61,32 +66,30 @@
                     </div>
                 </div>
 
-                <!-- Usage Stats -->
-                {% if usage_stats %}
+                <!-- Automation Stats -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i> Usage This Period</h5>
+                        <h5 class="mb-0"><i class="bi bi-robot me-2"></i> Instagram Automation</h5>
                     </div>
                     <div class="card-body">
-                        {% for stat in usage_stats %}
                         <div class="mb-4">
                             <div class="d-flex justify-content-between mb-1">
-                                <span>{{ stat.description }}</span>
+                                <span>Post-level Automations</span>
                                 <span class="text-muted">
-                                    {{ stat.used }} / {% if stat.limit == 'Unlimited' %}<i class="bi bi-infinity"></i>{% else %}{{ stat.limit }}{% endif %}
+                                    {{ automation_count }} / {% if automation_limit %}{{ automation_limit }}{% else %}<i class="bi bi-infinity"></i>{% endif %}
                                 </span>
                             </div>
-                            {% if stat.limit != 'Unlimited' %}
+                            {% if automation_limit %}
                             <div class="progress" style="height: 10px;">
-                                <div class="progress-bar {% if stat.percentage >= 90 %}bg-danger{% elif stat.percentage >= 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                <div class="progress-bar {% if automation_percentage >= 90 %}bg-danger{% elif automation_percentage >= 70 %}bg-warning{% else %}bg-success{% endif %}"
                                      role="progressbar"
-                                     style="width: {{ stat.percentage }}%"
-                                     aria-valuenow="{{ stat.percentage }}"
+                                     style="width: {{ automation_percentage }}%"
+                                     aria-valuenow="{{ automation_percentage }}"
                                      aria-valuemin="0"
                                      aria-valuemax="100">
                                 </div>
                             </div>
-                            <small class="text-muted">{{ stat.remaining }} remaining</small>
+                            <small class="text-muted">{{ automation_remaining }} remaining</small>
                             {% else %}
                             <div class="progress" style="height: 10px;">
                                 <div class="progress-bar bg-success" style="width: 100%"></div>
@@ -94,17 +97,19 @@
                             <small class="text-success"><i class="bi bi-infinity"></i> Unlimited</small>
                             {% endif %}
                         </div>
-                        {% endfor %}
 
-                        {% if subscription.next_reset_date %}
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Usage resets on <strong>{{ subscription.next_reset_date|date:"M d, Y" }}</strong>
+                        <div class="mb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Account-level Automation</span>
+                                {% if can_use_account_automation %}
+                                <span class="badge bg-success"><i class="bi bi-check"></i> Available</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-lock"></i> Creator Plan</span>
+                                {% endif %}
+                            </div>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
 
                 <!-- Plan Features -->
                 <div class="card mb-4">

@@ -1,8 +1,9 @@
 from django.urls import path
 from . import views
+from instagram.views import AutomationLandingView
 
 urlpatterns = [
-    path('', views.HomePage.as_view(), name='home'),
+    path('', AutomationLandingView.as_view(), name='home'),
     path('about/', views.AboutPage.as_view(), name='about'),
     path('pricing/', views.PricingPage.as_view(), name='pricing'),
     path('contact/', views.ContactPage.as_view(), name='contact'),

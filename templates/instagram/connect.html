@@ -11,7 +11,7 @@
                     <div class="text-center mb-4">
                         <i class="bi bi-instagram text-danger" style="font-size: 3rem;"></i>
                         <h3 class="fw-bold mt-3">Instagram Connection</h3>
-                        <p class="text-muted">Connect your Instagram Business account to post Reels directly</p>
+                        <p class="text-muted">Connect your Instagram Business account</p>
                     </div>
 
                     {% if messages %}
@@ -134,8 +134,8 @@
                         <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i>Requirements</h6>
                         <ul class="mb-0 small">
                             <li>Instagram Business or Creator account</li>
-                            <li>Account must be connected to a Facebook Page</li>
-                            <li>You must be an admin of the Facebook Page</li>
+                            {% comment %} <li>Account must be connected to a Facebook Page</li>
+                            <li>You must be an admin of the Facebook Page</li> {% endcomment %}
                         </ul>
                     </div>
 
@@ -149,14 +149,14 @@
                     </div>
 
                     <p class="text-muted small text-center mt-3">
-                        By connecting, you authorize this app to post Reels on your behalf.
+                        By connecting, you authorize this app to post content(comming soon), reply to comments and send DM on your behalf.
                     </p>
                     {% endif %}
 
                     <hr class="my-4">
 
                     <div class="text-center">
-                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'instagram_automation_list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
                         </a>
                     </div>

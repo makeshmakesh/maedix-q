@@ -17,21 +17,44 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from .models import InstagramAccount, InstagramAutomation, InstagramCommentEvent
 from core.models import Configuration
-from core.subscription_utils import check_feature_access
+from core.subscription_utils import check_feature_access, get_user_subscription
 
 logger = logging.getLogger(__name__)
 
 
 class IGAutomationFeatureRequiredMixin:
-    """Mixin to check if user has ig_automation feature access"""
+    """Mixin to check if user has ig_post_automation feature access"""
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
 
-        can_access, message, _ = check_feature_access(request.user, 'ig_automation')
+        # Staff users bypass all checks
+        if request.user.is_staff:
+            return super().dispatch(request, *args, **kwargs)
+
+        can_access, message, _ = check_feature_access(request.user, 'ig_post_automation')
         if not can_access:
             messages.error(request, 'You need to upgrade your plan to access Instagram Automation.')
+            return redirect('subscription')
+
+        return super().dispatch(request, *args, **kwargs)
+
+
+class IGAccountAutomationFeatureRequiredMixin:
+    """Mixin to check if user has ig_account_automation feature (Creator plan)"""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+
+        # Staff users bypass all checks
+        if request.user.is_staff:
+            return super().dispatch(request, *args, **kwargs)
+
+        can_access, message, _ = check_feature_access(request.user, 'ig_account_automation')
+        if not can_access:
+            messages.error(request, 'Account-level automation is available on the Creator plan. Please upgrade.')
             return redirect('subscription')
 
         return super().dispatch(request, *args, **kwargs)
@@ -601,7 +624,7 @@ class AutomationLandingView(View):
 
         # Check if user has feature access
         if request.user.is_authenticated:
-            can_access, _, _ = check_feature_access(request.user, 'ig_automation')
+            can_access, _, _ = check_feature_access(request.user, 'ig_post_automation')
             context['has_feature_access'] = can_access
 
         return render(request, self.template_name, context)
@@ -621,6 +644,23 @@ class AutomationListView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
 
         # Get user's automations
         automations = InstagramAutomation.objects.filter(user=request.user)
+        automation_count = automations.count()
+
+        # Get automation limit from subscription
+        automation_limit = None
+        can_create_more = True
+        can_use_account_automation = request.user.is_staff
+
+        if not request.user.is_staff:
+            subscription = get_user_subscription(request.user)
+            if subscription and subscription.plan:
+                feature = subscription.plan.get_feature('ig_post_automation')
+                if feature:
+                    automation_limit = feature.get('limit')
+                    if automation_limit:
+                        can_create_more = automation_count < automation_limit
+                # Check if user can use account-level automation
+                can_use_account_automation = subscription.plan.has_feature('ig_account_automation')
 
         # Get recent comment events
         recent_events = InstagramCommentEvent.objects.filter(
@@ -631,6 +671,10 @@ class AutomationListView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, V
             'instagram_connected': instagram_connected,
             'instagram_account': instagram_account,
             'automations': automations,
+            'automation_count': automation_count,
+            'automation_limit': automation_limit,
+            'can_create_more': can_create_more,
+            'can_use_account_automation': can_use_account_automation,
             'recent_events': recent_events,
         }
         return render(request, self.template_name, context)
@@ -640,12 +684,33 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
     """Create a new Instagram automation"""
     template_name = 'instagram/automation_form.html'
 
+    def _check_automation_limit(self, request):
+        """Check if user has reached their automation limit. Returns (limit_reached, limit_count)"""
+        if request.user.is_staff:
+            return False, None
+
+        current_count = InstagramAutomation.objects.filter(user=request.user).count()
+        subscription = get_user_subscription(request.user)
+        if subscription and subscription.plan:
+            feature = subscription.plan.get_feature('ig_post_automation')
+            if feature:
+                limit = feature.get('limit')
+                if limit and current_count >= limit:
+                    return True, limit
+        return False, None
+
     def get(self, request):
         # Check if Instagram is connected
         if not hasattr(request.user, 'instagram_account') or \
            not request.user.instagram_account.is_connected:
             messages.error(request, 'Please connect your Instagram account first.')
             return redirect('instagram_connect')
+
+        # Check automation limit
+        limit_reached, limit = self._check_automation_limit(request)
+        if limit_reached:
+            messages.error(request, f'You have reached your limit of {limit} automations. Please upgrade your plan for more.')
+            return redirect('instagram_automation_list')
 
         context = {
             'editing': False,
@@ -659,6 +724,12 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
            not request.user.instagram_account.is_connected:
             messages.error(request, 'Please connect your Instagram account first.')
             return redirect('instagram_connect')
+
+        # Check automation limit
+        limit_reached, limit = self._check_automation_limit(request)
+        if limit_reached:
+            messages.error(request, f'You have reached your limit of {limit} automations. Please upgrade your plan for more.')
+            return redirect('instagram_automation_list')
 
         title = request.POST.get('title', '').strip()
         instagram_post_id = request.POST.get('instagram_post_id', '').strip()
@@ -791,8 +862,8 @@ class AutomationDeleteView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
         return redirect('instagram_automation_list')
 
 
-class AccountAutomationView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
-    """Configure account-level automation settings"""
+class AccountAutomationView(IGAccountAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
+    """Configure account-level automation settings (Creator plan feature)"""
     template_name = 'instagram/automation_account.html'
 
     def get(self, request):

@@ -16,9 +16,15 @@
                         <p class="text-muted mb-0 small">Auto-reply to Instagram comments with DM follow-ups</p>
                     </div>
                     {% if instagram_connected %}
-                    <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary w-100 w-sm-auto">
-                        <i class="bi bi-plus-lg me-1"></i>Create Automation
-                    </a>
+                        {% if can_create_more %}
+                        <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary w-100 w-sm-auto">
+                            <i class="bi bi-plus-lg me-1"></i>Create Automation
+                        </a>
+                        {% else %}
+                        <a href="{% url 'pricing' %}" class="btn btn-outline-warning w-100 w-sm-auto">
+                            <i class="bi bi-arrow-up-circle me-1"></i>Upgrade for More
+                        </a>
+                        {% endif %}
                     {% endif %}
                 </div>
 
@@ -51,25 +57,41 @@
                             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
                                     <i class="bi bi-gear me-2"></i>Account-Level Automation
+                                    {% if not can_use_account_automation %}
+                                    <span class="badge bg-warning ms-1" style="font-size: 10px;">Creator</span>
+                                    {% endif %}
                                 </h6>
+                                {% if can_use_account_automation %}
                                 <a href="{% url 'instagram_automation_account' %}" class="btn btn-sm btn-outline-primary">
                                     Configure
                                 </a>
+                                {% else %}
+                                <a href="{% url 'pricing' %}" class="btn btn-sm btn-outline-warning">
+                                    Upgrade
+                                </a>
+                                {% endif %}
                             </div>
                             <div class="card-body">
-                                {% if instagram_account.account_automation_enabled %}
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-success me-2">Enabled</span>
-                                    <span class="text-muted small">
-                                        Fallback automation for comments without specific rules
-                                    </span>
-                                </div>
+                                {% if can_use_account_automation %}
+                                    {% if instagram_account.account_automation_enabled %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">Enabled</span>
+                                        <span class="text-muted small">
+                                            Fallback automation for comments without specific rules
+                                        </span>
+                                    </div>
+                                    {% else %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-secondary me-2">Disabled</span>
+                                        <span class="text-muted small">
+                                            Enable to auto-reply to comments on any post
+                                        </span>
+                                    </div>
+                                    {% endif %}
                                 {% else %}
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-secondary me-2">Disabled</span>
-                                    <span class="text-muted small">
-                                        Enable to auto-reply to comments on any post
-                                    </span>
+                                <div class="text-muted small">
+                                    <i class="bi bi-lock me-1"></i>Account-level automation is available on the Creator plan.
+                                    This acts as a fallback for posts without specific automations.
                                 </div>
                                 {% endif %}
                             </div>
@@ -77,10 +99,13 @@
 
                         <!-- Post-Level Automations -->
                         <div class="card">
-                            <div class="card-header bg-light">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
                                     <i class="bi bi-collection me-2"></i>Post-Level Automations
                                 </h6>
+                                <span class="badge {% if can_create_more %}bg-primary{% else %}bg-warning{% endif %}">
+                                    {{ automation_count }}{% if automation_limit %}/{{ automation_limit }}{% else %} (Unlimited){% endif %}
+                                </span>
                             </div>
                             <div class="card-body">
                                 {% if automations %}
@@ -132,9 +157,11 @@
                                 <div class="text-center py-4">
                                     <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
                                     <p class="text-muted mt-2 mb-0">No automations created yet</p>
+                                    {% if can_create_more %}
                                     <a href="{% url 'instagram_automation_create' %}" class="btn btn-primary mt-3">
                                         <i class="bi bi-plus-lg me-1"></i>Create Your First Automation
                                     </a>
+                                    {% endif %}
                                 </div>
                                 {% endif %}
                             </div>
@@ -202,8 +229,8 @@
 
                 <!-- Back Link -->
                 <div class="text-center mt-4">
-                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Home
                     </a>
                 </div>
             </div>

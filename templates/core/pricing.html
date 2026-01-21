@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
 {% block title %}Pricing Plans{% endblock %}
-{% block meta_description %}Choose the perfect Maedix-Q plan for your needs. Create quiz videos, learning carousels, and post to Instagram and YouTube. Free, Pro, and Enterprise plans available.{% endblock %}
-{% block og_description %}Choose the perfect Maedix-Q plan for your needs. Create quiz videos, learning carousels, and post to Instagram and YouTube.{% endblock %}
-{% block twitter_title %}Pricing Plans | Maedix-Q{% endblock %}
-{% block twitter_description %}Choose the perfect Maedix-Q plan for your needs. Free, Pro, and Enterprise plans available.{% endblock %}
+{% block meta_description %}Choose the perfect Maedix plan for Instagram automation. Automate comment replies and DMs. Free, Pro, and Creator plans available.{% endblock %}
+{% block og_description %}Choose the perfect Maedix plan for Instagram automation. Automate comment replies and DMs.{% endblock %}
+{% block twitter_title %}Pricing Plans | Maedix{% endblock %}
+{% block twitter_description %}Choose the perfect Maedix plan for Instagram automation. Free, Pro, and Creator plans available.{% endblock %}
 
 {% block content %}
 <section class="py-5">
     <div class="container">
         <!-- Header -->
         <div class="text-center mb-5">
-            <h1 class="fw-bold mb-2">Simple Pricing</h1>
-            <p class="text-muted">All limits reset monthly. No hidden fees.</p>
+            <h1 class="fw-bold mb-2">Simple Pricing for Instagram Automation</h1>
+            <p class="text-muted">Automate your Instagram engagement. No hidden fees.</p>
         </div>
 
         {% if plans %}
@@ -61,7 +61,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="small">{{ feature.description }}</span>
                                     {% if feature.limit %}
-                                    <span class="badge bg-dark">{{ feature.limit }}/mo</span>
+                                    <span class="badge bg-dark">{{ feature.limit }}</span>
                                     {% else %}
                                     <i class="bi bi-check-lg text-success"></i>
                                     {% endif %}
@@ -79,7 +79,7 @@
                             {% if user.is_authenticated %}
                             <button class="btn btn-outline-secondary w-100" disabled>Free Plan</button>
                             {% else %}
-                            <a href="{% url 'signup' %}" class="btn btn-outline-primary w-100">Get Started</a>
+                            <a href="{% url 'signup' %}" class="btn btn-outline-primary w-100">Get Started Free</a>
                             {% endif %}
                         {% elif plan.plan_type == 'enterprise' %}
                         <a href="{% url 'contact' %}" class="btn btn-outline-primary w-100">Contact Sales</a>
@@ -101,7 +101,7 @@
                 <span class="mx-2">|</span>
                 <i class="bi bi-arrow-repeat me-1"></i> Cancel anytime
                 <span class="mx-2">|</span>
-                <i class="bi bi-calendar-check me-1"></i> Limits reset monthly
+                <i class="bi bi-instagram me-1"></i> Works with Business/Creator accounts
             </small>
         </div>
 
@@ -155,179 +155,108 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Quiz Attempts -->
-                    <tr>
-                        <td class="py-3">Quiz attempts per month</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'quiz_attempt' %}
-                                    <strong>{{ f.limit }}</strong>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Video Generation -->
-                    <tr>
-                        <td class="py-3">Video generation per month</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'video_gen' %}
-                                    <strong>{{ f.limit }}</strong>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Quiz Creation -->
-                    <tr>
-                        <td class="py-3">Create custom quizzes</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'quiz_create' %}
-                                    <strong>{{ f.limit }}</strong>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Topic Creation -->
-                    <tr>
-                        <td class="py-3">Create learning topics</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'topic_create' %}
-                                    <strong>{{ f.limit }}</strong>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Topics View -->
-                    <tr>
-                        <td class="py-3">View learning topics per month</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'topics_view' %}
-                                    <strong>{{ f.limit }}</strong>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Carousel Export -->
-                    <tr>
-                        <td class="py-3">Export carousel images</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'carousel_export' %}
-                                    <strong>{{ f.limit }}</strong>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Custom Handle -->
-                    <tr>
-                        <td class="py-3">Custom handle in videos</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% with has_feature=False %}
-                            {% for f in plan.features %}
-                                {% if f.code == 'custom_handle_name_in_video_export' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% empty %}
-                                <i class="bi bi-x text-muted"></i>
-                            {% endfor %}
-                            {% endwith %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Custom Intro/Outro -->
-                    <tr>
-                        <td class="py-3">Custom intro & CTA slides</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% with has_feature=False %}
-                            {% for f in plan.features %}
-                                {% if f.code == 'custom_intro_and_outro' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% endfor %}
-                            {% endwith %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Premium Video Templates -->
-                    <tr>
-                        <td class="py-3">Premium video templates</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'premium_video_templates' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Bulk Generation -->
-                    <tr>
-                        <td class="py-3">Bulk video generation & auto-post</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% with has_feature=False %}
-                            {% for f in plan.features %}
-                                {% if f.code == 'can_generate_and_post_multiple_auto' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% endfor %}
-                            {% endwith %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- IG Automation -->
+                    <!-- Post Automations -->
                     <tr>
                         <td class="py-3">
-                            <i class="bi bi-robot text-danger me-1"></i>
-                            Instagram automation (comments & auto-DM)
-                            <span class="badge bg-danger ms-1" style="font-size: 9px;">NEW</span>
+                            <i class="bi bi-chat-left-text text-primary me-1"></i>
+                            Post-level automations
                         </td>
                         {% for plan in plans %}
                         <td class="py-3 text-center">
                             {% for f in plan.features %}
-                                {% if f.code == 'ig_automation' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% if f.code == 'ig_post_automation' %}
+                                    {% if f.limit %}
+                                    <strong>{{ f.limit }}</strong>
+                                    {% else %}
+                                    <span class="text-success fw-bold">Unlimited</span>
+                                    {% endif %}
                                 {% endif %}
                             {% endfor %}
                         </td>
                         {% endfor %}
                     </tr>
 
-                    <!-- Analytics -->
+                    <!-- Account-Level Automation -->
                     <tr>
-                        <td class="py-3">Advanced analytics</td>
+                        <td class="py-3">
+                            <i class="bi bi-person-gear text-success me-1"></i>
+                            Account-level automation (fallback)
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            {% with has_feature=False %}
+                            {% for f in plan.features %}
+                                {% if f.code == 'ig_account_automation' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Auto Comment Reply -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-reply text-info me-1"></i>
+                            Auto comment replies
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Auto DM -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-envelope text-warning me-1"></i>
+                            Auto follow-up DMs
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Keyword Triggers -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-hash text-danger me-1"></i>
+                            Keyword triggers
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Message Variations -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-shuffle me-1"></i>
+                            Multiple message variations (1-5)
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Priority Support -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-headset me-1"></i>
+                            Priority support
+                        </td>
                         {% for plan in plans %}
                         <td class="py-3 text-center">
                             {% for f in plan.features %}
-                                {% if f.code == 'analytics' %}
+                                {% if f.code == 'priority_support' %}
                                     <i class="bi bi-check-circle-fill text-success"></i>
                                 {% endif %}
                             {% endfor %}
@@ -341,4 +270,71 @@
     </div>
 </section>
 {% endif %}
+
+<!-- FAQ Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold">Frequently Asked Questions</h3>
+                </div>
+
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                What is a "post-level automation"?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                A post-level automation is an auto-reply configuration for a specific Instagram post. You can set unique comment replies and DMs for each post. The Free plan allows 3 active automations, Pro allows 100, and Creator has unlimited.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                What is "account-level automation"?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Account-level automation acts as a fallback. When someone comments on any of your posts that don't have specific automations, the account-level settings will automatically respond. This is available on the Creator plan.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Do I need an Instagram Business account?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, Instagram automation requires a Business or Creator account connected to a Facebook Page. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Can I cancel anytime?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! You can cancel your subscription at any time from your dashboard. Your access continues until the end of your billing period, and you won't be charged again.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

@@ -130,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Authentication
 LOGIN_URL = '/users/login/'
-LOGIN_REDIRECT_URL = '/users/dashboard/'
+LOGIN_REDIRECT_URL = '/instagram/automation/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
 

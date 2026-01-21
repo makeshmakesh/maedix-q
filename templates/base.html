@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Maedix-Q{% endblock %} | Interactive Quizzes & Video Generator</title>
-    <meta name="description" content="{% block meta_description %}Test your knowledge with interactive quizzes or create engaging quiz videos for Instagram Reels & YouTube Shorts. Learn, create, and grow.{% endblock %}">
+    <title>{% block title %}Maedix{% endblock %} | Instagram Automation</title>
+    <meta name="description" content="{% block meta_description %}Automate Instagram comment replies and DMs. Turn comments into leads with keyword triggers. Meta verified provider.{% endblock %}">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
@@ -13,23 +13,23 @@
     <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="{% block og_title %}{% block title_og %}Maedix-Q{% endblock %}{% endblock %} | Interactive Quizzes & Video Generator">
-    <meta property="og:description" content="{% block og_description %}Test your knowledge with interactive quizzes or create engaging quiz videos for Instagram Reels & YouTube Shorts.{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{% block title_og %}Maedix{% endblock %}{% endblock %} | Instagram Automation">
+    <meta property="og:description" content="{% block og_description %}Automate Instagram comment replies and DMs. Turn comments into leads with keyword triggers.{% endblock %}">
     <meta property="og:image" content="{% block og_image %}https://maedix.com/static/images/og-default.png{% endblock %}">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:site_name" content="Maedix-Q">
+    <meta property="og:site_name" content="Maedix">
     <meta property="og:locale" content="en_US">
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}Maedix-Q | Interactive Quizzes & Video Generator{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}Test your knowledge with interactive quizzes or create engaging quiz videos for Instagram Reels & YouTube Shorts.{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}Maedix | Instagram Automation{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Automate Instagram comment replies and DMs. Turn comments into leads with keyword triggers.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}https://maedix.com/static/images/og-default.png{% endblock %}">
 
     <!-- Additional SEO Meta Tags -->
-    <meta name="author" content="Maedix-Q">
-    <meta name="keywords" content="{% block keywords %}quiz, interactive quizzes, quiz videos, Instagram Reels, YouTube Shorts, learning, education, trivia{% endblock %}">
+    <meta name="author" content="Maedix">
+    <meta name="keywords" content="{% block keywords %}instagram automation, auto reply, auto dm, comment automation, instagram marketing, lead generation, Meta API{% endblock %}">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -40,57 +40,90 @@
 
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #e0e7ff;
-            --secondary: #10b981;
+            /* Instagram-inspired color scheme */
+            --primary: #E1306C;
+            --primary-dark: #C13584;
+            --primary-light: #fdf2f5;
+            --primary-rgb: 225, 48, 108;
+            --gradient: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            --secondary: #0d6efd;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
             --text-dark: #1f2937;
             --text-muted: #6b7280;
             --bg-white: #ffffff;
-            --bg-light: #f9fafb;
+            --bg-light: #f8f9fa;
             --bg-gray: #f3f4f6;
             --border-color: #e5e7eb;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-light);
             color: var(--text-dark);
             min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Navbar */
         .navbar {
             background: var(--bg-white);
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow);
+            padding: 0.75rem 0;
         }
 
         .navbar-brand {
             font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--primary) !important;
+            font-size: 1.35rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav-link {
             color: var(--text-dark) !important;
             font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
         }
 
         .nav-link:hover {
             color: var(--primary) !important;
+            background: var(--primary-light);
+        }
+
+        /* Buttons */
+        .btn {
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 1.25rem;
+            transition: all 0.2s ease;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: var(--primary);
             border: none;
-            padding: 0.5rem 1.5rem;
-            font-weight: 500;
         }
 
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        .btn-primary:hover, .btn-primary:focus {
+            background: var(--primary-dark);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
         }
 
         .btn-outline-primary {
@@ -104,20 +137,42 @@
             color: #fff;
         }
 
+        .btn-danger {
+            background: var(--primary);
+            border: none;
+        }
+
+        .btn-danger:hover, .btn-danger:focus {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
+        }
+
+        .btn-lg {
+            padding: 0.75rem 1.75rem;
+            font-size: 1rem;
+        }
+
+        /* Cards */
         .card {
             background: var(--bg-white);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
         }
 
         .card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            border-color: rgba(var(--primary-rgb), 0.3);
+            box-shadow: var(--shadow-md);
         }
 
+        /* Remove transform on card hover for better UX */
+        .card.no-hover:hover {
+            transform: none;
+        }
+
+        /* Footer */
         footer {
             background: var(--bg-white);
             border-top: 1px solid var(--border-color);
@@ -126,15 +181,23 @@
         .footer-link {
             color: var(--text-muted);
             text-decoration: none;
+            transition: color 0.2s ease;
         }
 
         .footer-link:hover {
             color: var(--primary);
         }
 
-        .badge-difficulty-beginner { background: #22c55e; }
-        .badge-difficulty-intermediate { background: #f59e0b; }
-        .badge-difficulty-advanced { background: #ef4444; }
+        /* Badges */
+        .badge {
+            font-weight: 600;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+        }
+
+        .badge-difficulty-beginner { background: var(--success); }
+        .badge-difficulty-intermediate { background: var(--warning); }
+        .badge-difficulty-advanced { background: var(--danger); }
         .badge-difficulty-expert { background: #8b5cf6; }
 
         .xp-badge {
@@ -147,28 +210,38 @@
             background: linear-gradient(135deg, #ef4444, #dc2626);
         }
 
-        /* Form styling */
-        .form-control {
+        /* Forms */
+        .form-control, .form-select {
             background: var(--bg-white);
             border: 1px solid var(--border-color);
             color: var(--text-dark);
+            border-radius: var(--radius-sm);
+            padding: 0.625rem 0.875rem;
+            transition: all 0.2s ease;
         }
 
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             background: var(--bg-white);
             border-color: var(--primary);
             color: var(--text-dark);
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
         }
 
         .form-control::placeholder {
             color: var(--text-muted);
         }
 
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
         /* Alerts */
         .alert {
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
         }
 
         /* Tables */
@@ -177,15 +250,25 @@
             --bs-table-color: var(--text-dark);
         }
 
+        .table th {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
         /* Dropdown */
         .dropdown-menu {
             background: var(--bg-white);
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            padding: 0.5rem;
         }
 
         .dropdown-item {
             color: var(--text-dark);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
         }
 
         .dropdown-item:hover {
@@ -193,9 +276,20 @@
             color: var(--primary);
         }
 
+        .dropdown-item i {
+            width: 20px;
+        }
+
         /* Progress bar */
         .progress {
             background: var(--bg-gray);
+            border-radius: 50px;
+            height: 8px;
+        }
+
+        .progress-bar {
+            background: var(--gradient);
+            border-radius: 50px;
         }
 
         /* Text utilities */
@@ -203,31 +297,45 @@
             color: var(--text-muted) !important;
         }
 
+        .text-primary {
+            color: var(--primary) !important;
+        }
+
+        .text-gradient {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         /* Section backgrounds */
-        .bg-light-custom {
-            background: var(--bg-gray);
+        .bg-light-custom, .bg-light {
+            background: var(--bg-light) !important;
         }
 
         .bg-primary-soft {
             background: var(--primary-light);
         }
 
-        /* Hero gradient for special sections */
+        /* Hero gradient */
         .hero-gradient {
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-white) 100%);
+            background: linear-gradient(180deg, var(--primary-light) 0%, var(--bg-white) 100%);
         }
 
         /* Stat cards */
         .stat-card {
             background: var(--bg-white);
-            border-radius: 12px;
+            border-radius: var(--radius);
             padding: 1.5rem;
             text-align: center;
+            box-shadow: var(--shadow);
         }
 
         /* Breadcrumb */
         .breadcrumb {
             background: transparent;
+            padding: 0;
+            margin-bottom: 1rem;
         }
 
         .breadcrumb-item a {
@@ -235,8 +343,64 @@
             text-decoration: none;
         }
 
+        .breadcrumb-item a:hover {
+            text-decoration: underline;
+        }
+
         .breadcrumb-item.active {
             color: var(--text-muted);
+        }
+
+        /* Section headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                padding: 0.5rem 1rem;
+            }
+
+            .btn-lg {
+                padding: 0.625rem 1.25rem;
+                font-size: 0.95rem;
+            }
+
+            .card {
+                border-radius: var(--radius-sm);
+            }
+
+            h1 { font-size: 1.75rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Focus states for accessibility */
+        :focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Loading states */
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
         }
     </style>
 
@@ -247,10 +411,10 @@
     {
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "Maedix-Q",
+        "name": "Maedix",
         "url": "https://maedix.com",
         "logo": "https://maedix.com/static/images/logo.png",
-        "description": "Interactive quizzes and quiz video generator for Instagram Reels & YouTube Shorts",
+        "description": "Instagram automation platform for auto comment replies and DMs. Meta verified provider.",
         "sameAs": []
     }
     </script>

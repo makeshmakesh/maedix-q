@@ -389,7 +389,6 @@
             <div class="col-lg-8">
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb small">
-                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{% url 'instagram_automation_list' %}">Automation</a></li>
                         <li class="breadcrumb-item active">{% if editing %}Edit{% else %}Create{% endif %}</li>
                     </ol>
@@ -431,7 +430,7 @@
                             </label>
                             <input type="text" class="form-control" id="title" name="title"
                                    value="{{ automation.title|default:'' }}"
-                                   placeholder="e.g., Python Quiz Promo" maxlength="100" required>
+                                   placeholder="e.g., My Automation" maxlength="100" required>
                             <small class="text-muted">Give your automation a descriptive name</small>
                         </div>
 

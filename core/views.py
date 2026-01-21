@@ -283,7 +283,7 @@ class PaymentSuccessPageView(LoginRequiredMixin, View):
 
         if not payment_data:
             messages.warning(request, 'No payment information found.')
-            return redirect('quiz_home')
+            return redirect('subscription')
 
         # Clear session data
         del request.session['payment_success_data']
@@ -299,7 +299,7 @@ class PaymentSuccessPageView(LoginRequiredMixin, View):
             )
         except (Transaction.DoesNotExist, Subscription.DoesNotExist):
             messages.warning(request, 'Transaction not found.')
-            return redirect('quiz_home')
+            return redirect('subscription')
 
         context = {
             'transaction': transaction,

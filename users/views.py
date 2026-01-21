@@ -19,13 +19,13 @@ class SignupView(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('dashboard')
+            return redirect('instagram_automation_list')
         form = SignupForm()
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
         if request.user.is_authenticated:
-            return redirect('dashboard')
+            return redirect('instagram_automation_list')
         form = SignupForm(request.POST)
         if form.is_valid():
             # Create user as inactive (pending email verification)
@@ -104,7 +104,7 @@ class OTPVerificationView(View):
                 # Log the user in
                 login(request, user)
                 messages.success(request, 'Email verified! Account created successfully. You are on the Free plan.')
-                return redirect('dashboard')
+                return redirect('instagram_automation_list')
             else:
                 messages.error(request, message)
 
@@ -154,13 +154,13 @@ class LoginView(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('dashboard')
+            return redirect('instagram_automation_list')
         form = LoginForm()
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
         if request.user.is_authenticated:
-            return redirect('dashboard')
+            return redirect('instagram_automation_list')
         form = LoginForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
@@ -168,7 +168,7 @@ class LoginView(View):
             user = authenticate(request, email=email, password=password)
             if user is not None:
                 login(request, user)
-                next_url = request.GET.get('next', 'dashboard')
+                next_url = request.GET.get('next', 'instagram_automation_list')
                 return redirect(next_url)
             else:
                 messages.error(request, 'Invalid email or password')
@@ -295,48 +295,46 @@ class SubscriptionView(LoginRequiredMixin, View):
     template_name = 'users/subscription.html'
 
     def get(self, request):
+        from instagram.models import InstagramAutomation
+
         # Get user's active subscription
         subscription = Subscription.objects.filter(
             user=request.user
         ).select_related('plan').first()
 
         # Get available plans for upgrade
-        plans = Plan.objects.filter(is_active=True)
+        plans = Plan.objects.filter(is_active=True).order_by('order')
 
         # Get recent transactions
         transactions = Transaction.objects.filter(
             user=request.user
         ).order_by('-created_at')[:10]
 
-        # Calculate usage stats if subscription exists
-        usage_stats = []
+        # Calculate IG automation stats
+        automation_count = InstagramAutomation.objects.filter(user=request.user).count()
+        automation_limit = None
+        automation_remaining = None
+        automation_percentage = 0
+        can_use_account_automation = request.user.is_staff
+
         if subscription and subscription.plan:
-            for feature in subscription.plan.features:
-                code = feature.get('code')
-                description = feature.get('description')
-                limit = feature.get('limit')
-                used = subscription.get_usage(code)
-
-                if limit:
-                    percentage = min(100, int((used / limit) * 100))
-                else:
-                    percentage = 0
-                    limit = 'Unlimited'
-
-                usage_stats.append({
-                    'code': code,
-                    'description': description,
-                    'limit': limit,
-                    'used': used,
-                    'remaining': subscription.get_remaining(code) if limit != 'Unlimited' else 'Unlimited',
-                    'percentage': percentage,
-                })
+            feature = subscription.plan.get_feature('ig_post_automation')
+            if feature:
+                automation_limit = feature.get('limit')
+                if automation_limit:
+                    automation_remaining = max(0, automation_limit - automation_count)
+                    automation_percentage = min(100, int((automation_count / automation_limit) * 100))
+            can_use_account_automation = subscription.plan.has_feature('ig_account_automation') or request.user.is_staff
 
         context = {
             'subscription': subscription,
             'plans': plans,
             'transactions': transactions,
-            'usage_stats': usage_stats,
+            'automation_count': automation_count,
+            'automation_limit': automation_limit,
+            'automation_remaining': automation_remaining,
+            'automation_percentage': automation_percentage,
+            'can_use_account_automation': can_use_account_automation,
         }
         return render(request, self.template_name, context)
 

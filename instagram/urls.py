@@ -10,14 +10,28 @@ urlpatterns = [
     path('subscribe/', views.InstagramWebhookSubscribeView.as_view(), name='instagram_subscribe'),
     path('post/', views.InstagramPostPageView.as_view(), name='instagram_post_page'),
 
-    # Automation management
-    path('automation/', views.AutomationLandingView.as_view(), name='instagram_automation_landing'),
-    path('automation/dashboard/', views.AutomationListView.as_view(), name='instagram_automation_list'),
-    path('automation/create/', views.AutomationCreateView.as_view(), name='instagram_automation_create'),
+    # Instagram Posts API
     path('api/posts/', views.InstagramPostsAPIView.as_view(), name='instagram_api_posts'),
-    path('automation/<int:pk>/edit/', views.AutomationEditView.as_view(), name='instagram_automation_edit'),
-    path('automation/<int:pk>/delete/', views.AutomationDeleteView.as_view(), name='instagram_automation_delete'),
-    path('automation/account/', views.AccountAutomationView.as_view(), name='instagram_automation_account'),
+
+    # DM Flow Builder
+    path('flows/', views.FlowListView.as_view(), name='flow_list'),
+    path('flows/create/', views.FlowCreateView.as_view(), name='flow_create'),
+    path('flows/<int:pk>/edit/', views.FlowEditView.as_view(), name='flow_edit'),
+    path('flows/<int:pk>/delete/', views.FlowDeleteView.as_view(), name='flow_delete'),
+    path('flows/<int:pk>/sessions/', views.FlowSessionsView.as_view(), name='flow_sessions'),
+
+    # Flow Node API endpoints
+    path('flows/<int:flow_id>/nodes/', views.FlowNodeCreateView.as_view(), name='flow_node_create'),
+    path('flows/<int:flow_id>/nodes/<int:node_id>/', views.FlowNodeDetailView.as_view(), name='flow_node_detail'),
+    path('flows/<int:flow_id>/nodes/<int:node_id>/update/', views.FlowNodeUpdateView.as_view(), name='flow_node_update'),
+    path('flows/<int:flow_id>/nodes/<int:node_id>/delete/', views.FlowNodeDeleteView.as_view(), name='flow_node_delete'),
+    path('flows/<int:flow_id>/nodes/reorder/', views.FlowNodeReorderView.as_view(), name='flow_node_reorder'),
+    path('flows/<int:pk>/save-visual/', views.FlowSaveVisualView.as_view(), name='flow_save_visual'),
+
+    # Leads / CRM
+    path('leads/', views.LeadsListView.as_view(), name='leads_list'),
+    path('leads/export/', views.LeadsExportView.as_view(), name='leads_export'),
+    path('leads/<int:pk>/', views.LeadDetailView.as_view(), name='lead_detail'),
 
     # Webhook
     path('webhook/', views.InstagramWebhookView.as_view(), name='instagram_webhook'),

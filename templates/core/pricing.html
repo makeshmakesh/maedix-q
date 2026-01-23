@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
 {% block title %}Pricing Plans{% endblock %}
-{% block meta_description %}Choose the perfect Maedix plan for Instagram automation. Automate comment replies and DMs. Free, Pro, and Creator plans available.{% endblock %}
-{% block og_description %}Choose the perfect Maedix plan for Instagram automation. Automate comment replies and DMs.{% endblock %}
+{% block meta_description %}Choose the perfect Maedix plan for Instagram DM automation. Visual Flow Builder, Quick Replies, Follower Check. Free, Pro, and Creator plans available.{% endblock %}
+{% block og_description %}Choose the perfect Maedix plan for Instagram DM automation. Visual Flow Builder with Quick Replies and Follower Check.{% endblock %}
 {% block twitter_title %}Pricing Plans | Maedix{% endblock %}
-{% block twitter_description %}Choose the perfect Maedix plan for Instagram automation. Free, Pro, and Creator plans available.{% endblock %}
+{% block twitter_description %}Choose the perfect Maedix plan for Instagram DM automation. Free, Pro, and Creator plans available.{% endblock %}
 
 {% block content %}
 <section class="py-5">
     <div class="container">
         <!-- Header -->
         <div class="text-center mb-5">
-            <h1 class="fw-bold mb-2">Simple Pricing for Instagram Automation</h1>
-            <p class="text-muted">Automate your Instagram engagement. No hidden fees.</p>
+            <h1 class="fw-bold mb-2">Simple Pricing for Powerful Automation</h1>
+            <p class="text-muted">Build advanced DM flows with our Visual Flow Builder. No hidden fees.</p>
         </div>
 
         {% if plans %}
@@ -121,16 +121,22 @@
     <div class="container">
         <div class="text-center mb-4">
             <h3 class="fw-bold">Compare Plans</h3>
+            <p class="text-muted">All plans include our powerful Visual Flow Builder</p>
         </div>
 
         <div class="table-responsive">
             <table class="table bg-white">
                 <thead>
                     <tr>
-                        <th class="py-3 border-0" style="min-width: 200px;">Feature</th>
+                        <th class="py-3 border-0" style="min-width: 220px;">Feature</th>
                         {% for plan in plans %}
                         <th class="py-3 border-0 text-center" style="min-width: 120px;">
                             <strong>{{ plan.name }}</strong>
+                            {% if plan.price_monthly > 0 %}
+                            <br><small class="text-muted">₹{{ plan.price_monthly|floatformat:0 }}/mo</small>
+                            {% else %}
+                            <br><small class="text-muted">Free</small>
+                            {% endif %}
                             {% if current_plan and current_plan.id == plan.id %}
                             <br><span class="badge bg-success">Current</span>
                             {% endif %}
@@ -139,35 +145,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Price Row -->
+                    <!-- Active Flows -->
                     <tr class="table-light">
-                        <td class="py-3 fw-semibold">Monthly Price</td>
-                        {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% if plan.plan_type == 'enterprise' %}
-                            Custom
-                            {% elif plan.price_monthly > 0 %}
-                            <strong>₹{{ plan.price_monthly|floatformat:0 }}</strong>
-                            {% else %}
-                            Free
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-
-                    <!-- Active Automations -->
-                    <tr>
                         <td class="py-3">
-                            <i class="bi bi-chat-left-text text-primary me-1"></i>
-                            Active automations (posts)
-                            <br><small class="text-muted">Posts with automation enabled</small>
+                            <i class="bi bi-diagram-3 text-primary me-2"></i>
+                            <strong>Active DM Flows</strong>
+                            <br><small class="text-muted">Automated flows running simultaneously</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
+                        <td class="py-3 text-center align-middle">
                             {% for f in plan.features %}
-                                {% if f.code == 'ig_post_automation' %}
+                                {% if f.code == 'ig_flow_builder' %}
                                     {% if f.limit %}
-                                    <strong>{{ f.limit }} posts</strong>
+                                    <strong class="fs-5">{{ f.limit }}</strong>
                                     {% else %}
                                     <span class="text-success fw-bold">Unlimited</span>
                                     {% endif %}
@@ -177,48 +167,86 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Replies per post -->
-                    <tr class="table-light">
+                    <!-- Visual Flow Builder -->
+                    <tr>
                         <td class="py-3">
-                            <i class="bi bi-infinity text-success me-1"></i>
-                            Replies per post
-                            <br><small class="text-muted">Auto-replies sent per automation</small>
+                            <i class="bi bi-window-stack text-info me-2"></i>
+                            Visual Flow Builder
+                            <br><small class="text-muted">Drag-and-drop interface</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            <span class="text-success fw-bold">Unlimited</span>
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
                         {% endfor %}
                     </tr>
 
-                    <!-- Account-Level Automation -->
-                    <tr>
+                    <!-- Mobile Form Editor -->
+                    <tr class="table-light">
                         <td class="py-3">
-                            <i class="bi bi-person-gear text-success me-1"></i>
-                            Account-level automation (fallback)
+                            <i class="bi bi-phone text-purple me-2"></i>
+                            Mobile-Friendly Editor
+                            <br><small class="text-muted">Edit flows on any device</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% with has_feature=False %}
-                            {% for f in plan.features %}
-                                {% if f.code == 'ig_account_automation' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% endfor %}
-                            {% endwith %}
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Quick Replies -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-ui-radios-grid text-success me-2"></i>
+                            Quick Reply Buttons
+                            <br><small class="text-muted">Interactive button messages</small>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Button Templates -->
+                    <tr class="table-light">
+                        <td class="py-3">
+                            <i class="bi bi-menu-button-wide text-purple me-2"></i>
+                            Button Templates
+                            <br><small class="text-muted">Action & URL buttons</small>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Follower Check -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-person-check text-danger me-2"></i>
+                            Follower Check
+                            <br><small class="text-muted">Branch based on follow status</small>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
                         {% endfor %}
                     </tr>
 
                     <!-- Auto Comment Reply -->
-                    <tr>
+                    <tr class="table-light">
                         <td class="py-3">
-                            <i class="bi bi-reply text-info me-1"></i>
-                            Auto comment replies
+                            <i class="bi bi-chat-dots text-info me-2"></i>
+                            Auto Comment Replies
+                            <br><small class="text-muted">Reply to comments automatically</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
                         {% endfor %}
                     </tr>
@@ -226,61 +254,101 @@
                     <!-- Auto DM -->
                     <tr>
                         <td class="py-3">
-                            <i class="bi bi-envelope text-warning me-1"></i>
-                            Auto follow-up DMs
+                            <i class="bi bi-envelope text-warning me-2"></i>
+                            Auto Follow-up DMs
+                            <br><small class="text-muted">Send DMs to commenters</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
                         {% endfor %}
                     </tr>
 
                     <!-- Keyword Triggers -->
-                    <tr>
+                    <tr class="table-light">
                         <td class="py-3">
-                            <i class="bi bi-hash text-danger me-1"></i>
-                            Keyword triggers
+                            <i class="bi bi-hash text-danger me-2"></i>
+                            Keyword Triggers
+                            <br><small class="text-muted">Trigger on specific words</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
                         {% endfor %}
                     </tr>
 
-                    <!-- Message Variations -->
+                    <!-- Link Messages -->
                     <tr>
                         <td class="py-3">
-                            <i class="bi bi-shuffle me-1"></i>
-                            Multiple message variations (1-5)
+                            <i class="bi bi-link-45deg text-primary me-2"></i>
+                            Link Messages
+                            <br><small class="text-muted">Send clickable links in DMs</small>
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                        <td class="py-3 text-center align-middle">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Replies per Flow -->
+                    <tr class="table-light">
+                        <td class="py-3">
+                            <i class="bi bi-infinity text-success me-2"></i>
+                            Replies per Flow
+                            <br><small class="text-muted">No limits on responses</small>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center align-middle">
+                            <span class="text-success fw-bold">Unlimited</span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Lead Collection (Coming Soon) -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-person-plus text-muted me-2"></i>
+                            Lead Collection
+                            <br><small class="text-muted">Collect name, email, phone</small>
+                        </td>
+                        {% for plan in plans %}
+                        <td class="py-3 text-center align-middle">
+                            <span class="badge bg-secondary">Coming Soon</span>
                         </td>
                         {% endfor %}
                     </tr>
 
                     <!-- Priority Support -->
-                    <tr>
+                    <tr class="table-light">
                         <td class="py-3">
-                            <i class="bi bi-headset me-1"></i>
-                            Priority support
+                            <i class="bi bi-headset me-2"></i>
+                            Priority Support
                         </td>
                         {% for plan in plans %}
-                        <td class="py-3 text-center">
-                            {% for f in plan.features %}
-                                {% if f.code == 'priority_support' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% endif %}
-                            {% endfor %}
+                        <td class="py-3 text-center align-middle">
+                            {% if plan.plan_type == 'free' %}
+                            <i class="bi bi-dash text-muted"></i>
+                            {% else %}
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% endif %}
                         </td>
                         {% endfor %}
                     </tr>
 
                 </tbody>
             </table>
+        </div>
+
+        <!-- CTA after table -->
+        <div class="text-center mt-4">
+            {% if not user.is_authenticated %}
+            <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-rocket-takeoff me-2"></i>Start Free Trial
+            </a>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -299,14 +367,19 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                What does "3 active automations" mean on the Free plan?
+                                What is a "DM Flow"?
                             </button>
                         </h2>
                         <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                <strong>It means you can have automation enabled on 3 different posts at a time.</strong> Each post gets <strong>unlimited replies</strong> - there's no cap on how many comments we auto-reply to. You can disable an old automation and enable it on a new post anytime.
-                                <br><br>
-                                <em>Example: If you have 3 Reels with automation, all incoming comments on those 3 posts get auto-replies and DMs - no limits on the number of replies!</em>
+                                A DM Flow is an automated conversation sequence. When someone comments on your post with a trigger keyword, the flow automatically:
+                                <ul class="mt-2">
+                                    <li>Replies to their comment</li>
+                                    <li>Sends them a DM with your message</li>
+                                    <li>Shows interactive buttons for them to tap</li>
+                                    <li>Continues the conversation based on their responses</li>
+                                </ul>
+                                <em>Example: Someone comments "LINK" on your Reel → They get a comment reply + a DM with Quick Reply buttons → They tap "Get Free Guide" → They receive your download link!</em>
                             </div>
                         </div>
                     </div>
@@ -314,25 +387,14 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                Are replies limited per post?
+                                What does "1 active flow" mean on the Free plan?
                             </button>
                         </h2>
                         <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                <strong>No! Replies are unlimited on all plans.</strong> Whether you're on Free, Pro, or Creator - every comment with your trigger keywords gets an auto-reply and DM. The only difference between plans is how many posts can have automation active simultaneously.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2b">
-                                What is "account-level automation"?
-                            </button>
-                        </h2>
-                        <div id="faq2b" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Account-level automation acts as a fallback. When someone comments on any of your posts that don't have specific automations, the account-level settings will automatically respond. This is available on the Creator plan.
+                                <strong>You can have 1 automated flow running at a time.</strong> That flow can be as complex as you want - with multiple steps, Quick Replies, Follower Checks, etc. And it handles <strong>unlimited responses</strong>!
+                                <br><br>
+                                Want to run automation on multiple posts? Upgrade to Pro (5 flows) or Creator (unlimited flows).
                             </div>
                         </div>
                     </div>
@@ -340,12 +402,12 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                Do I need an Instagram Business account?
+                                Are replies limited?
                             </button>
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Yes, Instagram automation requires a Business or Creator account. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
+                                <strong>No! Replies are unlimited on all plans.</strong> Whether you're on Free, Pro, or Creator - every comment that triggers your flow gets the full automated experience. The only difference between plans is how many flows can be active simultaneously.
                             </div>
                         </div>
                     </div>
@@ -353,10 +415,53 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                Can I cancel anytime?
+                                What are Quick Replies and Button Templates?
                             </button>
                         </h2>
                         <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <strong>Quick Replies</strong> are tappable buttons that appear below your DM message. Users can tap them to continue the conversation - perfect for surveys, quizzes, or guiding users to different content.
+                                <br><br>
+                                <strong>Button Templates</strong> are similar but can include URL buttons that open links directly. Great for directing users to your website, Calendly, or product pages.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                What is "Follower Check"?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Follower Check lets you create different paths based on whether someone follows you or not.
+                                <br><br>
+                                <em>Example: If they're a follower → Send exclusive discount. If not → Ask them to follow first, then send the regular offer.</em>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                Do I need an Instagram Business account?
+                            </button>
+                        </h2>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, Instagram automation requires a Business or Creator account connected to a Facebook Page. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                                Can I cancel anytime?
+                            </button>
+                        </h2>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
                                 Yes! This is not auto-renewing. You don't need to worry about being charged again. Simply upgrade again when you're ready.
                             </div>
@@ -365,6 +470,23 @@
                 </div>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-3">Ready to Automate Your Instagram DMs?</h3>
+        <p class="mb-4 opacity-75">Join creators who are saving hours every week with automated conversations.</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'flow_list' %}" class="btn btn-light btn-lg">
+            <i class="bi bi-diagram-3 me-2"></i>Go to Flow Builder
+        </a>
+        {% else %}
+        <a href="{% url 'signup' %}" class="btn btn-light btn-lg">
+            <i class="bi bi-rocket-takeoff me-2"></i>Start Free - No Credit Card Required
+        </a>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

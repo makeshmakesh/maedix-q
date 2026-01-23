@@ -496,15 +496,6 @@
                 <p>Set up automated DM responses for your Instagram posts</p>
             </div>
 
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
-            {% endif %}
-
             <form method="post" id="flowForm">
                 {% csrf_token %}
 

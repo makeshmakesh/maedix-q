@@ -743,12 +743,15 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             })
 
         # Check if user can have this flow active
-        from users.models import UserProfile
-        profile = UserProfile.objects.filter(user=request.user).first()
         max_active = 1  # Default for free users
 
-        if request.user.is_staff or (profile and profile.subscription_status == 'active'):
+        if request.user.is_staff:
             max_active = float('inf')
+        else:
+            subscription = get_user_subscription(request.user)
+            if subscription and subscription.plan:
+                # Pro users can have unlimited active flows
+                max_active = float('inf')
 
         active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
         is_active = active_count < max_active
@@ -1128,19 +1131,21 @@ class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         # If trying to activate, check if user can have more active flows
         if is_active and not flow.is_active:
             # Check active flow limit based on subscription
-            from users.models import UserProfile
-            profile = UserProfile.objects.filter(user=request.user).first()
             max_active = 1  # Default for free users
 
-            if profile and profile.subscription_status == 'active':
-                # Pro users can have unlimited active flows
+            if request.user.is_staff:
                 max_active = float('inf')
+            else:
+                subscription = get_user_subscription(request.user)
+                if subscription and subscription.plan:
+                    # Pro users can have unlimited active flows
+                    max_active = float('inf')
 
             active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
             if active_count >= max_active:
                 return JsonResponse({
                     'success': False,
-                    'error': f'You can only have {max_active} active flow(s) on your current plan. Please upgrade or deactivate another flow first.'
+                    'error': f'You can only have {int(max_active)} active flow(s) on your current plan. Please upgrade or deactivate another flow first.'
                 }, status=400)
 
         flow.is_active = is_active

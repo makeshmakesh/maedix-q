@@ -1,0 +1,3891 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Flow: {{ flow.title }}{% endblock %}
+
+{% block content %}
+<style>
+/* Drawflow Styles */
+#drawflow {
+    width: 100%;
+    height: 650px;
+    background: #f8f9fa;
+    background-size: 20px 20px;
+    background-image:
+        linear-gradient(to right, #e9ecef 1px, transparent 1px),
+        linear-gradient(to bottom, #e9ecef 1px, transparent 1px);
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+
+.drawflow .drawflow-node {
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    min-width: 240px;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.drawflow .drawflow-node.selected {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Style the ports - keep Drawflow's default sizing and positioning */
+.drawflow .drawflow-node .input,
+.drawflow .drawflow-node .output {
+    background: white !important;
+    border: 2px solid #6c757d !important;
+    cursor: crosshair !important;
+}
+
+.drawflow .drawflow-node .input:hover,
+.drawflow .drawflow-node .output:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+}
+
+.drawflow .connection .main-path {
+    stroke: #6c757d;
+    stroke-width: 3px;
+}
+
+.drawflow .connection .main-path:hover {
+    stroke: var(--primary);
+}
+
+/* Node Header Styles */
+.node-header {
+    padding: 8px 12px;
+    border-radius: 6px 6px 0 0;
+    font-weight: 600;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.node-header.trigger { background: #fff3cd; color: #856404; }
+.node-header.comment-reply { background: #cff4fc; color: #055160; }
+.node-header.text-message { background: #cfe2ff; color: #084298; }
+.node-header.quick-reply { background: #d1e7dd; color: #0f5132; }
+.node-header.button-template { background: #e0cffc; color: #432874; }
+.node-header.link-message { background: #fff3cd; color: #664d03; }
+.node-header.follower-check { background: #f8d7da; color: #842029; }
+.node-header.collect-data { background: #f5d0e1; color: #8c1e56; }
+
+.node-body {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.node-body .text-preview {
+    color: #6c757d;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+/* Output Labels for Branching */
+.node-outputs {
+    margin-top: 8px;
+    border-top: 1px solid #e9ecef;
+    padding-top: 8px;
+}
+
+.output-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 4px 0;
+    font-size: 11px;
+    position: relative;
+}
+
+.output-label {
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+
+.output-label.follower { background: #d1e7dd; color: #0f5132; }
+.output-label.not-follower { background: #f8d7da; color: #842029; }
+.output-label.button { background: #e9ecef; color: #495057; }
+.output-label.default { background: #cfe2ff; color: #084298; }
+
+.output-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6c757d;
+    margin-left: 4px;
+}
+
+.output-dot.green { background: #198754; }
+.output-dot.red { background: #dc3545; }
+.output-dot.blue { background: #0d6efd; }
+
+/* Toolbar */
+.flow-toolbar {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #dee2e6;
+}
+
+/* Node Palette */
+.node-palette {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 12px;
+}
+
+.palette-item {
+    padding: 10px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: grab;
+    transition: all 0.2s;
+    font-size: 13px;
+}
+
+.palette-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.palette-item:active {
+    cursor: grabbing;
+}
+
+.palette-item i {
+    width: 20px;
+}
+
+.palette-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Edit Panel */
+.edit-panel {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 16px;
+    display: none;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.edit-panel.active {
+    display: block;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+}
+
+/* Pan/Navigation Controls */
+.pan-controls {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    z-index: 10;
+}
+
+.pan-controls .pan-row {
+    display: flex;
+    gap: 2px;
+}
+
+.pan-controls button {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.pan-controls button:hover {
+    background: #f8f9fa;
+}
+
+.pan-controls button:active {
+    background: #e9ecef;
+}
+
+/* Custom Scrollbars */
+.canvas-scrollbar {
+    position: absolute;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    z-index: 15;
+}
+
+.canvas-scrollbar-h {
+    bottom: 4px;
+    left: 120px;  /* Clear pan controls (about 100px wide) */
+    right: 160px; /* Clear zoom controls (about 150px wide) */
+    height: 8px;
+}
+
+.canvas-scrollbar-v {
+    right: 4px;
+    top: 50px;    /* Clear help hint */
+    bottom: 60px; /* Clear zoom controls */
+    width: 8px;
+}
+
+.scrollbar-thumb {
+    position: absolute;
+    background: rgba(0,0,0,0.4);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.scrollbar-thumb:hover,
+.scrollbar-thumb:active {
+    background: rgba(0,0,0,0.6);
+}
+
+.scrollbar-thumb-h {
+    height: 100%;
+    min-width: 40px;
+}
+
+.scrollbar-thumb-v {
+    width: 100%;
+    min-height: 40px;
+}
+
+.zoom-controls button {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto; /* Ensure buttons are clickable */
+}
+
+.zoom-controls button:hover {
+    background: #f8f9fa;
+}
+
+/* Help text */
+.help-hint {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    z-index: 10;
+    pointer-events: none; /* Don't block canvas interactions */
+}
+
+/* Drawflow touch support */
+#drawflow {
+    touch-action: none; /* Enable custom touch handling for Drawflow */
+}
+
+.drawflow .drawflow-node {
+    touch-action: none;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 767px) {
+    #drawflow {
+        height: 450px;
+    }
+
+    .node-palette {
+        margin-bottom: 16px;
+    }
+
+    .palette-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        /* Better touch targets */
+        min-height: 44px;
+        touch-action: none;
+    }
+
+    .palette-item span {
+        white-space: nowrap;
+    }
+
+    .node-palette h6 {
+        margin-bottom: 10px !important;
+    }
+
+    /* Make palette scrollable horizontally on mobile */
+    .mobile-palette-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #desktopHint {
+        display: none !important;
+    }
+
+    #mobileHint {
+        display: block !important;
+        top: auto;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 11px;
+    }
+
+    .zoom-controls {
+        bottom: 8px;
+        right: 8px;
+    }
+
+    .zoom-controls button {
+        width: 40px;
+        height: 40px;
+    }
+
+    .pan-controls {
+        bottom: 8px;
+        left: 8px;
+    }
+
+    .pan-controls button {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Mobile scrollbars - larger for touch */
+    .canvas-scrollbar {
+        background: rgba(0,0,0,0.15);
+    }
+
+    .canvas-scrollbar-h {
+        height: 12px;
+        left: 8px;
+        right: 150px;
+        bottom: 50px;
+    }
+
+    .canvas-scrollbar-v {
+        width: 12px;
+        top: 8px;
+        bottom: 100px;
+    }
+
+    .scrollbar-thumb {
+        background: rgba(0,0,0,0.5);
+    }
+
+    /* Hide pan arrows on mobile - scrollbars are enough */
+    .pan-controls {
+        display: none;
+    }
+
+    .edit-panel {
+        max-height: 400px;
+    }
+
+    /* Touch feedback */
+    .palette-item:active {
+        transform: scale(0.95);
+        background: var(--primary-light);
+    }
+}
+
+/* Touch drag ghost */
+.touch-drag-ghost i {
+    font-size: 16px;
+}
+
+/* Form Editor Styles */
+#formEditor {
+    display: none;
+}
+
+#formEditor.active {
+    display: block;
+}
+
+#visualEditor.hidden {
+    display: none;
+}
+
+.form-node-card {
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.form-node-card:hover {
+    border-color: #adb5bd;
+}
+
+.form-node-card.dragging {
+    opacity: 0.5;
+    border-color: var(--primary);
+}
+
+.form-node-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.form-node-header .node-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.form-node-header .node-icon.comment-reply { background: #0dcaf0; color: white; }
+.form-node-header .node-icon.text-message { background: #0d6efd; color: white; }
+.form-node-header .node-icon.quick-reply { background: #198754; color: white; }
+.form-node-header .node-icon.button-template { background: #6f42c1; color: white; }
+.form-node-header .node-icon.link-message { background: #ffc107; color: #212529; }
+.form-node-header .node-icon.follower-check { background: #dc3545; color: white; }
+.form-node-header .node-icon.collect-data { background: #d63384; color: white; }
+
+.form-node-header .node-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.node-connections {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.node-connections .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.form-node-header .node-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.form-node-header .node-actions button {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.form-node-header .node-actions button:hover {
+    background: #f8f9fa;
+}
+
+.form-node-header .node-actions button.danger:hover {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.form-node-body {
+    padding: 16px;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.form-node-body .form-label {
+    font-weight: 500;
+    font-size: 13px;
+    color: #495057;
+}
+
+.form-node-connection {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.form-node-connection .connection-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+.form-node-connection.follower { border-left: 3px solid #198754; }
+.form-node-connection.not-follower { border-left: 3px solid #dc3545; }
+.form-node-connection.button-branch { border-left: 3px solid #0d6efd; }
+.form-node-connection.next-node { border-left: 3px solid #6c757d; background: #fff; }
+
+.add-node-section {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    margin-top: 16px;
+}
+
+.add-node-dropdown .dropdown-menu {
+    min-width: 220px;
+}
+
+.add-node-dropdown .dropdown-item {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Button template row - flexbox layout */
+.btn-row-flex {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-row-flex .btn-type {
+    flex: 0 0 100px;
+    min-width: 80px;
+}
+
+.btn-row-flex .btn-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-row-flex .remove-btn {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+}
+
+.add-node-dropdown .dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Flow arrow between nodes */
+.flow-arrow {
+    text-align: center;
+    padding: 8px 0;
+    color: #adb5bd;
+}
+
+.flow-arrow i {
+    font-size: 20px;
+}
+
+/* Utility */
+.min-width-0 {
+    min-width: 0;
+}
+
+/* Mobile optimizations for form editor */
+@media (max-width: 767px) {
+    /* Form editor container */
+    #formEditor .col-lg-8 {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    /* Flow settings card - compact */
+    #formEditor .card {
+        border-radius: 8px;
+    }
+
+    #formEditor .card-header {
+        padding: 10px 12px;
+    }
+
+    #formEditor .card-body {
+        padding: 12px;
+    }
+
+    #formEditor .card-footer {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    /* Node cards */
+    .form-node-card {
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    .form-node-header {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .form-node-header .node-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .form-node-header .node-title {
+        font-size: 13px;
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .form-node-header .node-number {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    /* Action buttons - better touch targets */
+    .form-node-header .node-actions {
+        gap: 6px;
+    }
+
+    .form-node-header .node-actions button {
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+    }
+
+    /* Node body */
+    .form-node-body {
+        padding: 12px;
+    }
+
+    .form-node-body .form-label {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .form-node-body .form-control,
+    .form-node-body .form-select {
+        font-size: 14px;
+        padding: 8px 10px;
+    }
+
+    .form-node-body textarea.form-control {
+        min-height: 80px;
+    }
+
+    .form-node-body .form-text {
+        font-size: 11px;
+    }
+
+    /* Connection dropdowns */
+    .form-node-connection {
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    .form-node-connection .connection-label {
+        font-size: 11px;
+    }
+
+    .form-node-connection .form-select {
+        font-size: 13px;
+    }
+
+    /* Quick reply and button template options */
+    .form-node-body .quick-reply-option,
+    .form-node-body .button-option {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .form-node-body .quick-reply-option input,
+    .form-node-body .button-option input,
+    .form-node-body .button-option select {
+        font-size: 13px;
+    }
+
+    /* Button template row - mobile layout */
+    .btn-row-flex {
+        gap: 6px;
+    }
+
+    .btn-row-flex .btn-type {
+        flex: 0 0 85px;
+        min-width: 70px;
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+
+    .btn-row-flex .btn-title {
+        font-size: 13px;
+    }
+
+    .btn-row-flex .remove-btn {
+        padding: 6px 8px;
+    }
+
+    /* Quick reply buttons - better layout */
+    .qr-container .qr-title {
+        font-size: 13px;
+    }
+
+    /* Follower check branches */
+    .form-node-connection.follower,
+    .form-node-connection.not-follower {
+        padding: 8px 10px;
+    }
+
+    /* Add node section */
+    .add-node-section {
+        padding: 16px 12px;
+        margin-top: 12px;
+        border-radius: 8px;
+    }
+
+    .add-node-section p {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .add-node-dropdown .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .add-node-dropdown .dropdown-menu {
+        width: calc(100vw - 32px);
+        max-width: 280px;
+    }
+
+    .add-node-dropdown .dropdown-item {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    /* Header buttons */
+    #editorModeToggle .btn {
+        padding: 6px 10px;
+    }
+
+    #saveFlowBtn {
+        padding: 6px 12px;
+    }
+
+    #resetViewBtn {
+        display: none !important;
+    }
+
+    /* Page header */
+    section.py-4 {
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+    section.py-4 > .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    section.py-4 h4 {
+        font-size: 16px;
+    }
+
+    section.py-4 .small {
+        font-size: 11px;
+    }
+
+    /* Compact form rows */
+    #formEditor .row.g-2 {
+        --bs-gutter-x: 0.5rem;
+        --bs-gutter-y: 0.5rem;
+    }
+
+    /* Input groups */
+    #formEditor .input-group .btn {
+        padding: 6px 10px;
+    }
+
+    /* Connection badges in header */
+    .node-connections {
+        flex-basis: 100%;
+        margin-top: 4px;
+    }
+
+    .node-connections .badge {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+
+    /* Form flow settings card */
+    #formFlowSettings .row.g-2 .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    #formFlowSettings .form-check-label {
+        font-size: 13px;
+    }
+
+    #formFlowSettings .btn {
+        font-size: 13px;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 400px) {
+    #formEditor .col-lg-8 {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    section.py-4 > .container-fluid {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .form-node-header {
+        padding: 8px 10px;
+    }
+
+    .form-node-header .node-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .form-node-header .node-title {
+        font-size: 12px;
+    }
+
+    .form-node-header .node-actions button {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+    }
+
+    .form-node-body {
+        padding: 10px;
+    }
+
+    .add-node-section {
+        padding: 12px 10px;
+    }
+
+    /* Smaller page header on very small screens */
+    section.py-4 h4 {
+        font-size: 14px;
+    }
+
+    #editorModeToggle .btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    #saveFlowBtn {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    /* Button template - stack on very small screens */
+    .btn-row-flex {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .btn-row-flex .btn-type {
+        flex: 1 1 45%;
+        min-width: 0;
+        order: 1;
+    }
+
+    .btn-row-flex .btn-title {
+        flex: 1 1 100%;
+        order: 3;
+    }
+
+    .btn-row-flex .remove-btn {
+        flex: 0 0 auto;
+        order: 2;
+    }
+
+    /* Quick replies - keep inline but smaller */
+    .qr-container .d-flex.gap-2 {
+        gap: 6px !important;
+    }
+
+    .qr-container .qr-title {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .qr-container .remove-qr {
+        flex-shrink: 0;
+        padding: 4px 8px;
+    }
+}
+</style>
+
+<section class="py-4">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="flex-shrink-1 min-width-0">
+                <a href="{% url 'flow_list' %}" class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+                <h4 class="mb-0 mt-1 text-truncate">{{ flow.title }}</h4>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-shrink-0">
+                <!-- Mode Toggle -->
+                <div class="btn-group btn-group-sm" role="group" id="editorModeToggle">
+                    <button type="button" class="btn btn-outline-secondary active" data-mode="visual" title="Visual drag-and-drop editor">
+                        <i class="bi bi-diagram-3 me-md-1"></i><span class="d-none d-md-inline">Visual</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-mode="form" title="Form-based editor (mobile friendly)">
+                        <i class="bi bi-list-ul me-md-1"></i><span class="d-none d-md-inline">Form</span>
+                    </button>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm d-none d-md-inline-flex" id="resetViewBtn">
+                    <i class="bi bi-arrows-fullscreen me-1"></i><span class="d-none d-md-inline">Reset View</span>
+                </button>
+                <button class="btn btn-primary btn-sm" id="saveFlowBtn">
+                    <i class="bi bi-check-lg me-1"></i>Save
+                </button>
+            </div>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Visual Editor -->
+        <div class="row" id="visualEditor">
+            <!-- Node Palette (Left) -->
+            <div class="col-md-2">
+                <div class="node-palette">
+                    <h6 class="mb-3"><i class="bi bi-grid-3x3-gap me-2"></i>Add Steps</h6>
+
+                    <div class="palette-item" draggable="true" data-node="comment_reply">
+                        <i class="bi bi-chat-dots text-info"></i>
+                        <span>Comment Reply</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-node="message_text">
+                        <i class="bi bi-chat-left-text text-primary"></i>
+                        <span>Text Message</span>
+                    </div>
+
+                    {% if features.quick_replies %}
+                    <div class="palette-item" draggable="true" data-node="message_quick_reply">
+                        <i class="bi bi-ui-radios-grid text-success"></i>
+                        <span>Quick Reply</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-node="message_button_template">
+                        <i class="bi bi-menu-button-wide text-purple"></i>
+                        <span>Button Template</span>
+                    </div>
+                    {% else %}
+                    <div class="palette-item disabled" title="Upgrade to Pro">
+                        <i class="bi bi-lock text-muted"></i>
+                        <span class="text-muted">Quick Reply</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="palette-item" draggable="true" data-node="message_link">
+                        <i class="bi bi-link text-warning"></i>
+                        <span>Link Message</span>
+                    </div>
+
+                    {% if features.follower_check %}
+                    <div class="palette-item disabled" draggable="false" data-node="condition_follower" title="Add a Quick Reply or Button Template first">
+                        <i class="bi bi-person-check text-danger"></i>
+                        <span>Follower Check</span>
+                        <small class="d-block text-muted" style="font-size:10px;">Requires interaction node</small>
+                    </div>
+                    {% else %}
+                    <div class="palette-item disabled" title="Upgrade to Creator">
+                        <i class="bi bi-lock text-muted"></i>
+                        <span class="text-muted">Follower Check</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="palette-item disabled" title="Coming Soon">
+                        <i class="bi bi-input-cursor-text text-muted"></i>
+                        <span class="text-muted">Collect Data</span>
+                        <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Soon</span>
+                    </div>
+                </div>
+
+                <!-- Flow Settings -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center"
+                         data-bs-toggle="collapse" data-bs-target="#flowSettings" style="cursor: pointer;">
+                        <h6 class="mb-0 small">
+                            <i class="bi bi-gear me-1"></i>Flow Settings
+                        </h6>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if flow.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                            <i class="bi bi-chevron-down small"></i>
+                        </div>
+                    </div>
+                    <div class="collapse" id="flowSettings">
+                        <div class="card-body py-2">
+                            <form method="post" id="flowSettingsForm">
+                                {% csrf_token %}
+
+                                <!-- Active Toggle -->
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                           {% if flow.is_active %}checked{% endif %}>
+                                    <label class="form-check-label small" for="is_active">Flow Active</label>
+                                </div>
+
+                                <!-- Title -->
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Title</label>
+                                    <input type="text" class="form-control form-control-sm" name="title"
+                                           value="{{ flow.title }}" required maxlength="100">
+                                </div>
+
+                                <!-- Trigger Type -->
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Trigger</label>
+                                    <select class="form-select form-select-sm" name="trigger_type" id="settingsTriggerType">
+                                        <option value="comment_keyword" {% if flow.trigger_type == 'comment_keyword' %}selected{% endif %}>
+                                            Keyword Match
+                                        </option>
+                                        <option value="comment_any" {% if flow.trigger_type == 'comment_any' %}selected{% endif %}>
+                                            Any Comment
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Keywords -->
+                                <div class="mb-2" id="settingsKeywordsSection">
+                                    <label class="form-label small mb-1">Keywords</label>
+                                    <input type="text" class="form-control form-control-sm" name="keywords"
+                                           value="{{ flow.keywords }}" placeholder="link, free, send">
+                                    <small class="text-muted" style="font-size: 11px;">Comma-separated</small>
+                                </div>
+
+                                <!-- Post Selection -->
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Specific Post</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control" name="instagram_post_id" id="settingsPostId"
+                                               value="{{ flow.instagram_post_id }}" placeholder="All posts">
+                                        <button type="button" class="btn btn-outline-secondary" id="settingsBrowsePostsBtn">
+                                            <i class="bi bi-image"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="settingsClearPostBtn"
+                                                style="{% if not flow.instagram_post_id %}display:none{% endif %}">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 11px;">Leave empty for all posts</small>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Description</label>
+                                    <textarea class="form-control form-control-sm" name="description" rows="2"
+                                              placeholder="Optional">{{ flow.description }}</textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-check me-1"></i>Save Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas (Center) -->
+            <div class="col-md-7">
+                <div style="position: relative;">
+                    <div id="drawflow"></div>
+                    <div class="help-hint" id="desktopHint">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Drag to pan • Scroll to zoom • Arrow keys to navigate
+                    </div>
+                    <div class="help-hint mobile-hint" id="mobileHint" style="display:none;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        2-finger drag to pan • Pinch to zoom • Use buttons below
+                    </div>
+                    <!-- Custom Scrollbars -->
+                    <div class="canvas-scrollbar canvas-scrollbar-h" id="scrollbarH">
+                        <div class="scrollbar-thumb scrollbar-thumb-h" id="scrollThumbH"></div>
+                    </div>
+                    <div class="canvas-scrollbar canvas-scrollbar-v" id="scrollbarV">
+                        <div class="scrollbar-thumb scrollbar-thumb-v" id="scrollThumbV"></div>
+                    </div>
+
+                    <!-- Pan/Navigation Controls -->
+                    <div class="pan-controls">
+                        <button id="panUpBtn" title="Pan Up"><i class="bi bi-chevron-up"></i></button>
+                        <div class="pan-row">
+                            <button id="panLeftBtn" title="Pan Left"><i class="bi bi-chevron-left"></i></button>
+                            <button id="panCenterBtn" title="Center View"><i class="bi bi-fullscreen"></i></button>
+                            <button id="panRightBtn" title="Pan Right"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                        <button id="panDownBtn" title="Pan Down"><i class="bi bi-chevron-down"></i></button>
+                    </div>
+
+                    <!-- Zoom Controls -->
+                    <div class="zoom-controls">
+                        <button id="zoomOutBtn" title="Zoom Out"><i class="bi bi-dash"></i></button>
+                        <button id="zoomResetBtn" title="Reset Zoom"><i class="bi bi-square"></i></button>
+                        <button id="zoomInBtn" title="Zoom In"><i class="bi bi-plus"></i></button>
+                        <button id="fitViewBtn" title="Fit All Nodes"><i class="bi bi-arrows-fullscreen"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Panel (Right) -->
+            <div class="col-md-3">
+                <div class="edit-panel" id="editPanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0" id="editPanelTitle">Edit Node</h6>
+                        <button class="btn btn-sm btn-outline-danger" id="deleteNodeBtn" title="Delete Node">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <form id="nodeEditForm">
+                        <input type="hidden" id="editNodeId" name="node_id">
+                        <input type="hidden" id="editNodeType" name="node_type">
+
+                        <div id="nodeConfigFields">
+                            <!-- Dynamic fields will be inserted here -->
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-check me-1"></i>Update Node
+                        </button>
+                    </form>
+                </div>
+
+                <div id="noSelectionPanel" class="edit-panel active">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-cursor fs-1 mb-2 d-block"></i>
+                        <p class="mb-2">Select a node to edit</p>
+                        <small>Or drag a step from the left panel to add it to your flow</small>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-2"><i class="bi bi-lightbulb me-2"></i>Tips</h6>
+                    <ul class="small text-muted ps-3">
+                        <li>Drag from output dots to input dots to connect nodes</li>
+                        <li>Follower Check has 2 outputs: green for followers, red for non-followers</li>
+                        <li>Quick Reply buttons each have their own output for branching</li>
+                        <li>Click a node to edit its settings</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Editor (Mobile Friendly) -->
+        <div id="formEditor">
+            <div class="row">
+                <div class="col-12 col-md-10 col-lg-8 mx-auto">
+                    <!-- Flow Settings Card -->
+                    <div class="card mb-3">
+                        <div class="card-header py-2 d-flex justify-content-between align-items-center"
+                             data-bs-toggle="collapse" data-bs-target="#formFlowSettings" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-lightning-charge text-warning"></i>
+                                <span class="fw-bold small">{{ flow.title }}</span>
+                                {% if flow.is_active %}
+                                <span class="badge bg-success" style="font-size: 10px;">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary" style="font-size: 10px;">Inactive</span>
+                                {% endif %}
+                            </div>
+                            <i class="bi bi-chevron-down small"></i>
+                        </div>
+                        <div class="collapse" id="formFlowSettings">
+                            <div class="card-body py-2">
+                                <form method="post">
+                                    {% csrf_token %}
+
+                                    <div class="row g-2">
+                                        <!-- Active Toggle -->
+                                        <div class="col-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="form_is_active" name="is_active"
+                                                       {% if flow.is_active %}checked{% endif %}>
+                                                <label class="form-check-label small" for="form_is_active">Flow Active</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Title -->
+                                        <div class="col-12">
+                                            <input type="text" class="form-control form-control-sm" name="title"
+                                                   value="{{ flow.title }}" required maxlength="100" placeholder="Flow name">
+                                        </div>
+
+                                        <!-- Trigger Type -->
+                                        <div class="col-6">
+                                            <select class="form-select form-select-sm" name="trigger_type" id="formTriggerType">
+                                                <option value="comment_keyword" {% if flow.trigger_type == 'comment_keyword' %}selected{% endif %}>Keyword</option>
+                                                <option value="comment_any" {% if flow.trigger_type == 'comment_any' %}selected{% endif %}>Any Comment</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Keywords -->
+                                        <div class="col-6" id="formKeywordsCol">
+                                            <input type="text" class="form-control form-control-sm" name="keywords"
+                                                   value="{{ flow.keywords }}" placeholder="Keywords">
+                                        </div>
+
+                                        <!-- Post Selection -->
+                                        <div class="col-12">
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control" name="instagram_post_id" id="formPostId"
+                                                       value="{{ flow.instagram_post_id }}" placeholder="All posts (no specific post)">
+                                                <button type="button" class="btn btn-outline-secondary" id="formBrowsePostsBtn">
+                                                    <i class="bi bi-image"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger" id="formClearPostBtn"
+                                                        style="{% if not flow.instagram_post_id %}display:none{% endif %}">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                                <i class="bi bi-check me-1"></i>Save Settings
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Quick Info -->
+                        <div class="card-footer py-1 bg-light small text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            {% if flow.trigger_type == 'comment_any' %}
+                                Triggers on any comment
+                            {% else %}
+                                Keywords: <code>{{ flow.keywords|default:"any" }}</code>
+                            {% endif %}
+                            {% if flow.instagram_post_id %}
+                                | Specific post
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Nodes Container -->
+                    <div id="formNodesContainer">
+                        <!-- Nodes will be rendered here by JavaScript -->
+                    </div>
+
+                    <!-- Add Node Section -->
+                    <div class="add-node-section">
+                        <p class="text-muted mb-2">Add a step to your flow</p>
+                        <div class="dropdown add-node-dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="addNodeDropdown" data-bs-toggle="dropdown">
+                                <i class="bi bi-plus-circle me-1"></i>Add Step
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="addNodeDropdown">
+                                <li><a class="dropdown-item" href="#" data-add-node="comment_reply">
+                                    <i class="bi bi-chat-dots text-info"></i>Comment Reply
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" data-add-node="message_text">
+                                    <i class="bi bi-chat-left-text text-primary"></i>Text Message
+                                </a></li>
+                                {% if features.quick_replies %}
+                                <li><a class="dropdown-item" href="#" data-add-node="message_quick_reply">
+                                    <i class="bi bi-ui-radios-grid text-success"></i>Quick Reply
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" data-add-node="message_button_template">
+                                    <i class="bi bi-menu-button-wide text-purple"></i>Button Template
+                                </a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="#" data-add-node="message_link">
+                                    <i class="bi bi-link text-warning"></i>Link Message
+                                </a></li>
+                                {% if features.follower_check %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" data-add-node="condition_follower" id="formAddFollowerCheck">
+                                    <i class="bi bi-person-check text-danger"></i>Follower Check
+                                </a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item disabled text-muted" href="#">
+                                    <i class="bi bi-input-cursor-text"></i>Collect Data
+                                    <span class="badge bg-secondary ms-2" style="font-size: 9px;">Coming Soon</span>
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Drawflow Library (latest version) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.css">
+<script src="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.js"></script>
+
+<script>
+const flowId = {{ flow.id }};
+const csrfToken = '{{ csrf_token }}';
+const existingNodes = {{ nodes_json|safe }};
+
+// Initialize Drawflow
+const container = document.getElementById('drawflow');
+const editor = new Drawflow(container);
+
+// Configure before starting
+editor.reroute = true;
+editor.reroute_fix_curvature = true;
+editor.force_first_input = false;
+editor.editor_mode = 'edit';  // Must be set before start()
+
+// Start the editor
+editor.start();
+
+
+// Set initial zoom
+editor.zoom = 0.85;
+editor.zoom_refresh();
+
+// Show correct help hint based on device
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.getElementById('desktopHint')?.style.setProperty('display', 'none');
+    document.getElementById('mobileHint')?.style.setProperty('display', 'block');
+}
+
+// Track node data (maps drawflow node id to our data)
+const nodeDataMap = {};
+let selectedNodeId = null;
+
+// ============================================================================
+// Node Template Generation
+// ============================================================================
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function generateNodeHtml(type, data = {}) {
+    const headers = {
+        'trigger': { class: 'trigger', icon: 'bi-lightning-charge', title: 'Trigger' },
+        'comment_reply': { class: 'comment-reply', icon: 'bi-chat-dots', title: 'Comment Reply' },
+        'message_text': { class: 'text-message', icon: 'bi-chat-left-text', title: 'Text Message' },
+        'message_quick_reply': { class: 'quick-reply', icon: 'bi-ui-radios-grid', title: 'Quick Reply' },
+        'message_button_template': { class: 'button-template', icon: 'bi-menu-button-wide', title: 'Button Template' },
+        'message_link': { class: 'link-message', icon: 'bi-link', title: 'Link Message' },
+        'condition_follower': { class: 'follower-check', icon: 'bi-person-check', title: 'Follower Check' },
+        'collect_data': { class: 'collect-data', icon: 'bi-input-cursor-text', title: 'Collect Data' }
+    };
+
+    const header = headers[type] || { class: '', icon: 'bi-circle', title: 'Node' };
+
+    let bodyHtml = '';
+    let outputsHtml = '';
+
+    switch (type) {
+        case 'trigger':
+            bodyHtml = '<div class="text-preview">Comment received</div>';
+            break;
+
+        case 'comment_reply':
+        case 'message_text':
+            const text = data.text || 'Configure message...';
+            bodyHtml = `<div class="text-preview">${escapeHtml(text.substring(0, 35))}${text.length > 35 ? '...' : ''}</div>`;
+            break;
+
+        case 'message_link':
+            const linkText = data.text || 'Link message';
+            bodyHtml = `
+                <div class="text-preview">${escapeHtml(linkText.substring(0, 30))}...</div>
+                <div class="small text-primary mt-1">${escapeHtml((data.url || '').substring(0, 25))}...</div>
+            `;
+            break;
+
+        case 'message_quick_reply':
+            const qrText = data.text || 'Choose an option...';
+            bodyHtml = `<div class="text-preview">${escapeHtml(qrText.substring(0, 35))}...</div>`;
+
+            const qrButtons = data.quick_replies || [];
+            if (qrButtons.length > 0) {
+                outputsHtml = '<div class="node-outputs">';
+                qrButtons.forEach((btn, i) => {
+                    outputsHtml += `
+                        <div class="output-row" data-output="${i + 1}">
+                            <span class="output-label button">${escapeHtml(btn.title || `Button ${i+1}`)}</span>
+                            <span class="output-dot blue"></span>
+                        </div>
+                    `;
+                });
+                outputsHtml += '</div>';
+            }
+            break;
+
+        case 'message_button_template':
+            const btnText = data.text || 'Choose an option...';
+            bodyHtml = `<div class="text-preview">${escapeHtml(btnText.substring(0, 35))}...</div>`;
+
+            // Default type is 'postback' if not specified
+            const postbackBtns = (data.buttons || []).filter(b => (b.type || 'postback') === 'postback');
+            if (postbackBtns.length > 0) {
+                outputsHtml = '<div class="node-outputs">';
+                postbackBtns.forEach((btn, i) => {
+                    outputsHtml += `
+                        <div class="output-row" data-output="${i + 1}">
+                            <span class="output-label button">${escapeHtml(btn.title || `Button ${i+1}`)}</span>
+                            <span class="output-dot blue"></span>
+                        </div>
+                    `;
+                });
+                outputsHtml += '</div>';
+            } else {
+                // No postback buttons - show single default output
+                outputsHtml = '<div class="node-outputs"><div class="output-row" data-output="1"><span class="output-label default">Next</span><span class="output-dot"></span></div></div>';
+            }
+            break;
+
+        case 'condition_follower':
+            bodyHtml = '<div class="text-muted small">Checks if user follows you</div>';
+            outputsHtml = `
+                <div class="node-outputs">
+                    <div class="output-row" data-output="1">
+                        <span class="output-label follower"><i class="bi bi-check-circle me-1"></i>Follower</span>
+                        <span class="output-dot green"></span>
+                    </div>
+                    <div class="output-row" data-output="2">
+                        <span class="output-label not-follower"><i class="bi bi-x-circle me-1"></i>Not Follower</span>
+                        <span class="output-dot red"></span>
+                    </div>
+                </div>
+            `;
+            break;
+
+        case 'collect_data':
+            const fieldType = data.field_type || 'email';
+            const prompt = data.prompt_text || 'Enter your info...';
+            bodyHtml = `
+                <div class="text-preview">Collecting: ${fieldType}</div>
+                <div class="small text-muted">${escapeHtml(prompt.substring(0, 30))}...</div>
+            `;
+            break;
+    }
+
+    return `
+        <div class="node-header ${header.class}">
+            <i class="bi ${header.icon}"></i>
+            <span>${header.title}</span>
+        </div>
+        <div class="node-body">
+            ${bodyHtml}
+            ${outputsHtml}
+        </div>
+    `;
+}
+
+// ============================================================================
+// Node Creation
+// ============================================================================
+
+function addTriggerNode() {
+    const html = generateNodeHtml('trigger');
+    editor.addNode('trigger', 0, 1, 100, 100, 'trigger', {}, html);
+}
+
+function getOutputCount(type, data) {
+    switch (type) {
+        case 'condition_follower':
+            return 2; // Follower / Not Follower
+
+        case 'message_quick_reply':
+            return (data.quick_replies || []).length || 1;
+
+        case 'message_button_template':
+            // Default type is 'postback' if not specified
+            const postbackBtnsCount = (data.buttons || []).filter(b => (b.type || 'postback') === 'postback').length;
+            // One output per postback button, or 1 default if no postback buttons
+            return postbackBtnsCount > 0 ? postbackBtnsCount : 1;
+
+        default:
+            return 1;
+    }
+}
+
+function addStepNode(type, x, y, data = {}, dbId = null) {
+    const inputs = 1;
+    const outputs = getOutputCount(type, data);
+
+    const html = generateNodeHtml(type, data);
+    const nodeId = editor.addNode(type, inputs, outputs, x, y, type, { ...data, dbId }, html);
+
+    nodeDataMap[nodeId] = {
+        type: type,
+        data: data,
+        dbId: dbId
+    };
+
+    return nodeId;
+}
+
+function updateNodeVisual(nodeId) {
+    const nodeInfo = nodeDataMap[nodeId];
+    if (!nodeInfo) return;
+
+    const newOutputCount = getOutputCount(nodeInfo.type, nodeInfo.data);
+    const html = generateNodeHtml(nodeInfo.type, nodeInfo.data);
+
+    // Get current node data from Drawflow
+    const currentNode = editor.getNodeFromId(nodeId);
+    if (!currentNode) return;
+
+    const currentOutputCount = Object.keys(currentNode.outputs).length;
+
+    // If output count changed, we need to recreate the node
+    if (currentOutputCount !== newOutputCount) {
+        // Save position
+        const posX = currentNode.pos_x;
+        const posY = currentNode.pos_y;
+
+        // Save incoming connections (to this node's input)
+        const incomingConnections = [];
+        Object.entries(currentNode.inputs).forEach(([inputKey, inputData]) => {
+            inputData.connections.forEach(conn => {
+                incomingConnections.push({
+                    fromNode: conn.node,
+                    fromOutput: conn.output,
+                    toInput: inputKey
+                });
+            });
+        });
+
+        // Save outgoing connections (from this node's outputs)
+        const outgoingConnections = [];
+        Object.entries(currentNode.outputs).forEach(([outputKey, outputData]) => {
+            outputData.connections.forEach(conn => {
+                outgoingConnections.push({
+                    toNode: conn.node,
+                    toInput: conn.input,
+                    fromOutput: outputKey
+                });
+            });
+        });
+
+        // Delete old node
+        editor.removeNodeId(`node-${nodeId}`);
+
+        // Create new node with correct output count
+        const newNodeId = editor.addNode(
+            nodeInfo.type,
+            1, // inputs
+            newOutputCount,
+            posX,
+            posY,
+            nodeInfo.type,
+            { ...nodeInfo.data, dbId: nodeInfo.dbId },
+            html
+        );
+
+        // Update nodeDataMap
+        delete nodeDataMap[nodeId];
+        nodeDataMap[newNodeId] = {
+            type: nodeInfo.type,
+            data: nodeInfo.data,
+            dbId: nodeInfo.dbId
+        };
+
+        // Restore incoming connections
+        incomingConnections.forEach(conn => {
+            try {
+                editor.addConnection(conn.fromNode, newNodeId, conn.fromOutput, conn.toInput);
+            } catch (e) {
+                // Connection might fail if source node was deleted
+            }
+        });
+
+        // Restore outgoing connections (only if output still exists)
+        outgoingConnections.forEach(conn => {
+            // Extract output number from "output_X"
+            const outputNum = parseInt(conn.fromOutput.replace('output_', ''));
+            if (outputNum <= newOutputCount) {
+                try {
+                    editor.addConnection(newNodeId, conn.toNode, conn.fromOutput, conn.toInput);
+                } catch (e) {
+                    // Connection might fail if target node was deleted
+                }
+            }
+        });
+
+        // Update selectedNodeId if this was the selected node
+        if (selectedNodeId == nodeId) {
+            selectedNodeId = newNodeId;
+        }
+    } else {
+        // Just update HTML if output count is the same
+        const nodeElement = document.querySelector(`#node-${nodeId} .drawflow_content_node`);
+        if (nodeElement) {
+            nodeElement.innerHTML = html;
+        }
+    }
+}
+
+// ============================================================================
+// Load Existing Flow
+// ============================================================================
+
+function loadExistingFlow() {
+    addTriggerNode();
+
+    if (existingNodes.length === 0) return;
+
+    try {
+        const sortedNodes = [...existingNodes].sort((a, b) => a.order - b.order);
+
+        const startX = 380;
+        const startY = 100;
+        const spacingY = 180;
+
+        const dbToDrawflow = {};
+
+        // First pass: create all nodes
+        sortedNodes.forEach((node, index) => {
+            // Use saved positions if available, otherwise use default layout
+            const x = node.config._pos_x !== undefined ? node.config._pos_x : startX;
+            const y = node.config._pos_y !== undefined ? node.config._pos_y : startY + (index * spacingY);
+
+            const nodeData = {
+                ...node.config,
+                quick_replies: node.quick_replies || []
+            };
+            // Remove position data from nodeData (it's only for visual positioning)
+            delete nodeData._pos_x;
+            delete nodeData._pos_y;
+
+            const drawflowId = addStepNode(node.node_type, x, y, nodeData, node.id);
+            dbToDrawflow[node.id] = drawflowId;
+        });
+
+        // Second pass: create connections
+        if (sortedNodes.length > 0) {
+            const firstNodeDrawflowId = dbToDrawflow[sortedNodes[0].id];
+            editor.addConnection(1, firstNodeDrawflowId, 'output_1', 'input_1');
+        }
+
+        // Collect all nodes that are targets of branching connections
+        const branchTargetNodeIds = new Set();
+        sortedNodes.forEach(node => {
+            if (node.node_type === 'condition_follower') {
+                if (node.config.true_node_id) branchTargetNodeIds.add(node.config.true_node_id);
+                if (node.config.false_node_id) branchTargetNodeIds.add(node.config.false_node_id);
+            }
+            if (node.node_type === 'message_quick_reply' && node.quick_replies) {
+                node.quick_replies.forEach(qr => {
+                    if (qr.target_node_id) branchTargetNodeIds.add(qr.target_node_id);
+                });
+            }
+            if (node.node_type === 'message_button_template' && node.config?.buttons) {
+                node.config.buttons.forEach(btn => {
+                    if (btn.target_node_id) branchTargetNodeIds.add(btn.target_node_id);
+                });
+            }
+            // Also mark next_node_id targets so they don't get connected sequentially
+            if (node.next_node_id) {
+                branchTargetNodeIds.add(node.next_node_id);
+            }
+        });
+
+        // Connect nodes using next_node_id (explicit connections) or fall back to sequential order
+        sortedNodes.forEach((currentNode, i) => {
+            const fromId = dbToDrawflow[currentNode.id];
+
+            // Skip branching nodes - they have their own connection logic
+            if (currentNode.node_type === 'condition_follower') return;
+            if (currentNode.node_type === 'message_quick_reply') return;
+            if (currentNode.node_type === 'message_button_template') return;
+
+            // Use next_node_id if available (explicit connection)
+            if (currentNode.next_node_id && dbToDrawflow[currentNode.next_node_id]) {
+                console.log(`[LOAD] Node ${currentNode.id} -> next_node_id ${currentNode.next_node_id}`);
+                editor.addConnection(fromId, dbToDrawflow[currentNode.next_node_id], 'output_1', 'input_1');
+                return;
+            }
+
+            // Fall back to sequential connection based on order
+            const nextNode = sortedNodes[i + 1];
+            if (!nextNode) return;
+
+            // Skip if current node is a target of a branch (don't chain branch targets sequentially)
+            if (branchTargetNodeIds.has(currentNode.id)) return;
+
+            const toId = dbToDrawflow[nextNode.id];
+            if (fromId && toId) {
+                editor.addConnection(fromId, toId, 'output_1', 'input_1');
+            }
+        });
+
+        // Handle branching connections
+        sortedNodes.forEach(node => {
+            const fromId = dbToDrawflow[node.id];
+
+            if (node.node_type === 'condition_follower') {
+                // Follower branch (output_1)
+                if (node.config.true_node_id && dbToDrawflow[node.config.true_node_id]) {
+                    editor.addConnection(fromId, dbToDrawflow[node.config.true_node_id], 'output_1', 'input_1');
+                }
+                // Not follower branch (output_2)
+                if (node.config.false_node_id && dbToDrawflow[node.config.false_node_id]) {
+                    editor.addConnection(fromId, dbToDrawflow[node.config.false_node_id], 'output_2', 'input_1');
+                }
+            }
+
+            // Quick reply button branching
+            if (node.node_type === 'message_quick_reply' && node.quick_replies) {
+                console.log(`[LOAD] Quick reply node ${node.id}, quick_replies:`, node.quick_replies);
+                console.log(`[LOAD] dbToDrawflow:`, dbToDrawflow);
+                node.quick_replies.forEach((qr, i) => {
+                    console.log(`[LOAD]   QR ${i}: target_node_id=${qr.target_node_id}, dbToDrawflow[${qr.target_node_id}]=${dbToDrawflow[qr.target_node_id]}`);
+                    if (qr.target_node_id && dbToDrawflow[qr.target_node_id]) {
+                        console.log(`[LOAD]   Creating connection: ${fromId} output_${i + 1} -> ${dbToDrawflow[qr.target_node_id]} input_1`);
+                        try {
+                            const result = editor.addConnection(fromId, dbToDrawflow[qr.target_node_id], `output_${i + 1}`, 'input_1');
+                            console.log(`[LOAD]   Connection result:`, result);
+                        } catch (e) {
+                            console.error(`[LOAD]   Connection FAILED:`, e);
+                        }
+                    } else {
+                        console.log(`[LOAD]   SKIPPED: target_node_id=${qr.target_node_id}, found in dbToDrawflow=${!!dbToDrawflow[qr.target_node_id]}`);
+                    }
+                });
+            }
+
+            // Button template postback branching
+            if (node.node_type === 'message_button_template' && node.config?.buttons) {
+                // Default type is 'postback' if not specified
+                const postbackButtons = node.config.buttons.filter(b => (b.type || 'postback') === 'postback');
+                postbackButtons.forEach((btn, i) => {
+                    if (btn.target_node_id && dbToDrawflow[btn.target_node_id]) {
+                        editor.addConnection(fromId, dbToDrawflow[btn.target_node_id], `output_${i + 1}`, 'input_1');
+                    }
+                });
+            }
+        });
+
+    } catch (error) {
+        showToast('Error loading flow: ' + error.message, 'error');
+    }
+}
+
+// ============================================================================
+// Event Handlers
+// ============================================================================
+
+editor.on('nodeSelected', function(nodeId) {
+    selectedNodeId = nodeId;
+    showEditPanel(nodeId);
+});
+
+editor.on('nodeUnselected', function() {
+    selectedNodeId = null;
+    hideEditPanel();
+});
+
+function showEditPanel(nodeId) {
+    const nodeInfo = editor.getNodeFromId(nodeId);
+    if (!nodeInfo || nodeInfo.name === 'trigger') {
+        hideEditPanel();
+        return;
+    }
+
+    document.getElementById('noSelectionPanel').classList.remove('active');
+    document.getElementById('editPanel').classList.add('active');
+
+    document.getElementById('editNodeId').value = nodeId;
+    document.getElementById('editNodeType').value = nodeInfo.name;
+
+    const data = nodeDataMap[nodeId]?.data || nodeInfo.data || {};
+    renderConfigFields(nodeInfo.name, data);
+
+    const titles = {
+        'comment_reply': 'Comment Reply',
+        'message_text': 'Text Message',
+        'message_quick_reply': 'Quick Reply',
+        'message_button_template': 'Button Template',
+        'message_link': 'Link Message',
+        'condition_follower': 'Follower Check',
+        'collect_data': 'Collect Data'
+    };
+    document.getElementById('editPanelTitle').textContent = titles[nodeInfo.name] || 'Edit Node';
+}
+
+function hideEditPanel() {
+    document.getElementById('editPanel').classList.remove('active');
+    document.getElementById('noSelectionPanel').classList.add('active');
+}
+
+// ============================================================================
+// Config Fields Rendering
+// ============================================================================
+
+function renderConfigFields(nodeType, data) {
+    const container = document.getElementById('nodeConfigFields');
+    let html = '';
+
+    switch (nodeType) {
+        case 'comment_reply':
+        case 'message_text':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message Text</label>
+                    <textarea class="form-control" name="text" rows="3" required>${data.text || ''}</textarea>
+                </div>
+            `;
+            break;
+
+        case 'message_quick_reply':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message Text</label>
+                    <textarea class="form-control" name="text" rows="2" required>${data.text || ''}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Quick Reply Buttons</label>
+                    <small class="text-muted d-block mb-2">Each button creates an output for branching</small>
+                    <div id="qrButtonsContainer">
+                        ${(data.quick_replies || []).map((qr, i) => `
+                            <div class="input-group mb-2 qr-row">
+                                <input type="text" class="form-control" name="qr_title_${i}" value="${escapeHtml(qr.title || '')}" placeholder="Button text" maxlength="20">
+                                <button type="button" class="btn btn-outline-danger remove-qr"><i class="bi bi-x"></i></button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addQrBtn">
+                        <i class="bi bi-plus me-1"></i>Add Button
+                    </button>
+                    <small class="text-muted d-block mt-1">Max 13 buttons, 20 chars each</small>
+                </div>
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    After saving, each button will have its own output. Connect them to different nodes for branching.
+                </div>
+            `;
+            break;
+
+        case 'message_button_template':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message Text</label>
+                    <textarea class="form-control" name="text" rows="2" required>${data.text || ''}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Buttons (max 3)</label>
+                    <small class="text-muted d-block mb-2">Action buttons allow flow branching</small>
+                    <div id="btnTemplateContainer">
+                        ${(data.buttons || []).map((btn, i) => `
+                            <div class="card mb-2 btn-row">
+                                <div class="card-body p-2">
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <select class="form-select form-select-sm btn-type" name="btn_type_${i}">
+                                                <option value="postback" ${(btn.type || 'postback') === 'postback' ? 'selected' : ''}>Action</option>
+                                                <option value="web_url" ${btn.type === 'web_url' ? 'selected' : ''}>URL</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="text" class="form-control form-control-sm" name="btn_title_${i}" value="${escapeHtml(btn.title || '')}" placeholder="Button text" maxlength="20">
+                                        </div>
+                                        <div class="col-2">
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-btn w-100"><i class="bi bi-x"></i></button>
+                                        </div>
+                                    </div>
+                                    <input type="url" class="form-control form-control-sm btn-value mt-2 ${btn.type === 'web_url' ? '' : 'd-none'}"
+                                           name="btn_url_${i}"
+                                           value="${escapeHtml(btn.url || '')}"
+                                           placeholder="https://...">
+                                    <input type="hidden" name="btn_payload_${i}" value="${escapeHtml(btn.payload || `btn_${i}`)}">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addBtnTemplateBtn">
+                        <i class="bi bi-plus me-1"></i>Add Button
+                    </button>
+                </div>
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Action buttons allow branching. URL buttons open a link.
+                </div>
+            `;
+            break;
+
+        case 'message_link':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message Text</label>
+                    <textarea class="form-control" name="text" rows="2">${data.text || ''}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">URL</label>
+                    <input type="url" class="form-control" name="url" value="${data.url || ''}" required placeholder="https://...">
+                </div>
+            `;
+            break;
+
+        case 'condition_follower':
+            html = `
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    This node checks if the user follows your account.
+                </div>
+                <div class="mb-3">
+                    <strong>Outputs:</strong>
+                    <div class="mt-2">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="output-dot green me-2" style="display:inline-block;width:12px;height:12px;border-radius:50%;"></span>
+                            <span><strong>Follower</strong> - User follows you</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="output-dot red me-2" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#dc3545;"></span>
+                            <span><strong>Not Follower</strong> - User doesn't follow</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted small">Connect the green output to the path for followers, and the red output for non-followers.</p>
+            `;
+            break;
+
+        case 'collect_data':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Data Type</label>
+                    <select class="form-select" name="field_type" required>
+                        <option value="name" ${data.field_type === 'name' ? 'selected' : ''}>Name</option>
+                        <option value="email" ${data.field_type === 'email' ? 'selected' : ''}>Email</option>
+                        <option value="phone" ${data.field_type === 'phone' ? 'selected' : ''}>Phone</option>
+                        <option value="custom" ${data.field_type === 'custom' ? 'selected' : ''}>Custom</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Prompt Message</label>
+                    <textarea class="form-control" name="prompt_text" rows="2" required placeholder="What's your email?">${data.prompt_text || ''}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Variable Name</label>
+                    <input type="text" class="form-control" name="variable_name" value="${data.variable_name || ''}" placeholder="user_email">
+                    <small class="text-muted">Used to store the collected value</small>
+                </div>
+            `;
+            break;
+    }
+
+    container.innerHTML = html;
+    setupDynamicFormHandlers();
+}
+
+// ============================================================================
+// Dynamic Form Handlers
+// ============================================================================
+
+function setupDynamicFormHandlers() {
+    // Quick Reply add button
+    const addQrBtn = document.getElementById('addQrBtn');
+    if (addQrBtn) {
+        addQrBtn.addEventListener('click', function() {
+            const container = document.getElementById('qrButtonsContainer');
+            const count = container.querySelectorAll('.qr-row').length;
+            if (count >= 13) {
+                alert('Maximum 13 quick reply buttons');
+                return;
+            }
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2 qr-row';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="qr_title_${count}" placeholder="Button text" maxlength="20">
+                <button type="button" class="btn btn-outline-danger remove-qr"><i class="bi bi-x"></i></button>
+            `;
+            container.appendChild(div);
+            setupRemoveHandlers();
+        });
+    }
+
+    // Button Template add button
+    const addBtnTemplateBtn = document.getElementById('addBtnTemplateBtn');
+    if (addBtnTemplateBtn) {
+        addBtnTemplateBtn.addEventListener('click', function() {
+            const container = document.getElementById('btnTemplateContainer');
+            const count = container.querySelectorAll('.btn-row').length;
+            if (count >= 3) {
+                alert('Maximum 3 buttons for button template');
+                return;
+            }
+            const div = document.createElement('div');
+            div.className = 'card mb-2 btn-row';
+            div.innerHTML = `
+                <div class="card-body p-2">
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <select class="form-select form-select-sm btn-type" name="btn_type_${count}">
+                                <option value="postback" selected>Action</option>
+                                <option value="web_url">URL</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" name="btn_title_${count}" placeholder="Button text" maxlength="20">
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-btn w-100"><i class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <input type="url" class="form-control form-control-sm btn-value mt-2 d-none" name="btn_url_${count}" placeholder="https://...">
+                    <input type="hidden" name="btn_payload_${count}" value="btn_${count}">
+                </div>
+            `;
+            container.appendChild(div);
+            setupRemoveHandlers();
+            setupBtnTypeHandlers();
+        });
+    }
+
+    setupRemoveHandlers();
+    setupBtnTypeHandlers();
+}
+
+function setupRemoveHandlers() {
+    document.querySelectorAll('.remove-qr, .remove-btn').forEach(btn => {
+        btn.onclick = function() {
+            this.closest('.qr-row, .btn-row').remove();
+        };
+    });
+}
+
+function setupBtnTypeHandlers() {
+    document.querySelectorAll('.btn-type').forEach(select => {
+        select.onchange = function() {
+            const row = this.closest('.btn-row');
+            const urlInput = row.querySelector('.btn-value');
+
+            if (this.value === 'web_url') {
+                urlInput.classList.remove('d-none');
+            } else {
+                urlInput.classList.add('d-none');
+            }
+        };
+    });
+}
+
+// ============================================================================
+// Form Submission
+// ============================================================================
+
+document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const nodeId = document.getElementById('editNodeId').value;
+    const nodeType = document.getElementById('editNodeType').value;
+    const formData = new FormData(this);
+
+    const config = {};
+
+    switch (nodeType) {
+        case 'comment_reply':
+        case 'message_text':
+            config.text = formData.get('text');
+            break;
+
+        case 'message_quick_reply':
+            config.text = formData.get('text');
+            config.quick_replies = [];
+            document.querySelectorAll('.qr-row').forEach((row, i) => {
+                const title = row.querySelector('input').value;
+                if (title) {
+                    config.quick_replies.push({
+                        title: title,
+                        payload: `qr_${i}`
+                    });
+                }
+            });
+            break;
+
+        case 'message_button_template':
+            config.text = formData.get('text');
+            config.buttons = [];
+            document.querySelectorAll('.btn-row').forEach((row, i) => {
+                const type = row.querySelector('.btn-type').value;
+                const title = row.querySelector('input[name^="btn_title"]').value;
+                const urlInput = row.querySelector('input[name^="btn_url"]');
+                const payloadInput = row.querySelector('input[name^="btn_payload"]');
+                if (title) {
+                    const btn = { type, title };
+                    if (type === 'web_url') {
+                        btn.url = urlInput ? urlInput.value : '';
+                    } else {
+                        btn.payload = payloadInput ? payloadInput.value : `btn_${i}`;
+                    }
+                    config.buttons.push(btn);
+                }
+            });
+            break;
+
+        case 'message_link':
+            config.text = formData.get('text');
+            config.url = formData.get('url');
+            break;
+
+        case 'collect_data':
+            config.field_type = formData.get('field_type');
+            config.prompt_text = formData.get('prompt_text');
+            config.variable_name = formData.get('variable_name');
+            break;
+    }
+
+    // Update node data
+    nodeDataMap[nodeId] = {
+        type: nodeType,
+        data: config,
+        dbId: nodeDataMap[nodeId]?.dbId
+    };
+
+    // Update visual
+    updateNodeVisual(nodeId);
+
+    showToast('Node updated. Save flow to persist changes.');
+});
+
+// Delete node
+document.getElementById('deleteNodeBtn').addEventListener('click', function() {
+    if (!selectedNodeId) return;
+
+    const nodeInfo = nodeDataMap[selectedNodeId];
+    if (!nodeInfo) return;
+
+    // Check if deleting an interaction node when follower check depends on it
+    if (nodeInfo.type === 'message_quick_reply' || nodeInfo.type === 'message_button_template') {
+        const hasFollowerCheck = Object.values(nodeDataMap).some(n => n.type === 'condition_follower');
+        const interactionCount = Object.values(nodeDataMap).filter(n =>
+            n.type === 'message_quick_reply' || n.type === 'message_button_template'
+        ).length;
+
+        if (hasFollowerCheck && interactionCount <= 1) {
+            showToast('Cannot delete: Follower Check node requires at least one Quick Reply or Button Template.', 'error');
+            return;
+        }
+    }
+
+    if (confirm('Delete this node?')) {
+        editor.removeNodeId(`node-${selectedNodeId}`);
+        delete nodeDataMap[selectedNodeId];
+        hideEditPanel();
+        showToast('Node deleted');
+
+        // Update palette state after deletion
+        updateFollowerCheckPaletteState();
+    }
+});
+
+// ============================================================================
+// Validation Helpers
+// ============================================================================
+
+function hasInteractionNode() {
+    // Check if flow has any quick reply or button template nodes
+    return Object.values(nodeDataMap).some(node =>
+        node.type === 'message_quick_reply' || node.type === 'message_button_template'
+    );
+}
+
+function updateFollowerCheckPaletteState() {
+    const followerCheckItem = document.querySelector('.palette-item[data-node="condition_follower"]');
+    if (!followerCheckItem) return;
+
+    const smallText = followerCheckItem.querySelector('small');
+
+    if (hasInteractionNode()) {
+        followerCheckItem.classList.remove('disabled');
+        followerCheckItem.setAttribute('draggable', 'true');
+        followerCheckItem.title = 'Check if user follows your account';
+        if (smallText) smallText.style.display = 'none';
+    } else {
+        followerCheckItem.classList.add('disabled');
+        followerCheckItem.setAttribute('draggable', 'false');
+        followerCheckItem.title = 'Add a Quick Reply or Button Template first (required for user consent)';
+        if (smallText) smallText.style.display = 'block';
+    }
+}
+
+// ============================================================================
+// Drag & Drop (Desktop)
+// ============================================================================
+
+// Attach drag event to ALL palette items (including initially disabled ones)
+document.querySelectorAll('.palette-item').forEach(item => {
+    item.addEventListener('dragstart', function(e) {
+        if (this.classList.contains('disabled') || this.getAttribute('draggable') === 'false') {
+            e.preventDefault();
+            return;
+        }
+        e.dataTransfer.setData('node-type', this.dataset.node);
+    });
+});
+
+container.addEventListener('dragover', function(e) {
+    e.preventDefault();
+});
+
+container.addEventListener('drop', function(e) {
+    e.preventDefault();
+    const nodeType = e.dataTransfer.getData('node-type');
+    if (!nodeType) return;
+
+    // Validate follower check node
+    if (nodeType === 'condition_follower' && !hasInteractionNode()) {
+        showToast('Add a Quick Reply or Button Template first. Follower check requires user interaction for consent.', 'error');
+        return;
+    }
+
+    const rect = container.getBoundingClientRect();
+    const x = (e.clientX - rect.left - editor.precanvas.getBoundingClientRect().left + rect.left) / editor.zoom;
+    const y = (e.clientY - rect.top - editor.precanvas.getBoundingClientRect().top + rect.top) / editor.zoom;
+
+    addStepNode(nodeType, x, y, {});
+    showToast('Node added - click to configure, then connect outputs');
+
+    // Update palette state after adding node
+    updateFollowerCheckPaletteState();
+});
+
+// ============================================================================
+// Touch Drag & Drop (Mobile)
+// ============================================================================
+
+let touchDragData = null;
+let touchGhost = null;
+
+function createTouchGhost(item) {
+    const ghost = document.createElement('div');
+    ghost.className = 'touch-drag-ghost';
+    ghost.innerHTML = item.innerHTML;
+    ghost.style.cssText = `
+        position: fixed;
+        z-index: 10000;
+        pointer-events: none;
+        padding: 10px 15px;
+        background: var(--bs-primary);
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        opacity: 0.9;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    `;
+    document.body.appendChild(ghost);
+    return ghost;
+}
+
+function removeTouchGhost() {
+    if (touchGhost) {
+        touchGhost.remove();
+        touchGhost = null;
+    }
+    touchDragData = null;
+}
+
+document.querySelectorAll('.palette-item').forEach(item => {
+    item.addEventListener('touchstart', function(e) {
+        if (this.classList.contains('disabled')) return;
+
+        const nodeType = this.dataset.node;
+        if (!nodeType) return;
+
+        touchDragData = { nodeType };
+        touchGhost = createTouchGhost(this);
+
+        const touch = e.touches[0];
+        touchGhost.style.left = touch.clientX + 'px';
+        touchGhost.style.top = touch.clientY + 'px';
+
+        // Prevent scrolling while dragging
+        e.preventDefault();
+    }, { passive: false });
+
+    item.addEventListener('touchmove', function(e) {
+        if (!touchDragData || !touchGhost) return;
+
+        const touch = e.touches[0];
+        touchGhost.style.left = touch.clientX + 'px';
+        touchGhost.style.top = touch.clientY + 'px';
+
+        e.preventDefault();
+    }, { passive: false });
+
+    item.addEventListener('touchend', function(e) {
+        if (!touchDragData) return;
+
+        const touch = e.changedTouches[0];
+        const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Check if dropped on the drawflow container or its children
+        if (dropTarget && (dropTarget.closest('#drawflow') || dropTarget.id === 'drawflow')) {
+            const nodeType = touchDragData.nodeType;
+
+            // Validate follower check node
+            if (nodeType === 'condition_follower' && !hasInteractionNode()) {
+                showToast('Add a Quick Reply or Button Template first. Follower check requires user interaction for consent.', 'error');
+                removeTouchGhost();
+                return;
+            }
+
+            const rect = container.getBoundingClientRect();
+            const x = (touch.clientX - rect.left - editor.precanvas.getBoundingClientRect().left + rect.left) / editor.zoom;
+            const y = (touch.clientY - rect.top - editor.precanvas.getBoundingClientRect().top + rect.top) / editor.zoom;
+
+            addStepNode(nodeType, x, y, {});
+            showToast('Node added - tap to configure');
+            updateFollowerCheckPaletteState();
+        }
+
+        removeTouchGhost();
+    });
+
+    item.addEventListener('touchcancel', removeTouchGhost);
+});
+
+// ============================================================================
+// Zoom Controls
+// ============================================================================
+
+document.getElementById('zoomInBtn').addEventListener('click', () => {
+    editor.zoom_in();
+    updateScrollbars();
+});
+document.getElementById('zoomOutBtn').addEventListener('click', () => {
+    editor.zoom_out();
+    updateScrollbars();
+});
+document.getElementById('zoomResetBtn').addEventListener('click', () => {
+    editor.zoom = 1;
+    editor.zoom_refresh();
+    updateScrollbars();
+});
+
+// Pan controls - use Drawflow's internal canvas_x/canvas_y
+const panStep = 100;
+
+function panCanvas(dx, dy) {
+    // Use Drawflow's internal position
+    editor.canvas_x = (editor.canvas_x || 0) + dx;
+    editor.canvas_y = (editor.canvas_y || 0) + dy;
+    editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+}
+
+function getCurrentPan() {
+    return {
+        x: editor.canvas_x || 0,
+        y: editor.canvas_y || 0
+    };
+}
+
+document.getElementById('panUpBtn').addEventListener('click', () => panCanvas(0, panStep));
+document.getElementById('panDownBtn').addEventListener('click', () => panCanvas(0, -panStep));
+document.getElementById('panLeftBtn').addEventListener('click', () => panCanvas(panStep, 0));
+document.getElementById('panRightBtn').addEventListener('click', () => panCanvas(-panStep, 0));
+
+document.getElementById('panCenterBtn').addEventListener('click', () => {
+    editor.canvas_x = 0;
+    editor.canvas_y = 0;
+    editor.precanvas.style.transform = `translate(0px, 0px) scale(${editor.zoom})`;
+    updateScrollbars();
+});
+
+// Fit all nodes in view
+document.getElementById('fitViewBtn').addEventListener('click', () => {
+    const exportData = editor.export();
+    const nodes = Object.values(exportData.drawflow.Home.data);
+
+    if (nodes.length === 0) return;
+
+    // Find bounding box of all nodes
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodes.forEach(node => {
+        minX = Math.min(minX, node.pos_x);
+        minY = Math.min(minY, node.pos_y);
+        maxX = Math.max(maxX, node.pos_x + 250); // Approximate node width
+        maxY = Math.max(maxY, node.pos_y + 100); // Approximate node height
+    });
+
+    const container = document.getElementById('drawflow');
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    const contentWidth = maxX - minX + 100;
+    const contentHeight = maxY - minY + 100;
+
+    // Calculate zoom to fit
+    const zoomX = containerWidth / contentWidth;
+    const zoomY = containerHeight / contentHeight;
+    const newZoom = Math.min(zoomX, zoomY, 1) * 0.9; // Max 1x, with 10% padding
+
+    // Calculate pan to center
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    editor.canvas_x = (containerWidth / 2) - (centerX * newZoom);
+    editor.canvas_y = (containerHeight / 2) - (centerY * newZoom);
+
+    editor.zoom = Math.max(0.3, newZoom);
+    editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+    updateScrollbars();
+});
+document.getElementById('resetViewBtn').addEventListener('click', () => {
+    editor.zoom = 0.85;
+    editor.zoom_refresh();
+    editor.canvas_x = 0;
+    editor.canvas_y = 0;
+    editor.precanvas.style.transform = `translate(0px, 0px) scale(${editor.zoom})`;
+    updateScrollbars();
+});
+
+// Mobile touch handling - sync with Drawflow and prevent conflicts
+const drawflowContainer = document.getElementById('drawflow');
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartPanX = 0;
+let touchStartPanY = 0;
+let isPanning = false;
+let initialPinchDistance = 0;
+let initialZoom = 1;
+
+// Track current pan position (mirrors editor.canvas_x/y)
+let currentPanX = editor.canvas_x || 0;
+let currentPanY = editor.canvas_y || 0;
+
+// Sync our pan variables with Drawflow's internal state
+function syncPanFromDrawflow() {
+    currentPanX = editor.canvas_x || 0;
+    currentPanY = editor.canvas_y || 0;
+}
+
+// Single touchstart handler for both pan and pinch
+drawflowContainer.addEventListener('touchstart', (e) => {
+    syncPanFromDrawflow(); // Always sync first
+
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+        isPanning = true;
+
+        // Pan start position
+        touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        touchStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        touchStartPanX = currentPanX;
+        touchStartPanY = currentPanY;
+
+        // Pinch start distance
+        initialPinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoom = editor.zoom;
+    }
+}, { passive: false, capture: true });
+
+// Single touchmove handler for both pan and pinch
+drawflowContainer.addEventListener('touchmove', (e) => {
+    if (isPanning && e.touches.length === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate pan
+        const currentX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const deltaX = currentX - touchStartX;
+        const deltaY = currentY - touchStartY;
+        currentPanX = touchStartPanX + deltaX;
+        currentPanY = touchStartPanY + deltaY;
+
+        // Calculate pinch zoom
+        if (initialPinchDistance > 0) {
+            const currentDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const scale = currentDistance / initialPinchDistance;
+            editor.zoom = Math.min(Math.max(initialZoom * scale, 0.3), 2);
+        }
+
+        // Sync with Drawflow's internal state
+        editor.canvas_x = currentPanX;
+        editor.canvas_y = currentPanY;
+        editor.precanvas.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${editor.zoom})`;
+        updateScrollbars();
+    }
+}, { passive: false, capture: true });
+
+drawflowContainer.addEventListener('touchend', (e) => {
+    if (isPanning) {
+        isPanning = false;
+        initialPinchDistance = 0;
+    }
+}, { capture: true });
+
+// ============================================================================
+// Custom Scrollbars
+// ============================================================================
+const scrollbarH = document.getElementById('scrollbarH');
+const scrollbarV = document.getElementById('scrollbarV');
+const scrollThumbH = document.getElementById('scrollThumbH');
+const scrollThumbV = document.getElementById('scrollThumbV');
+
+// Virtual canvas bounds (expands as nodes are added)
+let canvasBounds = { minX: -500, maxX: 1500, minY: -500, maxY: 1500 };
+
+function updateCanvasBounds() {
+    const exportData = editor.export();
+    const nodes = Object.values(exportData.drawflow.Home.data);
+
+    if (nodes.length === 0) {
+        canvasBounds = { minX: -500, maxX: 1500, minY: -500, maxY: 1500 };
+        return;
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodes.forEach(node => {
+        minX = Math.min(minX, node.pos_x - 100);
+        minY = Math.min(minY, node.pos_y - 100);
+        maxX = Math.max(maxX, node.pos_x + 300);
+        maxY = Math.max(maxY, node.pos_y + 200);
+    });
+
+    // Add padding
+    canvasBounds = {
+        minX: Math.min(minX - 200, -500),
+        maxX: Math.max(maxX + 200, 1500),
+        minY: Math.min(minY - 200, -500),
+        maxY: Math.max(maxY + 200, 1500)
+    };
+}
+
+function updateScrollbars() {
+    const container = document.getElementById('drawflow');
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    const contentWidth = (canvasBounds.maxX - canvasBounds.minX) * editor.zoom;
+    const contentHeight = (canvasBounds.maxY - canvasBounds.minY) * editor.zoom;
+
+    const viewportWidth = containerWidth;
+    const viewportHeight = containerHeight;
+
+    // Horizontal scrollbar
+    const hTrackWidth = scrollbarH.clientWidth;
+    const hThumbWidth = Math.max(40, (viewportWidth / contentWidth) * hTrackWidth);
+    const hScrollRange = contentWidth - viewportWidth;
+    const hThumbRange = hTrackWidth - hThumbWidth;
+
+    const currentX = editor.canvas_x || 0;
+    const scrollXPercent = hScrollRange > 0 ? (-currentX - canvasBounds.minX * editor.zoom) / hScrollRange : 0;
+    const hThumbPos = Math.max(0, Math.min(hThumbRange, scrollXPercent * hThumbRange));
+
+    scrollThumbH.style.width = `${hThumbWidth}px`;
+    scrollThumbH.style.left = `${hThumbPos}px`;
+
+    // Vertical scrollbar
+    const vTrackHeight = scrollbarV.clientHeight;
+    const vThumbHeight = Math.max(40, (viewportHeight / contentHeight) * vTrackHeight);
+    const vScrollRange = contentHeight - viewportHeight;
+    const vThumbRange = vTrackHeight - vThumbHeight;
+
+    const currentY = editor.canvas_y || 0;
+    const scrollYPercent = vScrollRange > 0 ? (-currentY - canvasBounds.minY * editor.zoom) / vScrollRange : 0;
+    const vThumbPos = Math.max(0, Math.min(vThumbRange, scrollYPercent * vThumbRange));
+
+    scrollThumbV.style.height = `${vThumbHeight}px`;
+    scrollThumbV.style.top = `${vThumbPos}px`;
+}
+
+// Scrollbar drag handling
+let isDraggingScrollbar = false;
+let scrollbarDragStart = { x: 0, y: 0, canvasX: 0, canvasY: 0 };
+let activeScrollbar = null;
+
+function startScrollbarDrag(e, direction) {
+    e.preventDefault();
+    isDraggingScrollbar = true;
+    activeScrollbar = direction;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+    scrollbarDragStart = {
+        x: clientX,
+        y: clientY,
+        canvasX: editor.canvas_x || 0,
+        canvasY: editor.canvas_y || 0
+    };
+    document.addEventListener('mousemove', onScrollbarDrag);
+    document.addEventListener('mouseup', stopScrollbarDrag);
+    document.addEventListener('touchmove', onScrollbarDrag);
+    document.addEventListener('touchend', stopScrollbarDrag);
+}
+
+function onScrollbarDrag(e) {
+    if (!isDraggingScrollbar) return;
+
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    const container = document.getElementById('drawflow');
+    const contentWidth = (canvasBounds.maxX - canvasBounds.minX) * editor.zoom;
+    const contentHeight = (canvasBounds.maxY - canvasBounds.minY) * editor.zoom;
+
+    if (activeScrollbar === 'h') {
+        const trackWidth = scrollbarH.clientWidth;
+        const deltaX = clientX - scrollbarDragStart.x;
+        const scrollRatio = deltaX / trackWidth;
+        editor.canvas_x = scrollbarDragStart.canvasX - scrollRatio * contentWidth;
+    } else {
+        const trackHeight = scrollbarV.clientHeight;
+        const deltaY = clientY - scrollbarDragStart.y;
+        const scrollRatio = deltaY / trackHeight;
+        editor.canvas_y = scrollbarDragStart.canvasY - scrollRatio * contentHeight;
+    }
+
+    editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+    updateScrollbars();
+}
+
+function stopScrollbarDrag() {
+    isDraggingScrollbar = false;
+    activeScrollbar = null;
+    document.removeEventListener('mousemove', onScrollbarDrag);
+    document.removeEventListener('mouseup', stopScrollbarDrag);
+    document.removeEventListener('touchmove', onScrollbarDrag);
+    document.removeEventListener('touchend', stopScrollbarDrag);
+}
+
+scrollThumbH.addEventListener('mousedown', (e) => startScrollbarDrag(e, 'h'));
+scrollThumbH.addEventListener('touchstart', (e) => startScrollbarDrag(e, 'h'));
+scrollThumbV.addEventListener('mousedown', (e) => startScrollbarDrag(e, 'v'));
+scrollThumbV.addEventListener('touchstart', (e) => startScrollbarDrag(e, 'v'));
+
+// Click on track to jump
+scrollbarH.addEventListener('click', (e) => {
+    if (e.target === scrollThumbH) return;
+    const rect = scrollbarH.getBoundingClientRect();
+    const clickPercent = (e.clientX - rect.left) / rect.width;
+    const contentWidth = (canvasBounds.maxX - canvasBounds.minX) * editor.zoom;
+    editor.canvas_x = -canvasBounds.minX * editor.zoom - clickPercent * contentWidth + drawflowContainer.clientWidth / 2;
+    editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+    updateScrollbars();
+});
+
+scrollbarV.addEventListener('click', (e) => {
+    if (e.target === scrollThumbV) return;
+    const rect = scrollbarV.getBoundingClientRect();
+    const clickPercent = (e.clientY - rect.top) / rect.height;
+    const contentHeight = (canvasBounds.maxY - canvasBounds.minY) * editor.zoom;
+    editor.canvas_y = -canvasBounds.minY * editor.zoom - clickPercent * contentHeight + drawflowContainer.clientHeight / 2;
+    editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+    updateScrollbars();
+});
+
+// Update scrollbars when panning/zooming
+const originalPanCanvas = panCanvas;
+panCanvas = function(dx, dy) {
+    originalPanCanvas(dx, dy);
+    updateScrollbars();
+};
+
+// Initial scrollbar setup
+updateCanvasBounds();
+updateScrollbars();
+
+// Update bounds when nodes change
+editor.on('nodeCreated', () => { updateCanvasBounds(); updateScrollbars(); });
+editor.on('nodeRemoved', () => { updateCanvasBounds(); updateScrollbars(); });
+editor.on('nodeMoved', () => { updateCanvasBounds(); updateScrollbars(); });
+
+// Prevent Drawflow from resetting view on tap on empty canvas
+// This happens because Drawflow's click handler can reset transform
+const precanvas = editor.precanvas;
+precanvas.addEventListener('click', (e) => {
+    // If clicking on empty canvas (not on a node), prevent any transform reset
+    if (e.target === precanvas || e.target.classList.contains('drawflow')) {
+        syncPanFromDrawflow();
+    }
+});
+
+// Also handle mousedown/up to prevent transform reset on mobile tap
+let tapStartTime = 0;
+precanvas.addEventListener('mousedown', (e) => {
+    tapStartTime = Date.now();
+    syncPanFromDrawflow();
+});
+
+precanvas.addEventListener('mouseup', (e) => {
+    // If it was a quick tap (not a drag), sync the position
+    if (Date.now() - tapStartTime < 200) {
+        setTimeout(syncPanFromDrawflow, 10);
+    }
+});
+
+// Mouse wheel for scrolling (Shift+wheel = horizontal, Ctrl+wheel = zoom, wheel = vertical)
+drawflowContainer.addEventListener('wheel', (e) => {
+    e.preventDefault();
+
+    if (e.ctrlKey || e.metaKey) {
+        // Zoom
+        if (e.deltaY < 0) {
+            editor.zoom_in();
+        } else {
+            editor.zoom_out();
+        }
+    } else if (e.shiftKey) {
+        // Horizontal scroll
+        editor.canvas_x = (editor.canvas_x || 0) - e.deltaY;
+        editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+    } else {
+        // Vertical scroll
+        editor.canvas_y = (editor.canvas_y || 0) - e.deltaY;
+        editor.precanvas.style.transform = `translate(${editor.canvas_x}px, ${editor.canvas_y}px) scale(${editor.zoom})`;
+    }
+    updateScrollbars();
+}, { passive: false });
+
+// Keyboard navigation (arrow keys to pan when focused)
+document.addEventListener('keydown', (e) => {
+    // Only if no input is focused
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+    const keyPanStep = 50;
+    switch(e.key) {
+        case 'ArrowUp':
+            panCanvas(0, keyPanStep);
+            e.preventDefault();
+            break;
+        case 'ArrowDown':
+            panCanvas(0, -keyPanStep);
+            e.preventDefault();
+            break;
+        case 'ArrowLeft':
+            panCanvas(keyPanStep, 0);
+            e.preventDefault();
+            break;
+        case 'ArrowRight':
+            panCanvas(-keyPanStep, 0);
+            e.preventDefault();
+            break;
+        case '+':
+        case '=':
+            editor.zoom_in();
+            updateScrollbars();
+            break;
+        case '-':
+            editor.zoom_out();
+            updateScrollbars();
+            break;
+    }
+});
+
+// ============================================================================
+// Save Flow
+// ============================================================================
+
+// Save button handler - will be wrapped by form editor code
+document.getElementById('saveFlowBtn').addEventListener('click', function() {
+    // Check if we're in form mode (set by form editor code)
+    if (typeof currentEditorMode !== 'undefined' && currentEditorMode === 'form') {
+        saveFormFlow();
+    } else {
+        saveFlow();
+    }
+});
+
+function saveFlow() {
+    const exportData = editor.export();
+    console.log('Drawflow export:', JSON.stringify(exportData, null, 2));
+    console.log('nodeDataMap:', nodeDataMap);
+    const nodes = [];
+
+    let order = 0;
+
+    Object.entries(exportData.drawflow.Home.data).forEach(([drawflowId, nodeData]) => {
+        if (nodeData.name === 'trigger') return;
+
+        const savedData = nodeDataMap[drawflowId];
+        if (!savedData) return;
+
+        const node = {
+            id: savedData.dbId || null,
+            drawflow_id: drawflowId,  // Send Drawflow ID for mapping new nodes
+            order: order++,
+            node_type: savedData.type,
+            config: { ...savedData.data } || {},
+            quick_replies: savedData.data?.quick_replies || [],
+            // Save visual position
+            pos_x: nodeData.pos_x,
+            pos_y: nodeData.pos_y
+        };
+
+        // Remove quick_replies from config (it's separate)
+        delete node.config.quick_replies;
+
+        // Handle branching from connections
+        const outputs = nodeData.outputs;
+
+        // Save next_node_id for regular sequential connections (output_1 -> next node)
+        // This applies to non-branching nodes like message_text, message_link, comment_reply
+        // For branching nodes, output_1 is handled separately (e.g., follower check true branch)
+        const isBranchingNode = ['condition_follower', 'message_quick_reply', 'message_button_template'].includes(savedData.type);
+        if (!isBranchingNode) {
+            if (outputs.output_1?.connections?.length > 0) {
+                const targetDrawflowId = outputs.output_1.connections[0].node;
+                node.next_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
+            } else {
+                // Explicitly clear connection if removed
+                node.next_node_id = null;
+            }
+        }
+
+        if (savedData.type === 'condition_follower') {
+            // output_1 = follower (true), output_2 = not follower (false)
+            if (outputs.output_1?.connections?.length > 0) {
+                const targetDrawflowId = outputs.output_1.connections[0].node;
+                node.config.true_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
+            } else {
+                node.config.true_node_id = null;
+            }
+            if (outputs.output_2?.connections?.length > 0) {
+                const targetDrawflowId = outputs.output_2.connections[0].node;
+                node.config.false_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
+            } else {
+                node.config.false_node_id = null;
+            }
+        }
+
+        // Quick reply button branching
+        if (savedData.type === 'message_quick_reply') {
+            if (node.quick_replies && node.quick_replies.length > 0) {
+                node.quick_replies.forEach((qr, i) => {
+                    const outputKey = `output_${i + 1}`;
+                    if (outputs[outputKey]?.connections?.length > 0) {
+                        const targetDrawflowId = outputs[outputKey].connections[0].node;
+                        const targetDbId = nodeDataMap[targetDrawflowId]?.dbId;
+                        qr.target_node_id = targetDbId || `new_${targetDrawflowId}`;
+                    } else {
+                        // Explicitly clear connection if removed
+                        qr.target_node_id = null;
+                    }
+                });
+            }
+        }
+
+        // Button template postback branching
+        if (savedData.type === 'message_button_template' && node.config.buttons) {
+            // Default type is 'postback' if not specified
+            const postbackButtons = node.config.buttons.filter(b => (b.type || 'postback') === 'postback');
+            postbackButtons.forEach((btn, i) => {
+                const outputKey = `output_${i + 1}`;
+                if (outputs[outputKey]?.connections?.length > 0) {
+                    const targetDrawflowId = outputs[outputKey].connections[0].node;
+                    btn.target_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
+                } else {
+                    // Explicitly clear connection if removed
+                    btn.target_node_id = null;
+                }
+            });
+        }
+
+        nodes.push(node);
+    });
+
+    // Send to server
+    const saveBtn = document.getElementById('saveFlowBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Saving...';
+
+    fetch(`/instagram/flows/${flowId}/save-visual/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ nodes: nodes })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showToast('Flow saved successfully!', 'success');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showToast(data.error || 'Failed to save flow', 'error');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Flow';
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        showToast('Failed to save: ' + error.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Flow';
+    });
+}
+
+// ============================================================================
+// Toast
+// ============================================================================
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+    toast.style.cssText = 'bottom: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+    toast.innerHTML = `<i class="bi bi-${type === 'error' ? 'x-circle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ============================================================================
+// Form Editor (Complete Rewrite - Clean Design)
+// ============================================================================
+
+let formNodes = [];
+let currentEditorMode = 'visual';
+let formNodeIdCounter = 1;
+
+const NODE_TYPES = {
+    'comment_reply': { icon: 'bi-chat-dots', class: 'comment-reply', title: 'Comment Reply' },
+    'message_text': { icon: 'bi-chat-left-text', class: 'text-message', title: 'Text Message' },
+    'message_quick_reply': { icon: 'bi-ui-radios-grid', class: 'quick-reply', title: 'Quick Reply' },
+    'message_button_template': { icon: 'bi-menu-button-wide', class: 'button-template', title: 'Button Template' },
+    'message_link': { icon: 'bi-link', class: 'link-message', title: 'Link Message' },
+    'condition_follower': { icon: 'bi-person-check', class: 'follower-check', title: 'Follower Check' },
+    'collect_data': { icon: 'bi-input-cursor-text', class: 'collect-data', title: 'Collect Data' }
+};
+
+// Initialize form nodes from database (existingNodes)
+function initFormNodesFromDB() {
+    formNodes = [];
+
+    // Sort by order from database
+    const sorted = [...existingNodes].sort((a, b) => a.order - b.order);
+
+    sorted.forEach((dbNode, idx) => {
+        const node = {
+            tempId: `node_${formNodeIdCounter++}`,
+            dbId: dbNode.id,
+            type: dbNode.node_type,
+            config: { ...dbNode.config },
+            quickReplies: (dbNode.quick_replies || []).map(qr => ({
+                title: qr.title || '',
+                payload: qr.payload || '',
+                targetNodeId: qr.target_node_id  // DB ID of target
+            })),
+            nextNodeId: dbNode.next_node_id  // DB ID of next node
+        };
+
+        // Remove internal position fields from config display
+        delete node.config._pos_x;
+        delete node.config._pos_y;
+        delete node.config.quick_replies;
+
+        formNodes.push(node);
+    });
+}
+
+// Check if mobile device
+const isMobileDevice = () => {
+    return window.innerWidth <= 767 || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+};
+
+// Switch to a specific editor mode
+function switchEditorMode(mode) {
+    if (mode === currentEditorMode) return;
+
+    document.querySelectorAll('#editorModeToggle button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`#editorModeToggle button[data-mode="${mode}"]`).classList.add('active');
+
+    if (mode === 'visual') {
+        document.getElementById('visualEditor').classList.remove('hidden');
+        document.getElementById('formEditor').classList.remove('active');
+        document.getElementById('resetViewBtn').style.display = '';
+    } else {
+        document.getElementById('visualEditor').classList.add('hidden');
+        document.getElementById('formEditor').classList.add('active');
+        document.getElementById('resetViewBtn').style.display = 'none';
+        // Load fresh from database each time
+        initFormNodesFromDB();
+        renderFormEditor();
+        attachFormEventHandlers();
+    }
+
+    currentEditorMode = mode;
+}
+
+// Mode toggle
+document.querySelectorAll('#editorModeToggle button').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const mode = this.dataset.mode;
+
+        // Warn mobile users about visual editor limitations
+        if (mode === 'visual' && isMobileDevice()) {
+            showToast('Tip: Form editor works better on mobile for connecting nodes', 'info');
+        }
+
+        switchEditorMode(mode);
+    });
+});
+
+// Auto-switch to Form editor on mobile devices
+if (isMobileDevice()) {
+    // Small delay to ensure everything is loaded
+    setTimeout(() => {
+        switchEditorMode('form');
+        showToast('Switched to Form editor (recommended for mobile)', 'info');
+    }, 500);
+}
+
+// Render the form editor UI
+function renderFormEditor() {
+    const container = document.getElementById('formNodesContainer');
+    container.innerHTML = '';
+
+    if (formNodes.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
+                <p>No steps yet. Add your first step below.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Analyze flow structure
+    const connections = analyzeFlowConnections();
+
+    formNodes.forEach((node, index) => {
+        const typeInfo = NODE_TYPES[node.type] || { icon: 'bi-question', class: 'unknown', title: 'Unknown' };
+        container.insertAdjacentHTML('beforeend', buildNodeCard(node, index, typeInfo, connections));
+    });
+}
+
+// Flag to track if form event handlers have been attached
+let formEventHandlersAttached = false;
+
+// Analyze flow structure to find what connects to each node
+function analyzeFlowConnections() {
+    const connections = {}; // nodeId -> [{from: nodeId, type: 'next'|'follower'|'not_follower'|'button:X'|'qr:X'}]
+
+    formNodes.forEach((node, idx) => {
+        const nodeId = node.dbId || node.tempId;
+
+        // Check explicit nextNodeId for all node types
+        if (node.nextNodeId) {
+            if (!connections[node.nextNodeId]) connections[node.nextNodeId] = [];
+            connections[node.nextNodeId].push({ from: nodeId, fromIndex: idx, type: 'next' });
+        }
+
+        // Follower check branches
+        if (node.type === 'condition_follower') {
+            if (node.config.true_node_id) {
+                const targetId = node.config.true_node_id;
+                if (!connections[targetId]) connections[targetId] = [];
+                connections[targetId].push({ from: nodeId, fromIndex: idx, type: 'follower' });
+            }
+            if (node.config.false_node_id) {
+                const targetId = node.config.false_node_id;
+                if (!connections[targetId]) connections[targetId] = [];
+                connections[targetId].push({ from: nodeId, fromIndex: idx, type: 'not_follower' });
+            }
+        }
+
+        // Quick reply buttons
+        if (node.type === 'message_quick_reply' && node.quickReplies) {
+            node.quickReplies.forEach((qr, i) => {
+                if (qr.targetNodeId) {
+                    if (!connections[qr.targetNodeId]) connections[qr.targetNodeId] = [];
+                    connections[qr.targetNodeId].push({ from: nodeId, fromIndex: idx, type: 'qr', label: qr.title || `Button ${i+1}` });
+                }
+            });
+        }
+
+        // Button template
+        if (node.type === 'message_button_template' && node.config.buttons) {
+            node.config.buttons.forEach((btn, i) => {
+                if (btn.target_node_id && (btn.type || 'postback') === 'postback') {
+                    if (!connections[btn.target_node_id]) connections[btn.target_node_id] = [];
+                    connections[btn.target_node_id].push({ from: nodeId, fromIndex: idx, type: 'button', label: btn.title || `Button ${i+1}` });
+                }
+            });
+        }
+    });
+
+    return connections;
+}
+
+// Build "connected from" badges HTML
+function buildConnectionBadges(node, index, connections) {
+    const nodeId = node.dbId || node.tempId;
+    const incomingConnections = connections[nodeId] || [];
+
+    if (index === 0 && incomingConnections.length === 0) {
+        return '<span class="badge bg-warning text-dark"><i class="bi bi-lightning-charge me-1"></i>From Trigger</span>';
+    }
+
+    if (incomingConnections.length === 0) {
+        return '<span class="badge bg-secondary"><i class="bi bi-question-circle me-1"></i>Not connected</span>';
+    }
+
+    return incomingConnections.map(conn => {
+        const fromNode = formNodes[conn.fromIndex];
+        const fromInfo = NODE_TYPES[fromNode?.type] || { title: 'Unknown' };
+        const stepNum = conn.fromIndex + 1;
+
+        switch (conn.type) {
+            case 'next':
+                return `<span class="badge bg-primary"><i class="bi bi-arrow-right me-1"></i>From Node ${stepNum}</span>`;
+            case 'follower':
+                return `<span class="badge bg-success"><i class="bi bi-person-check me-1"></i>If Follower (Node ${stepNum})</span>`;
+            case 'not_follower':
+                return `<span class="badge bg-danger"><i class="bi bi-person-x me-1"></i>If Not Follower (Node ${stepNum})</span>`;
+            case 'qr':
+                return `<span class="badge bg-info"><i class="bi bi-ui-radios me-1"></i>"${conn.label}" (Node ${stepNum})</span>`;
+            case 'button':
+                return `<span class="badge bg-purple text-white"><i class="bi bi-menu-button me-1"></i>"${conn.label}" (Node ${stepNum})</span>`;
+            default:
+                return `<span class="badge bg-secondary">From Node ${stepNum}</span>`;
+        }
+    }).join(' ');
+}
+
+// Build HTML for a single node card
+function buildNodeCard(node, index, typeInfo, connections) {
+    const connectionBadges = buildConnectionBadges(node, index, connections);
+
+    let bodyHtml = buildNodeFields(node, index);
+
+    return `
+        <div class="form-node-card" data-node-index="${index}" data-temp-id="${node.tempId}">
+            <div class="form-node-header">
+                <div class="node-icon ${typeInfo.class}">
+                    <i class="bi ${typeInfo.icon}"></i>
+                </div>
+                <div class="node-title">
+                    <span>Node ${index + 1}: ${typeInfo.title}</span>
+                    <div class="node-connections mt-1">${connectionBadges}</div>
+                </div>
+                <div class="node-actions">
+                    <button type="button" class="delete-node-btn danger" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-node-body">
+                ${bodyHtml}
+            </div>
+        </div>
+    `;
+}
+
+// Build form fields based on node type
+function buildNodeFields(node, index) {
+    let html = '';
+
+    switch (node.type) {
+        case 'comment_reply':
+        case 'message_text':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
+                </div>
+                <div class="form-node-connection next-node">
+                    <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>Then go to:</div>
+                    <select class="form-select form-select-sm next-node-select">
+                        ${buildTargetOptions(node.nextNodeId, index)}
+                    </select>
+                </div>
+            `;
+            break;
+
+        case 'message_link':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">URL</label>
+                    <input type="url" class="form-control node-field" data-field="url" value="${escapeHtml(node.config.url || '')}">
+                </div>
+                <div class="form-node-connection next-node">
+                    <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>Then go to:</div>
+                    <select class="form-select form-select-sm next-node-select">
+                        ${buildTargetOptions(node.nextNodeId, index)}
+                    </select>
+                </div>
+            `;
+            break;
+
+        case 'message_quick_reply':
+            let qrHtml = '';
+            (node.quickReplies || []).forEach((qr, i) => {
+                qrHtml += `
+                    <div class="form-node-connection button-branch mb-2" data-qr-index="${i}">
+                        <div class="d-flex gap-2 mb-2">
+                            <input type="text" class="form-control form-control-sm qr-title" value="${escapeHtml(qr.title || '')}" placeholder="Button text" maxlength="20">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-qr"><i class="bi bi-x"></i></button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <small class="text-muted">Go to:</small>
+                            <select class="form-select form-select-sm qr-target">
+                                ${buildTargetOptions(qr.targetNodeId, index)}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            });
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
+                </div>
+                <label class="form-label">Buttons</label>
+                <div class="qr-container">${qrHtml}</div>
+                <button type="button" class="btn btn-outline-primary btn-sm add-qr mt-2"><i class="bi bi-plus me-1"></i>Add Button</button>
+            `;
+            break;
+
+        case 'message_button_template':
+            let btnHtml = '';
+            (node.config.buttons || []).forEach((btn, i) => {
+                const isUrl = btn.type === 'web_url';
+                btnHtml += `
+                    <div class="form-node-connection button-branch mb-2" data-btn-index="${i}">
+                        <div class="btn-row-flex mb-2">
+                            <select class="form-select form-select-sm btn-type">
+                                <option value="postback" ${!isUrl ? 'selected' : ''}>Action</option>
+                                <option value="web_url" ${isUrl ? 'selected' : ''}>URL</option>
+                            </select>
+                            <input type="text" class="form-control form-control-sm btn-title" value="${escapeHtml(btn.title || '')}" placeholder="Button text" maxlength="20">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-btn"><i class="bi bi-x"></i></button>
+                        </div>
+                        <div class="btn-url-row ${isUrl ? '' : 'd-none'}">
+                            <input type="url" class="form-control form-control-sm btn-url" value="${escapeHtml(btn.url || '')}" placeholder="https://...">
+                        </div>
+                        <div class="btn-target-row ${isUrl ? 'd-none' : ''}">
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-muted">Go to:</small>
+                                <select class="form-select form-select-sm btn-target">
+                                    ${buildTargetOptions(btn.target_node_id, index)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
+                </div>
+                <label class="form-label">Buttons (max 3)</label>
+                <div class="btn-container">${btnHtml}</div>
+                <button type="button" class="btn btn-outline-primary btn-sm add-btn mt-2"><i class="bi bi-plus me-1"></i>Add Button</button>
+            `;
+            break;
+
+        case 'condition_follower':
+            html = `
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Checks if user follows you and branches accordingly.
+                </div>
+                <div class="form-node-connection follower mb-2">
+                    <div class="connection-label"><i class="bi bi-check-circle text-success me-1"></i>If Follower:</div>
+                    <select class="form-select form-select-sm follower-target" data-branch="true">
+                        ${buildTargetOptions(node.config.true_node_id, index)}
+                    </select>
+                </div>
+                <div class="form-node-connection not-follower">
+                    <div class="connection-label"><i class="bi bi-x-circle text-danger me-1"></i>If Not Follower:</div>
+                    <select class="form-select form-select-sm follower-target" data-branch="false">
+                        ${buildTargetOptions(node.config.false_node_id, index)}
+                    </select>
+                </div>
+            `;
+            break;
+
+        case 'collect_data':
+            html = `
+                <div class="mb-3">
+                    <label class="form-label">Data Type</label>
+                    <select class="form-select node-field" data-field="field_type">
+                        <option value="name" ${node.config.field_type === 'name' ? 'selected' : ''}>Name</option>
+                        <option value="email" ${node.config.field_type === 'email' ? 'selected' : ''}>Email</option>
+                        <option value="phone" ${node.config.field_type === 'phone' ? 'selected' : ''}>Phone</option>
+                        <option value="custom" ${node.config.field_type === 'custom' ? 'selected' : ''}>Custom</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Prompt</label>
+                    <textarea class="form-control node-field" data-field="prompt_text" rows="2">${escapeHtml(node.config.prompt_text || '')}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Variable</label>
+                    <input type="text" class="form-control node-field" data-field="variable_name" value="${escapeHtml(node.config.variable_name || '')}">
+                </div>
+                <div class="form-node-connection next-node">
+                    <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>Then go to:</div>
+                    <select class="form-select form-select-sm next-node-select">
+                        ${buildTargetOptions(node.nextNodeId, index)}
+                    </select>
+                </div>
+            `;
+            break;
+    }
+
+    return html;
+}
+
+// Build target node dropdown options
+function buildTargetOptions(selectedId, excludeIndex = -1) {
+    let options = '<option value="">-- End flow --</option>';
+
+    formNodes.forEach((n, i) => {
+        // Skip current node to prevent self-reference
+        if (i === excludeIndex) return;
+
+        const info = NODE_TYPES[n.type];
+        const label = `Node ${i + 1}: ${info?.title || n.type}`;
+        // Match by dbId (for existing nodes) or tempId (for new nodes)
+        const isSelected = (selectedId && (selectedId == n.dbId || selectedId == n.tempId)) ? 'selected' : '';
+        options += `<option value="${n.dbId || n.tempId}" ${isSelected}>${label}</option>`;
+    });
+
+    return options;
+}
+
+// Attach all event handlers for form editor (only once)
+function attachFormEventHandlers() {
+    if (formEventHandlersAttached) return;
+    formEventHandlersAttached = true;
+
+    const container = document.getElementById('formNodesContainer');
+
+    // Use event delegation for better performance
+    container.addEventListener('click', function(e) {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        const card = target.closest('.form-node-card');
+        if (!card) return;
+        const nodeIndex = parseInt(card.dataset.nodeIndex);
+
+        if (target.closest('.delete-node-btn')) {
+            e.stopPropagation();
+            if (confirm('Delete this node?')) {
+                formNodes.splice(nodeIndex, 1);
+                renderFormEditor();
+                showToast('Node deleted');
+            }
+            return;
+        } else if (target.closest('.add-qr')) {
+            if (formNodes[nodeIndex].quickReplies.length >= 13) {
+                showToast('Maximum 13 buttons', 'error');
+                return;
+            }
+            formNodes[nodeIndex].quickReplies.push({ title: '', payload: `qr_${Date.now()}`, targetNodeId: null });
+            renderFormEditor();
+        } else if (target.closest('.remove-qr')) {
+            const qrDiv = target.closest('[data-qr-index]');
+            const qrIndex = parseInt(qrDiv.dataset.qrIndex);
+            formNodes[nodeIndex].quickReplies.splice(qrIndex, 1);
+            renderFormEditor();
+        } else if (target.closest('.add-btn')) {
+            if (!formNodes[nodeIndex].config.buttons) formNodes[nodeIndex].config.buttons = [];
+            if (formNodes[nodeIndex].config.buttons.length >= 3) {
+                showToast('Maximum 3 buttons', 'error');
+                return;
+            }
+            formNodes[nodeIndex].config.buttons.push({ type: 'postback', title: '', payload: `btn_${Date.now()}` });
+            renderFormEditor();
+        } else if (target.closest('.remove-btn')) {
+            const btnDiv = target.closest('[data-btn-index]');
+            const btnIndex = parseInt(btnDiv.dataset.btnIndex);
+            formNodes[nodeIndex].config.buttons.splice(btnIndex, 1);
+            renderFormEditor();
+        }
+    });
+
+    // Input/select change handlers
+    container.addEventListener('change', function(e) {
+        const card = e.target.closest('.form-node-card');
+        if (!card) return;
+        const nodeIndex = parseInt(card.dataset.nodeIndex);
+        const node = formNodes[nodeIndex];
+
+        // Simple config fields
+        if (e.target.classList.contains('node-field')) {
+            const field = e.target.dataset.field;
+            node.config[field] = e.target.value;
+        }
+        // Quick reply title
+        else if (e.target.classList.contains('qr-title')) {
+            const qrIndex = parseInt(e.target.closest('[data-qr-index]').dataset.qrIndex);
+            node.quickReplies[qrIndex].title = e.target.value;
+        }
+        // Quick reply target
+        else if (e.target.classList.contains('qr-target')) {
+            const qrIndex = parseInt(e.target.closest('[data-qr-index]').dataset.qrIndex);
+            node.quickReplies[qrIndex].targetNodeId = e.target.value || null;
+        }
+        // Button type
+        else if (e.target.classList.contains('btn-type')) {
+            const btnIndex = parseInt(e.target.closest('[data-btn-index]').dataset.btnIndex);
+            node.config.buttons[btnIndex].type = e.target.value;
+            const btnDiv = e.target.closest('[data-btn-index]');
+            btnDiv.querySelector('.btn-url-row').classList.toggle('d-none', e.target.value !== 'web_url');
+            btnDiv.querySelector('.btn-target-row').classList.toggle('d-none', e.target.value === 'web_url');
+        }
+        // Button title
+        else if (e.target.classList.contains('btn-title')) {
+            const btnIndex = parseInt(e.target.closest('[data-btn-index]').dataset.btnIndex);
+            node.config.buttons[btnIndex].title = e.target.value;
+        }
+        // Button URL
+        else if (e.target.classList.contains('btn-url')) {
+            const btnIndex = parseInt(e.target.closest('[data-btn-index]').dataset.btnIndex);
+            node.config.buttons[btnIndex].url = e.target.value;
+        }
+        // Button target
+        else if (e.target.classList.contains('btn-target')) {
+            const btnIndex = parseInt(e.target.closest('[data-btn-index]').dataset.btnIndex);
+            node.config.buttons[btnIndex].target_node_id = e.target.value || null;
+        }
+        // Follower check targets
+        else if (e.target.classList.contains('follower-target')) {
+            const branch = e.target.dataset.branch;
+            if (branch === 'true') {
+                node.config.true_node_id = e.target.value || null;
+            } else {
+                node.config.false_node_id = e.target.value || null;
+            }
+        }
+        // Next node selector
+        else if (e.target.classList.contains('next-node-select')) {
+            node.nextNodeId = e.target.value || null;
+        }
+    });
+}
+
+// Add node from dropdown (form editor)
+document.querySelectorAll('[data-add-node]').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (currentEditorMode !== 'form') return;
+
+        const nodeType = this.dataset.addNode;
+
+        // Validate follower check
+        if (nodeType === 'condition_follower') {
+            const hasInteraction = formNodes.some(n =>
+                n.type === 'message_quick_reply' || n.type === 'message_button_template'
+            );
+            if (!hasInteraction) {
+                showToast('Add a Quick Reply or Button Template first', 'error');
+                return;
+            }
+        }
+
+        const newNode = {
+            tempId: `node_${formNodeIdCounter++}`,
+            dbId: null,
+            type: nodeType,
+            config: {},
+            quickReplies: nodeType === 'message_quick_reply' ? [{ title: '', payload: 'qr_0', targetNodeId: null }] : [],
+            nextNodeId: null
+        };
+
+        if (nodeType === 'message_button_template') {
+            newNode.config.buttons = [{ type: 'postback', title: '', payload: 'btn_0' }];
+        }
+
+        formNodes.push(newNode);
+        renderFormEditor();
+        showToast('Node added');
+    });
+});
+
+// Form editor save function - Clean rewrite
+function saveFormFlow() {
+    if (formNodes.length === 0) {
+        showToast('Add at least one node to save', 'error');
+        return;
+    }
+
+    // Build nodes array for saving - Use explicit nextNodeId, no auto-connect
+    const nodes = formNodes.map((node, index) => {
+        const nodeData = {
+            id: node.dbId || null,
+            temp_id: node.tempId,
+            order: index,
+            node_type: node.type,
+            config: { ...node.config },
+            quick_replies: [],
+            // Use explicit next node (null if not set)
+            next_node_id: node.nextNodeId || null
+        };
+
+        // Handle quick replies (message_quick_reply nodes)
+        if (node.type === 'message_quick_reply' && node.quickReplies) {
+            nodeData.quick_replies = node.quickReplies.map(qr => ({
+                title: qr.title || '',
+                payload: qr.payload || '',
+                target_node_id: qr.targetNodeId || null
+            }));
+        }
+
+        // Note: button_template target_node_id is already in config.buttons
+        // Note: condition_follower true_node_id/false_node_id is already in config
+
+        return nodeData;
+    });
+
+    console.log('[FORM SAVE] Nodes:', nodes);
+
+    const saveBtn = document.getElementById('saveFlowBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Saving...';
+
+    fetch(`/instagram/flows/${flowId}/save-visual/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ nodes: nodes })
+    })
+    .then(response => {
+        console.log('[FORM SAVE] Response status:', response.status, response.statusText);
+        // Check if redirected (e.g., to login page)
+        if (response.redirected) {
+            throw new Error('Session expired. Please refresh the page and try again.');
+        }
+        // Check content type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. You may need to log in again.');
+        }
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('[FORM SAVE] Server response:', data);
+        if (data.success) {
+            showToast('Flow saved successfully!', 'success');
+            // Reload to show saved data
+            location.reload();
+        } else {
+            showToast(data.error || 'Failed to save flow', 'error');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save';
+        }
+    })
+    .catch(error => {
+        console.error('[FORM SAVE] Error:', error);
+        showToast('Failed to save: ' + error.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save';
+    });
+}
+
+// ============================================================================
+// Flow Settings
+// ============================================================================
+
+// Toggle keywords section based on trigger type (Visual Editor sidebar)
+const settingsTriggerType = document.getElementById('settingsTriggerType');
+const settingsKeywordsSection = document.getElementById('settingsKeywordsSection');
+
+if (settingsTriggerType && settingsKeywordsSection) {
+    function toggleSettingsKeywords() {
+        settingsKeywordsSection.style.display = settingsTriggerType.value === 'comment_keyword' ? 'block' : 'none';
+    }
+    settingsTriggerType.addEventListener('change', toggleSettingsKeywords);
+    toggleSettingsKeywords();
+}
+
+// Toggle keywords section (Form Editor)
+const formTriggerType = document.getElementById('formTriggerType');
+const formKeywordsCol = document.getElementById('formKeywordsCol');
+
+if (formTriggerType && formKeywordsCol) {
+    function toggleFormKeywords() {
+        formKeywordsCol.style.display = formTriggerType.value === 'comment_keyword' ? 'block' : 'none';
+    }
+    formTriggerType.addEventListener('change', toggleFormKeywords);
+    toggleFormKeywords();
+}
+
+// Browse posts button
+const settingsBrowsePostsBtn = document.getElementById('settingsBrowsePostsBtn');
+const settingsPostId = document.getElementById('settingsPostId');
+
+if (settingsBrowsePostsBtn) {
+    settingsBrowsePostsBtn.addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('postSelectModal'));
+        modal.show();
+        loadPostsForSettings();
+    });
+}
+
+// Clear post button (Visual Editor)
+const settingsClearPostBtn = document.getElementById('settingsClearPostBtn');
+if (settingsClearPostBtn) {
+    settingsClearPostBtn.addEventListener('click', function() {
+        settingsPostId.value = '';
+        this.style.display = 'none';
+    });
+}
+
+// Form Editor - Browse posts button
+const formBrowsePostsBtn = document.getElementById('formBrowsePostsBtn');
+const formPostId = document.getElementById('formPostId');
+
+if (formBrowsePostsBtn) {
+    formBrowsePostsBtn.addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('postSelectModal'));
+        modal.show();
+        loadPostsForForm();
+    });
+}
+
+// Form Editor - Clear post button
+const formClearPostBtn = document.getElementById('formClearPostBtn');
+if (formClearPostBtn) {
+    formClearPostBtn.addEventListener('click', function() {
+        formPostId.value = '';
+        this.style.display = 'none';
+    });
+}
+
+// Load posts for form editor modal
+function loadPostsForForm() {
+    const loading = document.getElementById('postsLoading');
+    const grid = document.getElementById('postsGrid');
+    const error = document.getElementById('postsError');
+
+    loading.style.display = 'block';
+    grid.style.display = 'none';
+    error.style.display = 'none';
+
+    fetch('{% url "instagram_api_posts" %}')
+        .then(response => response.json())
+        .then(data => {
+            loading.style.display = 'none';
+            if (data.success) {
+                grid.innerHTML = '';
+                data.posts.forEach(post => {
+                    const col = document.createElement('div');
+                    col.className = 'col-4 col-md-3';
+                    const imgUrl = post.media_type === 'VIDEO'
+                        ? (post.thumbnail_url || '/static/img/placeholder.png')
+                        : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
+                    const isVideo = post.media_type === 'VIDEO';
+                    col.innerHTML = `
+                        <div class="post-item border rounded p-1 position-relative" style="cursor: pointer;">
+                            <img src="${imgUrl}" class="img-fluid rounded" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
+                            ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
+                        </div>
+                    `;
+                    col.querySelector('.post-item').addEventListener('click', function() {
+                        formPostId.value = post.id;
+                        // Also update the sidebar input if exists
+                        if (settingsPostId) settingsPostId.value = post.id;
+                        bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
+                        // Show clear buttons
+                        if (formClearPostBtn) formClearPostBtn.style.display = 'block';
+                        if (settingsClearPostBtn) settingsClearPostBtn.style.display = 'block';
+                    });
+                    grid.appendChild(col);
+                });
+                grid.style.display = 'flex';
+            } else {
+                error.textContent = data.error || 'Failed to load posts';
+                error.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            loading.style.display = 'none';
+            error.textContent = 'Error loading posts';
+            error.style.display = 'block';
+        });
+}
+
+// Load posts for settings modal
+function loadPostsForSettings() {
+    const loading = document.getElementById('postsLoading');
+    const grid = document.getElementById('postsGrid');
+    const error = document.getElementById('postsError');
+
+    loading.style.display = 'block';
+    grid.style.display = 'none';
+    error.style.display = 'none';
+
+    fetch('{% url "instagram_api_posts" %}')
+        .then(response => response.json())
+        .then(data => {
+            loading.style.display = 'none';
+            if (data.success) {
+                grid.innerHTML = '';
+                data.posts.forEach(post => {
+                    const col = document.createElement('div');
+                    col.className = 'col-4 col-md-3';
+                    const imgUrl = post.media_type === 'VIDEO'
+                        ? (post.thumbnail_url || '/static/img/placeholder.png')
+                        : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
+                    const isVideo = post.media_type === 'VIDEO';
+                    col.innerHTML = `
+                        <div class="post-item border rounded p-1 position-relative" style="cursor: pointer;">
+                            <img src="${imgUrl}" class="img-fluid rounded" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
+                            ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
+                        </div>
+                    `;
+                    col.querySelector('.post-item').addEventListener('click', function() {
+                        settingsPostId.value = post.id;
+                        bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
+                        // Show clear button
+                        const clearBtn = document.getElementById('settingsClearPostBtn');
+                        if (clearBtn) clearBtn.style.display = 'block';
+                    });
+                    grid.appendChild(col);
+                });
+                grid.style.display = 'flex';
+            } else {
+                error.textContent = data.error || 'Failed to load posts';
+                error.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            loading.style.display = 'none';
+            error.textContent = 'Error loading posts';
+            error.style.display = 'block';
+        });
+}
+
+// ============================================================================
+// Initialize
+// ============================================================================
+
+loadExistingFlow();
+updateFollowerCheckPaletteState();
+
+// Auto-detect mobile and suggest form mode
+if (window.innerWidth < 768) {
+    setTimeout(() => {
+        if (confirm('Mobile detected. Switch to form editor for easier editing?')) {
+            document.querySelector('#editorModeToggle button[data-mode="form"]').click();
+        }
+    }, 500);
+}
+</script>
+
+<!-- Post Selection Modal -->
+<div class="modal fade" id="postSelectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title">Select Instagram Post</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="postsLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 mb-0 small">Loading your posts...</p>
+                </div>
+                <div id="postsGrid" class="row g-2" style="display: none;"></div>
+                <div id="postsError" class="alert alert-danger" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

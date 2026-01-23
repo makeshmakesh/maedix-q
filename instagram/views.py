@@ -1,3 +1,4 @@
+#pylint: disable=all
 import json
 import logging
 import requests
@@ -6,7 +7,9 @@ import base64
 import hmac
 import hashlib
 import uuid
+import csv
 from datetime import timedelta
+from django.db import models, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,15 +18,24 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
-from .models import InstagramAccount, InstagramAutomation, InstagramCommentEvent
+from .models import (
+    InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
+    FlowSession, FlowExecutionLog, CollectedLead
+)
+from .flow_engine import FlowEngine, find_matching_flow, find_session_for_message, parse_quick_reply_payload
+from .instagram_api import get_api_client_for_account, InstagramAPIError
 from core.models import Configuration
 from core.subscription_utils import check_feature_access, get_user_subscription
 
 logger = logging.getLogger(__name__)
 
 
-class IGAutomationFeatureRequiredMixin:
-    """Mixin to check if user has ig_post_automation feature access"""
+# =============================================================================
+# Feature Access Mixins
+# =============================================================================
+
+class IGFlowBuilderFeatureMixin:
+    """Mixin to check if user has ig_flow_builder feature access"""
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -33,32 +45,17 @@ class IGAutomationFeatureRequiredMixin:
         if request.user.is_staff:
             return super().dispatch(request, *args, **kwargs)
 
-        can_access, message, _ = check_feature_access(request.user, 'ig_post_automation')
+        can_access, message, _ = check_feature_access(request.user, 'ig_flow_builder')
         if not can_access:
-            messages.error(request, 'You need to upgrade your plan to access Instagram Automation.')
+            messages.error(request, 'You need to upgrade your plan to access the DM Flow Builder.')
             return redirect('subscription')
 
         return super().dispatch(request, *args, **kwargs)
 
 
-class IGAccountAutomationFeatureRequiredMixin:
-    """Mixin to check if user has ig_account_automation feature (Creator plan)"""
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('login')
-
-        # Staff users bypass all checks
-        if request.user.is_staff:
-            return super().dispatch(request, *args, **kwargs)
-
-        can_access, message, _ = check_feature_access(request.user, 'ig_account_automation')
-        if not can_access:
-            messages.error(request, 'Account-level automation is available on the Creator plan. Please upgrade.')
-            return redirect('subscription')
-
-        return super().dispatch(request, *args, **kwargs)
-
+# =============================================================================
+# Instagram Connection Views
+# =============================================================================
 
 class InstagramConnectView(LoginRequiredMixin, View):
     """Display Instagram connection status"""
@@ -135,7 +132,6 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             logger.info(f"Instagram subscription response: {response_data}")
 
             if response.status_code == 200 and response_data.get("success"):
-                # Update the webhook_subscribed field in instagram_data
                 if hasattr(user, 'instagram_account'):
                     instagram_account = user.instagram_account
                     if instagram_account.instagram_data:
@@ -170,12 +166,10 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             messages.error(request, "Invalid callback parameters.")
             return redirect("instagram_connect")
 
-        # Verify state matches user
         if state != str(request.user.id):
             messages.error(request, "Invalid state parameter.")
             return redirect("instagram_connect")
 
-        # Load configuration
         app_root_url = Configuration.get_value('app_root_url', '')
         instagram_app_id = Configuration.get_value('instagram_app_id', '')
         instagram_app_secret = Configuration.get_value('instagram_app_secret', '')
@@ -228,11 +222,10 @@ class InstagramCallbackView(LoginRequiredMixin, View):
                 )
 
             access_token = long_lived_data["access_token"]
-            expires_in = long_lived_data.get("expires_in", 5184000)  # 60 days
+            expires_in = long_lived_data.get("expires_in", 5184000)
             token_expires_at = timezone.now() + timedelta(seconds=expires_in)
 
-            # Step 3: Fetch user details with all available fields
-            # Request comprehensive fields including those available with insights permission
+            # Step 3: Fetch user details
             user_info_response = requests.get(
                 "https://graph.instagram.com/v21.0/me",
                 params={
@@ -250,14 +243,9 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             user_info = user_info_response.json()
             logger.info(f"Instagram /me response: {user_info}")
 
-            # The ID from /me endpoint with instagram_business_* scopes
-            # is the Instagram Professional Account ID (same as webhook entry.id)
             ig_account_id = str(user_info.get("id", ""))
-
-            # Some accounts might have a separate user_id field
             ig_user_id = str(user_info.get("user_id", "")) or ig_account_id
 
-            # Also try to fetch from the account endpoint directly for additional info
             try:
                 account_info_response = requests.get(
                     f"https://graph.instagram.com/v21.0/{ig_account_id}",
@@ -270,14 +258,11 @@ class InstagramCallbackView(LoginRequiredMixin, View):
                 if account_info_response.ok:
                     account_info = account_info_response.json()
                     logger.info(f"Instagram account info response: {account_info}")
-                    # ig_id might be a different ID format
                     if account_info.get("ig_id"):
                         ig_user_id = str(account_info.get("ig_id"))
             except Exception as e:
                 logger.warning(f"Could not fetch additional account info: {e}")
 
-            # Step 4: Save or update InstagramAccount
-            # Store the main ID which should match webhook entry.id
             business_account_id = ig_account_id
 
             _, created = InstagramAccount.objects.update_or_create(
@@ -290,10 +275,10 @@ class InstagramCallbackView(LoginRequiredMixin, View):
                     "is_active": True,
                     "instagram_data": {
                         "user_info": user_info,
-                        "account_id": ig_account_id,  # Main ID from /me
-                        "user_id": ig_user_id,  # User ID or ig_id if different
-                        "ig_id": ig_user_id,  # Explicit ig_id for webhook matching
-                        "business_account_id": business_account_id,  # For webhook matching
+                        "account_id": ig_account_id,
+                        "user_id": ig_user_id,
+                        "ig_id": ig_user_id,
+                        "business_account_id": business_account_id,
                         "account_type": user_info.get("account_type", ""),
                         "connected_at": str(timezone.now()),
                     },
@@ -306,7 +291,6 @@ class InstagramCallbackView(LoginRequiredMixin, View):
                 f"username={user_info.get('username')}, account_type={user_info.get('account_type')}"
             )
 
-            # Step 5: Auto-subscribe to webhook events (comments and messages)
             subscription_success = self.subscribe_to_webhook_events(
                 ig_account_id, access_token, request.user
             )
@@ -380,11 +364,10 @@ class InstagramWebhookSubscribeView(LoginRequiredMixin, View):
                     'error': 'Missing account credentials'
                 }, status=400)
 
-            # Subscribe to webhook events
             url = f"https://graph.instagram.com/v21.0/{ig_user_id}/subscribed_apps"
 
             params = {
-                "subscribed_fields": "comments,messages",
+                "subscribed_fields": "comments,messages, messaging_postbacks",
                 "access_token": access_token,
             }
 
@@ -396,7 +379,6 @@ class InstagramWebhookSubscribeView(LoginRequiredMixin, View):
             logger.info(f"Instagram subscription response: {response_data}")
 
             if response.status_code == 200 and response_data.get("success"):
-                # Update the webhook_subscribed field
                 if instagram_account.instagram_data:
                     instagram_account.instagram_data["webhook_subscribed"] = True
                 else:
@@ -442,7 +424,6 @@ class InstagramPostPageView(LoginRequiredMixin, View):
             messages.error(request, 'No video URL provided.')
             return redirect('dashboard')
 
-        # Check Instagram connection
         if not hasattr(request.user, 'instagram_account') or not request.user.instagram_account.is_connected:
             messages.error(request, 'Please connect your Instagram account first.')
             return redirect('instagram_connect')
@@ -464,7 +445,6 @@ class InstagramPostPageView(LoginRequiredMixin, View):
             messages.error(request, 'No video URL provided.')
             return redirect('dashboard')
 
-        # Check Instagram connection
         if not hasattr(request.user, 'instagram_account'):
             messages.error(request, 'Instagram not connected.')
             return redirect('instagram_connect')
@@ -480,7 +460,6 @@ class InstagramPostPageView(LoginRequiredMixin, View):
         try:
             import time
 
-            # Step 1: Create media container for Reel
             container_response = requests.post(
                 f"https://graph.instagram.com/v21.0/{ig_user_id}/media",
                 data={
@@ -500,8 +479,7 @@ class InstagramPostPageView(LoginRequiredMixin, View):
 
             container_id = container_data["id"]
 
-            # Step 2: Wait for video processing to complete
-            max_attempts = 30  # Max 5 minutes
+            max_attempts = 30
             for attempt in range(max_attempts):
                 status_response = requests.get(
                     f"https://graph.instagram.com/v21.0/{container_id}",
@@ -526,7 +504,6 @@ class InstagramPostPageView(LoginRequiredMixin, View):
                 messages.error(request, 'Video processing timeout. Please try again.')
                 return redirect(return_url or 'dashboard')
 
-            # Step 3: Publish the container
             publish_response = requests.post(
                 f"https://graph.instagram.com/v21.0/{ig_user_id}/media_publish",
                 data={
@@ -551,14 +528,34 @@ class InstagramPostPageView(LoginRequiredMixin, View):
 
 
 # =============================================================================
-# Instagram Automation Views
+# Landing Page
 # =============================================================================
 
-class InstagramPostsAPIView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
+class AutomationLandingView(View):
+    """Public landing page for Instagram automation feature"""
+    template_name = 'instagram/automation_landing.html'
+
+    def get(self, request):
+        context = {
+            'has_feature_access': False,
+        }
+
+        # Check if user has feature access
+        if request.user.is_authenticated:
+            can_access, _, _ = check_feature_access(request.user, 'ig_flow_builder')
+            context['has_feature_access'] = can_access
+
+        return render(request, self.template_name, context)
+
+
+# =============================================================================
+# Instagram Posts API
+# =============================================================================
+
+class InstagramPostsAPIView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to fetch user's Instagram posts for browsing"""
 
     def get(self, request):
-        # Check if Instagram is connected
         if not hasattr(request.user, 'instagram_account'):
             return JsonResponse({
                 'success': False,
@@ -572,26 +569,9 @@ class InstagramPostsAPIView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin
                 'error': 'Instagram token expired. Please reconnect.'
             })
 
-        access_token = instagram_account.access_token
-        ig_user_id = instagram_account.instagram_user_id
-
         try:
-            # Fetch user's media posts
-            media_url = f"https://graph.instagram.com/v21.0/{ig_user_id}/media"
-            params = {
-                'fields': 'id,media_type,media_url,thumbnail_url,timestamp,caption,permalink',
-                'access_token': access_token,
-                'limit': 50
-            }
-
-            response = requests.get(media_url, params=params, timeout=30)
-            data = response.json()
-
-            if 'error' in data:
-                return JsonResponse({
-                    'success': False,
-                    'error': f"Instagram API error: {data['error'].get('message', 'Unknown error')}"
-                })
+            api_client = get_api_client_for_account(instagram_account)
+            data = api_client.get_media(limit=50)
 
             posts = data.get('data', [])
 
@@ -601,11 +581,6 @@ class InstagramPostsAPIView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin
                 'count': len(posts)
             })
 
-        except requests.RequestException as e:
-            return JsonResponse({
-                'success': False,
-                'error': f'Network error fetching posts: {str(e)}'
-            })
         except Exception as e:
             return JsonResponse({
                 'success': False,
@@ -613,86 +588,76 @@ class InstagramPostsAPIView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin
             })
 
 
-class AutomationLandingView(View):
-    """Public landing page for Instagram automation feature"""
-    template_name = 'instagram/automation_landing.html'
+# =============================================================================
+# DM Flow Builder Views
+# =============================================================================
+
+class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """List all DM flows for the user"""
+    template_name = 'instagram/flow_list.html'
 
     def get(self, request):
-        context = {
-            'has_feature_access': False,
-        }
-
-        # Check if user has feature access
-        if request.user.is_authenticated:
-            can_access, _, _ = check_feature_access(request.user, 'ig_post_automation')
-            context['has_feature_access'] = can_access
-
-        return render(request, self.template_name, context)
-
-
-class AutomationListView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
-    """List all Instagram automations for the user"""
-    template_name = 'instagram/automation_list.html'
-
-    def get(self, request):
-        # Check if Instagram is connected
         instagram_connected = False
         instagram_account = None
         if hasattr(request.user, 'instagram_account'):
             instagram_account = request.user.instagram_account
             instagram_connected = instagram_account.is_connected
 
-        # Get user's automations
-        automations = InstagramAutomation.objects.filter(user=request.user)
-        automation_count = automations.count()
+        flows = DMFlow.objects.filter(user=request.user).prefetch_related('nodes')
+        flow_count = flows.count()
 
-        # Get automation limit from subscription
-        automation_limit = None
+        # Get flow limit from subscription
+        flow_limit = None
         can_create_more = True
-        can_use_account_automation = request.user.is_staff
 
         if not request.user.is_staff:
             subscription = get_user_subscription(request.user)
             if subscription and subscription.plan:
-                feature = subscription.plan.get_feature('ig_post_automation')
+                feature = subscription.plan.get_feature('ig_flow_builder')
                 if feature:
-                    automation_limit = feature.get('limit')
-                    if automation_limit:
-                        can_create_more = automation_count < automation_limit
-                # Check if user can use account-level automation
-                can_use_account_automation = subscription.plan.has_feature('ig_account_automation')
+                    flow_limit = feature.get('limit')
+                    if flow_limit:
+                        can_create_more = flow_count < flow_limit
 
-        # Get recent comment events
-        recent_events = InstagramCommentEvent.objects.filter(
-            user=request.user
-        ).select_related('automation')[:20]
+        # Get recent sessions for activity feed
+        recent_sessions = FlowSession.objects.filter(
+            flow__user=request.user
+        ).select_related('flow').order_by('-created_at')[:20]
+
+        # Aggregate stats for mobile view
+        from django.db.models import Sum
+        stats = flows.aggregate(
+            total_triggered=Sum('total_triggered'),
+            total_completed=Sum('total_completed')
+        )
 
         context = {
             'instagram_connected': instagram_connected,
             'instagram_account': instagram_account,
-            'automations': automations,
-            'automation_count': automation_count,
-            'automation_limit': automation_limit,
+            'flows': flows,
+            'flow_count': flow_count,
+            'flow_limit': flow_limit,
             'can_create_more': can_create_more,
-            'can_use_account_automation': can_use_account_automation,
-            'recent_events': recent_events,
+            'recent_sessions': recent_sessions,
+            'total_triggered': stats['total_triggered'] or 0,
+            'total_completed': stats['total_completed'] or 0,
         }
         return render(request, self.template_name, context)
 
 
-class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
-    """Create a new Instagram automation"""
-    template_name = 'instagram/automation_form.html'
+class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Create a new DM flow"""
+    template_name = 'instagram/flow_form.html'
 
-    def _check_automation_limit(self, request):
-        """Check if user has reached their automation limit. Returns (limit_reached, limit_count)"""
+    def _check_flow_limit(self, request):
+        """Check if user has reached their flow limit"""
         if request.user.is_staff:
             return False, None
 
-        current_count = InstagramAutomation.objects.filter(user=request.user).count()
+        current_count = DMFlow.objects.filter(user=request.user).count()
         subscription = get_user_subscription(request.user)
         if subscription and subscription.plan:
-            feature = subscription.plan.get_feature('ig_post_automation')
+            feature = subscription.plan.get_feature('ig_flow_builder')
             if feature:
                 limit = feature.get('limit')
                 if limit and current_count >= limit:
@@ -700,221 +665,728 @@ class AutomationCreateView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin,
         return False, None
 
     def get(self, request):
-        # Check if Instagram is connected
         if not hasattr(request.user, 'instagram_account') or \
            not request.user.instagram_account.is_connected:
             messages.error(request, 'Please connect your Instagram account first.')
             return redirect('instagram_connect')
 
-        # Check automation limit
-        limit_reached, limit = self._check_automation_limit(request)
+        limit_reached, limit = self._check_flow_limit(request)
         if limit_reached:
-            messages.error(request, f'You have reached your limit of {limit} automations. Please upgrade your plan for more.')
-            return redirect('instagram_automation_list')
+            messages.error(request, f'You have reached your limit of {limit} flows. Please upgrade your plan.')
+            return redirect('flow_list')
+
+        # Get available features for the user
+        features = self._get_user_features(request.user)
 
         context = {
             'editing': False,
-            'automation': None,
+            'flow': None,
+            'features': features,
         }
         return render(request, self.template_name, context)
 
     def post(self, request):
-        # Check if Instagram is connected
         if not hasattr(request.user, 'instagram_account') or \
            not request.user.instagram_account.is_connected:
             messages.error(request, 'Please connect your Instagram account first.')
             return redirect('instagram_connect')
 
-        # Check automation limit
-        limit_reached, limit = self._check_automation_limit(request)
+        limit_reached, limit = self._check_flow_limit(request)
         if limit_reached:
-            messages.error(request, f'You have reached your limit of {limit} automations. Please upgrade your plan for more.')
-            return redirect('instagram_automation_list')
+            messages.error(request, f'You have reached your limit of {limit} flows.')
+            return redirect('flow_list')
 
         title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        trigger_type = request.POST.get('trigger_type', 'comment_keyword')
         instagram_post_id = request.POST.get('instagram_post_id', '').strip()
         keywords = request.POST.get('keywords', '').strip()
 
-        # Get multiple replies/DMs as lists (filter out empty values)
-        comment_replies = [r.strip() for r in request.POST.getlist('comment_replies[]') if r.strip()]
-        followup_dms = [d.strip() for d in request.POST.getlist('followup_dms[]') if d.strip()]
-
-        # Validation
         errors = []
         if not title:
             errors.append('Title is required.')
         if len(title) > 100:
             errors.append('Title must be 100 characters or less.')
-        if not instagram_post_id:
-            errors.append('Please select an Instagram post.')
-        if not comment_replies:
-            errors.append('At least one comment reply is required.')
-        if len(comment_replies) > 5:
-            errors.append('Maximum 5 comment replies allowed.')
-        if len(followup_dms) > 5:
-            errors.append('Maximum 5 follow-up DMs allowed.')
+
+        # Check if post is already used by another active flow
+        if instagram_post_id:
+            existing_flow = DMFlow.objects.filter(
+                user=request.user,
+                instagram_post_id=instagram_post_id,
+                is_active=True
+            ).first()
+            if existing_flow:
+                errors.append(f'This post is already used by flow "{existing_flow.title}". Please select a different post or deactivate the existing flow.')
 
         if errors:
             for error in errors:
                 messages.error(request, error)
-            context = {
+            return render(request, self.template_name, {
                 'editing': False,
-                'automation': {
+                'flow': {
                     'title': title,
+                    'description': description,
+                    'trigger_type': trigger_type,
                     'instagram_post_id': instagram_post_id,
                     'keywords': keywords,
-                    'comment_replies': comment_replies,
-                    'followup_dms': followup_dms,
                 },
-            }
-            return render(request, self.template_name, context)
+                'features': self._get_user_features(request.user),
+            })
 
-        # Create automation
-        InstagramAutomation.objects.create(
+        flow = DMFlow.objects.create(
             user=request.user,
             title=title,
+            description=description,
+            trigger_type=trigger_type,
             instagram_post_id=instagram_post_id,
             keywords=keywords,
-            comment_replies=comment_replies,
-            followup_dms=followup_dms,
         )
 
-        messages.success(request, f'Automation "{title}" created successfully!')
-        return redirect('instagram_automation_list')
+        messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
+        return redirect('flow_edit', pk=flow.pk)
+
+    def _get_user_features(self, user):
+        """Get available flow features based on user's subscription"""
+        if user.is_staff:
+            return {
+                'quick_replies': True,
+                'follower_check': True,
+                'data_collection': True,
+                'advanced_branching': True,
+            }
+
+        subscription = get_user_subscription(user)
+        if not subscription:
+            return {}
+
+        return {
+            'quick_replies': subscription.plan.has_feature('ig_quick_replies'),
+            'follower_check': subscription.plan.has_feature('ig_follower_check'),
+            'data_collection': subscription.plan.has_feature('ig_data_collection'),
+            'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
+        }
 
 
-class AutomationEditView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
-    """Edit an existing Instagram automation"""
-    template_name = 'instagram/automation_form.html'
+class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Edit an existing DM flow"""
+    template_name = 'instagram/flow_edit.html'
 
     def get(self, request, pk):
-        automation = get_object_or_404(
-            InstagramAutomation, pk=pk, user=request.user
-        )
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        nodes = flow.nodes.all().order_by('order').prefetch_related('quick_reply_options')
+
+        features = self._get_user_features(request.user)
+
+        # Build nodes list for JavaScript (for visual editor)
+        nodes_json = []
+        for node in nodes:
+            # Get quick replies for this node
+            quick_replies = []
+            for qr in node.quick_reply_options.all().order_by('order'):
+                print(f"[LOAD] Node {node.id} QR: id={qr.id}, title={qr.title}, target_node_id={qr.target_node_id}")
+                quick_replies.append({
+                    'id': qr.id,
+                    'title': qr.title,
+                    'payload': qr.payload,
+                    'target_node_id': qr.target_node_id
+                })
+
+            nodes_json.append({
+                'id': node.id,
+                'order': node.order,
+                'node_type': node.node_type,
+                'name': node.name or node.get_node_type_display(),
+                'display': f"Step {node.order + 1}: {node.name or node.get_node_type_display()}",
+                'config': node.config or {},
+                'quick_replies': quick_replies,
+                'next_node_id': node.next_node_id
+            })
+            if node.node_type == 'message_quick_reply':
+                print(f"[LOAD] Quick reply node {node.id} sending: quick_replies={quick_replies}")
+            if node.next_node_id:
+                print(f"[LOAD] Node {node.id} has next_node_id={node.next_node_id}")
 
         context = {
-            'editing': True,
-            'automation': automation,
+            'flow': flow,
+            'nodes': nodes,
+            'nodes_json': json.dumps(nodes_json),
+            'features': features,
+            'node_types': FlowNode.NODE_TYPE_CHOICES,
         }
         return render(request, self.template_name, context)
 
     def post(self, request, pk):
-        automation = get_object_or_404(
-            InstagramAutomation, pk=pk, user=request.user
-        )
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
         title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        trigger_type = request.POST.get('trigger_type', 'comment_keyword')
         instagram_post_id = request.POST.get('instagram_post_id', '').strip()
         keywords = request.POST.get('keywords', '').strip()
         is_active = request.POST.get('is_active') == 'on'
 
-        # Get multiple replies/DMs as lists (filter out empty values)
-        comment_replies = [r.strip() for r in request.POST.getlist('comment_replies[]') if r.strip()]
-        followup_dms = [d.strip() for d in request.POST.getlist('followup_dms[]') if d.strip()]
-
-        # Validation
         errors = []
         if not title:
             errors.append('Title is required.')
         if len(title) > 100:
             errors.append('Title must be 100 characters or less.')
-        if not instagram_post_id:
-            errors.append('Please select an Instagram post.')
-        if not comment_replies:
-            errors.append('At least one comment reply is required.')
-        if len(comment_replies) > 5:
-            errors.append('Maximum 5 comment replies allowed.')
-        if len(followup_dms) > 5:
-            errors.append('Maximum 5 follow-up DMs allowed.')
+
+        # Check if post is already used by another active flow (exclude current flow)
+        if instagram_post_id:
+            existing_flow = DMFlow.objects.filter(
+                user=request.user,
+                instagram_post_id=instagram_post_id,
+                is_active=True
+            ).exclude(pk=pk).first()
+            if existing_flow:
+                errors.append(f'This post is already used by flow "{existing_flow.title}". Please select a different post or deactivate the existing flow.')
 
         if errors:
             for error in errors:
                 messages.error(request, error)
-            context = {
-                'editing': True,
-                'automation': automation,
+            return redirect('flow_edit', pk=pk)
+
+        flow.title = title
+        flow.description = description
+        flow.trigger_type = trigger_type
+        flow.instagram_post_id = instagram_post_id
+        flow.keywords = keywords
+        flow.is_active = is_active
+        flow.save()
+
+        messages.success(request, f'Flow "{title}" updated!')
+        return redirect('flow_edit', pk=pk)
+
+    def _get_user_features(self, user):
+        """Get available flow features based on user's subscription"""
+        if user.is_staff:
+            return {
+                'quick_replies': True,
+                'follower_check': True,
+                'data_collection': True,
+                'advanced_branching': True,
             }
-            return render(request, self.template_name, context)
 
-        # Update automation
-        automation.title = title
-        automation.instagram_post_id = instagram_post_id
-        automation.keywords = keywords
-        automation.comment_replies = comment_replies
-        automation.followup_dms = followup_dms
-        automation.is_active = is_active
-        automation.save()
+        subscription = get_user_subscription(user)
+        if not subscription:
+            return {}
 
-        messages.success(request, f'Automation "{title}" updated successfully!')
-        return redirect('instagram_automation_list')
+        return {
+            'quick_replies': subscription.plan.has_feature('ig_quick_replies'),
+            'follower_check': subscription.plan.has_feature('ig_follower_check'),
+            'data_collection': subscription.plan.has_feature('ig_data_collection'),
+            'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
+        }
 
 
-class AutomationDeleteView(IGAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
-    """Delete an Instagram automation"""
+class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """API endpoint to save flow from visual editor"""
 
     def post(self, request, pk):
-        automation = get_object_or_404(
-            InstagramAutomation, pk=pk, user=request.user
-        )
-        title = automation.title
-        automation.delete()
-        messages.success(request, f'Automation "{title}" deleted.')
-        return redirect('instagram_automation_list')
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+
+        try:
+            data = json.loads(request.body)
+            nodes_data = data.get('nodes', [])
+            print(f"[SAVE] Received {len(nodes_data)} nodes")
+            for nd in nodes_data:
+                print(f"[SAVE]   Node: id={nd.get('id')}, type={nd.get('node_type')}, quick_replies={nd.get('quick_replies')}")
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        # Track all node IDs we want to keep
+        keep_node_ids = set()
+        new_node_map = {}  # Maps drawflow temp id (string) to new db id
+        node_objects = {}  # Maps original id to node object for second pass
+
+        try:
+            with transaction.atomic():
+                # Step 1: Identify which existing nodes to keep (those being updated)
+                existing_node_ids_to_keep = set()
+                for node_data in nodes_data:
+                    node_id = node_data.get('id')
+                    if node_id and isinstance(node_id, int):
+                        existing_node_ids_to_keep.add(node_id)
+
+                # Step 2: Delete nodes that are NOT being kept BEFORE creating new ones
+                # This prevents unique constraint violations on (flow_id, order)
+                deleted_count = flow.nodes.exclude(id__in=existing_node_ids_to_keep).delete()[0]
+                print(f"[SAVE] Deleted {deleted_count} old nodes")
+
+                # Step 3: Temporarily shift all existing node orders to avoid unique constraint conflicts
+                # This handles cases where nodes are being reordered (e.g., node A order 0->1, node B order 1->0)
+                for idx, node_id in enumerate(existing_node_ids_to_keep):
+                    FlowNode.objects.filter(id=node_id).update(order=10000 + idx)
+                print(f"[SAVE] Temporarily shifted orders for {len(existing_node_ids_to_keep)} existing nodes")
+
+                # Step 4: Create/update all nodes (without resolving target_node_ids)
+                for node_data in nodes_data:
+                    node_id = node_data.get('id')  # Database ID (null for new nodes)
+                    drawflow_id = node_data.get('drawflow_id')  # Drawflow ID for mapping (visual editor)
+                    temp_id = node_data.get('temp_id')  # Temp ID for mapping (form editor)
+                    node_type = node_data.get('node_type')
+                    order = node_data.get('order', 0)
+                    config = node_data.get('config', {})
+
+                    # Save visual editor positions in config
+                    pos_x = node_data.get('pos_x')
+                    pos_y = node_data.get('pos_y')
+                    if pos_x is not None:
+                        config['_pos_x'] = pos_x
+                    if pos_y is not None:
+                        config['_pos_y'] = pos_y
+
+                    if node_id and isinstance(node_id, int):
+                        # Update existing node
+                        try:
+                            node = FlowNode.objects.get(id=node_id, flow=flow)
+                            node.order = order
+                            node.node_type = node_type
+                            node.config = config
+                            node.save()
+                            keep_node_ids.add(node.id)
+                            node_objects[node_id] = (node, node_data)
+                            # Map all IDs to db_id for existing nodes
+                            if drawflow_id:
+                                new_node_map[str(drawflow_id)] = node.id
+                            if temp_id:
+                                new_node_map[str(temp_id)] = node.id
+                            new_node_map[str(node.id)] = node.id  # Also map DB ID to itself
+                        except FlowNode.DoesNotExist:
+                            # Node was deleted from DB, create new one
+                            node = FlowNode.objects.create(
+                                flow=flow,
+                                order=order,
+                                node_type=node_type,
+                                config=config
+                            )
+                            keep_node_ids.add(node.id)
+                            if drawflow_id:
+                                new_node_map[str(drawflow_id)] = node.id
+                            if temp_id:
+                                new_node_map[str(temp_id)] = node.id
+                            node_objects[node_id] = (node, node_data)
+                    else:
+                        # Create new node
+                        node = FlowNode.objects.create(
+                            flow=flow,
+                            order=order,
+                            node_type=node_type,
+                            config=config
+                        )
+                        keep_node_ids.add(node.id)
+                        # Map both drawflow_id and temp_id for new nodes
+                        if drawflow_id:
+                            new_node_map[str(drawflow_id)] = node.id
+                        if temp_id:
+                            new_node_map[str(temp_id)] = node.id
+                        # Always add to node_objects for second pass processing
+                        obj_key = temp_id or drawflow_id or f"new_db_{node.id}"
+                        node_objects[obj_key] = (node, node_data)
+
+                print(f"[SAVE] First pass complete. new_node_map: {new_node_map}")
+
+                # Helper to resolve target_node_id (handles int, "new_X", "node_X", etc.)
+                def resolve_target_id(target_id):
+                    if target_id is None or target_id == '':
+                        return None
+                    if isinstance(target_id, int):
+                        # If it's already a DB ID, return it (if still valid)
+                        return target_id if target_id in [n.id for n, _ in node_objects.values()] else None
+                    if isinstance(target_id, str):
+                        # Try direct lookup first (handles node_X, new_X, and string DB IDs)
+                        if target_id in new_node_map:
+                            return new_node_map[target_id]
+                        # Try stripping prefixes
+                        if target_id.startswith('new_'):
+                            stripped = target_id[4:]
+                            if stripped in new_node_map:
+                                return new_node_map[stripped]
+                        if target_id.startswith('node_'):
+                            stripped = target_id[5:]
+                            if stripped in new_node_map:
+                                return new_node_map[stripped]
+                        # Try parsing as int (DB ID)
+                        try:
+                            db_id = int(target_id)
+                            return db_id if str(db_id) in new_node_map else None
+                        except ValueError:
+                            pass
+                    return None
+
+                # Second pass: Update target_node_ids now that all nodes exist
+                for node, node_data in node_objects.values():
+                    config = node.config or {}
+                    config_updated = False
+
+                    # Handle next_node_id for regular sequential connections
+                    # Check if 'next_node_id' key exists in data (could be null to clear)
+                    if 'next_node_id' in node_data:
+                        next_node_id = node_data.get('next_node_id')
+                        resolved_next = resolve_target_id(next_node_id) if next_node_id else None
+                        if resolved_next != node.next_node_id:
+                            node.next_node_id = resolved_next
+                            node.save(update_fields=['next_node_id'])
+                            print(f"[SAVE] Set next_node_id={resolved_next} for node {node.id}")
+
+                    # Handle button template target_node_ids
+                    if node.node_type == 'message_button_template' and config.get('buttons'):
+                        for btn in config['buttons']:
+                            if 'target_node_id' in btn:
+                                resolved_id = resolve_target_id(btn['target_node_id'])
+                                btn['target_node_id'] = resolved_id
+                                config_updated = True
+
+                    # Handle condition_follower target_node_ids
+                    if node.node_type == 'condition_follower':
+                        if 'true_node_id' in config:
+                            config['true_node_id'] = resolve_target_id(config['true_node_id'])
+                            config_updated = True
+                        if 'false_node_id' in config:
+                            config['false_node_id'] = resolve_target_id(config['false_node_id'])
+                            config_updated = True
+
+                    if config_updated:
+                        node.config = config
+                        node.save()
+
+                    # Handle quick replies
+                    quick_replies_data = node_data.get('quick_replies', [])
+                    print(f"[SAVE] Processing node {node.id} ({node.node_type}), quick_replies_data: {quick_replies_data}")
+
+                    if node.node_type == 'message_quick_reply':
+                        # Delete existing quick replies for this node
+                        deleted = node.quick_reply_options.all().delete()
+                        print(f"[SAVE] Deleted {deleted} existing quick reply options")
+
+                        # Create new quick replies with resolved target_node_ids
+                        for idx, qr_data in enumerate(quick_replies_data):
+                            raw_target = qr_data.get('target_node_id')
+                            resolved_target = resolve_target_id(raw_target)
+                            print(f"[SAVE]   QR {idx}: title={qr_data.get('title')}, raw_target={raw_target}, resolved={resolved_target}")
+                            qr = QuickReplyOption.objects.create(
+                                node=node,
+                                title=qr_data.get('title', ''),
+                                payload=qr_data.get('payload', f'qr_{idx}'),
+                                order=idx,
+                                target_node_id=resolved_target
+                            )
+                            print(f"[SAVE]   Created QR option id={qr.id}, target_node_id={qr.target_node_id}")
+
+                # Note: Deletion already happened at the beginning of the transaction
+
+        except Exception as e:
+            logger.exception(f"Error saving flow {pk}: {str(e)}")
+            return JsonResponse({'error': f'Failed to save flow: {str(e)}'}, status=500)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Flow saved successfully. {len(keep_node_ids)} nodes saved.',
+            'node_ids': new_node_map,
+            'deleted': deleted_count
+        })
 
 
-class AccountAutomationView(IGAccountAutomationFeatureRequiredMixin, LoginRequiredMixin, View):
-    """Configure account-level automation settings (Creator plan feature)"""
-    template_name = 'instagram/automation_account.html'
+class FlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Delete a DM flow"""
 
-    def get(self, request):
-        # Check if Instagram is connected
-        if not hasattr(request.user, 'instagram_account'):
-            messages.error(request, 'Please connect your Instagram account first.')
-            return redirect('instagram_connect')
+    def post(self, request, pk):
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        title = flow.title
+        flow.delete()
+        messages.success(request, f'Flow "{title}" deleted.')
+        return redirect('flow_list')
 
-        instagram_account = request.user.instagram_account
-        if not instagram_account.is_connected:
-            messages.error(request, 'Please reconnect your Instagram account.')
-            return redirect('instagram_connect')
+
+class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """View sessions/logs for a flow"""
+    template_name = 'instagram/flow_sessions.html'
+
+    def get(self, request, pk):
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+
+        sessions = flow.sessions.all().order_by('-created_at')[:100]
 
         context = {
-            'instagram_account': instagram_account,
+            'flow': flow,
+            'sessions': sessions,
         }
         return render(request, self.template_name, context)
 
-    def post(self, request):
-        if not hasattr(request.user, 'instagram_account'):
-            messages.error(request, 'Instagram account not found.')
-            return redirect('instagram_connect')
 
-        instagram_account = request.user.instagram_account
+# =============================================================================
+# Flow Node API Views
+# =============================================================================
 
-        account_automation_enabled = request.POST.get('account_automation_enabled') == 'on'
+class FlowNodeCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """API endpoint to create a new node"""
 
-        # Get multiple replies/DMs as lists (filter out empty values)
-        account_comment_replies = [r.strip() for r in request.POST.getlist('account_comment_replies[]') if r.strip()]
-        account_followup_dms = [d.strip() for d in request.POST.getlist('account_followup_dms[]') if d.strip()]
+    def post(self, request, flow_id):
+        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
 
-        # Validate max 5 items
-        if len(account_comment_replies) > 5:
-            account_comment_replies = account_comment_replies[:5]
-        if len(account_followup_dms) > 5:
-            account_followup_dms = account_followup_dms[:5]
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-        # Require at least one reply when enabling
-        if account_automation_enabled and not account_comment_replies:
-            messages.error(request, 'Please add at least one comment reply to enable automation.')
-            context = {'instagram_account': instagram_account}
-            return render(request, self.template_name, context)
+        node_type = data.get('node_type')
+        name = data.get('name', '')
+        config = data.get('config', {})
 
-        # Update account settings
-        instagram_account.account_automation_enabled = account_automation_enabled
-        instagram_account.account_comment_replies = account_comment_replies
-        instagram_account.account_followup_dms = account_followup_dms
-        instagram_account.save()
+        if not node_type:
+            return JsonResponse({'error': 'node_type is required'}, status=400)
 
-        messages.success(request, 'Account automation settings saved!')
-        return redirect('instagram_automation_list')
+        # Validate follower check node requires interaction nodes
+        if node_type == 'condition_follower':
+            has_interaction_node = flow.nodes.filter(
+                node_type__in=['message_quick_reply', 'message_button_template']
+            ).exists()
+            if not has_interaction_node:
+                return JsonResponse({
+                    'error': 'Follower Check requires a Quick Reply or Button Template step first. '
+                             'The user must interact (click a button) before we can check their follower status.'
+                }, status=400)
+
+        # Calculate next order with proper locking to avoid race conditions
+        from django.db import transaction
+        with transaction.atomic():
+            # Lock the flow's nodes to prevent concurrent modifications
+            existing_orders = list(flow.nodes.select_for_update().values_list('order', flat=True))
+            if existing_orders:
+                next_order = max(existing_orders) + 1
+            else:
+                next_order = 0
+
+            node = FlowNode.objects.create(
+                flow=flow,
+                order=next_order,
+                node_type=node_type,
+                name=name,
+                config=config,
+            )
+
+        # Handle quick reply options if provided
+        quick_replies = data.get('quick_replies', [])
+        for i, qr in enumerate(quick_replies):
+            target_node = None
+            target_node_id = qr.get('target_node_id')
+            if target_node_id:
+                try:
+                    target_node = FlowNode.objects.get(id=target_node_id, flow=flow)
+                except FlowNode.DoesNotExist:
+                    pass
+
+            QuickReplyOption.objects.create(
+                node=node,
+                title=qr.get('title', '')[:20],
+                payload=qr.get('payload', f'opt_{i}'),
+                order=i,
+                target_node=target_node,
+            )
+
+        return JsonResponse({
+            'success': True,
+            'node_id': node.id,
+            'order': node.order,
+        })
+
+
+class FlowNodeUpdateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """API endpoint to update a node"""
+
+    def post(self, request, flow_id, node_id):
+        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        node = get_object_or_404(FlowNode, pk=node_id, flow=flow)
+
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        if 'name' in data:
+            node.name = data['name']
+        if 'config' in data:
+            node.config = data['config']
+        if 'next_node_id' in data:
+            if data['next_node_id']:
+                try:
+                    next_node = FlowNode.objects.get(pk=data['next_node_id'], flow=flow)
+                    node.next_node = next_node
+                except FlowNode.DoesNotExist:
+                    pass
+            else:
+                node.next_node = None
+
+        node.save()
+
+        # Handle quick reply options if provided
+        if 'quick_replies' in data:
+            # Delete existing and recreate
+            node.quick_reply_options.all().delete()
+            for i, qr in enumerate(data['quick_replies']):
+                target_node_id = qr.get('target_node_id')
+                target_node = None
+                if target_node_id:
+                    try:
+                        target_node = FlowNode.objects.get(pk=target_node_id, flow=flow)
+                    except FlowNode.DoesNotExist:
+                        pass
+
+                QuickReplyOption.objects.create(
+                    node=node,
+                    title=qr.get('title', '')[:20],
+                    payload=qr.get('payload', f'opt_{i}'),
+                    order=i,
+                    target_node=target_node,
+                )
+
+        return JsonResponse({'success': True})
+
+
+class FlowNodeDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """API endpoint to delete a node"""
+
+    def post(self, request, flow_id, node_id):
+        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        node = get_object_or_404(FlowNode, pk=node_id, flow=flow)
+
+        # Prevent deleting interaction nodes if follower check depends on them
+        if node.node_type in ['message_quick_reply', 'message_button_template']:
+            has_follower_check = flow.nodes.filter(node_type='condition_follower').exists()
+            if has_follower_check:
+                interaction_count = flow.nodes.filter(
+                    node_type__in=['message_quick_reply', 'message_button_template']
+                ).count()
+                if interaction_count <= 1:
+                    return JsonResponse({
+                        'error': 'Cannot delete this step because a Follower Check step depends on it. '
+                                 'Remove the Follower Check step first, or add another Quick Reply/Button Template step.'
+                    }, status=400)
+
+        node.delete()
+
+        # Reorder remaining nodes
+        for i, n in enumerate(flow.nodes.all().order_by('order')):
+            if n.order != i:
+                n.order = i
+                n.save(update_fields=['order'])
+
+        return JsonResponse({'success': True})
+
+
+class FlowNodeReorderView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """API endpoint to reorder nodes"""
+
+    def post(self, request, flow_id):
+        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        node_order = data.get('node_order', [])  # List of node IDs in new order
+
+        for i, node_id in enumerate(node_order):
+            try:
+                node = FlowNode.objects.get(pk=node_id, flow=flow)
+                node.order = i
+                node.save(update_fields=['order'])
+            except FlowNode.DoesNotExist:
+                pass
+
+        return JsonResponse({'success': True})
+
+
+class FlowNodeDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """API endpoint to get node details"""
+
+    def get(self, request, flow_id, node_id):
+        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        node = get_object_or_404(FlowNode, pk=node_id, flow=flow)
+
+        quick_replies = [
+            {
+                'id': qr.id,
+                'title': qr.title,
+                'payload': qr.payload,
+                'target_node_id': qr.target_node_id,
+                'order': qr.order,
+            }
+            for qr in node.quick_reply_options.all().order_by('order')
+        ]
+
+        return JsonResponse({
+            'id': node.id,
+            'order': node.order,
+            'node_type': node.node_type,
+            'name': node.name,
+            'config': node.config,
+            'next_node_id': node.next_node_id,
+            'quick_replies': quick_replies,
+        })
+
+
+# =============================================================================
+# Leads Views
+# =============================================================================
+
+class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """View all collected leads"""
+    template_name = 'instagram/leads_list.html'
+
+    def get(self, request):
+        leads = CollectedLead.objects.filter(
+            user=request.user
+        ).select_related('flow').order_by('-created_at')
+
+        context = {
+            'leads': leads,
+            'total_leads': leads.count(),
+        }
+        return render(request, self.template_name, context)
+
+
+class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Export leads as CSV"""
+
+    def get(self, request):
+        leads = CollectedLead.objects.filter(user=request.user).order_by('-created_at')
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="leads.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Instagram Username', 'Name', 'Email', 'Phone',
+            'Is Follower', 'Flow', 'Created At'
+        ])
+
+        for lead in leads:
+            writer.writerow([
+                lead.instagram_username,
+                lead.name,
+                lead.email,
+                lead.phone,
+                'Yes' if lead.is_follower else 'No',
+                lead.flow.title if lead.flow else '',
+                lead.created_at.strftime('%Y-%m-%d %H:%M'),
+            ])
+
+        return response
+
+
+class LeadDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """View a single lead's details"""
+    template_name = 'instagram/lead_detail.html'
+
+    def get(self, request, pk):
+        lead = get_object_or_404(CollectedLead, pk=pk, user=request.user)
+
+        context = {
+            'lead': lead,
+        }
+        return render(request, self.template_name, context)
 
 
 # =============================================================================
@@ -923,7 +1395,7 @@ class AccountAutomationView(IGAccountAutomationFeatureRequiredMixin, LoginRequir
 
 @method_decorator(csrf_exempt, name='dispatch')
 class InstagramWebhookView(View):
-    """Handle Instagram webhook events for comment automation"""
+    """Handle Instagram webhook events for DM flow automation"""
 
     def get(self, request):
         """Verify webhook subscription (challenge-response)"""
@@ -944,21 +1416,21 @@ class InstagramWebhookView(View):
         """Process incoming webhook events"""
         try:
             payload = json.loads(request.body)
-            logger.info(f"Instagram webhook received full payload: {json.dumps(payload)}")
+            print(payload)
+            logger.info(f"Instagram webhook received: {json.dumps(payload)[:1000]}")
 
-            # Process each entry
             for entry in payload.get('entry', []):
-                # The entry 'id' is the Instagram Business Account ID
                 ig_business_account_id = str(entry.get('id', ''))
-                logger.info(
-                    f"Processing webhook entry: id={ig_business_account_id}, "
-                    f"time={entry.get('time')}, changes_count={len(entry.get('changes', []))}"
-                )
+                logger.info(f"Processing webhook entry: id={ig_business_account_id}")
 
                 # Handle comment changes
                 for change in entry.get('changes', []):
                     if change.get('field') == 'comments':
                         self.handle_comment(change.get('value', {}), ig_business_account_id)
+
+                # Handle message events (quick replies, text replies)
+                for messaging in entry.get('messaging', []):
+                    self.handle_message(messaging, ig_business_account_id)
 
             return JsonResponse({'status': 'ok'})
 
@@ -970,7 +1442,7 @@ class InstagramWebhookView(View):
             return JsonResponse({'status': 'error'}, status=500)
 
     def handle_comment(self, comment_data, ig_business_account_id):
-        """Process a new comment and trigger automation"""
+        """Process a new comment and trigger matching flow"""
         comment_id = comment_data.get('id')
         post_id = comment_data.get('media', {}).get('id', '')
         comment_text = comment_data.get('text', '')
@@ -978,285 +1450,237 @@ class InstagramWebhookView(View):
         commenter_username = comment_data.get('from', {}).get('username', '')
         parent_id = comment_data.get('parent_id', '')
 
-        # Skip if this is a reply to another comment (not a top-level comment)
+        # Skip replies to comments
         if parent_id:
-            logger.info(f"Skipping comment {comment_id} - it's a reply to {parent_id}")
+            logger.info(f"Skipping comment {comment_id} - it's a reply")
             return
 
         if not comment_id:
             logger.warning("Comment event missing comment_id")
             return
 
-        # Simple deduplication check first
-        if InstagramCommentEvent.objects.filter(comment_id=comment_id).exists():
-            logger.info(f"Comment {comment_id} already processed, skipping")
+        # Check for duplicate
+        if FlowSession.objects.filter(trigger_comment_id=comment_id).exists():
+            logger.info(f"Comment {comment_id} already processed")
             return
 
-        # Create event record immediately for deduplication
-        from django.db import IntegrityError
-        try:
-            event = InstagramCommentEvent.objects.create(
-                comment_id=comment_id,
-                post_id=post_id,
-                commenter_username=commenter_username,
-                commenter_id=commenter_id,
-                comment_text=comment_text,
-                status='processing'
-            )
-        except IntegrityError:
-            logger.info(f"Comment {comment_id} already being processed (race condition), skipping")
-            return
-
-        # Find the Instagram account this comment belongs to
-        logger.info(f"Looking for Instagram account with webhook ID: {ig_business_account_id}")
-
-        instagram_account = None
-
-        # Method 1: Direct match on instagram_user_id
-        try:
-            instagram_account = InstagramAccount.objects.get(
-                instagram_user_id=ig_business_account_id,
-                is_active=True
-            )
-            logger.info(f"Found account by instagram_user_id: {instagram_account.username}")
-        except InstagramAccount.DoesNotExist:
-            pass
-
-        # Method 2: Match by account_id in instagram_data
+        # Find Instagram account
+        instagram_account = self._find_instagram_account(ig_business_account_id)
         if not instagram_account:
-            try:
-                instagram_account = InstagramAccount.objects.get(
-                    instagram_data__account_id=ig_business_account_id,
-                    is_active=True
-                )
-                logger.info(f"Found account by instagram_data.account_id: {instagram_account.username}")
-            except InstagramAccount.DoesNotExist:
-                pass
-
-        # Method 3: Match by business_account_id in instagram_data
-        if not instagram_account:
-            try:
-                instagram_account = InstagramAccount.objects.get(
-                    instagram_data__business_account_id=ig_business_account_id,
-                    is_active=True
-                )
-                logger.info(f"Found account by instagram_data.business_account_id: {instagram_account.username}")
-            except InstagramAccount.DoesNotExist:
-                pass
-
-        # Method 4: Match by user_id in instagram_data
-        if not instagram_account:
-            try:
-                instagram_account = InstagramAccount.objects.get(
-                    instagram_data__user_id=ig_business_account_id,
-                    is_active=True
-                )
-                logger.info(f"Found account by instagram_data.user_id: {instagram_account.username}")
-            except InstagramAccount.DoesNotExist:
-                pass
-
-        # Method 5: Match by ig_id in instagram_data
-        if not instagram_account:
-            try:
-                instagram_account = InstagramAccount.objects.get(
-                    instagram_data__ig_id=ig_business_account_id,
-                    is_active=True
-                )
-                logger.info(f"Found account by instagram_data.ig_id: {instagram_account.username}")
-            except InstagramAccount.DoesNotExist:
-                pass
-
-        # If still no match, log debug info and return
-        if not instagram_account:
-            all_accounts = InstagramAccount.objects.filter(is_active=True)
-            debug_info = []
-            for acc in all_accounts:
-                debug_info.append({
-                    'user_id': acc.instagram_user_id,
-                    'username': acc.username,
-                    'data': acc.instagram_data
-                })
-            logger.warning(
-                f"No active Instagram account found for webhook ID: {ig_business_account_id}. "
-                f"Active accounts: {debug_info}"
-            )
-            # Mark event as failed since we couldn't find the account
-            event.status = 'failed'
-            event.error_message = f'No matching Instagram account for ID: {ig_business_account_id}'
-            event.save()
+            logger.warning(f"No Instagram account found for {ig_business_account_id}")
             return
 
         user = instagram_account.user
 
-        # Skip comments from the account itself (our own replies)
+        # Skip own comments
         if commenter_id == ig_business_account_id or commenter_id == instagram_account.instagram_user_id:
             logger.info(f"Skipping comment {comment_id} - from account owner")
-            event.status = 'skipped'
-            event.error_message = 'Comment from account owner'
-            event.save()
             return
 
-        # Update event with user association
-        event.user = user
-        event.status = 'received'
-        event.save()
+        # Find matching flow
+        flow = find_matching_flow(user, post_id, comment_text)
+        if not flow:
+            logger.info(f"No matching flow for comment {comment_id}")
+            return
 
-        # Find matching automation
-        automation = None
-        comment_reply = None
-        followup_dm = None
+        # Trigger the flow
+        try:
+            engine = FlowEngine(instagram_account)
+            engine.trigger_flow_from_comment(
+                flow=flow,
+                comment_id=comment_id,
+                post_id=post_id,
+                commenter_id=commenter_id,
+                commenter_username=commenter_username,
+                comment_text=comment_text
+            )
+            logger.info(f"Triggered flow '{flow.title}' for comment {comment_id}")
+        except Exception as e:
+            logger.error(f"Error triggering flow: {str(e)}")
 
-        # First, try to find post-level automation
-        automations = InstagramAutomation.objects.filter(
-            user=user,
-            is_active=True
-        )
+    def handle_message(self, messaging_data, ig_business_account_id):
+        """Process incoming messages (quick reply clicks, text replies)"""
+        sender = messaging_data.get('sender', {})
+        sender_id = sender.get('id', '')
+        recipient = messaging_data.get('recipient', {})
+        recipient_id = recipient.get('id', '')
+        message = messaging_data.get('message', {})
+        timestamp = messaging_data.get('timestamp', '')
 
-        for auto in automations:
-            # Check if post ID matches (if specified)
-            if auto.instagram_post_id and auto.instagram_post_id != post_id:
+        # Skip echo messages (messages sent BY us, not TO us)
+        if message.get('is_echo'):
+            logger.debug(f"Skipping echo message from {sender_id}")
+            return
+
+        # Get message ID for deduplication
+        message_id = message.get('mid', '') if message else ''
+        postback = messaging_data.get('postback', {})
+        postback_mid = postback.get('mid', '') if postback else ''
+
+        logger.info(f"Message event - sender: {sender_id}, recipient: {recipient_id}, mid: {message_id or postback_mid}")
+
+        # Skip if sender is our own account (another way echoes might come through)
+        if sender_id == ig_business_account_id or sender_id == recipient_id:
+            logger.debug(f"Skipping message from our own account: {sender_id}")
+            return
+
+        if not sender_id or (not message and not postback):
+            return
+
+        # Find Instagram account - try entry.id first, then recipient.id
+        instagram_account = self._find_instagram_account(ig_business_account_id)
+        if not instagram_account and recipient_id:
+            instagram_account = self._find_instagram_account(recipient_id)
+        if not instagram_account:
+            logger.warning(f"No Instagram account found for entry_id={ig_business_account_id} or recipient_id={recipient_id}")
+            return
+
+        # Check for postback (from button template) - handle first since we already extracted it
+        if postback:
+            payload = postback.get('payload', '')
+            logger.info(f"Button template postback received: {payload}")
+            self._handle_quick_reply_or_postback(sender_id, payload, instagram_account, postback_mid)
+            return
+
+        # Check for quick reply (inside message object)
+        quick_reply = message.get('quick_reply', {})
+        if quick_reply:
+            payload = quick_reply.get('payload', '')
+            self._handle_quick_reply_or_postback(sender_id, payload, instagram_account, message_id)
+            return
+
+        # Check for text message (for data collection)
+        text = message.get('text', '')
+        if text:
+            self._handle_text_message(sender_id, text, instagram_account, message_id)
+
+    def _handle_quick_reply_or_postback(self, sender_id, payload, instagram_account, message_id=None):
+        """Handle quick reply button click or button template postback"""
+        logger.info(f"Quick reply/postback from {sender_id}: {payload}")
+
+        # Parse payload to get session info
+        parsed = parse_quick_reply_payload(payload)
+        if not parsed:
+            logger.error(f"Could not parse payload: {payload}")
+            return
+
+        session_id = parsed['session_id']
+
+        try:
+            session = FlowSession.objects.get(
+                id=session_id,
+                flow__user=instagram_account.user
+            )
+        except FlowSession.DoesNotExist:
+            logger.error(f"Session {session_id} not found")
+            return
+
+        # Deduplication: Check if this exact message was already processed (same webhook sent twice)
+        if message_id:
+            already_processed = FlowExecutionLog.objects.filter(
+                session=session,
+                action='quick_reply_received',
+                details__message_id=message_id
+            ).exists()
+            if already_processed:
+                logger.info(f"Duplicate webhook ignored - message_id {message_id} already processed")
+                return
+
+        # Allow clicks even on completed sessions - user can explore all buttons anytime
+        # Just reactivate the session
+        if session.status == 'completed':
+            logger.info(f"Reactivating completed session {session_id} for new button click")
+            session.status = 'active'
+            session.save(update_fields=['status', 'updated_at'])
+
+        try:
+            engine = FlowEngine(instagram_account)
+            # Determine if this is a quick reply (_opt_) or button postback (_btn_)
+            if '_btn_' in payload:
+                engine.handle_button_postback(session, payload, message_id)
+            else:
+                engine.handle_quick_reply_click(session, payload, message_id)
+        except Exception as e:
+            logger.error(f"Error handling quick reply/postback: {str(e)}")
+
+    def _handle_text_message(self, sender_id, text, instagram_account, message_id=None):
+        """Handle text message (for data collection)"""
+        logger.info(f"Text message from {sender_id}: {text[:50]}...")
+
+        # Find active session waiting for reply
+        session = find_session_for_message(sender_id, instagram_account.user)
+        if not session:
+            logger.info(f"No active session for {sender_id}")
+            return
+
+        if session.status != 'waiting_reply':
+            logger.info(f"Session {session.id} not waiting for reply")
+            return
+
+        # Deduplication: Check if this message was already processed
+        if message_id:
+            already_processed = FlowExecutionLog.objects.filter(
+                session=session,
+                action='text_reply_received',
+                details__message_id=message_id
+            ).exists()
+            if already_processed:
+                logger.info(f"Duplicate webhook ignored - message_id {message_id} already processed")
+                return
+
+        try:
+            engine = FlowEngine(instagram_account)
+            engine.handle_text_reply(session, text, message_id)
+        except Exception as e:
+            logger.error(f"Error handling text reply: {str(e)}")
+
+    def _find_instagram_account(self, ig_business_account_id):
+        """Find Instagram account by various ID fields"""
+        if not ig_business_account_id:
+            return None
+
+        # Try multiple methods to find the account
+        lookup_fields = [
+            {'instagram_user_id': ig_business_account_id},
+            {'instagram_data__account_id': ig_business_account_id},
+            {'instagram_data__business_account_id': ig_business_account_id},
+            {'instagram_data__user_id': ig_business_account_id},
+            {'instagram_data__ig_id': ig_business_account_id},
+        ]
+
+        for lookup in lookup_fields:
+            try:
+                return InstagramAccount.objects.get(
+                    **lookup,
+                    is_active=True
+                )
+            except InstagramAccount.DoesNotExist:
                 continue
 
-            # Check if keywords match
-            if auto.matches_comment(comment_text):
-                automation = auto
-                # Randomly select from available replies/DMs
-                comment_reply = auto.get_random_comment_reply()
-                followup_dm = auto.get_random_followup_dm()  # Returns None if empty list
-                break
-
-        # If no post-level automation matched, check account-level
-        if not automation and instagram_account.account_automation_enabled:
-            # Randomly select from account-level replies/DMs
-            comment_reply = instagram_account.get_random_comment_reply()
-            followup_dm = instagram_account.get_random_followup_dm()  # Returns None if empty list
-
-        # If no automation configured, skip
-        if not comment_reply:
-            event.status = 'skipped'
-            event.error_message = 'No matching automation found'
-            event.save()
-            logger.info(f"No automation for comment {comment_id}")
-            return
-
-        # Update event with automation info
-        event.automation = automation
-        event.reply_text = comment_reply
-        event.dm_text = followup_dm
-        event.status = 'processed'
-        event.save()
-
-        # Send comment reply
-        try:
-            self.reply_to_comment(
-                comment_id=comment_id,
-                message=comment_reply,
-                access_token=instagram_account.access_token
-            )
-            event.comment_replied = True
-            event.status = 'replied'
-            event.save()
-            logger.info(f"Replied to comment {comment_id}")
-        except Exception as e:
-            logger.error(f"Failed to reply to comment {comment_id}: {str(e)}")
-            event.error_message = f"Comment reply failed: {str(e)}"
-            event.status = 'failed'
-            event.save()
-            return
-
-        # Send follow-up DM
-        if followup_dm:
-            # For account-level automation (automation is None), check if we've already
-            # sent a DM to this commenter before - only send once per user
-            if automation is None:
-                already_sent = InstagramCommentEvent.objects.filter(
-                    user=user,
-                    commenter_id=commenter_id,
-                    automation__isnull=True,  # Account-level automation only
-                    dm_sent=True
-                ).exclude(pk=event.pk).exists()
-
-                if already_sent:
-                    logger.info(f"Skipping account-level DM for comment {comment_id} - already sent to commenter {commenter_id}")
-                    event.status = 'completed'
-                    event.error_message = 'Account-level DM already sent to this user'
-                    event.save()
-                    return
-
-            try:
-                self.send_dm_to_commenter(
-                    comment_id=comment_id,
-                    message=followup_dm,
-                    ig_business_account_id=instagram_account.instagram_user_id,
-                    access_token=instagram_account.access_token
-                )
-                event.dm_sent = True
-                event.status = 'completed'
-                event.save()
-                logger.info(f"DM sent for comment {comment_id}")
-            except Exception as e:
-                logger.error(f"Failed to send DM for comment {comment_id}: {str(e)}")
-                event.error_message = f"DM failed: {str(e)}"
-                event.save()
-
-    def reply_to_comment(self, comment_id, message, access_token):
-        """Reply to an Instagram comment"""
-        url = f"https://graph.instagram.com/v21.0/{comment_id}/replies"
-        response = requests.post(
-            url,
-            data={
-                'message': message,
-                'access_token': access_token
-            },
-            timeout=30
+        # Fallback: If only one active account with webhook subscribed, use it
+        # This handles cases where the webhook ID format changed
+        active_accounts = InstagramAccount.objects.filter(
+            is_active=True,
+            instagram_data__webhook_subscribed=True
         )
+        if active_accounts.count() == 1:
+            logger.info(f"Using fallback: only one active webhook account found")
+            return active_accounts.first()
 
-        if not response.ok:
-            error = response.json().get('error', {}).get('message', response.text)
-            raise Exception(error)
-
-        return response.json()
-
-    def send_dm_to_commenter(self, comment_id, message, ig_business_account_id, access_token):
-        """Send a DM to the person who commented using comment_id as reference"""
-        url = f"https://graph.instagram.com/v21.0/{ig_business_account_id}/messages"
-
-        # Instagram requires using comment_id to identify recipient for DM
-        payload = {
-            'recipient': {'comment_id': comment_id},
-            'message': {'text': message},
-        }
-
-        headers = {
-            'Authorization': f'Bearer {access_token}',
-            'Content-Type': 'application/json',
-        }
-
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
-
-        if not response.ok:
-            error = response.json().get('error', {}).get('message', response.text)
-            raise Exception(error)
-
-        return response.json()
+        logger.warning(f"Account lookup failed for ID: {ig_business_account_id}")
+        return None
 
 
 # =============================================================================
-# Facebook/Instagram App Callback Endpoints (Required for App Review)
+# Facebook/Instagram App Callback Endpoints
 # =============================================================================
 
 def parse_signed_request(signed_request, app_secret):
     """Parse and verify a signed_request from Facebook."""
     try:
         encoded_sig, payload = signed_request.split('.', 1)
-
-        # Decode signature
         sig = base64.urlsafe_b64decode(encoded_sig + '==')
-
-        # Decode payload
         data = json.loads(base64.urlsafe_b64decode(payload + '=='))
-
-        # Verify signature
         expected_sig = hmac.new(
             app_secret.encode('utf-8'),
             payload.encode('utf-8'),
@@ -1273,10 +1697,7 @@ def parse_signed_request(signed_request, app_secret):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DataDeletionCallbackView(View):
-    """
-    Handle Facebook/Instagram Data Deletion Requests.
-    URL to configure in Facebook App: {your_domain}/instagram/data-deletion/
-    """
+    """Handle Facebook/Instagram Data Deletion Requests"""
 
     def post(self, request):
         try:
@@ -1299,7 +1720,6 @@ class DataDeletionCallbackView(View):
             user_id = data.get('user_id', '')
             logger.info(f"Data deletion request received for user_id: {user_id}")
 
-            # Delete user's Instagram data if it exists
             if user_id:
                 try:
                     instagram_account = InstagramAccount.objects.filter(
@@ -1307,20 +1727,15 @@ class DataDeletionCallbackView(View):
                     ).first()
 
                     if instagram_account:
-                        InstagramAutomation.objects.filter(
-                            user=instagram_account.user
-                        ).delete()
-                        InstagramCommentEvent.objects.filter(
-                            user=instagram_account.user
-                        ).delete()
+                        # Delete all related data
+                        DMFlow.objects.filter(user=instagram_account.user).delete()
+                        CollectedLead.objects.filter(user=instagram_account.user).delete()
                         instagram_account.delete()
                         logger.info(f"Deleted Instagram data for user_id: {user_id}")
                 except Exception as e:
                     logger.error(f"Error deleting data for user_id {user_id}: {e}")
 
-            # Generate confirmation code
             confirmation_code = str(uuid.uuid4())[:8].upper()
-
             app_root_url = Configuration.get_value('app_root_url', 'https://example.com')
 
             return JsonResponse({
@@ -1335,10 +1750,7 @@ class DataDeletionCallbackView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DeauthorizationCallbackView(View):
-    """
-    Handle Facebook/Instagram Deauthorization Callbacks.
-    URL to configure in Facebook App: {your_domain}/instagram/deauthorize/
-    """
+    """Handle Facebook/Instagram Deauthorization Callbacks"""
 
     def post(self, request):
         try:
@@ -1361,7 +1773,6 @@ class DeauthorizationCallbackView(View):
             user_id = data.get('user_id', '')
             logger.info(f"Deauthorization request received for user_id: {user_id}")
 
-            # Deactivate user's Instagram connection
             if user_id:
                 try:
                     instagram_account = InstagramAccount.objects.filter(

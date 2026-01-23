@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Lead: @{{ lead.instagram_username }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="mb-4">
+                    <a href="{% url 'leads_list' %}" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Leads
+                    </a>
+                    <h3 class="mb-1 mt-2">
+                        <i class="bi bi-person text-primary me-2"></i>@{{ lead.instagram_username|default:"Unknown User" }}
+                    </h3>
+                </div>
+
+                <div class="row">
+                    <!-- Lead Info -->
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Contact Info</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Instagram</label>
+                                    <div><strong>@{{ lead.instagram_username|default:"-" }}</strong></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Name</label>
+                                    <div><strong>{{ lead.name|default:"-" }}</strong></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Email</label>
+                                    <div>
+                                        {% if lead.email %}
+                                        <a href="mailto:{{ lead.email }}">{{ lead.email }}</a>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Phone</label>
+                                    <div>
+                                        {% if lead.phone %}
+                                        <a href="tel:{{ lead.phone }}">{{ lead.phone }}</a>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label text-muted small">Follower Status</label>
+                                    <div>
+                                        {% if lead.is_follower %}
+                                        <span class="badge bg-success">Follows You</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not Following</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meta Info -->
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">From Flow</label>
+                                    <div>
+                                        {% if lead.flow %}
+                                        <a href="{% url 'flow_edit' lead.flow.pk %}">{{ lead.flow.title }}</a>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Created</label>
+                                    <div>{{ lead.created_at|date:"F j, Y, g:i a" }}</div>
+                                </div>
+                                <div>
+                                    <label class="form-label text-muted small">Last Updated</label>
+                                    <div>{{ lead.updated_at|date:"F j, Y, g:i a" }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if lead.custom_data %}
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-collection me-2"></i>Custom Data</h6>
+                            </div>
+                            <div class="card-body">
+                                {% for key, value in lead.custom_data.items %}
+                                <div class="mb-2">
+                                    <label class="form-label text-muted small">{{ key }}</label>
+                                    <div><strong>{{ value }}</strong></div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

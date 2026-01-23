@@ -10,7 +10,7 @@
             <div class="col-lg-3 mb-4">
                 <div class="card p-3">
                     <nav class="nav flex-column">
-                        <a class="nav-link" href="{% url 'instagram_automation_list' %}"><i class="bi bi-robot me-2"></i> Automation</a>
+                        <a class="nav-link" href="{% url 'flow_list' %}"><i class="bi bi-robot me-2"></i> Automation</a>
                         <a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a>
                         <a class="nav-link active" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i> Subscription</a>
                         <a class="nav-link" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i> Settings</a>
@@ -72,9 +72,9 @@
                         <h5 class="mb-0"><i class="bi bi-robot me-2"></i> Instagram Automation</h5>
                     </div>
                     <div class="card-body">
-                        <div class="mb-4">
+                        <div class="mb-0">
                             <div class="d-flex justify-content-between mb-1">
-                                <span>Post-level Automations</span>
+                                <span>Active DM Flows</span>
                                 <span class="text-muted">
                                     {{ automation_count }} / {% if automation_limit %}{{ automation_limit }}{% else %}<i class="bi bi-infinity"></i>{% endif %}
                                 </span>
@@ -96,17 +96,6 @@
                             </div>
                             <small class="text-success"><i class="bi bi-infinity"></i> Unlimited</small>
                             {% endif %}
-                        </div>
-
-                        <div class="mb-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>Account-level Automation</span>
-                                {% if can_use_account_automation %}
-                                <span class="badge bg-success"><i class="bi bi-check"></i> Available</span>
-                                {% else %}
-                                <span class="badge bg-secondary"><i class="bi bi-lock"></i> Creator Plan</span>
-                                {% endif %}
-                            </div>
                         </div>
                     </div>
                 </div>

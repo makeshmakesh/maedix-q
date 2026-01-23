@@ -245,17 +245,25 @@
     background: white;
     border-radius: 8px;
     border: 1px solid #dee2e6;
-    padding: 12px;
+    padding: 10px;
+}
+
+.node-palette h6 {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem !important;
 }
 
 .palette-item {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: 1px solid #dee2e6;
     border-radius: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     cursor: grab;
     transition: all 0.2s;
-    font-size: 13px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .palette-item:hover {
@@ -268,7 +276,24 @@
 }
 
 .palette-item i {
-    width: 20px;
+    width: 16px;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.palette-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.palette-item .badge {
+    font-size: 8px !important;
+    flex-shrink: 0;
+}
+
+.palette-item small {
+    font-size: 9px !important;
 }
 
 .palette-item.disabled {
@@ -281,14 +306,154 @@
     background: white;
     border-radius: 8px;
     border: 1px solid #dee2e6;
-    padding: 16px;
+    padding: 12px;
     display: none;
     max-height: 600px;
     overflow-y: auto;
+    font-size: 0.85rem;
 }
 
 .edit-panel.active {
     display: block;
+}
+
+.edit-panel h6 {
+    font-size: 0.8rem;
+}
+
+.edit-panel .form-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.edit-panel .form-control,
+.edit-panel .form-select {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.edit-panel .btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+}
+
+/* Compact tips section */
+#noSelectionPanel .small {
+    font-size: 0.7rem;
+}
+
+#noSelectionPanel ul {
+    padding-left: 1rem;
+}
+
+#noSelectionPanel ul li {
+    margin-bottom: 0.25rem;
+}
+
+/* Compact cards in side panels */
+.left-panel-col .card {
+    font-size: 0.8rem;
+}
+
+.left-panel-col .card-header {
+    padding: 0.5rem 0.75rem;
+}
+
+.left-panel-col .card-body {
+    padding: 0.5rem 0.75rem;
+}
+
+.left-panel-col .form-label {
+    font-size: 0.75rem;
+}
+
+.left-panel-col .badge {
+    font-size: 0.65rem;
+}
+
+/* Collapsible Panels */
+.panel-toggle-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 48px;
+    background: white;
+    border: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 15;
+    transition: all 0.2s ease;
+}
+
+.panel-toggle-btn:hover {
+    background: #f8f9fa;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.panel-toggle-left {
+    left: -12px;
+    border-radius: 0 6px 6px 0;
+    border-left: none;
+}
+
+.left-panel-col {
+    transition: all 0.3s ease;
+}
+
+.center-panel-col {
+    transition: all 0.3s ease;
+}
+
+.left-panel-col.collapsed {
+    width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.left-panel-col.collapsed .node-palette,
+.left-panel-col.collapsed .card {
+    display: none;
+}
+
+/* Floating toggle button when left panel is collapsed */
+.floating-toggle {
+    position: absolute;
+    z-index: 100;
+    width: 32px;
+    height: 64px;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.floating-toggle:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.floating-toggle.visible {
+    display: flex;
+}
+
+.floating-toggle-left {
+    left: 8px;
+}
+
+#visualEditor {
+    position: relative;
 }
 
 /* Zoom Controls */
@@ -1167,8 +1332,11 @@
         <!-- Visual Editor -->
         <div class="row" id="visualEditor">
             <!-- Node Palette (Left) -->
-            <div class="col-md-2">
-                <div class="node-palette">
+            <div class="col-md-2 left-panel-col" id="leftPanelCol">
+                <div class="node-palette" style="position: relative;">
+                    <button class="panel-toggle-btn panel-toggle-left" id="toggleLeftPanel" title="Collapse panel">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
                     <h6 class="mb-3"><i class="bi bi-grid-3x3-gap me-2"></i>Add Steps</h6>
 
                     <div class="palette-item" draggable="true" data-node="comment_reply">
@@ -1313,7 +1481,7 @@
             </div>
 
             <!-- Canvas (Center) -->
-            <div class="col-md-7">
+            <div class="col-md-8 center-panel-col" id="centerPanelCol">
                 <div style="position: relative;">
                     <div id="drawflow"></div>
                     <div class="help-hint" id="desktopHint">
@@ -1354,7 +1522,7 @@
             </div>
 
             <!-- Edit Panel (Right) -->
-            <div class="col-md-3">
+            <div class="col-md-2 right-panel-col" id="rightPanelCol">
                 <div class="edit-panel" id="editPanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0" id="editPanelTitle">Edit Node</h6>
@@ -1394,6 +1562,11 @@
                     </ul>
                 </div>
             </div>
+
+            <!-- Floating Toggle Button (visible when left panel is collapsed) -->
+            <button class="floating-toggle floating-toggle-left" id="floatingToggleLeft" title="Show nodes panel">
+                <i class="bi bi-chevron-right"></i>
+            </button>
         </div>
 
         <!-- Form Editor (Mobile Friendly) -->
@@ -1485,6 +1658,18 @@
                             {% if flow.instagram_post_id %}
                                 | Specific post
                             {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Trigger Indicator -->
+                    <div class="card mb-2 border-warning">
+                        <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-lightning-charge text-warning"></i>
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold">Trigger</div>
+                                <div class="text-muted" style="font-size: 11px;">Comment received</div>
+                            </div>
+                            <i class="bi bi-arrow-down text-muted"></i>
                         </div>
                     </div>
 
@@ -4197,6 +4382,67 @@ if (window.innerWidth < 768) {
         }
     }, 500);
 }
+
+// ============================================================================
+// Collapsible Left Panel Controls
+// ============================================================================
+
+const leftPanelCol = document.getElementById('leftPanelCol');
+const centerPanelCol = document.getElementById('centerPanelCol');
+const toggleLeftPanel = document.getElementById('toggleLeftPanel');
+const floatingToggleLeft = document.getElementById('floatingToggleLeft');
+
+// Load saved panel state
+const leftPanelCollapsed = localStorage.getItem('flowEditorLeftPanelCollapsed') === 'true';
+
+function updateColumnWidths() {
+    const leftCollapsed = leftPanelCol.classList.contains('collapsed');
+
+    // Remove all width classes first
+    centerPanelCol.classList.remove('col-md-8', 'col-md-10');
+
+    if (leftCollapsed) {
+        centerPanelCol.classList.add('col-md-10');
+    } else {
+        centerPanelCol.classList.add('col-md-8');
+    }
+
+    // Refresh drawflow after layout change
+    setTimeout(() => {
+        if (editor) {
+            editor.zoom_refresh();
+        }
+    }, 350);
+}
+
+function toggleLeftPanelFn() {
+    leftPanelCol.classList.toggle('collapsed');
+    const isCollapsed = leftPanelCol.classList.contains('collapsed');
+
+    // Update toggle button icon
+    const icon = toggleLeftPanel.querySelector('i');
+    icon.className = isCollapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
+
+    // Show/hide floating button
+    floatingToggleLeft.classList.toggle('visible', isCollapsed);
+
+    // Save state
+    localStorage.setItem('flowEditorLeftPanelCollapsed', isCollapsed);
+
+    updateColumnWidths();
+}
+
+// Initialize panel state
+if (leftPanelCollapsed) {
+    leftPanelCol.classList.add('collapsed');
+    toggleLeftPanel.querySelector('i').className = 'bi bi-chevron-right';
+    floatingToggleLeft.classList.add('visible');
+    updateColumnWidths();
+}
+
+// Event listeners
+toggleLeftPanel?.addEventListener('click', toggleLeftPanelFn);
+floatingToggleLeft?.addEventListener('click', toggleLeftPanelFn);
 </script>
 
 <!-- Post Selection Modal -->

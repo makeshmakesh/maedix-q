@@ -315,9 +315,9 @@ class InstagramAPIClient:
                 {"type": "postback", "title": "Get Started", "payload": "get_started"}
             ]
         """
-        print(f"[API_BTN_TEMPLATE] Sending to IGSID {igsid}")
-        print(f"[API_BTN_TEMPLATE] Text: '{text[:50]}...'")
-        print(f"[API_BTN_TEMPLATE] Buttons received ({len(buttons)}): {buttons}")
+        print(f"[API_BTN_TEMPLATE] Sending to IGSID {igsid}", flush=True)
+        print(f"[API_BTN_TEMPLATE] Text: '{text[:50]}...'", flush=True)
+        print(f"[API_BTN_TEMPLATE] Buttons received ({len(buttons)}): {buttons}", flush=True)
 
         # Validate and format buttons (Instagram limits: max 3 buttons)
         if len(buttons) > 3:
@@ -337,7 +337,7 @@ class InstagramAPIClient:
                 formatted_btn['payload'] = btn.get('payload', '')
             formatted_buttons.append(formatted_btn)
 
-        print(f"[API_BTN_TEMPLATE] Formatted buttons to send: {formatted_buttons}")
+        print(f"[API_BTN_TEMPLATE] Formatted buttons to send: {formatted_buttons}", flush=True)
 
         payload = {
             'recipient': {'id': igsid},
@@ -383,13 +383,13 @@ class InstagramAPIClient:
         Returns:
             API response containing the message ID and recipient IGSID
         """
-        print(f"[API_BTN_TEMPLATE_COMMENT] Sending to comment {comment_id}")
-        print(f"[API_BTN_TEMPLATE_COMMENT] Text: '{text[:50]}...'")
-        print(f"[API_BTN_TEMPLATE_COMMENT] Buttons received ({len(buttons)}): {buttons}")
+        print(f"[API_BTN_TEMPLATE_COMMENT] Sending to comment {comment_id}", flush=True)
+        print(f"[API_BTN_TEMPLATE_COMMENT] Text: '{text[:50]}...'", flush=True)
+        print(f"[API_BTN_TEMPLATE_COMMENT] Buttons received ({len(buttons)}): {buttons}", flush=True)
 
         # Validate and format buttons
         if len(buttons) > 3:
-            print(f"[API_BTN_TEMPLATE_COMMENT] Too many buttons, truncating to 3")
+            print(f"[API_BTN_TEMPLATE_COMMENT] Too many buttons, truncating to 3", flush=True)
             buttons = buttons[:3]
 
         formatted_buttons = []
@@ -405,7 +405,7 @@ class InstagramAPIClient:
                 formatted_btn['payload'] = btn.get('payload', '')
             formatted_buttons.append(formatted_btn)
 
-        print(f"[API_BTN_TEMPLATE_COMMENT] Formatted buttons to send: {formatted_buttons}")
+        print(f"[API_BTN_TEMPLATE_COMMENT] Formatted buttons to send: {formatted_buttons}", flush=True)
 
         payload = {
             'recipient': {'comment_id': comment_id},

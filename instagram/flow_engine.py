@@ -150,8 +150,8 @@ class FlowEngine:
         original_node_id = node.id
         node = FlowNode.objects.get(id=node.id)
         node.refresh_from_db()  # Double ensure fresh data
-        print(f"[EXEC_NODE] Executing node {node.id} (type: {node.node_type}) for session {session.id}")
-        print(f"[EXEC_NODE] Node {node.id} config keys: {list(node.config.keys()) if node.config else 'None'}")
+        print(f"[EXEC_NODE] Executing node {node.id} (type: {node.node_type}) for session {session.id}", flush=True)
+        print(f"[EXEC_NODE] Node {node.id} config keys: {list(node.config.keys()) if node.config else 'None'}", flush=True)
 
         # Update session's current node
         session.current_node = node
@@ -346,13 +346,13 @@ class FlowEngine:
         buttons = config.get('buttons', [])
 
         # DETAILED LOGGING to debug button contamination issue
-        print(f"[BTN_TEMPLATE] Node {node.id} - text: '{text[:50] if text else 'None'}...'")
-        print(f"[BTN_TEMPLATE] Node {node.id} - raw config from DB: {node.config}")
-        print(f"[BTN_TEMPLATE] Node {node.id} - buttons count: {len(buttons)}")
+        print(f"[BTN_TEMPLATE] Node {node.id} - text: '{text[:50] if text else 'None'}...'", flush=True)
+        print(f"[BTN_TEMPLATE] Node {node.id} - raw config from DB: {node.config}", flush=True)
+        print(f"[BTN_TEMPLATE] Node {node.id} - buttons count: {len(buttons)}", flush=True)
         for i, btn in enumerate(buttons):
-            print(f"[BTN_TEMPLATE] Node {node.id} - button {i}: title='{btn.get('title')}', type='{btn.get('type')}', payload='{btn.get('payload')}'")
+            print(f"[BTN_TEMPLATE] Node {node.id} - button {i}: title='{btn.get('title')}', type='{btn.get('type')}', payload='{btn.get('payload')}'", flush=True)
 
-        print(f"[BTN_TEMPLATE] Node {node.id} config: {len(buttons)} buttons - {[b.get('title') for b in buttons]}")
+        print(f"[BTN_TEMPLATE] Node {node.id} config: {len(buttons)} buttons - {[b.get('title') for b in buttons]}", flush=True)
 
         if not text:
             logger.warning("Button template node has no text")
@@ -398,7 +398,7 @@ class FlowEngine:
                 processed_btn['payload'] = f"flow_{session.id}_node_{node.id}_btn_{original_payload}"
             processed_buttons.append(processed_btn)
 
-        print(f"[BTN_TEMPLATE] Node {node.id} - processed_buttons to send: {processed_buttons}")
+        print(f"[BTN_TEMPLATE] Node {node.id} - processed_buttons to send: {processed_buttons}", flush=True)
 
         try:
             # Use comment_id for first DM to initiate conversation, IGSID for follow-ups
@@ -485,7 +485,7 @@ class FlowEngine:
         config = copy.deepcopy(node.config) if node.config else {}
         true_node_id = config.get('true_node_id')
         false_node_id = config.get('false_node_id')
-        print(f"[FOLLOWER_CHECK] Node {node.id} - true_node_id: {true_node_id}, false_node_id: {false_node_id}")
+        print(f"[FOLLOWER_CHECK] Node {node.id} - true_node_id: {true_node_id}, false_node_id: {false_node_id}", flush=True)
 
         # Check if user has interacted (clicked something) - required for profile API
         has_user_interacted = self._has_user_interacted(session)
@@ -556,12 +556,12 @@ class FlowEngine:
 
         # Route based on follower status
         if is_follower:
-            print(f"[FOLLOWER_CHECK] User {session.instagram_username} IS a follower, routing to true_node_id: {true_node_id}")
+            print(f"[FOLLOWER_CHECK] User {session.instagram_username} IS a follower, routing to true_node_id: {true_node_id}", flush=True)
 
             if true_node_id:
                 try:
                     next_node = FlowNode.objects.get(id=true_node_id, flow=session.flow)
-                    print(f"[FOLLOWER_CHECK] Fetched true branch node {next_node.id} (type: {next_node.node_type})")
+                    print(f"[FOLLOWER_CHECK] Fetched true branch node {next_node.id} (type: {next_node.node_type})", flush=True)
                     self.execute_node(session, next_node)
                 except FlowNode.DoesNotExist:
                     logger.error(f"True node {true_node_id} not found")
@@ -569,12 +569,12 @@ class FlowEngine:
             else:
                 self._complete_flow(session)
         else:
-            print(f"[FOLLOWER_CHECK] User {session.instagram_username} is NOT a follower, routing to false_node_id: {false_node_id}")
+            print(f"[FOLLOWER_CHECK] User {session.instagram_username} is NOT a follower, routing to false_node_id: {false_node_id}", flush=True)
 
             if false_node_id:
                 try:
                     next_node = FlowNode.objects.get(id=false_node_id, flow=session.flow)
-                    print(f"[FOLLOWER_CHECK] Fetched false branch node {next_node.id} (type: {next_node.node_type})")
+                    print(f"[FOLLOWER_CHECK] Fetched false branch node {next_node.id} (type: {next_node.node_type})", flush=True)
                     self.execute_node(session, next_node)
                 except FlowNode.DoesNotExist:
                     logger.error(f"False node {false_node_id} not found")
@@ -733,13 +733,13 @@ class FlowEngine:
                 node_id = int(node_parts[1])
                 # Fetch fresh from database to avoid any caching issues
                 btn_node = FlowNode.objects.get(id=node_id, flow=session.flow)
-                print(f"[BTN_POSTBACK] Fetched button node {btn_node.id} from payload")
+                print(f"[BTN_POSTBACK] Fetched button node {btn_node.id} from payload", flush=True)
             else:
                 # Refresh current_node from database
                 btn_node = FlowNode.objects.get(id=session.current_node_id, flow=session.flow) if session.current_node_id else session.current_node
-                print(f"[BTN_POSTBACK] Could not parse node_id from payload, using current_node {btn_node.id if btn_node else 'None'}")
+                print(f"[BTN_POSTBACK] Could not parse node_id from payload, using current_node {btn_node.id if btn_node else 'None'}", flush=True)
         except (ValueError, FlowNode.DoesNotExist) as e:
-            print(f"[BTN_POSTBACK] Could not extract node_id from payload ({e}), using current_node")
+            print(f"[BTN_POSTBACK] Could not extract node_id from payload ({e}), using current_node", flush=True)
             # Refresh current_node from database
             btn_node = FlowNode.objects.get(id=session.current_node_id, flow=session.flow) if session.current_node_id else session.current_node
 
@@ -759,32 +759,32 @@ class FlowEngine:
             # Deep copy to ensure we're working with isolated data
             btn_config = copy.deepcopy(btn_node.config)
             buttons = btn_config.get('buttons', [])
-            print(f"[BTN_POSTBACK] Looking for payload '{button_payload}' in node {btn_node.id}")
-            print(f"[BTN_POSTBACK] Node {btn_node.id} raw config: {btn_node.config}")
-            print(f"[BTN_POSTBACK] Node {btn_node.id} buttons: {[{'title': b.get('title'), 'payload': b.get('payload'), 'target': b.get('target_node_id')} for b in buttons]}")
+            print(f"[BTN_POSTBACK] Looking for payload '{button_payload}' in node {btn_node.id}", flush=True)
+            print(f"[BTN_POSTBACK] Node {btn_node.id} raw config: {btn_node.config}", flush=True)
+            print(f"[BTN_POSTBACK] Node {btn_node.id} buttons: {[{'title': b.get('title'), 'payload': b.get('payload'), 'target': b.get('target_node_id')} for b in buttons]}", flush=True)
             for button in buttons:
                 # Use default 'postback' for type to match _handle_message_button_template behavior
                 btn_type = button.get('type', 'postback')
                 if button.get('payload') == button_payload and btn_type == 'postback':
                     target_node_id = button.get('target_node_id')
-                    print(f"[BTN_POSTBACK] MATCH! Button '{button.get('title')}' -> target_node_id: {target_node_id}")
+                    print(f"[BTN_POSTBACK] MATCH! Button '{button.get('title')}' -> target_node_id: {target_node_id}", flush=True)
                     if target_node_id:
                         try:
                             target_node = FlowNode.objects.get(id=target_node_id, flow=session.flow)
-                            print(f"[BTN_POSTBACK] Fetched target node {target_node.id} (type: {target_node.node_type})")
-                            print(f"[BTN_POSTBACK] Target node {target_node.id} config: {target_node.config}")
+                            print(f"[BTN_POSTBACK] Fetched target node {target_node.id} (type: {target_node.node_type})", flush=True)
+                            print(f"[BTN_POSTBACK] Target node {target_node.id} config: {target_node.config}", flush=True)
                         except FlowNode.DoesNotExist:
-                            print(f"[BTN_POSTBACK] Target node {target_node_id} not found, advancing to next")
+                            print(f"[BTN_POSTBACK] Target node {target_node_id} not found, advancing to next", flush=True)
                     break
             else:
-                print(f"[BTN_POSTBACK] No matching button found for payload '{button_payload}' in node {btn_node.id}")
+                print(f"[BTN_POSTBACK] No matching button found for payload '{button_payload}' in node {btn_node.id}", flush=True)
 
         # If button has a target node, execute it (branching)
         if target_node:
-            print(f"[BTN_POSTBACK] Executing target node {target_node.id}")
+            print(f"[BTN_POSTBACK] Executing target node {target_node.id}", flush=True)
             self.execute_node(session, target_node)
         else:
-            print(f"[BTN_POSTBACK] No target node, advancing to next from node {btn_node.id if btn_node else 'None'}")
+            print(f"[BTN_POSTBACK] No target node, advancing to next from node {btn_node.id if btn_node else 'None'}", flush=True)
             # No target node, advance to next sequential node
             self._advance_to_next_node(session, btn_node)
 

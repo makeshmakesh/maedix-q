@@ -4,6 +4,110 @@
 
 {% block content %}
 <style>
+/* Page Header - Uses base template gradient */
+.page-header {
+    background: var(--gradient);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0 0 var(--radius) var(--radius);
+    margin: -1rem -12px 1rem -12px;
+    box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 768px) {
+    .page-header {
+        border-radius: var(--radius);
+        margin: 0 0 1rem 0;
+        padding: 1.5rem;
+    }
+}
+
+.page-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-header .back-link {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.page-header .back-link:hover {
+    color: white;
+}
+
+.page-header .flow-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.page-header .flow-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-mode-toggle {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-mode-toggle:hover {
+    background: rgba(255,255,255,0.25);
+    color: white;
+}
+
+.btn-mode-toggle.active {
+    background: white;
+    color: var(--primary);
+}
+
+.btn-save-flow {
+    background: white;
+    color: var(--primary);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-save-flow:hover {
+    background: rgba(255,255,255,0.9);
+    color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
 /* Drawflow Styles */
 #drawflow {
     width: 100%;
@@ -13,7 +117,7 @@
     background-image:
         linear-gradient(to right, #e9ecef 1px, transparent 1px),
         linear-gradient(to bottom, #e9ecef 1px, transparent 1px);
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid #dee2e6;
 }
 
@@ -70,7 +174,7 @@
 .node-header.comment-reply { background: #cff4fc; color: #055160; }
 .node-header.text-message { background: #cfe2ff; color: #084298; }
 .node-header.quick-reply { background: #d1e7dd; color: #0f5132; }
-.node-header.button-template { background: #e0cffc; color: #432874; }
+.node-header.button-template { background: var(--primary-light); color: var(--primary-dark); }
 .node-header.link-message { background: #fff3cd; color: #664d03; }
 .node-header.follower-check { background: #f8d7da; color: #842029; }
 .node-header.collect-data { background: #f5d0e1; color: #8c1e56; }
@@ -488,7 +592,7 @@
 .form-node-header .node-icon.comment-reply { background: #0dcaf0; color: white; }
 .form-node-header .node-icon.text-message { background: #0d6efd; color: white; }
 .form-node-header .node-icon.quick-reply { background: #198754; color: white; }
-.form-node-header .node-icon.button-template { background: #6f42c1; color: white; }
+.form-node-header .node-icon.button-template { background: var(--primary-dark); color: white; }
 .form-node-header .node-icon.link-message { background: #ffc107; color: #212529; }
 .form-node-header .node-icon.follower-check { background: #dc3545; color: white; }
 .form-node-header .node-icon.collect-data { background: #d63384; color: white; }
@@ -512,7 +616,7 @@
 }
 
 .bg-purple {
-    background-color: #6f42c1 !important;
+    background-color: var(--primary) !important;
 }
 
 .form-node-header .node-actions {
@@ -977,32 +1081,53 @@
 }
 </style>
 
-<section class="py-4">
+<section class="py-3 py-md-4">
     <div class="container-fluid">
-        <!-- Header -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div class="flex-shrink-1 min-width-0">
-                <a href="{% url 'flow_list' %}" class="text-decoration-none text-muted small">
-                    <i class="bi bi-arrow-left me-1"></i>Back
-                </a>
-                <h4 class="mb-0 mt-1 text-truncate">{{ flow.title }}</h4>
-            </div>
-            <div class="d-flex gap-2 align-items-center flex-shrink-0">
-                <!-- Mode Toggle -->
-                <div class="btn-group btn-group-sm" role="group" id="editorModeToggle">
-                    <button type="button" class="btn btn-outline-secondary active" data-mode="visual" title="Visual drag-and-drop editor">
-                        <i class="bi bi-diagram-3 me-md-1"></i><span class="d-none d-md-inline">Visual</span>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                <div class="flex-grow-1 min-width-0">
+                    <a href="{% url 'flow_list' %}" class="back-link">
+                        <i class="bi bi-arrow-left"></i> Back to Flows
+                    </a>
+                    <h1 class="text-truncate">
+                        <i class="bi bi-diagram-3 me-2"></i>{{ flow.title }}
+                    </h1>
+                    <div class="flow-meta">
+                        <span>
+                            {% if flow.is_active %}
+                            <i class="bi bi-check-circle-fill"></i> Active
+                            {% else %}
+                            <i class="bi bi-pause-circle"></i> Paused
+                            {% endif %}
+                        </span>
+                        <span>
+                            <i class="bi bi-lightning-charge"></i>
+                            {% if flow.trigger_type == 'comment_any' %}Any comment{% else %}Keywords{% endif %}
+                        </span>
+                        <span>
+                            <i class="bi bi-signpost-split"></i> {{ flow.nodes.count }} steps
+                        </span>
+                    </div>
+                </div>
+                <div class="header-actions flex-shrink-0">
+                    <!-- Mode Toggle -->
+                    <div class="btn-group" role="group" id="editorModeToggle">
+                        <button type="button" class="btn-mode-toggle active" data-mode="visual" title="Visual drag-and-drop editor">
+                            <i class="bi bi-diagram-3 me-1"></i><span class="d-none d-sm-inline">Visual</span>
+                        </button>
+                        <button type="button" class="btn-mode-toggle" data-mode="form" title="Form-based editor (mobile friendly)">
+                            <i class="bi bi-list-ul me-1"></i><span class="d-none d-sm-inline">Form</span>
+                        </button>
+                    </div>
+                    <button class="btn-mode-toggle d-none d-md-inline-flex" id="resetViewBtn" title="Reset canvas view">
+                        <i class="bi bi-arrows-fullscreen"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" data-mode="form" title="Form-based editor (mobile friendly)">
-                        <i class="bi bi-list-ul me-md-1"></i><span class="d-none d-md-inline">Form</span>
+                    <button class="btn-save-flow" id="saveFlowBtn">
+                        <i class="bi bi-check-lg"></i>
+                        <span>Save</span>
                     </button>
                 </div>
-                <button class="btn btn-outline-secondary btn-sm d-none d-md-inline-flex" id="resetViewBtn">
-                    <i class="bi bi-arrows-fullscreen me-1"></i><span class="d-none d-md-inline">Reset View</span>
-                </button>
-                <button class="btn btn-primary btn-sm" id="saveFlowBtn">
-                    <i class="bi bi-check-lg me-1"></i>Save
-                </button>
             </div>
         </div>
 

@@ -1,4 +1,5 @@
 #pylint: disable=all
+import copy
 import json
 import logging
 import requests
@@ -926,7 +927,8 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     temp_id = node_data.get('temp_id')  # Temp ID for mapping (form editor)
                     node_type = node_data.get('node_type')
                     order = node_data.get('order', 0)
-                    config = node_data.get('config', {})
+                    # Deep copy config to prevent any shared reference issues
+                    config = copy.deepcopy(node_data.get('config', {}))
 
                     # Save visual editor positions in config
                     pos_x = node_data.get('pos_x')
@@ -1016,7 +1018,8 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
                 # Second pass: Update target_node_ids now that all nodes exist
                 for node, node_data in node_objects.values():
-                    config = node.config or {}
+                    # Deep copy config to prevent shared reference issues when modifying
+                    config = copy.deepcopy(node.config) if node.config else {}
                     config_updated = False
 
                     # Handle next_node_id for regular sequential connections

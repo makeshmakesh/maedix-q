@@ -742,6 +742,17 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'features': self._get_user_features(request.user),
             })
 
+        # Check if user can have this flow active
+        from users.models import UserProfile
+        profile = UserProfile.objects.filter(user=request.user).first()
+        max_active = 1  # Default for free users
+
+        if request.user.is_staff or (profile and profile.subscription_status == 'active'):
+            max_active = float('inf')
+
+        active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
+        is_active = active_count < max_active
+
         flow = DMFlow.objects.create(
             user=request.user,
             title=title,
@@ -749,9 +760,13 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             trigger_type=trigger_type,
             instagram_post_id=instagram_post_id,
             keywords=keywords,
+            is_active=is_active,
         )
 
-        messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
+        if is_active:
+            messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
+        else:
+            messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan. Deactivate another flow to activate this one.')
         return redirect('flow_edit', pk=flow.pk)
 
     def _get_user_features(self, user):
@@ -1096,6 +1111,45 @@ class FlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         flow.delete()
         messages.success(request, f'Flow "{title}" deleted.')
         return redirect('flow_list')
+
+
+class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Toggle flow active status"""
+
+    def post(self, request, pk):
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+
+        try:
+            data = json.loads(request.body)
+            is_active = data.get('is_active', False)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        # If trying to activate, check if user can have more active flows
+        if is_active and not flow.is_active:
+            # Check active flow limit based on subscription
+            from users.models import UserProfile
+            profile = UserProfile.objects.filter(user=request.user).first()
+            max_active = 1  # Default for free users
+
+            if profile and profile.subscription_status == 'active':
+                # Pro users can have unlimited active flows
+                max_active = float('inf')
+
+            active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
+            if active_count >= max_active:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'You can only have {max_active} active flow(s) on your current plan. Please upgrade or deactivate another flow first.'
+                }, status=400)
+
+        flow.is_active = is_active
+        flow.save(update_fields=['is_active'])
+
+        return JsonResponse({
+            'success': True,
+            'is_active': flow.is_active
+        })
 
 
 class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):

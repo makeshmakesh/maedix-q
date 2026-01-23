@@ -240,8 +240,8 @@ class FlowEngine:
             logger.warning(f"Quick reply node {node.id} sent recently in session {session.id}, skipping duplicate")
             return
 
-        config = node.config or {}
-        text = config.get('text', '')
+        # Get text with variation support
+        text = node.get_text_with_variation()
         if not text:
             logger.warning("Quick reply node has no text")
             self._advance_to_next_node(session, node)
@@ -329,7 +329,8 @@ class FlowEngine:
             return
 
         config = node.config or {}
-        text = config.get('text', '')
+        # Get text with variation support
+        text = node.get_text_with_variation()
         # Make a deep copy of buttons to avoid any reference issues
         buttons = [dict(btn) for btn in config.get('buttons', [])]
 
@@ -340,6 +341,8 @@ class FlowEngine:
 
         if not buttons:
             logger.warning("Button template node has no buttons, sending as plain text")
+            # Substitute context variables before sending
+            text = self._substitute_variables(text, session.context_data)
             try:
                 if session.trigger_comment_id and not self._has_sent_dm(session):
                     self.api_client.send_dm_to_commenter(session.trigger_comment_id, text)
@@ -413,7 +416,8 @@ class FlowEngine:
     def _handle_message_link(self, session: FlowSession, node: FlowNode):
         """Handle message_link node - sends a message containing a URL."""
         config = node.config or {}
-        text = config.get('text', '')
+        # Get text with variation support
+        text = node.get_text_with_variation()
         url = config.get('url', '')
 
         if not text and not url:

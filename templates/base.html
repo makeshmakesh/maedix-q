@@ -6,6 +6,9 @@
     <title>{% block title %}Maedix{% endblock %} | Instagram Automation</title>
     <meta name="description" content="{% block meta_description %}Automate Instagram comment replies and DMs. Turn comments into leads with keyword triggers. Meta verified provider.{% endblock %}">
 
+    <!-- Favicon -->
+    {% if favicon_url %}<link rel="icon" type="image/x-icon" href="{{ favicon_url }}">{% endif %}
+
     <!-- Canonical URL -->
     <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
 

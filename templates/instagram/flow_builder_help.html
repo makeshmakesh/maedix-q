@@ -1,0 +1,843 @@
+{% extends 'base.html' %}
+
+{% block title %}Flow Builder Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+    .help-header {
+        background: var(--gradient);
+        color: white;
+        padding: 2.5rem 1.5rem;
+        border-radius: var(--radius);
+        margin-bottom: 2rem;
+    }
+
+    .help-header h1 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .node-guide-card {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .node-guide-card:hover {
+        border-color: rgba(var(--primary-rgb), 0.3);
+        box-shadow: var(--shadow-md);
+    }
+
+    .node-guide-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .node-icon-large {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .node-icon-large.comment-reply { background: #e8f5e9; color: #2e7d32; }
+    .node-icon-large.message-text { background: #e3f2fd; color: #1565c0; }
+    .node-icon-large.quick-reply { background: #fff3e0; color: #e65100; }
+    .node-icon-large.button-template { background: var(--primary-light); color: var(--primary-dark); }
+    .node-icon-large.link-message { background: #f3e5f5; color: #7b1fa2; }
+    .node-icon-large.follower-check { background: #fce4ec; color: #c2185b; }
+    .node-icon-large.collect-data { background: #e0f2f1; color: #00695c; }
+
+    .node-guide-title h3 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .node-guide-title .badge {
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .node-guide-body {
+        padding: 1.25rem;
+    }
+
+    .node-description {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+
+    .visual-example {
+        background: var(--bg-light);
+        border-radius: var(--radius-sm);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .visual-example-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Phone mockup */
+    .phone-mockup {
+        background: #1a1a1a;
+        border-radius: 24px;
+        padding: 8px;
+        max-width: 280px;
+        margin: 0 auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .phone-screen {
+        background: white;
+        border-radius: 18px;
+        padding: 1rem;
+        min-height: 200px;
+    }
+
+    .dm-message {
+        max-width: 85%;
+        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .dm-message.incoming {
+        background: #f0f0f0;
+        border-bottom-left-radius: 4px;
+    }
+
+    .dm-message.outgoing {
+        background: var(--primary);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+    }
+
+    .dm-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .dm-button {
+        background: white;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .dm-button.url {
+        border-color: #7b1fa2;
+        color: #7b1fa2;
+    }
+
+    .comment-example {
+        background: white;
+        border: 1px solid #dbdbdb;
+        border-radius: 8px;
+        padding: 0.75rem;
+    }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--gradient);
+    }
+
+    .comment-username {
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .comment-text {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+    }
+
+    .comment-reply {
+        margin-left: 40px;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .feature-list {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+
+    .feature-list li {
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .feature-list li strong {
+        color: var(--text-dark);
+    }
+
+    .flow-diagram {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 1rem;
+    }
+
+    .flow-step {
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .flow-step.highlight {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    .flow-arrow {
+        color: var(--text-muted);
+        font-size: 1.25rem;
+    }
+
+    .branch-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .branch-paths {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .branch-path {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .branch-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+    .branch-label.success { background: #e8f5e9; color: #2e7d32; }
+    .branch-label.danger { background: #ffebee; color: #c62828; }
+
+    .tip-box {
+        background: #fff8e1;
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        margin-top: 1rem;
+    }
+
+    .tip-box-title {
+        font-weight: 600;
+        color: #f57c00;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tip-box p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .toc-card {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        position: sticky;
+        top: 80px;
+    }
+
+    .toc-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+    }
+
+    .toc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .toc-list li {
+        margin-bottom: 0.5rem;
+    }
+
+    .toc-list a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s ease;
+    }
+
+    .toc-list a:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+    }
+
+    .toc-list a i {
+        width: 20px;
+        text-align: center;
+    }
+
+    @media (max-width: 991px) {
+        .toc-card {
+            position: static;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .help-header {
+            padding: 1.5rem 1rem;
+        }
+
+        .help-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .node-guide-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .phone-mockup {
+            max-width: 100%;
+        }
+
+        .branch-paths {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="{% url 'flow_list' %}" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to Flows
+    </a>
+
+    <div class="help-header">
+        <h1><i class="bi bi-book me-2"></i>Flow Builder Guide</h1>
+        <p class="mb-0 opacity-75">Learn how to use each node type to create powerful DM automation flows</p>
+    </div>
+
+    <div class="row">
+        <!-- Table of Contents - Sidebar -->
+        <div class="col-lg-3">
+            <div class="toc-card">
+                <div class="toc-title">Node Types</div>
+                <ul class="toc-list">
+                    <li><a href="#comment-reply"><i class="bi bi-chat-dots text-success"></i> Comment Reply</a></li>
+                    <li><a href="#text-message"><i class="bi bi-chat-left-text text-primary"></i> Text Message</a></li>
+                    <li><a href="#quick-reply"><i class="bi bi-ui-radios text-warning"></i> Quick Reply</a></li>
+                    <li><a href="#button-template"><i class="bi bi-menu-button-wide text-danger"></i> Button Template</a></li>
+                    <li><a href="#link-message"><i class="bi bi-link-45deg text-purple"></i> Link Message</a></li>
+                    <li><a href="#follower-check"><i class="bi bi-person-check text-pink"></i> Follower Check</a></li>
+                    <li><a href="#collect-data"><i class="bi bi-input-cursor-text text-teal"></i> Collect Data</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Comment Reply -->
+            <div class="node-guide-card" id="comment-reply">
+                <div class="node-guide-header">
+                    <div class="node-icon-large comment-reply">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Comment Reply</h3>
+                        <span class="badge bg-success">Engagement</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Automatically replies to the comment that triggered your flow. This is great for acknowledging users publicly and encouraging engagement on your posts.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it looks on Instagram
+                        </div>
+                        <div class="comment-example">
+                            <div class="comment-header">
+                                <div class="comment-avatar"></div>
+                                <span class="comment-username">user123</span>
+                            </div>
+                            <div class="comment-text">INFO</div>
+                            <div class="comment-reply">
+                                <div class="comment-header">
+                                    <div class="comment-avatar"></div>
+                                    <span class="comment-username">yourbrand</span>
+                                </div>
+                                <div class="comment-text">Thanks for your interest! Check your DMs for more details.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="feature-list">
+                        <li><strong>Public acknowledgment</strong> - Shows other users you're responsive</li>
+                        <li><strong>Drives DM opens</strong> - Tells users to check their messages</li>
+                        <li><strong>Supports variations</strong> - Add multiple message alternatives, one is randomly selected each time</li>
+                    </ul>
+
+                    <div class="tip-box">
+                        <div class="tip-box-title"><i class="bi bi-shuffle"></i> About Variations</div>
+                        <p>All text-based nodes support message variations. Click the "Variations" button to add alternative messages. The system randomly picks one each time, making your responses feel more natural and less robotic.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Message -->
+            <div class="node-guide-card" id="text-message">
+                <div class="node-guide-header">
+                    <div class="node-icon-large message-text">
+                        <i class="bi bi-chat-left-text"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Text Message</h3>
+                        <span class="badge bg-primary">DM</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Sends a simple text message directly to the user's Instagram DMs. Perfect for welcome messages, information delivery, or follow-up messages.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it looks in DMs
+                        </div>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="dm-message incoming">
+                                    Hey! Thanks for commenting on our post. Here's the exclusive info you requested...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="feature-list">
+                        <li><strong>Direct communication</strong> - Send personalized messages</li>
+                        <li><strong>Use variables</strong> - Include {username} or collected data</li>
+                        <li><strong>Supports variations</strong> - Add multiple alternatives for natural-feeling responses</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quick Reply -->
+            <div class="node-guide-card" id="quick-reply">
+                <div class="node-guide-header">
+                    <div class="node-icon-large quick-reply">
+                        <i class="bi bi-ui-radios"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Quick Reply</h3>
+                        <span class="badge bg-warning text-dark">Interactive</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Sends a message with clickable button options. Users tap a button to respond, and you can route them to different paths based on their choice. Great for menus, surveys, and guided conversations.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it looks in DMs
+                        </div>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="dm-message incoming">
+                                    What would you like to know more about?
+                                </div>
+                                <div class="dm-buttons">
+                                    <div class="dm-button">Pricing</div>
+                                    <div class="dm-button">Features</div>
+                                    <div class="dm-button">Support</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-diagram-3"></i> Flow branching
+                        </div>
+                        <div class="branch-diagram">
+                            <div class="flow-step highlight">Quick Reply</div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="branch-paths">
+                                <div class="branch-path">
+                                    <span class="branch-label" style="background: #e3f2fd; color: #1565c0;">Pricing</span>
+                                    <i class="bi bi-chevron-down flow-arrow"></i>
+                                    <div class="flow-step">Send pricing info</div>
+                                </div>
+                                <div class="branch-path">
+                                    <span class="branch-label" style="background: #fff3e0; color: #e65100;">Features</span>
+                                    <i class="bi bi-chevron-down flow-arrow"></i>
+                                    <div class="flow-step">Send features list</div>
+                                </div>
+                                <div class="branch-path">
+                                    <span class="branch-label" style="background: #f3e5f5; color: #7b1fa2;">Support</span>
+                                    <i class="bi bi-chevron-down flow-arrow"></i>
+                                    <div class="flow-step">Connect to support</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="feature-list">
+                        <li><strong>Up to 13 buttons</strong> - Plenty of options for complex menus</li>
+                        <li><strong>Branch your flow</strong> - Each button can lead to a different path</li>
+                        <li><strong>Supports variations</strong> - Randomize the message text above buttons</li>
+                        <li><strong>Required for Follower Check</strong> - User must click before you can check follower status</li>
+                    </ul>
+
+                    <div class="tip-box">
+                        <div class="tip-box-title"><i class="bi bi-lightbulb"></i> Pro Tip</div>
+                        <p>Keep button text short (max 20 characters). Use action words like "Get Pricing" or "Learn More".</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Button Template -->
+            <div class="node-guide-card" id="button-template">
+                <div class="node-guide-header">
+                    <div class="node-icon-large button-template">
+                        <i class="bi bi-menu-button-wide"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Button Template</h3>
+                        <span class="badge" style="background: var(--primary);">Advanced</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Similar to Quick Reply but supports two types of buttons: <strong>Action buttons</strong> (trigger flow actions) and <strong>URL buttons</strong> (open links in browser). Perfect for CTAs with links.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it looks in DMs
+                        </div>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="dm-message incoming">
+                                    Great choice! Here are your options:
+                                </div>
+                                <div class="dm-buttons">
+                                    <div class="dm-button url"><i class="bi bi-box-arrow-up-right me-1"></i>Visit Website</div>
+                                    <div class="dm-button">Get Discount Code</div>
+                                    <div class="dm-button url"><i class="bi bi-box-arrow-up-right me-1"></i>Book a Call</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="feature-list">
+                        <li><strong>Maximum 3 buttons</strong> - Keep it focused</li>
+                        <li><strong>URL buttons</strong> - Open external links (website, booking pages, etc.)</li>
+                        <li><strong>Action buttons</strong> - Continue the flow with different paths</li>
+                        <li><strong>Mix both types</strong> - Combine URLs and actions in one message</li>
+                        <li><strong>Supports variations</strong> - Randomize the message text above buttons</li>
+                    </ul>
+
+                    <div class="tip-box">
+                        <div class="tip-box-title"><i class="bi bi-lightbulb"></i> Pro Tip</div>
+                        <p>Use URL buttons for external links (your website, Calendly, etc.) and Action buttons when you need to continue the conversation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link Message -->
+            <div class="node-guide-card" id="link-message">
+                <div class="node-guide-header">
+                    <div class="node-icon-large link-message">
+                        <i class="bi bi-link-45deg"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Link Message</h3>
+                        <span class="badge bg-secondary">Simple</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Sends a text message containing a URL. Instagram will automatically create a link preview. Simple way to share links without buttons.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it looks in DMs
+                        </div>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="dm-message incoming">
+                                    Here's the link to our exclusive offer:
+                                    <br><br>
+                                    <span style="color: #1565c0; text-decoration: underline;">https://yoursite.com/offer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="feature-list">
+                        <li><strong>Simple delivery</strong> - Just text with a link</li>
+                        <li><strong>Auto link preview</strong> - Instagram shows link previews automatically</li>
+                        <li><strong>Great for resources</strong> - PDFs, guides, landing pages</li>
+                        <li><strong>Supports variations</strong> - Randomize the message text (URL stays the same)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Follower Check -->
+            <div class="node-guide-card" id="follower-check">
+                <div class="node-guide-header">
+                    <div class="node-icon-large follower-check">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Follower Check</h3>
+                        <span class="badge bg-danger">Conditional</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Checks if the user follows your account and branches the flow accordingly. Perfect for offering exclusive content to followers or encouraging non-followers to follow you first.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-diagram-3"></i> How it branches
+                        </div>
+                        <div class="branch-diagram">
+                            <div class="flow-step highlight"><i class="bi bi-person-check me-1"></i>Follower Check</div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="branch-paths">
+                                <div class="branch-path">
+                                    <span class="branch-label success"><i class="bi bi-check me-1"></i>Is Follower</span>
+                                    <i class="bi bi-chevron-down flow-arrow"></i>
+                                    <div class="flow-step">Send exclusive content</div>
+                                </div>
+                                <div class="branch-path">
+                                    <span class="branch-label danger"><i class="bi bi-x me-1"></i>Not Follower</span>
+                                    <i class="bi bi-chevron-down flow-arrow"></i>
+                                    <div class="flow-step">Ask them to follow</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <strong>Important:</strong> The user must interact first (click a Quick Reply or Button Template) before you can check their follower status. This is an Instagram requirement for privacy.
+                    </div>
+
+                    <ul class="feature-list">
+                        <li><strong>Reward followers</strong> - Give exclusive content to your community</li>
+                        <li><strong>Grow followers</strong> - Encourage non-followers to follow for access</li>
+                        <li><strong>Two branches</strong> - Define different paths for each outcome</li>
+                    </ul>
+
+                    <div class="tip-box">
+                        <div class="tip-box-title"><i class="bi bi-lightbulb"></i> Common Pattern</div>
+                        <p>Quick Reply ("Get Access") → Follower Check → If follower: send content / If not: "Follow us first, then tap 'I followed'"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collect Data -->
+            <div class="node-guide-card" id="collect-data">
+                <div class="node-guide-header">
+                    <div class="node-icon-large collect-data">
+                        <i class="bi bi-input-cursor-text"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Collect Data</h3>
+                        <span class="badge bg-info">Lead Gen</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Asks the user a question and waits for their text response. Collected data is validated and saved to your leads list. Perfect for gathering names, emails, phone numbers, or custom info.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it works
+                        </div>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="dm-message incoming">
+                                    What's your email address? We'll send the guide there.
+                                </div>
+                                <div class="dm-message outgoing">
+                                    john@example.com
+                                </div>
+                                <div class="dm-message incoming">
+                                    Thanks John! Check your inbox.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold mb-2">Data Types</h6>
+                            <ul class="feature-list">
+                                <li><strong>Name</strong> - Auto-capitalizes</li>
+                                <li><strong>Email</strong> - Validates format</li>
+                                <li><strong>Phone</strong> - Cleans formatting</li>
+                                <li><strong>Custom</strong> - Any text response</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold mb-2">Features</h6>
+                            <ul class="feature-list">
+                                <li><strong>Auto-validation</strong> - Invalid inputs get error message</li>
+                                <li><strong>Saved to Leads</strong> - Export to CSV anytime</li>
+                                <li><strong>Use in messages</strong> - Reference with {variable_name}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <div class="tip-box-title"><i class="bi bi-lightbulb"></i> Pro Tip</div>
+                        <p>Collect data after providing value first. Users are more likely to share their email after receiving helpful content.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flow Example -->
+            <div class="node-guide-card">
+                <div class="node-guide-header">
+                    <div class="node-icon-large" style="background: var(--gradient); color: white;">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>Example: Lead Generation Flow</h3>
+                        <span class="badge bg-dark">Template</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Here's a complete example of a lead generation flow that rewards followers with exclusive content:
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="flow-diagram" style="flex-direction: column; gap: 0.75rem;">
+                            <div class="flow-step" style="background: #e8f5e9; border-color: #2e7d32;">
+                                <i class="bi bi-chat-dots me-1"></i> Comment Reply<br>
+                                <small class="text-muted">"Check your DMs!"</small>
+                            </div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="flow-step" style="background: #fff3e0; border-color: #e65100;">
+                                <i class="bi bi-ui-radios me-1"></i> Quick Reply<br>
+                                <small class="text-muted">"Want the free guide?"</small>
+                            </div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="flow-step" style="background: #fce4ec; border-color: #c2185b;">
+                                <i class="bi bi-person-check me-1"></i> Follower Check
+                            </div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="d-flex gap-4 flex-wrap justify-content-center">
+                                <div class="text-center">
+                                    <span class="branch-label success mb-2 d-inline-block">Follower</span>
+                                    <div class="flow-step" style="background: #e0f2f1; border-color: #00695c;">
+                                        <i class="bi bi-input-cursor-text me-1"></i> Collect Email
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <span class="branch-label danger mb-2 d-inline-block">Not Follower</span>
+                                    <div class="flow-step" style="background: #e3f2fd; border-color: #1565c0;">
+                                        <i class="bi bi-chat-left-text me-1"></i> "Follow first!"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'flow_create' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-lg me-2"></i>Create Your First Flow
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

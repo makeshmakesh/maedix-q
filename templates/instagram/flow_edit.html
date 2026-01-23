@@ -847,6 +847,35 @@
         font-size: 13px;
     }
 
+    /* Variations section */
+    .variations-section {
+        border-top: 1px dashed var(--border-color);
+        padding-top: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .variations-container {
+        background: var(--bg-light);
+        border-radius: var(--radius-sm);
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .variation-item {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem;
+    }
+
+    .variation-item .variation-text {
+        font-size: 0.875rem;
+    }
+
+    .toggle-variations {
+        font-size: 0.8rem;
+    }
+
     /* Quick reply and button template options */
     .form-node-body .quick-reply-option,
     .form-node-body .button-option {
@@ -1111,6 +1140,10 @@
                     </div>
                 </div>
                 <div class="header-actions flex-shrink-0">
+                    <!-- Help Link -->
+                    <a href="{% url 'flow_builder_help' %}" class="btn-mode-toggle" title="Learn about node types" target="_blank">
+                        <i class="bi bi-question-circle"></i>
+                    </a>
                     <!-- Mode Toggle -->
                     <div class="btn-group" role="group" id="editorModeToggle">
                         <button type="button" class="btn-mode-toggle active" data-mode="visual" title="Visual drag-and-drop editor">
@@ -1898,7 +1931,6 @@ function loadExistingFlow() {
 
             // Use next_node_id if available (explicit connection)
             if (currentNode.next_node_id && dbToDrawflow[currentNode.next_node_id]) {
-                console.log(`[LOAD] Node ${currentNode.id} -> next_node_id ${currentNode.next_node_id}`);
                 editor.addConnection(fromId, dbToDrawflow[currentNode.next_node_id], 'output_1', 'input_1');
                 return;
             }
@@ -1933,20 +1965,13 @@ function loadExistingFlow() {
 
             // Quick reply button branching
             if (node.node_type === 'message_quick_reply' && node.quick_replies) {
-                console.log(`[LOAD] Quick reply node ${node.id}, quick_replies:`, node.quick_replies);
-                console.log(`[LOAD] dbToDrawflow:`, dbToDrawflow);
                 node.quick_replies.forEach((qr, i) => {
-                    console.log(`[LOAD]   QR ${i}: target_node_id=${qr.target_node_id}, dbToDrawflow[${qr.target_node_id}]=${dbToDrawflow[qr.target_node_id]}`);
                     if (qr.target_node_id && dbToDrawflow[qr.target_node_id]) {
-                        console.log(`[LOAD]   Creating connection: ${fromId} output_${i + 1} -> ${dbToDrawflow[qr.target_node_id]} input_1`);
                         try {
-                            const result = editor.addConnection(fromId, dbToDrawflow[qr.target_node_id], `output_${i + 1}`, 'input_1');
-                            console.log(`[LOAD]   Connection result:`, result);
+                            editor.addConnection(fromId, dbToDrawflow[qr.target_node_id], `output_${i + 1}`, 'input_1');
                         } catch (e) {
-                            console.error(`[LOAD]   Connection FAILED:`, e);
+                            // Connection might fail if node doesn't exist
                         }
-                    } else {
-                        console.log(`[LOAD]   SKIPPED: target_node_id=${qr.target_node_id}, found in dbToDrawflow=${!!dbToDrawflow[qr.target_node_id]}`);
                     }
                 });
             }
@@ -2023,6 +2048,36 @@ function renderConfigFields(nodeType, data) {
     const container = document.getElementById('nodeConfigFields');
     let html = '';
 
+    // Helper function to build variations section
+    function buildVisualVariationsSection(variations) {
+        const hasVariations = variations && variations.length > 0;
+        const variationsHtml = (variations || []).map((v, i) => `
+            <div class="input-group mb-2 variation-row">
+                <textarea class="form-control form-control-sm" name="variation_${i}" rows="2" placeholder="Alternative ${i + 1}">${escapeHtml(v || '')}</textarea>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-variation"><i class="bi bi-x"></i></button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="mb-3 visual-variations-section">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <button type="button" class="btn btn-sm ${hasVariations ? 'btn-secondary' : 'btn-outline-secondary'}" id="toggleVariationsBtn">
+                        <i class="bi bi-shuffle me-1"></i>Variations ${hasVariations ? `(${variations.length})` : ''}
+                    </button>
+                </div>
+                <div id="variationsContainer" class="${hasVariations ? '' : 'd-none'}">
+                    <div id="variationsList">${variationsHtml}</div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addVariationBtn">
+                        <i class="bi bi-plus me-1"></i>Add Variation
+                    </button>
+                    <small class="text-muted d-block mt-2">
+                        <i class="bi bi-info-circle me-1"></i>If variations exist, one is randomly selected. Main message is ignored.
+                    </small>
+                </div>
+            </div>
+        `;
+    }
+
     switch (nodeType) {
         case 'comment_reply':
         case 'message_text':
@@ -2031,6 +2086,7 @@ function renderConfigFields(nodeType, data) {
                     <label class="form-label">Message Text</label>
                     <textarea class="form-control" name="text" rows="3" required>${data.text || ''}</textarea>
                 </div>
+                ${buildVisualVariationsSection(data.variations)}
             `;
             break;
 
@@ -2040,6 +2096,7 @@ function renderConfigFields(nodeType, data) {
                     <label class="form-label">Message Text</label>
                     <textarea class="form-control" name="text" rows="2" required>${data.text || ''}</textarea>
                 </div>
+                ${buildVisualVariationsSection(data.variations)}
                 <div class="mb-3">
                     <label class="form-label">Quick Reply Buttons</label>
                     <small class="text-muted d-block mb-2">Each button creates an output for branching</small>
@@ -2069,6 +2126,7 @@ function renderConfigFields(nodeType, data) {
                     <label class="form-label">Message Text</label>
                     <textarea class="form-control" name="text" rows="2" required>${data.text || ''}</textarea>
                 </div>
+                ${buildVisualVariationsSection(data.variations)}
                 <div class="mb-3">
                     <label class="form-label">Buttons (max 3)</label>
                     <small class="text-muted d-block mb-2">Action buttons allow flow branching</small>
@@ -2116,6 +2174,7 @@ function renderConfigFields(nodeType, data) {
                     <label class="form-label">Message Text</label>
                     <textarea class="form-control" name="text" rows="2">${data.text || ''}</textarea>
                 </div>
+                ${buildVisualVariationsSection(data.variations)}
                 <div class="mb-3">
                     <label class="form-label">URL</label>
                     <input type="url" class="form-control" name="url" value="${data.url || ''}" required placeholder="https://...">
@@ -2238,14 +2297,58 @@ function setupDynamicFormHandlers() {
         });
     }
 
+    // Variations toggle button
+    const toggleVariationsBtn = document.getElementById('toggleVariationsBtn');
+    if (toggleVariationsBtn) {
+        toggleVariationsBtn.addEventListener('click', function() {
+            const container = document.getElementById('variationsContainer');
+            container.classList.toggle('d-none');
+            this.classList.toggle('btn-secondary');
+            this.classList.toggle('btn-outline-secondary');
+        });
+    }
+
+    // Add variation button
+    const addVariationBtn = document.getElementById('addVariationBtn');
+    if (addVariationBtn) {
+        addVariationBtn.addEventListener('click', function() {
+            const list = document.getElementById('variationsList');
+            const count = list.querySelectorAll('.variation-row').length;
+            if (count >= 10) {
+                alert('Maximum 10 variations');
+                return;
+            }
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2 variation-row';
+            div.innerHTML = `
+                <textarea class="form-control form-control-sm" name="variation_${count}" rows="2" placeholder="Alternative ${count + 1}"></textarea>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-variation"><i class="bi bi-x"></i></button>
+            `;
+            list.appendChild(div);
+            setupRemoveHandlers();
+            // Update toggle button text
+            updateVariationsCount();
+        });
+    }
+
     setupRemoveHandlers();
     setupBtnTypeHandlers();
 }
 
+function updateVariationsCount() {
+    const list = document.getElementById('variationsList');
+    const toggleBtn = document.getElementById('toggleVariationsBtn');
+    if (list && toggleBtn) {
+        const count = list.querySelectorAll('.variation-row').length;
+        toggleBtn.innerHTML = `<i class="bi bi-shuffle me-1"></i>Variations ${count > 0 ? `(${count})` : ''}`;
+    }
+}
+
 function setupRemoveHandlers() {
-    document.querySelectorAll('.remove-qr, .remove-btn').forEach(btn => {
+    document.querySelectorAll('.remove-qr, .remove-btn, .remove-variation').forEach(btn => {
         btn.onclick = function() {
-            this.closest('.qr-row, .btn-row').remove();
+            this.closest('.qr-row, .btn-row, .variation-row').remove();
+            updateVariationsCount();
         };
     });
 }
@@ -2278,14 +2381,28 @@ document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
 
     const config = {};
 
+    // Helper function to collect variations (filters out empty ones)
+    function collectVariations() {
+        const variations = [];
+        const textareas = document.querySelectorAll('.variation-row textarea');
+        textareas.forEach((textarea) => {
+            if (textarea.value.trim()) {
+                variations.push(textarea.value.trim());
+            }
+        });
+        return variations.length > 0 ? variations : undefined;
+    }
+
     switch (nodeType) {
         case 'comment_reply':
         case 'message_text':
             config.text = formData.get('text');
+            config.variations = collectVariations();
             break;
 
         case 'message_quick_reply':
             config.text = formData.get('text');
+            config.variations = collectVariations();
             config.quick_replies = [];
             document.querySelectorAll('.qr-row').forEach((row, i) => {
                 const title = row.querySelector('input').value;
@@ -2300,6 +2417,7 @@ document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
 
         case 'message_button_template':
             config.text = formData.get('text');
+            config.variations = collectVariations();
             config.buttons = [];
             document.querySelectorAll('.btn-row').forEach((row, i) => {
                 const type = row.querySelector('.btn-type').value;
@@ -2320,6 +2438,7 @@ document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
 
         case 'message_link':
             config.text = formData.get('text');
+            config.variations = collectVariations();
             config.url = formData.get('url');
             break;
 
@@ -2994,8 +3113,6 @@ document.getElementById('saveFlowBtn').addEventListener('click', function() {
 
 function saveFlow() {
     const exportData = editor.export();
-    console.log('Drawflow export:', JSON.stringify(exportData, null, 2));
-    console.log('nodeDataMap:', nodeDataMap);
     const nodes = [];
 
     let order = 0;
@@ -3167,7 +3284,7 @@ function initFormNodesFromDB() {
     // Sort by order from database
     const sorted = [...existingNodes].sort((a, b) => a.order - b.order);
 
-    sorted.forEach((dbNode, idx) => {
+    sorted.forEach((dbNode) => {
         const node = {
             tempId: `node_${formNodeIdCounter++}`,
             dbId: dbNode.id,
@@ -3396,6 +3513,7 @@ function buildNodeFields(node, index) {
                     <label class="form-label">Message</label>
                     <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
                 </div>
+                ${buildVariationsSection(node, index)}
                 <div class="form-node-connection next-node">
                     <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>Then go to:</div>
                     <select class="form-select form-select-sm next-node-select">
@@ -3411,6 +3529,7 @@ function buildNodeFields(node, index) {
                     <label class="form-label">Message</label>
                     <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
                 </div>
+                ${buildVariationsSection(node, index)}
                 <div class="mb-3">
                     <label class="form-label">URL</label>
                     <input type="url" class="form-control node-field" data-field="url" value="${escapeHtml(node.config.url || '')}">
@@ -3447,6 +3566,7 @@ function buildNodeFields(node, index) {
                     <label class="form-label">Message</label>
                     <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
                 </div>
+                ${buildVariationsSection(node, index)}
                 <label class="form-label">Buttons</label>
                 <div class="qr-container">${qrHtml}</div>
                 <button type="button" class="btn btn-outline-primary btn-sm add-qr mt-2"><i class="bi bi-plus me-1"></i>Add Button</button>
@@ -3486,6 +3606,7 @@ function buildNodeFields(node, index) {
                     <label class="form-label">Message</label>
                     <textarea class="form-control node-field" data-field="text" rows="2">${escapeHtml(node.config.text || '')}</textarea>
                 </div>
+                ${buildVariationsSection(node, index)}
                 <label class="form-label">Buttons (max 3)</label>
                 <div class="btn-container">${btnHtml}</div>
                 <button type="button" class="btn btn-outline-primary btn-sm add-btn mt-2"><i class="bi bi-plus me-1"></i>Add Button</button>
@@ -3543,6 +3664,38 @@ function buildNodeFields(node, index) {
     }
 
     return html;
+}
+
+// Build variations section for message nodes
+function buildVariationsSection(node, index) {
+    const variations = node.config.variations || [];
+    const hasVariations = variations.length > 0;
+    const variationsHtml = variations.map((v, i) => `
+        <div class="variation-item d-flex gap-2 mb-2" data-variation-index="${i}">
+            <textarea class="form-control form-control-sm variation-text" rows="2" placeholder="Alternative message ${i + 1}">${escapeHtml(v || '')}</textarea>
+            <button type="button" class="btn btn-outline-danger btn-sm remove-variation align-self-start"><i class="bi bi-x"></i></button>
+        </div>
+    `).join('');
+
+    return `
+        <div class="mb-3 variations-section">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <button type="button" class="btn btn-sm ${hasVariations ? 'btn-outline-secondary' : 'btn-outline-primary'} toggle-variations" data-node-index="${index}">
+                    <i class="bi bi-shuffle me-1"></i>Variations ${hasVariations ? `(${variations.length})` : ''}
+                </button>
+                <small class="text-muted">Randomly picks one message to send</small>
+            </div>
+            <div class="variations-container ${hasVariations ? '' : 'd-none'}">
+                <div class="variations-list">${variationsHtml}</div>
+                <button type="button" class="btn btn-outline-primary btn-sm add-variation mt-1">
+                    <i class="bi bi-plus me-1"></i>Add Variation
+                </button>
+                <div class="small text-muted mt-2">
+                    <i class="bi bi-info-circle me-1"></i>If variations exist, the main message above is ignored. One variation is randomly selected each time.
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Build target node dropdown options
@@ -3612,6 +3765,41 @@ function attachFormEventHandlers() {
             const btnIndex = parseInt(btnDiv.dataset.btnIndex);
             formNodes[nodeIndex].config.buttons.splice(btnIndex, 1);
             renderFormEditor();
+        } else if (target.closest('.toggle-variations')) {
+            const variationsContainer = card.querySelector('.variations-container');
+            variationsContainer.classList.toggle('d-none');
+            const btn = target.closest('.toggle-variations');
+            btn.classList.toggle('btn-outline-primary');
+            btn.classList.toggle('btn-outline-secondary');
+        } else if (target.closest('.add-variation')) {
+            if (!formNodes[nodeIndex].config.variations) formNodes[nodeIndex].config.variations = [];
+            if (formNodes[nodeIndex].config.variations.length >= 10) {
+                showToast('Maximum 10 variations', 'error');
+                return;
+            }
+            formNodes[nodeIndex].config.variations.push('');
+            renderFormEditor();
+            // Re-open the variations section
+            setTimeout(() => {
+                const newCard = document.querySelector(`.form-node-card[data-node-index="${nodeIndex}"]`);
+                if (newCard) {
+                    const container = newCard.querySelector('.variations-container');
+                    if (container) container.classList.remove('d-none');
+                }
+            }, 0);
+        } else if (target.closest('.remove-variation')) {
+            const varDiv = target.closest('[data-variation-index]');
+            const varIndex = parseInt(varDiv.dataset.variationIndex);
+            formNodes[nodeIndex].config.variations.splice(varIndex, 1);
+            renderFormEditor();
+            // Re-open the variations section if there are still variations
+            setTimeout(() => {
+                const newCard = document.querySelector(`.form-node-card[data-node-index="${nodeIndex}"]`);
+                if (newCard && formNodes[nodeIndex].config.variations?.length > 0) {
+                    const container = newCard.querySelector('.variations-container');
+                    if (container) container.classList.remove('d-none');
+                }
+            }, 0);
         }
     });
 
@@ -3673,6 +3861,32 @@ function attachFormEventHandlers() {
         else if (e.target.classList.contains('next-node-select')) {
             node.nextNodeId = e.target.value || null;
         }
+        // Variation text
+        else if (e.target.classList.contains('variation-text')) {
+            const varIndex = parseInt(e.target.closest('[data-variation-index]').dataset.variationIndex);
+            if (!node.config.variations) node.config.variations = [];
+            node.config.variations[varIndex] = e.target.value;
+        }
+    });
+
+    // Also listen for input events (real-time updates for textareas)
+    container.addEventListener('input', function(e) {
+        const card = e.target.closest('.form-node-card');
+        if (!card) return;
+        const nodeIndex = parseInt(card.dataset.nodeIndex);
+        const node = formNodes[nodeIndex];
+
+        // Variation text (input event for real-time updates)
+        if (e.target.classList.contains('variation-text')) {
+            const varIndex = parseInt(e.target.closest('[data-variation-index]').dataset.variationIndex);
+            if (!node.config.variations) node.config.variations = [];
+            node.config.variations[varIndex] = e.target.value;
+        }
+        // Also handle main text field
+        else if (e.target.classList.contains('node-field') && e.target.tagName === 'TEXTAREA') {
+            const field = e.target.dataset.field;
+            node.config[field] = e.target.value;
+        }
     });
 }
 
@@ -3723,12 +3937,21 @@ function saveFormFlow() {
 
     // Build nodes array for saving - Use explicit nextNodeId, no auto-connect
     const nodes = formNodes.map((node, index) => {
+        // Filter out empty variations before saving
+        let config = { ...node.config };
+        if (config.variations) {
+            config.variations = config.variations.filter(v => v && v.trim());
+            if (config.variations.length === 0) {
+                delete config.variations;
+            }
+        }
+
         const nodeData = {
             id: node.dbId || null,
             temp_id: node.tempId,
             order: index,
             node_type: node.type,
-            config: { ...node.config },
+            config: config,
             quick_replies: [],
             // Use explicit next node (null if not set)
             next_node_id: node.nextNodeId || null
@@ -3743,13 +3966,8 @@ function saveFormFlow() {
             }));
         }
 
-        // Note: button_template target_node_id is already in config.buttons
-        // Note: condition_follower true_node_id/false_node_id is already in config
-
         return nodeData;
     });
-
-    console.log('[FORM SAVE] Nodes:', nodes);
 
     const saveBtn = document.getElementById('saveFlowBtn');
     saveBtn.disabled = true;
@@ -3764,7 +3982,6 @@ function saveFormFlow() {
         body: JSON.stringify({ nodes: nodes })
     })
     .then(response => {
-        console.log('[FORM SAVE] Response status:', response.status, response.statusText);
         // Check if redirected (e.g., to login page)
         if (response.redirected) {
             throw new Error('Session expired. Please refresh the page and try again.');
@@ -3782,7 +3999,6 @@ function saveFormFlow() {
         return response.json();
     })
     .then(data => {
-        console.log('[FORM SAVE] Server response:', data);
         if (data.success) {
             showToast('Flow saved successfully!', 'success');
             // Reload to show saved data

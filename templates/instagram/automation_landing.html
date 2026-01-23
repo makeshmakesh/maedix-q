@@ -17,7 +17,7 @@
             <div class="hero-content">
                 <div class="hero-pill">
                     <span class="pill-icon"><i class="bi bi-patch-check-fill"></i></span>
-                    <span>Official Meta Business Partner</span>
+                    <span>Verified Meta Tech Provider</span>
                 </div>
 
                 <h1 class="hero-headline">
@@ -420,75 +420,22 @@
     </div>
 </section>
 
-<!-- Pricing -->
-<section class="section pricing-section">
+<!-- Pricing CTA -->
+<section class="section pricing-cta-section">
     <div class="container">
-        <div class="section-intro">
-            <span class="section-label">Pricing</span>
-            <h2>Start Free, Upgrade When Ready</h2>
-            <p>No credit card required. No hidden fees.</p>
-        </div>
-
-        <div class="pricing-cards">
-            <div class="pricing-card">
-                <div class="pricing-header">
-                    <h3>Free</h3>
-                    <div class="pricing-price">
-                        <span class="price-amount">₹0</span>
-                        <span class="price-period">forever</span>
-                    </div>
-                </div>
-                <ul class="pricing-features">
-                    <li><i class="bi bi-check"></i> 1 active automation flow</li>
-                    <li><i class="bi bi-check"></i> Unlimited replies per flow</li>
-                    <li><i class="bi bi-check"></i> Visual flow builder</li>
-                    <li><i class="bi bi-check"></i> Quick reply buttons</li>
-                    <li><i class="bi bi-check"></i> Follower check</li>
-                </ul>
+        <div class="pricing-cta-box">
+            <div class="section-intro">
+                <span class="section-label">Pricing</span>
+                <h2>Start Free, Upgrade When Ready</h2>
+                <p>No credit card required. No hidden fees. 1 active flow free forever.</p>
+            </div>
+            <div class="pricing-cta-actions">
                 {% if user.is_authenticated %}
-                <a href="{% url 'flow_list' %}" class="btn-pricing-secondary">Current Plan</a>
+                <a href="{% url 'flow_list' %}" class="btn-pricing-primary">Go to Dashboard</a>
                 {% else %}
-                <a href="{% url 'signup' %}" class="btn-pricing-secondary">Get Started</a>
+                <a href="{% url 'signup' %}" class="btn-pricing-primary">Start Free</a>
                 {% endif %}
-            </div>
-
-            <div class="pricing-card popular">
-                <div class="popular-badge">Most Popular</div>
-                <div class="pricing-header">
-                    <h3>Pro</h3>
-                    <div class="pricing-price">
-                        <span class="price-amount">₹199</span>
-                        <span class="price-period">/month</span>
-                    </div>
-                </div>
-                <ul class="pricing-features">
-                    <li><i class="bi bi-check"></i> <strong>5 active flows</strong></li>
-                    <li><i class="bi bi-check"></i> Unlimited replies per flow</li>
-                    <li><i class="bi bi-check"></i> Visual flow builder</li>
-                    <li><i class="bi bi-check"></i> Quick reply buttons</li>
-                    <li><i class="bi bi-check"></i> Follower check</li>
-                    <li><i class="bi bi-check"></i> Priority support</li>
-                </ul>
-                <a href="{% url 'pricing' %}" class="btn-pricing-primary">Upgrade to Pro</a>
-            </div>
-
-            <div class="pricing-card">
-                <div class="pricing-header">
-                    <h3>Creator</h3>
-                    <div class="pricing-price">
-                        <span class="price-amount">₹499</span>
-                        <span class="price-period">/month</span>
-                    </div>
-                </div>
-                <ul class="pricing-features">
-                    <li><i class="bi bi-check"></i> <strong>Unlimited flows</strong></li>
-                    <li><i class="bi bi-check"></i> Unlimited replies per flow</li>
-                    <li><i class="bi bi-check"></i> Visual flow builder</li>
-                    <li><i class="bi bi-check"></i> Quick reply buttons</li>
-                    <li><i class="bi bi-check"></i> Follower check</li>
-                    <li><i class="bi bi-check"></i> Priority support</li>
-                </ul>
-                <a href="{% url 'pricing' %}" class="btn-pricing-secondary">Go Creator</a>
+                <a href="{% url 'pricing' %}" class="btn-pricing-secondary">View All Plans <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
     </div>
@@ -510,7 +457,7 @@
 
             <div class="faq-card">
                 <h4><i class="bi bi-question-circle"></i> What accounts work?</h4>
-                <p>Instagram Business or Creator accounts connected to a Facebook Page. Takes 30 seconds to set up.</p>
+                <p>Instagram Business or Creator accounts. Takes 30 seconds to connect via Meta's official OAuth.</p>
             </div>
 
             <div class="faq-card">
@@ -1477,102 +1424,33 @@
     border: none !important;
 }
 
-/* ========== Pricing ========== */
-.pricing-section {
+/* ========== Pricing CTA ========== */
+.pricing-cta-section {
     background: white;
 }
 
-.pricing-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.pricing-card {
+.pricing-cta-box {
     background: var(--bg-light);
-    border-radius: 20px;
-    padding: 2rem;
-    border: 2px solid var(--border-color);
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.pricing-card.popular {
-    border-color: var(--primary);
-    transform: scale(1.05);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-}
-
-.popular-badge {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--gradient-instagram);
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.pricing-header {
+    border-radius: 24px;
+    padding: 3rem 2rem;
     text-align: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
 }
 
-.pricing-header h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.pricing-price {
+.pricing-cta-actions {
     display: flex;
-    align-items: baseline;
+    gap: 1rem;
     justify-content: center;
-    gap: 0.25rem;
-}
-
-.price-amount {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--text);
-}
-
-.price-period {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.pricing-features {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 1.5rem;
-}
-
-.pricing-features li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    font-size: 0.9rem;
-}
-
-.pricing-features i {
-    color: #22c55e;
+    flex-wrap: wrap;
 }
 
 .btn-pricing-primary {
-    display: block;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background: var(--gradient-instagram);
     color: white;
-    padding: 1rem;
+    padding: 1rem 2rem;
     border-radius: 12px;
     font-weight: 600;
     text-decoration: none;
@@ -1586,11 +1464,12 @@
 }
 
 .btn-pricing-secondary {
-    display: block;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background: white;
     color: var(--text);
-    padding: 1rem;
+    padding: 1rem 2rem;
     border-radius: 12px;
     font-weight: 600;
     text-decoration: none;
@@ -1746,14 +1625,6 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .pricing-cards {
-        grid-template-columns: 1fr;
-        max-width: 400px;
-    }
-
-    .pricing-card.popular {
-        transform: none;
-    }
 }
 
 @media (max-width: 768px) {

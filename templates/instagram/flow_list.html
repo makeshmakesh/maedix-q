@@ -732,10 +732,10 @@
                             {% endif %}
                         </div>
 
-                        <div class="flex-shrink-0 d-flex gap-2">
-                            <a href="{% url 'flow_builder_help' %}" class="btn btn-outline-light btn-sm" title="Learn how to build flows">
-                                <i class="bi bi-question-circle"></i>
-                                <span class="d-none d-sm-inline ms-1">Help</span>
+                        <div class="flex-shrink-0 d-flex gap-2 align-items-center">
+                            <a href="{% url 'flow_builder_help' %}" class="btn btn-outline-light btn-sm d-inline-flex align-items-center" title="Learn about node types and how to build flows">
+                                <i class="bi bi-question-circle me-1"></i>
+                                <span>Help</span>
                             </a>
                             {% if can_create_more %}
                             <a href="{% url 'flow_create' %}" class="btn-create-flow">
@@ -754,7 +754,7 @@
 
                 <div class="row">
                     <!-- Main Column: Flows -->
-                    <div class="col-lg-8 order-2 order-lg-1">
+                    <div class="col-lg-8 order-1 order-lg-1">
                         <div class="section-card">
                             <div class="section-header">
                                 <h2 class="section-title">
@@ -881,7 +881,7 @@
                     </div>
 
                     <!-- Sidebar -->
-                    <div class="col-lg-4 order-1 order-lg-2 mb-3 mb-lg-0">
+                    <div class="col-lg-4 order-2 order-lg-2 mb-3 mb-lg-0">
                         <!-- Recent Activity -->
                         <div class="section-card">
                             <div class="section-header">

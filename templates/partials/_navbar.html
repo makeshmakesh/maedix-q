@@ -42,7 +42,7 @@
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'instagram_automation_list' %}">
+                    <a class="nav-link" href="{% url 'flow_list' %}">
                         <i class="bi bi-robot d-lg-none"></i> IG Automation
                     </a>
                 </li>
@@ -60,7 +60,7 @@
                             <i class="bi bi-person-circle"></i> {{ user.get_short_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'instagram_automation_list' %}"><i class="bi bi-robot me-2"></i>Automation Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'flow_list' %}"><i class="bi bi-robot me-2"></i>Automation Dashboard</a></li>
                             <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
                             <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>Subscription</a></li>
                             <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>

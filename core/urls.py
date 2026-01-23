@@ -4,6 +4,7 @@ from instagram.views import AutomationLandingView
 
 urlpatterns = [
     path('', AutomationLandingView.as_view(), name='home'),
+    path('instagram-automation/', AutomationLandingView.as_view(), name='instagram_automation_landing'),
     path('about/', views.AboutPage.as_view(), name='about'),
     path('pricing/', views.PricingPage.as_view(), name='pricing'),
     path('contact/', views.ContactPage.as_view(), name='contact'),

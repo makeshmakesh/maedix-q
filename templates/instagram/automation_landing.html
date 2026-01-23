@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}Instagram Automation - Auto Reply & DM | Maedix{% endblock %}
-{% block meta_description %}Automate Instagram comment replies and DMs. Turn comments into leads with keyword triggers. Meta verified provider. Start free today.{% endblock %}
+{% block title %}Instagram DM Automation | Auto Reply to Comments & DMs | Maedix{% endblock %}
+{% block meta_description %}Automate Instagram comment replies and DMs. Convert every comment into a conversation. Advanced flow builder, quick replies, follower checks. Meta verified. Start free.{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -17,51 +17,51 @@
             <div class="hero-content">
                 <div class="hero-pill">
                     <span class="pill-icon"><i class="bi bi-patch-check-fill"></i></span>
-                    <span>Meta Verified Provider</span>
+                    <span>Official Meta Business Partner</span>
                 </div>
 
                 <h1 class="hero-headline">
-                    Auto-Reply to <br>
-                    <span class="gradient-text">Instagram Comments</span>
+                    Automate Your<br>
+                    <span class="gradient-text">Instagram DMs</span>
                 </h1>
 
                 <p class="hero-desc">
-                    Turn every comment into a lead. Set trigger keywords, auto-reply publicly, and send DMs with links — all on autopilot, 24/7.
+                    Turn every comment into a customer conversation. Auto-reply to comments, send personalized DMs, and nurture leads — all on autopilot.
                 </p>
 
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="stat-icon"><i class="bi bi-infinity"></i></span>
-                        <span class="stat-label">Unlimited Replies</span>
+                <div class="hero-benefits">
+                    <div class="hero-benefit">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Auto-reply to comments instantly</span>
                     </div>
-                    <div class="hero-stat">
-                        <span class="stat-icon"><i class="bi bi-lightning-charge-fill"></i></span>
-                        <span class="stat-label">&lt;1s Response</span>
+                    <div class="hero-benefit">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Send DMs to commenters automatically</span>
                     </div>
-                    <div class="hero-stat">
-                        <span class="stat-icon"><i class="bi bi-shield-check"></i></span>
-                        <span class="stat-label">Official API</span>
+                    <div class="hero-benefit">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Build multi-step conversations</span>
                     </div>
                 </div>
 
                 <div class="hero-actions">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'instagram_automation_list' %}" class="btn-hero-primary">
-                        Get Started <i class="bi bi-arrow-right"></i>
+                    <a href="{% url 'flow_list' %}" class="btn-hero-primary">
+                        Go to Dashboard <i class="bi bi-arrow-right"></i>
                     </a>
                     {% else %}
                     <a href="{% url 'signup' %}" class="btn-hero-primary">
                         Start Free <i class="bi bi-arrow-right"></i>
                     </a>
                     {% endif %}
-                    <a href="#demo" class="btn-hero-secondary">
-                        <i class="bi bi-play-circle"></i> Watch Demo
+                    <a href="#how-it-works" class="btn-hero-secondary">
+                        <i class="bi bi-play-circle"></i> See How It Works
                     </a>
                 </div>
 
                 <p class="hero-note">
                     <i class="bi bi-check-lg"></i> No credit card required
-                    <i class="bi bi-check-lg"></i> 3 free automations
+                    <i class="bi bi-check-lg"></i> Works with Reels, Posts, Stories
                 </p>
             </div>
 
@@ -71,251 +71,211 @@
                         <div class="demo-dots">
                             <span></span><span></span><span></span>
                         </div>
-                        <span class="demo-title">Live Preview</span>
+                        <span class="demo-title">Live Demo</span>
                     </div>
 
                     <div class="demo-content">
-                        <!-- Instagram Post Mock -->
-                        <div class="ig-mock">
-                            <div class="ig-post-header">
-                                <div class="ig-avatar-ring">
-                                    <div class="ig-avatar"></div>
+                        <!-- Automation Preview -->
+                        <div class="automation-preview">
+                            <div class="preview-comment">
+                                <div class="comment-avatar">JD</div>
+                                <div class="comment-content">
+                                    <span class="comment-user">@john_doe</span>
+                                    <span class="comment-text">Send me the link!</span>
                                 </div>
-                                <div class="ig-meta">
-                                    <span class="ig-handle">@yourbrand</span>
-                                    <span class="ig-time">Just now</span>
+                            </div>
+                            <div class="preview-arrow">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                            </div>
+                            <div class="preview-actions">
+                                <div class="action-item reply">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <span>Auto Reply</span>
+                                    <small>"Check your DM!"</small>
                                 </div>
-                                <i class="bi bi-three-dots"></i>
-                            </div>
-
-                            <div class="ig-media">
-                                <i class="bi bi-play-btn-fill"></i>
-                                <span>Your Viral Reel</span>
-                            </div>
-
-                            <div class="ig-actions">
-                                <i class="bi bi-heart"></i>
-                                <i class="bi bi-chat"></i>
-                                <i class="bi bi-send"></i>
-                                <i class="bi bi-bookmark ms-auto"></i>
-                            </div>
-
-                            <div class="ig-likes">2,847 likes</div>
-                        </div>
-
-                        <!-- Comment Flow Animation -->
-                        <div class="comment-flow">
-                            <div class="flow-comment incoming">
-                                <div class="comment-avatar"></div>
-                                <div class="comment-bubble">
-                                    <strong>@sarah_creates</strong>
-                                    <p>Send me the link! 🔥</p>
+                                <div class="action-item dm">
+                                    <i class="bi bi-envelope"></i>
+                                    <span>Send DM</span>
+                                    <small>"Hey! Here's your link..."</small>
                                 </div>
-                                <span class="comment-tag trigger">KEYWORD</span>
-                            </div>
-
-                            <div class="flow-arrow">
-                                <i class="bi bi-arrow-down"></i>
-                            </div>
-
-                            <div class="flow-comment outgoing">
-                                <div class="comment-avatar brand"></div>
-                                <div class="comment-bubble">
-                                    <strong>@yourbrand</strong>
-                                    <p>Check your DMs! 📩</p>
-                                </div>
-                                <span class="comment-tag auto"><i class="bi bi-robot"></i> AUTO</span>
-                            </div>
-
-                            <div class="flow-dm">
-                                <i class="bi bi-envelope-check-fill"></i>
-                                <span>DM sent with link!</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Floating Elements -->
+                <!-- Floating Stats -->
                 <div class="floating-badge badge-1">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <span>+284% engagement</span>
+                    <i class="bi bi-lightning-charge"></i>
+                    <span>Instant Replies</span>
                 </div>
                 <div class="floating-badge badge-2">
-                    <i class="bi bi-person-plus-fill"></i>
-                    <span>47 leads today</span>
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>10x Engagement</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Brands/Trust Bar -->
+<!-- Social Proof Bar -->
 <section class="trust-bar">
     <div class="container">
         <div class="trust-content">
-            <span class="trust-label">Trusted by creators using</span>
+            <div class="trust-stats">
+                <div class="trust-stat">
+                    <span class="stat-number">50K+</span>
+                    <span class="stat-label">DMs Sent</span>
+                </div>
+                <div class="trust-divider"></div>
+                <div class="trust-stat">
+                    <span class="stat-number">1000+</span>
+                    <span class="stat-label">Active Users</span>
+                </div>
+                <div class="trust-divider"></div>
+                <div class="trust-stat">
+                    <span class="stat-number">99.9%</span>
+                    <span class="stat-label">Uptime</span>
+                </div>
+            </div>
             <div class="trust-logos">
-                <span><i class="bi bi-instagram"></i> Instagram</span>
-                <span><i class="bi bi-meta"></i> Meta Business</span>
-                <span><i class="bi bi-facebook"></i> Facebook</span>
+                <span><i class="bi bi-instagram"></i> Instagram API</span>
+                <span><i class="bi bi-meta"></i> Meta Verified</span>
+                <span><i class="bi bi-shield-check"></i> 100% Safe</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Problem/Solution Section -->
+<section class="section problem-section">
+    <div class="container">
+        <div class="problem-grid">
+            <div class="problem-side">
+                <span class="section-label red">The Problem</span>
+                <h2>You're Losing Leads Every Day</h2>
+                <ul class="problem-list">
+                    <li><i class="bi bi-x-circle"></i> Comments go unanswered for hours</li>
+                    <li><i class="bi bi-x-circle"></i> Manual DM replies take forever</li>
+                    <li><i class="bi bi-x-circle"></i> Interested followers slip away</li>
+                    <li><i class="bi bi-x-circle"></i> Can't scale your engagement</li>
+                </ul>
+            </div>
+            <div class="solution-side">
+                <span class="section-label green">The Solution</span>
+                <h2>Automate & Convert 24/7</h2>
+                <ul class="solution-list">
+                    <li><i class="bi bi-check-circle-fill"></i> Reply to comments in seconds</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Send DMs automatically</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Capture every lead</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Scale without extra work</li>
+                </ul>
             </div>
         </div>
     </div>
 </section>
 
 <!-- How It Works -->
-<section class="section how-it-works" id="demo">
+<section class="section how-it-works" id="how-it-works">
     <div class="container">
         <div class="section-intro">
             <span class="section-label">How It Works</span>
-            <h2>Set Up in 60 Seconds</h2>
-            <p>No coding required. Just connect and configure.</p>
+            <h2>Set Up in 3 Minutes, Save Hours Every Week</h2>
+            <p>No coding, no complicated setup — just connect and automate</p>
         </div>
 
-        <div class="steps-timeline">
-            <div class="step-item">
-                <div class="step-visual">
-                    <div class="step-icon">
-                        <i class="bi bi-link-45deg"></i>
-                    </div>
-                    <div class="step-line"></div>
-                </div>
-                <div class="step-content">
-                    <span class="step-num">01</span>
-                    <h3>Connect Instagram</h3>
-                    <p>Link your Business or Creator account via Meta's secure OAuth. No passwords shared.</p>
-                </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-icon"><i class="bi bi-instagram"></i></div>
+                <h3>Connect Instagram</h3>
+                <p>Link your Business or Creator account securely via Meta's official OAuth.</p>
             </div>
+            <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
 
-            <div class="step-item">
-                <div class="step-visual">
-                    <div class="step-icon">
-                        <i class="bi bi-gear-wide-connected"></i>
-                    </div>
-                    <div class="step-line"></div>
-                </div>
-                <div class="step-content">
-                    <span class="step-num">02</span>
-                    <h3>Configure Triggers</h3>
-                    <p>Set keywords like "LINK" or "INFO". Write your auto-reply and DM message.</p>
-                </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-icon"><i class="bi bi-gear"></i></div>
+                <h3>Set Trigger Keywords</h3>
+                <p>Choose words like "LINK", "INFO", "PRICE" that trigger your automation.</p>
             </div>
+            <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
 
-            <div class="step-item">
-                <div class="step-visual">
-                    <div class="step-icon">
-                        <i class="bi bi-rocket-takeoff"></i>
-                    </div>
-                </div>
-                <div class="step-content">
-                    <span class="step-num">03</span>
-                    <h3>Go Live</h3>
-                    <p>Automation runs 24/7. Every matching comment gets an instant reply + DM.</p>
-                </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <div class="step-icon"><i class="bi bi-rocket-takeoff"></i></div>
+                <h3>Watch It Work</h3>
+                <p>Comments get replied, DMs get sent — all automatically, 24/7.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Features Bento Grid -->
-<section class="section features-section">
+<!-- Features Section -->
+<section class="section features-section" id="features">
     <div class="container">
         <div class="section-intro">
-            <span class="section-label">Features</span>
-            <h2>Everything You Need</h2>
-            <p>Powerful automation built on Meta's official API</p>
+            <span class="section-label">Powerful Features</span>
+            <h2>Everything You Need to Automate Instagram</h2>
+            <p>Simple automations to advanced multi-step flows</p>
         </div>
 
-        <div class="bento-grid">
-            <div class="bento-card bento-large">
-                <div class="bento-icon"><i class="bi bi-infinity"></i></div>
-                <h3>Unlimited Replies</h3>
-                <p>No cap on responses. Every comment with your trigger gets a reply — free plan included.</p>
-                <div class="bento-visual">
-                    <div class="reply-counter">
-                        <span class="counter-num">∞</span>
-                        <span class="counter-label">replies/post</span>
-                    </div>
-                </div>
+        <div class="features-grid">
+            <!-- Core Features -->
+            <div class="feature-card primary">
+                <div class="feature-icon"><i class="bi bi-chat-dots"></i></div>
+                <h3>Auto Comment Replies</h3>
+                <p>Instantly reply to comments with personalized messages. Keep your audience engaged and acknowledged.</p>
+                <div class="feature-tag">Core</div>
             </div>
 
-            <div class="bento-card">
-                <div class="bento-icon pink"><i class="bi bi-chat-heart"></i></div>
-                <h3>Auto Comment Reply</h3>
-                <p>Instant public replies to engage your audience</p>
+            <div class="feature-card primary">
+                <div class="feature-icon"><i class="bi bi-envelope"></i></div>
+                <h3>Auto DM Follow-ups</h3>
+                <p>Send DMs to commenters automatically. Deliver links, info, or start conversations privately.</p>
+                <div class="feature-tag">Core</div>
             </div>
 
-            <div class="bento-card">
-                <div class="bento-icon blue"><i class="bi bi-send-check"></i></div>
-                <h3>Auto DM</h3>
-                <p>Send links, codes, or info via direct message</p>
+            <div class="feature-card primary">
+                <div class="feature-icon"><i class="bi bi-hash"></i></div>
+                <h3>Keyword Triggers</h3>
+                <p>Set specific words that trigger your automation. "LINK", "INFO", "PRICE" — you decide.</p>
+                <div class="feature-tag">Core</div>
             </div>
 
-            <div class="bento-card">
-                <div class="bento-icon green"><i class="bi bi-shuffle"></i></div>
-                <h3>Message Variations</h3>
-                <p>Up to 5 reply variations for natural responses</p>
+            <!-- Advanced Features -->
+            <div class="feature-card advanced">
+                <div class="feature-icon purple"><i class="bi bi-diagram-3"></i></div>
+                <h3>Visual Flow Builder</h3>
+                <p>Drag-and-drop builder for multi-step conversations. Create complex automation flows visually.</p>
+                <div class="feature-tag purple">Advanced</div>
             </div>
 
-            <div class="bento-card">
-                <div class="bento-icon orange"><i class="bi bi-bullseye"></i></div>
-                <h3>Multi-Keyword</h3>
-                <p>Multiple trigger words per automation</p>
+            <div class="feature-card advanced">
+                <div class="feature-icon green"><i class="bi bi-ui-radios-grid"></i></div>
+                <h3>Quick Reply Buttons</h3>
+                <p>Add tappable buttons to DMs. Let users choose options and branch conversations.</p>
+                <div class="feature-tag green">Advanced</div>
             </div>
 
-            <div class="bento-card bento-wide">
-                <div class="bento-icon purple"><i class="bi bi-shield-lock"></i></div>
-                <h3>100% Safe & Compliant</h3>
-                <p>Official Meta API integration. No third-party hacks. Your account stays secure.</p>
-                <div class="security-badges">
-                    <span><i class="bi bi-patch-check-fill"></i> Meta Verified</span>
-                    <span><i class="bi bi-lock-fill"></i> OAuth 2.0</span>
-                    <span><i class="bi bi-shield-fill-check"></i> No Password</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Pricing Highlight -->
-<section class="section pricing-highlight">
-    <div class="container">
-        <div class="pricing-card">
-            <div class="pricing-left">
-                <span class="pricing-label"><i class="bi bi-gift"></i> Free Forever</span>
-                <h2>Start with 3 Active Posts</h2>
-                <p>Each post gets <strong>unlimited replies</strong>. No limits on how many comments we respond to.</p>
-
-                <ul class="pricing-features">
-                    <li><i class="bi bi-check-circle-fill"></i> 3 posts with automation</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited auto-replies</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited DMs</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Keyword triggers</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Message variations</li>
-                </ul>
+            <div class="feature-card advanced">
+                <div class="feature-icon pink"><i class="bi bi-person-check"></i></div>
+                <h3>Follower Check</h3>
+                <p>Different responses for followers vs non-followers. Reward your loyal audience.</p>
+                <div class="feature-tag pink">Advanced</div>
             </div>
 
-            <div class="pricing-right">
-                <div class="price-box">
-                    <span class="price-amount">₹0</span>
-                    <span class="price-period">forever free</span>
-                </div>
+            <div class="feature-card advanced">
+                <div class="feature-icon orange"><i class="bi bi-menu-button-wide"></i></div>
+                <h3>Button Templates</h3>
+                <p>Rich messages with action buttons. Link to websites, products, or booking pages.</p>
+                <div class="feature-tag orange">Advanced</div>
+            </div>
 
-                {% if user.is_authenticated %}
-                <a href="{% url 'instagram_automation_list' %}" class="btn-pricing">
-                    Get Started <i class="bi bi-arrow-right"></i>
-                </a>
-                {% else %}
-                <a href="{% url 'signup' %}" class="btn-pricing">
-                    Sign Up Free <i class="bi bi-arrow-right"></i>
-                </a>
-                {% endif %}
-
-                <p class="pricing-note">No credit card required</p>
-
-                <a href="{% url 'pricing' %}" class="pricing-link">
-                    Compare all plans <i class="bi bi-arrow-right"></i>
-                </a>
+            <div class="feature-card advanced">
+                <div class="feature-icon blue"><i class="bi bi-phone"></i></div>
+                <h3>Mobile Editor</h3>
+                <p>Build and manage flows from your phone. No desktop required.</p>
+                <div class="feature-tag blue">Advanced</div>
             </div>
         </div>
     </div>
@@ -326,36 +286,209 @@
     <div class="container">
         <div class="section-intro">
             <span class="section-label">Use Cases</span>
-            <h2>Built for Creators & Brands</h2>
+            <h2>How Creators & Businesses Use Maedix</h2>
+            <p>Real automation flows that drive results</p>
         </div>
 
         <div class="cases-grid">
             <div class="case-card">
-                <div class="case-emoji">🎬</div>
-                <h4>Content Creators</h4>
-                <p class="case-example">"Comment <strong>LINK</strong> for the free guide"</p>
-                <span class="case-result">→ Auto-send resources to followers</span>
+                <div class="case-icon">🎁</div>
+                <h4>Lead Magnets & Freebies</h4>
+                <p>Someone comments "GUIDE" on your Reel → Auto-reply + DM with download link</p>
+                <div class="case-result">
+                    <i class="bi bi-arrow-up-right"></i> Grow your email list automatically
+                </div>
             </div>
 
             <div class="case-card">
-                <div class="case-emoji">🛍️</div>
-                <h4>E-commerce</h4>
-                <p class="case-example">"Comment <strong>PRICE</strong> for details"</p>
-                <span class="case-result">→ Share product links instantly</span>
+                <div class="case-icon">🛍️</div>
+                <h4>Product Inquiries</h4>
+                <p>Someone comments "PRICE" → Send product details, pricing, and purchase link via DM</p>
+                <div class="case-result">
+                    <i class="bi bi-arrow-up-right"></i> Convert interest to sales
+                </div>
             </div>
 
             <div class="case-card">
-                <div class="case-emoji">🎓</div>
-                <h4>Coaches</h4>
-                <p class="case-example">"Comment <strong>JOIN</strong> to enroll"</p>
-                <span class="case-result">→ Capture leads automatically</span>
+                <div class="case-icon">📅</div>
+                <h4>Appointment Booking</h4>
+                <p>Someone comments "BOOK" → Send booking link or available slots via DM</p>
+                <div class="case-result">
+                    <i class="bi bi-arrow-up-right"></i> Fill your calendar hands-free
+                </div>
             </div>
 
             <div class="case-card">
-                <div class="case-emoji">💼</div>
-                <h4>Service Providers</h4>
-                <p class="case-example">"Comment <strong>BOOK</strong> for slots"</p>
-                <span class="case-result">→ Share booking links 24/7</span>
+                <div class="case-icon">🎓</div>
+                <h4>Course Enrollment</h4>
+                <p>Someone comments "JOIN" → Check if follower → Send discount (followers) or regular price</p>
+                <div class="case-result">
+                    <i class="bi bi-arrow-up-right"></i> Reward loyal followers
+                </div>
+            </div>
+
+            <div class="case-card">
+                <div class="case-icon">🎯</div>
+                <h4>Contest & Giveaways</h4>
+                <p>Someone comments with keyword → Auto-reply confirmation + DM entry details</p>
+                <div class="case-result">
+                    <i class="bi bi-arrow-up-right"></i> Boost engagement 10x
+                </div>
+            </div>
+
+            <div class="case-card">
+                <div class="case-icon">💬</div>
+                <h4>Customer Support</h4>
+                <p>Someone comments "HELP" → DM with FAQ links or support options</p>
+                <div class="case-result">
+                    <i class="bi bi-arrow-up-right"></i> Support at scale
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Flow Builder Highlight -->
+<section class="section builder-highlight">
+    <div class="container">
+        <div class="builder-grid">
+            <div class="builder-content">
+                <span class="section-label">Advanced Feature</span>
+                <h2>Visual Flow Builder</h2>
+                <p class="builder-desc">
+                    Go beyond simple auto-replies. Build sophisticated multi-step conversations with our drag-and-drop flow builder.
+                </p>
+
+                <ul class="builder-features">
+                    <li><i class="bi bi-check-circle-fill"></i> Drag-and-drop interface</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Unlimited conversation steps</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Conditional branching</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Quick reply buttons</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Follower status checks</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Mobile-friendly editor</li>
+                </ul>
+
+                {% if user.is_authenticated %}
+                <a href="{% url 'flow_list' %}" class="btn-builder">
+                    Try Flow Builder <i class="bi bi-arrow-right"></i>
+                </a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="btn-builder">
+                    Try Flow Builder Free <i class="bi bi-arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="builder-visual">
+                <div class="flow-preview-card">
+                    <div class="flow-preview">
+                        <div class="flow-node trigger-node">
+                            <div class="node-header"><i class="bi bi-lightning-charge"></i> Trigger</div>
+                            <div class="node-body">Comment: "INFO"</div>
+                        </div>
+                        <div class="flow-connector"></div>
+                        <div class="flow-node message-node">
+                            <div class="node-header"><i class="bi bi-chat-left-text"></i> Send DM</div>
+                            <div class="node-body">Hey! Here's the info...</div>
+                        </div>
+                        <div class="flow-connector"></div>
+                        <div class="flow-node qr-node">
+                            <div class="node-header"><i class="bi bi-ui-radios-grid"></i> Quick Reply</div>
+                            <div class="node-body">
+                                <div class="qr-buttons">
+                                    <span class="qr-btn">Pricing</span>
+                                    <span class="qr-btn">Demo</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flow-branch">
+                            <div class="branch-line left"></div>
+                            <div class="branch-line right"></div>
+                        </div>
+                        <div class="flow-row">
+                            <div class="flow-node small-node">
+                                <i class="bi bi-currency-rupee"></i> Pricing
+                            </div>
+                            <div class="flow-node small-node">
+                                <i class="bi bi-play-circle"></i> Demo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing -->
+<section class="section pricing-section">
+    <div class="container">
+        <div class="section-intro">
+            <span class="section-label">Pricing</span>
+            <h2>Start Free, Upgrade When Ready</h2>
+            <p>No credit card required. No hidden fees.</p>
+        </div>
+
+        <div class="pricing-cards">
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Free</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">₹0</span>
+                        <span class="price-period">forever</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="bi bi-check"></i> 1 active automation flow</li>
+                    <li><i class="bi bi-check"></i> Unlimited replies per flow</li>
+                    <li><i class="bi bi-check"></i> Visual flow builder</li>
+                    <li><i class="bi bi-check"></i> Quick reply buttons</li>
+                    <li><i class="bi bi-check"></i> Follower check</li>
+                </ul>
+                {% if user.is_authenticated %}
+                <a href="{% url 'flow_list' %}" class="btn-pricing-secondary">Current Plan</a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="btn-pricing-secondary">Get Started</a>
+                {% endif %}
+            </div>
+
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <div class="pricing-header">
+                    <h3>Pro</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">₹199</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="bi bi-check"></i> <strong>5 active flows</strong></li>
+                    <li><i class="bi bi-check"></i> Unlimited replies per flow</li>
+                    <li><i class="bi bi-check"></i> Visual flow builder</li>
+                    <li><i class="bi bi-check"></i> Quick reply buttons</li>
+                    <li><i class="bi bi-check"></i> Follower check</li>
+                    <li><i class="bi bi-check"></i> Priority support</li>
+                </ul>
+                <a href="{% url 'pricing' %}" class="btn-pricing-primary">Upgrade to Pro</a>
+            </div>
+
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Creator</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">₹499</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="bi bi-check"></i> <strong>Unlimited flows</strong></li>
+                    <li><i class="bi bi-check"></i> Unlimited replies per flow</li>
+                    <li><i class="bi bi-check"></i> Visual flow builder</li>
+                    <li><i class="bi bi-check"></i> Quick reply buttons</li>
+                    <li><i class="bi bi-check"></i> Follower check</li>
+                    <li><i class="bi bi-check"></i> Priority support</li>
+                </ul>
+                <a href="{% url 'pricing' %}" class="btn-pricing-secondary">Go Creator</a>
             </div>
         </div>
     </div>
@@ -366,28 +499,28 @@
     <div class="container">
         <div class="section-intro">
             <span class="section-label">FAQ</span>
-            <h2>Quick Answers</h2>
+            <h2>Common Questions</h2>
         </div>
 
         <div class="faq-grid">
             <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> What's "3 active automations"?</h4>
-                <p>You can enable automation on <strong>3 posts at once</strong>. Each gets <strong>unlimited replies</strong> — no cap on how many comments we respond to!</p>
-            </div>
-
-            <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> Are replies limited?</h4>
-                <p><strong>No limits.</strong> Every matching comment gets an auto-reply and DM. Even on the free plan.</p>
-            </div>
-
-            <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> Is it safe?</h4>
-                <p>100% safe. We use Meta's official API — no password sharing, no risky third-party access.</p>
+                <h4><i class="bi bi-question-circle"></i> Is this safe for my account?</h4>
+                <p>100% safe. We use Meta's official Instagram Messaging API. No password sharing, no third-party hacks, no risk to your account.</p>
             </div>
 
             <div class="faq-card">
                 <h4><i class="bi bi-question-circle"></i> What accounts work?</h4>
-                <p>Instagram Business or Creator accounts.</p>
+                <p>Instagram Business or Creator accounts connected to a Facebook Page. Takes 30 seconds to set up.</p>
+            </div>
+
+            <div class="faq-card">
+                <h4><i class="bi bi-question-circle"></i> Are replies limited?</h4>
+                <p>No! Replies are unlimited on all plans. The only limit is how many flows can be active at once.</p>
+            </div>
+
+            <div class="faq-card">
+                <h4><i class="bi bi-question-circle"></i> Does it work with Reels?</h4>
+                <p>Yes! Comments on Reels, Feed Posts, and Carousels all trigger automations.</p>
             </div>
         </div>
     </div>
@@ -398,23 +531,22 @@
     <div class="container">
         <div class="cta-box">
             <div class="cta-content">
-                <span class="cta-badge"><i class="bi bi-patch-check-fill"></i> Meta Verified Provider</span>
-                <h2>Ready to Automate?</h2>
-                <p>Turn comments into leads while you sleep.</p>
+                <h2>Stop Losing Leads to Slow Replies</h2>
+                <p>Join thousands of creators who automate their Instagram engagement.</p>
 
                 <div class="cta-actions">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'instagram_automation_list' %}" class="btn-cta">
+                    <a href="{% url 'flow_list' %}" class="btn-cta">
                         Go to Dashboard <i class="bi bi-arrow-right"></i>
                     </a>
                     {% else %}
                     <a href="{% url 'signup' %}" class="btn-cta">
-                        Start Free Today <i class="bi bi-arrow-right"></i>
+                        Start Automating Free <i class="bi bi-arrow-right"></i>
                     </a>
                     {% endif %}
                 </div>
 
-                <p class="cta-subtext">No credit card • 3 free automations • Unlimited replies</p>
+                <p class="cta-subtext">No credit card required • Setup in 3 minutes • Cancel anytime</p>
             </div>
         </div>
     </div>
@@ -536,34 +668,28 @@
     font-size: 1.15rem;
     color: rgba(255,255,255,0.7);
     line-height: 1.7;
-    margin-bottom: 2rem;
-    max-width: 480px;
+    margin-bottom: 1.5rem;
+    max-width: 500px;
 }
 
-.hero-stats {
+.hero-benefits {
     display: flex;
-    gap: 1.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
 }
 
-.hero-stat {
+.hero-benefit {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: rgba(255,255,255,0.8);
+    gap: 0.75rem;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.95rem;
 }
 
-.stat-icon {
-    width: 32px;
-    height: 32px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #f093fb;
+.hero-benefit i {
+    color: #22c55e;
+    font-size: 1.1rem;
 }
 
 .hero-actions {
@@ -624,7 +750,7 @@
     margin-right: 0.25rem;
 }
 
-/* Hero Visual / Demo Card */
+/* Hero Visual */
 .hero-visual {
     position: relative;
 }
@@ -671,196 +797,105 @@
     padding: 1.5rem;
 }
 
-/* Instagram Mock */
-.ig-mock {
-    background: #000;
-    border-radius: 16px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.ig-post-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.ig-avatar-ring {
-    width: 36px;
-    height: 36px;
-    background: var(--gradient-instagram);
-    border-radius: 50%;
-    padding: 2px;
-}
-
-.ig-avatar {
-    width: 100%;
-    height: 100%;
-    background: #1a1a1a;
-    border-radius: 50%;
-}
-
-.ig-meta {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.ig-handle {
-    color: white;
-    font-weight: 600;
-    font-size: 0.85rem;
-}
-
-.ig-time {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.75rem;
-}
-
-.ig-post-header > i {
-    color: rgba(255,255,255,0.5);
-}
-
-.ig-media {
-    background: linear-gradient(135deg, #1a1a2e, #2d2d44);
-    border-radius: 8px;
-    height: 120px;
+/* Automation Preview */
+.automation-preview {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    color: rgba(255,255,255,0.4);
-    margin-bottom: 1rem;
-}
-
-.ig-media i {
-    font-size: 2rem;
-}
-
-.ig-media span {
-    font-size: 0.8rem;
-}
-
-.ig-actions {
-    display: flex;
     gap: 1rem;
-    color: white;
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
 }
 
-.ig-likes {
-    color: white;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-/* Comment Flow */
-.comment-flow {
+.preview-comment {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 0.75rem;
-}
-
-.flow-comment {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    position: relative;
-    animation: slideIn 0.5s ease-out;
-}
-
-.flow-comment.outgoing {
-    animation-delay: 0.5s;
-    animation-fill-mode: both;
-}
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
+    background: rgba(255,255,255,0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    width: 100%;
 }
 
 .comment-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    flex-shrink: 0;
-}
-
-.comment-avatar.brand {
+    width: 40px;
+    height: 40px;
     background: var(--gradient-instagram);
-}
-
-.comment-bubble {
-    background: rgba(255,255,255,0.1);
-    padding: 0.5rem 0.75rem;
-    border-radius: 12px;
-    flex: 1;
-}
-
-.comment-bubble strong {
-    color: white;
-    font-size: 0.8rem;
-}
-
-.comment-bubble p {
-    color: rgba(255,255,255,0.8);
-    font-size: 0.8rem;
-    margin: 0.25rem 0 0;
-}
-
-.comment-tag {
-    position: absolute;
-    right: 0;
-    top: -8px;
-    font-size: 0.6rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-weight: 700;
-}
-
-.comment-tag.trigger {
-    background: #fbbf24;
-    color: #1a1a1a;
-}
-
-.comment-tag.auto {
-    background: #22c55e;
-    color: white;
-}
-
-.flow-arrow {
-    text-align: center;
-    color: rgba(255,255,255,0.3);
-    animation: bounce 1s ease-in-out infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(5px); }
-}
-
-.flow-dm {
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    padding: 0.75rem;
-    border-radius: 12px;
-    color: #22c55e;
+    color: white;
     font-weight: 600;
     font-size: 0.85rem;
+}
+
+.comment-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-user {
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.comment-text {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.9rem;
+}
+
+.preview-arrow {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-instagram);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
     animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-    50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.preview-actions {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.action-item {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.action-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.action-item.reply i { color: #60a5fa; }
+.action-item.dm i { color: #f59e0b; }
+
+.action-item span {
+    display: block;
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+.action-item small {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
 }
 
 /* Floating Badges */
@@ -884,15 +919,15 @@
     right: -20px;
 }
 
-.badge-1 i { color: #22c55e; }
+.badge-1 i { color: #f59e0b; }
 
 .badge-2 {
-    bottom: 20%;
+    bottom: 15%;
     left: -30px;
     animation-delay: -1.5s;
 }
 
-.badge-2 i { color: #f093fb; }
+.badge-2 i { color: #22c55e; }
 
 @keyframes floatBadge {
     0%, 100% { transform: translateY(0); }
@@ -904,27 +939,49 @@
     background: #0f0f1a;
     border-top: 1px solid rgba(255,255,255,0.05);
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding: 1.5rem 0;
+    padding: 2rem 0;
 }
 
 .trust-content {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 2rem;
+    justify-content: space-between;
     flex-wrap: wrap;
+    gap: 2rem;
 }
 
-.trust-label {
-    color: rgba(255,255,255,0.4);
-    font-size: 0.85rem;
+.trust-stats {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.trust-stat {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+}
+
+.trust-divider {
+    width: 1px;
+    height: 40px;
+    background: rgba(255,255,255,0.2);
 }
 
 .trust-logos {
     display: flex;
     gap: 2rem;
     flex-wrap: wrap;
-    justify-content: center;
 }
 
 .trust-logos span {
@@ -960,6 +1017,16 @@
     margin-bottom: 1rem;
 }
 
+.section-label.red {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.section-label.green {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
 .section-intro h2 {
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 700;
@@ -971,103 +1038,167 @@
     font-size: 1.1rem;
 }
 
-/* ========== How It Works ========== */
-.how-it-works {
+/* ========== Problem/Solution ========== */
+.problem-section {
     background: var(--bg-light);
 }
 
-.steps-timeline {
-    max-width: 700px;
-    margin: 0 auto;
+.problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
 }
 
-.step-item {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
+.problem-side, .solution-side {
+    padding: 2rem;
+    border-radius: 20px;
 }
 
-.step-visual {
+.problem-side {
+    background: #fef2f2;
+}
+
+.solution-side {
+    background: #f0fdf4;
+}
+
+.problem-side h2, .solution-side h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.problem-list, .solution-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.problem-list li, .solution-list li {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    font-size: 1rem;
+}
+
+.problem-list i {
+    color: #dc2626;
+    font-size: 1.25rem;
+}
+
+.solution-list i {
+    color: #16a34a;
+    font-size: 1.25rem;
+}
+
+/* ========== How It Works ========== */
+.how-it-works {
+    background: white;
+}
+
+.steps-grid {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.step-card {
+    background: var(--bg-light);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 280px;
+    position: relative;
+}
+
+.step-number {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    background: var(--gradient-instagram);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
 }
 
 .step-icon {
-    width: 56px;
-    height: 56px;
-    background: var(--gradient-instagram);
+    width: 64px;
+    height: 64px;
+    background: white;
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    flex-shrink: 0;
-}
-
-.step-line {
-    width: 2px;
-    flex: 1;
-    background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
-    margin: 0.5rem 0;
-}
-
-.step-content {
-    padding-bottom: 1rem;
-}
-
-.step-num {
+    margin: 0 auto 1rem;
+    font-size: 1.75rem;
     color: var(--primary);
-    font-weight: 700;
-    font-size: 0.85rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.step-content h3 {
-    font-size: 1.25rem;
+.step-card h3 {
+    font-size: 1.1rem;
     font-weight: 700;
-    margin: 0.25rem 0 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
-.step-content p {
+.step-card p {
     color: var(--text-muted);
-    line-height: 1.6;
+    font-size: 0.9rem;
+    line-height: 1.5;
     margin: 0;
 }
 
-/* ========== Bento Grid ========== */
-.bento-grid {
+.step-arrow {
+    display: flex;
+    align-items: center;
+    color: #d1d5db;
+    font-size: 1.5rem;
+    padding-top: 2.5rem;
+}
+
+/* ========== Features Grid ========== */
+.features-section {
+    background: var(--bg-light);
+}
+
+.features-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
 }
 
-.bento-card {
-    background: var(--bg-light);
+.feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 1.75rem;
+    position: relative;
     transition: all 0.3s ease;
 }
 
-.bento-card:hover {
+.feature-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    border-color: var(--primary);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
 }
 
-.bento-large {
-    grid-column: span 2;
-    grid-row: span 2;
-    display: flex;
-    flex-direction: column;
+.feature-card.primary {
+    grid-column: span 1;
 }
 
-.bento-wide {
-    grid-column: span 2;
+.feature-card.advanced {
+    grid-column: span 1;
 }
 
-.bento-icon {
+.feature-icon {
     width: 48px;
     height: 48px;
     background: var(--gradient-instagram);
@@ -1080,235 +1211,58 @@
     margin-bottom: 1rem;
 }
 
-.bento-icon.pink { background: linear-gradient(135deg, #f093fb, #f5576c); }
-.bento-icon.blue { background: linear-gradient(135deg, #667eea, #764ba2); }
-.bento-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.bento-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.bento-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.feature-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.feature-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.feature-icon.pink { background: linear-gradient(135deg, #ec4899, #db2777); }
+.feature-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.feature-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 
-.bento-card h3 {
-    font-size: 1.15rem;
+.feature-card h3 {
+    font-size: 1rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
 }
 
-.bento-card p {
+.feature-card p {
     color: var(--text-muted);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     line-height: 1.5;
     margin: 0;
 }
 
-.bento-visual {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-
-.reply-counter {
-    text-align: center;
-}
-
-.counter-num {
-    font-size: 5rem;
-    font-weight: 800;
-    background: var(--gradient-instagram);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-}
-
-.counter-label {
-    display: block;
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin-top: 0.5rem;
-}
-
-.security-badges {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-}
-
-.security-badges span {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: white;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.security-badges i {
-    color: #22c55e;
-}
-
-/* ========== Pricing Highlight ========== */
-.pricing-highlight {
-    background: linear-gradient(180deg, var(--bg-light) 0%, white 100%);
-}
-
-.pricing-card {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 3rem;
-    background: white;
-    border: 2px solid var(--primary);
-    border-radius: 24px;
-    padding: 3rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.pricing-card::before {
-    content: '';
+.feature-tag {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 300px;
-    height: 300px;
-    background: var(--gradient-instagram);
-    opacity: 0.05;
-    border-radius: 50%;
-    transform: translate(30%, -30%);
-}
-
-.pricing-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--primary);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.pricing-left h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-}
-
-.pricing-left > p {
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.pricing-features {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 0.75rem;
-}
-
-.pricing-features li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.95rem;
-}
-
-.pricing-features i {
-    color: #22c55e;
-    font-size: 1.1rem;
-}
-
-.pricing-right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.price-box {
-    margin-bottom: 1.5rem;
-}
-
-.price-amount {
-    font-size: 4rem;
-    font-weight: 800;
-    background: var(--gradient-instagram);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-}
-
-.price-period {
-    display: block;
-    color: var(--text-muted);
-    font-size: 1rem;
-}
-
-.btn-pricing {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+    top: 1rem;
+    right: 1rem;
     background: var(--gradient-instagram);
     color: white;
-    padding: 1rem 2rem;
-    border-radius: 12px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
     font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 1rem;
 }
 
-.btn-pricing:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(225, 48, 108, 0.4);
-    color: white;
-}
-
-.pricing-note {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-}
-
-.pricing-link {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.pricing-link:hover {
-    text-decoration: underline;
-}
+.feature-tag.purple { background: #8b5cf6; }
+.feature-tag.green { background: #22c55e; }
+.feature-tag.pink { background: #ec4899; }
+.feature-tag.orange { background: #f59e0b; }
+.feature-tag.blue { background: #3b82f6; }
 
 /* ========== Use Cases ========== */
 .use-cases {
-    background: var(--bg-light);
+    background: white;
 }
 
 .cases-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
 }
 
 .case-card {
-    background: white;
+    background: var(--bg-light);
     border-radius: 20px;
     padding: 1.75rem;
-    text-align: center;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
@@ -1318,7 +1272,7 @@
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
 }
 
-.case-emoji {
+.case-icon {
     font-size: 2.5rem;
     margin-bottom: 1rem;
 }
@@ -1329,22 +1283,331 @@
     margin-bottom: 0.75rem;
 }
 
-.case-example {
-    background: var(--bg-light);
-    padding: 0.75rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    color: var(--text-dark);
-    margin-bottom: 0.75rem;
+.case-card > p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
 }
 
 .case-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--primary);
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.case-result i {
+    font-size: 1rem;
+}
+
+/* ========== Builder Highlight ========== */
+.builder-highlight {
+    background: linear-gradient(180deg, var(--bg-light) 0%, white 100%);
+}
+
+.builder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.builder-content h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.builder-desc {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+.builder-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.builder-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.builder-features i {
+    color: #22c55e;
+}
+
+.btn-builder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--gradient-instagram);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-builder:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(225, 48, 108, 0.4);
+    color: white;
+}
+
+/* Builder Visual */
+.flow-preview-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+}
+
+.flow-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.flow-node {
+    background: #f8f9fa;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 220px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.flow-node .node-header {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.flow-node .node-body {
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: white;
+}
+
+.trigger-node .node-header { background: #f59e0b; }
+.message-node .node-header { background: #3b82f6; }
+.qr-node .node-header { background: #22c55e; }
+
+.qr-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.qr-btn {
+    background: var(--bg-light);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    color: var(--text);
+    border: 1px solid var(--border-color);
+}
+
+.flow-connector {
+    width: 2px;
+    height: 20px;
+    background: linear-gradient(180deg, #d1d5db, #e5e7eb);
+}
+
+.flow-branch {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 20px;
+    position: relative;
+}
+
+.branch-line {
+    position: absolute;
+    width: 50px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-top: none;
+}
+
+.branch-line.left {
+    left: calc(50% - 70px);
+    border-right: none;
+    border-radius: 0 0 0 12px;
+}
+
+.branch-line.right {
+    right: calc(50% - 70px);
+    border-left: none;
+    border-radius: 0 0 12px 0;
+}
+
+.flow-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.small-node {
+    padding: 8px 16px !important;
+    font-size: 0.7rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #8b5cf6 !important;
+    border: none !important;
+}
+
+/* ========== Pricing ========== */
+.pricing-section {
+    background: white;
+}
+
+.pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.pricing-card {
+    background: var(--bg-light);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 2px solid var(--border-color);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.pricing-card.popular {
+    border-color: var(--primary);
+    transform: scale(1.05);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gradient-instagram);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.pricing-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pricing-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.pricing-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.price-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.price-period {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+
+.pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.pricing-features i {
+    color: #22c55e;
+}
+
+.btn-pricing-primary {
+    display: block;
+    text-align: center;
+    background: var(--gradient-instagram);
+    color: white;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-pricing-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(225, 48, 108, 0.4);
+    color: white;
+}
+
+.btn-pricing-secondary {
+    display: block;
+    text-align: center;
+    background: white;
+    color: var(--text);
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.btn-pricing-secondary:hover {
+    background: var(--bg-light);
+    color: var(--text);
 }
 
 /* ========== FAQ ========== */
+.faq-section {
+    background: var(--bg-light);
+}
+
 .faq-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1354,9 +1617,10 @@
 }
 
 .faq-card {
-    background: var(--bg-light);
+    background: white;
     border-radius: 16px;
     padding: 1.5rem;
+    border: 1px solid var(--border-color);
 }
 
 .faq-card h4 {
@@ -1410,18 +1674,6 @@
 .cta-content {
     position: relative;
     z-index: 1;
-}
-
-.cta-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-size: 0.85rem;
-    margin-bottom: 1.5rem;
 }
 
 .cta-box h2 {
@@ -1481,22 +1733,26 @@
         display: none;
     }
 
-    .bento-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .problem-grid, .builder-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
     }
 
-    .bento-large {
-        grid-column: span 2;
-        grid-row: span 1;
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .cases-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .pricing-card {
+    .pricing-cards {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        max-width: 400px;
+    }
+
+    .pricing-card.popular {
+        transform: none;
     }
 }
 
@@ -1504,11 +1760,6 @@
     .hero {
         padding: 4rem 0 3rem;
         min-height: auto;
-    }
-
-    .hero-stats {
-        flex-direction: column;
-        gap: 0.75rem;
     }
 
     .hero-actions {
@@ -1525,40 +1776,35 @@
         gap: 0.5rem;
     }
 
-    .step-item {
+    .trust-content {
         flex-direction: column;
-        gap: 1rem;
+        text-align: center;
     }
 
-    .step-visual {
-        flex-direction: row;
-        gap: 1rem;
+    .trust-stats {
+        justify-content: center;
     }
 
-    .step-line {
-        width: 100%;
-        height: 2px;
-        margin: 0;
+    .steps-grid {
+        flex-direction: column;
+        align-items: center;
     }
 
-    .bento-grid {
+    .step-arrow {
+        transform: rotate(90deg);
+        padding: 0.5rem 0;
+    }
+
+    .step-card {
+        max-width: 100%;
+    }
+
+    .features-grid, .cases-grid, .faq-grid {
         grid-template-columns: 1fr;
     }
 
-    .bento-large, .bento-wide {
-        grid-column: span 1;
-    }
-
-    .faq-grid, .cases-grid {
+    .builder-features {
         grid-template-columns: 1fr;
-    }
-
-    .pricing-card {
-        padding: 2rem 1.5rem;
-    }
-
-    .price-amount {
-        font-size: 3rem;
     }
 
     .cta-box {

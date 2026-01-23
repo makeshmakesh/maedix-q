@@ -1,0 +1,932 @@
+{% extends 'base.html' %}
+
+{% block title %}My Flows{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page header */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+        margin: -1rem -12px 1.5rem -12px;
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: 1rem;
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 1.75rem;
+        }
+    }
+
+    .page-header p {
+        opacity: 0.9;
+        margin: 0.5rem 0 0 0;
+        font-size: 0.9rem;
+    }
+
+    .header-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .header-stat {
+        text-align: center;
+    }
+
+    .header-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .header-stat-label {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-create-flow {
+        background: rgba(255,255,255,0.2);
+        border: 2px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-create-flow:hover {
+        background: rgba(255,255,255,0.3);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-upgrade {
+        background: #ffc107;
+        border: none;
+        color: #212529;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Flow limit indicator */
+    .flow-limit-bar {
+        background: rgba(255,255,255,0.2);
+        height: 6px;
+        border-radius: 3px;
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .flow-limit-fill {
+        background: white;
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .flow-limit-text {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+    }
+
+    /* Section cards */
+    .section-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid #f0f0f0;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .section-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Flow cards */
+    .flow-card {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f5f5f5;
+        transition: all 0.2s ease;
+    }
+
+    .flow-card:last-child {
+        border-bottom: none;
+    }
+
+    .flow-card:hover {
+        background: #fafafa;
+    }
+
+    .flow-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .flow-title {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #212529;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .flow-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .flow-status.active {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .flow-status.inactive {
+        background: #f0f0f0;
+        color: #6c757d;
+    }
+
+    .flow-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .flow-status.active .flow-status-dot {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .flow-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+    }
+
+    .flow-trigger-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: #fff3cd;
+        color: #856404;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .flow-keywords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin-top: 0.5rem;
+    }
+
+    .flow-keyword {
+        background: #f0f0f0;
+        padding: 0.125rem 0.5rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        color: #495057;
+    }
+
+    .flow-stats {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .flow-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .flow-stat i {
+        font-size: 0.9rem;
+    }
+
+    .flow-stat-value {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .flow-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .flow-action-btn {
+        padding: 0.5rem 0.875rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        transition: all 0.15s ease;
+        border: none;
+        text-decoration: none;
+    }
+
+    .flow-action-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .flow-action-btn.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .flow-action-btn.secondary {
+        background: #f0f0f0;
+        color: #495057;
+    }
+
+    .flow-action-btn.secondary:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .flow-action-btn.danger {
+        background: #fff5f5;
+        color: #dc3545;
+    }
+
+    .flow-action-btn.danger:hover {
+        background: #ffe3e3;
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .empty-state-icon i {
+        font-size: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .empty-state h3 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-create-first {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-create-first:hover {
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Not connected state */
+    .not-connected {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+
+    .not-connected-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #E1306C 0%, #F56040 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 2.5rem;
+    }
+
+    .btn-connect {
+        background: linear-gradient(135deg, #E1306C 0%, #F56040 100%);
+        border: none;
+        color: white;
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-connect:hover {
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(225, 48, 108, 0.4);
+    }
+
+    /* Activity feed */
+    .activity-item {
+        padding: 0.875rem 1.25rem;
+        border-bottom: 1px solid #f5f5f5;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .activity-user {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #212529;
+    }
+
+    .activity-flow {
+        font-size: 0.8rem;
+        color: #6c757d;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .activity-meta {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .activity-status {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 2rem;
+        font-weight: 500;
+    }
+
+    .activity-status.completed {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .activity-status.waiting {
+        background: rgba(255, 193, 7, 0.15);
+        color: #856404;
+    }
+
+    .activity-status.error {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .activity-status.active {
+        background: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .activity-time {
+        font-size: 0.7rem;
+        color: #adb5bd;
+        margin-top: 0.25rem;
+    }
+
+    /* Quick links */
+    .quick-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.15s ease;
+    }
+
+    .quick-link:hover {
+        background: #fafafa;
+        color: inherit;
+    }
+
+    .quick-link-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .quick-link-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .quick-link-icon.leads {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .quick-link-icon.settings {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+
+    .quick-link-text h6 {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .quick-link-text p {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .quick-link-arrow {
+        color: #adb5bd;
+    }
+
+    /* How it works */
+    .how-it-works {
+        padding: 1.25rem;
+    }
+
+    .how-step {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .how-step:last-child {
+        margin-bottom: 0;
+    }
+
+    .how-step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .how-step-text {
+        font-size: 0.85rem;
+        color: #495057;
+        line-height: 1.5;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .flow-card {
+            padding: 1rem;
+        }
+
+        .flow-actions {
+            flex-wrap: wrap;
+        }
+
+        .flow-action-btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .header-stats {
+            gap: 1rem;
+        }
+
+        .header-stat-value {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-3 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if not instagram_connected %}
+                <!-- Not Connected State -->
+                <div class="section-card">
+                    <div class="not-connected">
+                        <div class="not-connected-icon">
+                            <i class="bi bi-instagram"></i>
+                        </div>
+                        <h3>Connect Your Instagram</h3>
+                        <p>Connect your Instagram Business or Creator account to start automating your DMs.</p>
+                        <a href="{% url 'instagram_connect' %}" class="btn-connect">
+                            <i class="bi bi-link-45deg"></i>
+                            Connect Instagram
+                        </a>
+                    </div>
+                </div>
+
+                {% else %}
+
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                        <div>
+                            <h1><i class="bi bi-robot me-2"></i>My Flows</h1>
+                            <p class="mb-0">Automate your Instagram DM conversations</p>
+
+                            <!-- Stats -->
+                            <div class="header-stats">
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ flow_count }}</div>
+                                    <div class="header-stat-label">Flows</div>
+                                </div>
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ total_triggered|default:0 }}</div>
+                                    <div class="header-stat-label">Triggered</div>
+                                </div>
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ total_completed|default:0 }}</div>
+                                    <div class="header-stat-label">Completed</div>
+                                </div>
+                            </div>
+
+                            {% if flow_limit %}
+                            <div class="flow-limit-bar">
+                                <div class="flow-limit-fill" style="width: {% widthratio flow_count flow_limit 100 %}%"></div>
+                            </div>
+                            <div class="flow-limit-text">{{ flow_count }} of {{ flow_limit }} flows used</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-shrink-0">
+                            {% if can_create_more %}
+                            <a href="{% url 'flow_create' %}" class="btn-create-flow">
+                                <i class="bi bi-plus-lg"></i>
+                                Create Flow
+                            </a>
+                            {% else %}
+                            <a href="{% url 'pricing' %}" class="btn-upgrade">
+                                <i class="bi bi-arrow-up-circle"></i>
+                                Upgrade Plan
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Main Column: Flows -->
+                    <div class="col-lg-8 order-2 order-lg-1">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <h2 class="section-title">
+                                    <i class="bi bi-collection text-primary"></i>
+                                    Your Flows
+                                </h2>
+                            </div>
+
+                            {% if flows %}
+                            {% for flow in flows %}
+                            <div class="flow-card">
+                                <div class="flow-card-header">
+                                    <div>
+                                        <h3 class="flow-title">{{ flow.title }}</h3>
+                                        <span class="flow-status {% if flow.is_active %}active{% else %}inactive{% endif %}">
+                                            <span class="flow-status-dot"></span>
+                                            {% if flow.is_active %}Active{% else %}Paused{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="flow-trigger">
+                                    <div class="flow-trigger-icon">
+                                        <i class="bi bi-lightning-charge-fill"></i>
+                                    </div>
+                                    <div>
+                                        {% if flow.trigger_type == 'comment_any' %}
+                                        Triggers on any comment
+                                        {% else %}
+                                        Triggers on keywords
+                                        {% endif %}
+                                        {% if flow.instagram_post_id %}
+                                        <span class="text-muted">· Specific post</span>
+                                        {% else %}
+                                        <span class="text-muted">· All posts</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if flow.trigger_type == 'comment_keyword' and flow.keywords %}
+                                <div class="flow-keywords" data-keywords="{{ flow.keywords }}">
+                                    <!-- Keywords rendered by JS -->
+                                </div>
+                                {% endif %}
+
+                                <div class="flow-stats">
+                                    <div class="flow-stat">
+                                        <i class="bi bi-signpost-split text-primary"></i>
+                                        <span class="flow-stat-value">{{ flow.nodes.count }}</span> steps
+                                    </div>
+                                    <div class="flow-stat">
+                                        <i class="bi bi-play-circle text-success"></i>
+                                        <span class="flow-stat-value">{{ flow.total_triggered }}</span> triggered
+                                    </div>
+                                    <div class="flow-stat">
+                                        <i class="bi bi-check-circle text-info"></i>
+                                        <span class="flow-stat-value">{{ flow.total_completed }}</span> completed
+                                    </div>
+                                </div>
+
+                                <div class="flow-actions">
+                                    <a href="{% url 'flow_edit' flow.pk %}" class="flow-action-btn primary">
+                                        <i class="bi bi-pencil"></i>
+                                        Edit
+                                    </a>
+                                    <a href="{% url 'flow_sessions' flow.pk %}" class="flow-action-btn secondary">
+                                        <i class="bi bi-list-check"></i>
+                                        Sessions
+                                    </a>
+                                    <form method="post" action="{% url 'flow_delete' flow.pk %}"
+                                          class="d-inline" onsubmit="return confirm('Delete this flow? This cannot be undone.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="flow-action-btn danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <!-- Empty State -->
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+                                <h3>Create Your First Flow</h3>
+                                <p>Set up automated DM responses when people comment on your posts.</p>
+                                {% if can_create_more %}
+                                <a href="{% url 'flow_create' %}" class="btn-create-first">
+                                    <i class="bi bi-plus-lg"></i>
+                                    Create Flow
+                                </a>
+                                {% else %}
+                                <a href="{% url 'pricing' %}" class="btn-upgrade">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                    Upgrade to Create Flows
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Quick Links -->
+                        <div class="section-card">
+                            <a href="{% url 'leads_list' %}" class="quick-link">
+                                <div class="quick-link-content">
+                                    <div class="quick-link-icon leads">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+                                    <div class="quick-link-text">
+                                        <h6>Collected Leads</h6>
+                                        <p>View and export collected data</p>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-link-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-4 order-1 order-lg-2 mb-3 mb-lg-0">
+                        <!-- Recent Activity -->
+                        <div class="section-card">
+                            <div class="section-header">
+                                <h2 class="section-title">
+                                    <i class="bi bi-activity text-success"></i>
+                                    Recent Activity
+                                </h2>
+                            </div>
+
+                            {% if recent_sessions %}
+                            {% for session in recent_sessions|slice:":6" %}
+                            <div class="activity-item">
+                                <div class="activity-avatar">
+                                    {{ session.instagram_username|default:"U"|slice:":1"|upper }}
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-user">@{{ session.instagram_username|default:"user"|truncatechars:12 }}</div>
+                                    <div class="activity-flow">{{ session.flow.title|truncatechars:20 }}</div>
+                                </div>
+                                <div class="activity-meta">
+                                    {% if session.status == 'completed' %}
+                                    <span class="activity-status completed">Completed</span>
+                                    {% elif session.status == 'waiting_reply' %}
+                                    <span class="activity-status waiting">Waiting</span>
+                                    {% elif session.status == 'error' %}
+                                    <span class="activity-status error">Error</span>
+                                    {% else %}
+                                    <span class="activity-status active">Active</span>
+                                    {% endif %}
+                                    <div class="activity-time">{{ session.created_at|timesince|truncatewords:2 }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-chat-dots text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted small mt-2 mb-0">No activity yet</p>
+                                <p class="text-muted small">Activity will appear here when your flows run</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- How it Works (Desktop) -->
+                        <div class="section-card d-none d-lg-block">
+                            <div class="section-header">
+                                <h2 class="section-title">
+                                    <i class="bi bi-lightbulb text-warning"></i>
+                                    How It Works
+                                </h2>
+                            </div>
+                            <div class="how-it-works">
+                                <div class="how-step">
+                                    <div class="how-step-num">1</div>
+                                    <div class="how-step-text">Someone comments on your post with a trigger keyword</div>
+                                </div>
+                                <div class="how-step">
+                                    <div class="how-step-num">2</div>
+                                    <div class="how-step-text">Your flow automatically replies and sends a DM</div>
+                                </div>
+                                <div class="how-step">
+                                    <div class="how-step-num">3</div>
+                                    <div class="how-step-text">User interacts with quick reply buttons</div>
+                                </div>
+                                <div class="how-step">
+                                    <div class="how-step-num">4</div>
+                                    <div class="how-step-text">Collect leads and grow your business!</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Instagram Account -->
+                        <div class="section-card">
+                            <a href="{% url 'instagram_connect' %}" class="quick-link">
+                                <div class="quick-link-content">
+                                    <div class="quick-link-icon" style="background: linear-gradient(135deg, #E1306C 0%, #F56040 100%); color: white;">
+                                        <i class="bi bi-instagram"></i>
+                                    </div>
+                                    <div class="quick-link-text">
+                                        <h6>@{{ instagram_account.username|default:"Connected" }}</h6>
+                                        <p>Instagram Account</p>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-link-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Render keywords from data attribute
+    document.querySelectorAll('.flow-keywords').forEach(container => {
+        const keywords = container.dataset.keywords;
+        if (keywords) {
+            const keywordList = keywords.split(',').map(k => k.trim()).filter(k => k).slice(0, 5);
+            container.innerHTML = keywordList.map(kw =>
+                `<span class="flow-keyword">${kw}</span>`
+            ).join('');
+
+            // Add "more" indicator if there are more keywords
+            const allKeywords = keywords.split(',').filter(k => k.trim());
+            if (allKeywords.length > 5) {
+                container.innerHTML += `<span class="flow-keyword" style="background: #e0e0e0;">+${allKeywords.length - 5} more</span>`;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

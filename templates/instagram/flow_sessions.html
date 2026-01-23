@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Sessions: {{ flow.title }}{% endblock %}
+
+{% block content %}
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="mb-4">
+                    <a href="{% url 'flow_edit' flow.pk %}" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i>Back to {{ flow.title }}
+                    </a>
+                    <h3 class="mb-1 mt-2">
+                        <i class="bi bi-list-check text-primary me-2"></i>Flow Sessions
+                    </h3>
+                    <p class="text-muted">View users who have gone through this flow</p>
+                </div>
+
+                <!-- Stats -->
+                <div class="row mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body py-3">
+                                <h4 class="mb-0">{{ flow.total_triggered }}</h4>
+                                <small class="text-muted">Triggered</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body py-3">
+                                <h4 class="mb-0">{{ flow.total_completed }}</h4>
+                                <small class="text-muted">Completed</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body py-3">
+                                <h4 class="mb-0">{{ sessions.count }}</h4>
+                                <small class="text-muted">Sessions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body py-3">
+                                {% if flow.total_triggered > 0 %}
+                                <h4 class="mb-0">{{ flow.total_completed|floatformat:0 }}%</h4>
+                                {% else %}
+                                <h4 class="mb-0">0%</h4>
+                                {% endif %}
+                                <small class="text-muted">Completion Rate</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sessions List -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Recent Sessions</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if sessions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Current Step</th>
+                                        <th>Started</th>
+                                        <th>Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in sessions %}
+                                    <tr>
+                                        <td>
+                                            <strong>@{{ session.instagram_username|default:"unknown" }}</strong>
+                                            {% if session.trigger_comment_text %}
+                                            <small class="d-block text-muted">{{ session.trigger_comment_text|truncatechars:30 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if session.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                            {% elif session.status == 'error' %}
+                                            <span class="badge bg-danger">Error</span>
+                                            {% elif session.status == 'waiting_reply' %}
+                                            <span class="badge bg-warning">Waiting</span>
+                                            {% elif session.status == 'waiting_scheduled' %}
+                                            <span class="badge bg-info">Scheduled</span>
+                                            {% elif session.status == 'expired' %}
+                                            <span class="badge bg-secondary">Expired</span>
+                                            {% else %}
+                                            <span class="badge bg-primary">{{ session.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if session.current_node %}
+                                            <small>{{ session.current_node.get_node_type_display }}</small>
+                                            {% else %}
+                                            <small class="text-muted">-</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ session.created_at|date:"M j, Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if session.completed_at %}
+                                            <small>{{ session.completed_at|date:"M j, Y H:i" }}</small>
+                                            {% else %}
+                                            <small class="text-muted">-</small>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No sessions yet</p>
+                            <small class="text-muted">Sessions will appear here when users trigger this flow</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

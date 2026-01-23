@@ -227,6 +227,19 @@ class FlowEngine:
 
     def _handle_message_quick_reply(self, session: FlowSession, node: FlowNode):
         """Handle message_quick_reply node - sends a message with clickable buttons."""
+        # Prevent rapid duplicate execution (within 5 seconds) - allows legitimate re-clicks later
+        from datetime import timedelta
+        recent_cutoff = timezone.now() - timedelta(seconds=5)
+        recent_send = FlowExecutionLog.objects.filter(
+            session=session,
+            node=node,
+            action='message_sent',
+            created_at__gte=recent_cutoff
+        ).exclude(details__template_type='button').exists()
+        if recent_send:
+            logger.warning(f"Quick reply node {node.id} sent recently in session {session.id}, skipping duplicate")
+            return
+
         config = node.config or {}
         text = config.get('text', '')
         if not text:
@@ -301,9 +314,24 @@ class FlowEngine:
         - web_url: Opens a URL in in-app browser
         - postback: Sends a webhook notification with payload
         """
+        # Prevent rapid duplicate execution (within 5 seconds) - allows legitimate re-clicks later
+        from datetime import timedelta
+        recent_cutoff = timezone.now() - timedelta(seconds=5)
+        recent_send = FlowExecutionLog.objects.filter(
+            session=session,
+            node=node,
+            action='message_sent',
+            details__template_type='button',
+            created_at__gte=recent_cutoff
+        ).exists()
+        if recent_send:
+            logger.warning(f"Button template node {node.id} sent recently in session {session.id}, skipping duplicate")
+            return
+
         config = node.config or {}
         text = config.get('text', '')
-        buttons = config.get('buttons', [])
+        # Make a deep copy of buttons to avoid any reference issues
+        buttons = [dict(btn) for btn in config.get('buttons', [])]
 
         if not text:
             logger.warning("Button template node has no text")
@@ -329,7 +357,12 @@ class FlowEngine:
         # Process buttons - add session info to postback payloads
         processed_buttons = []
         for btn in buttons[:3]:  # Max 3 buttons
-            btn_type = btn.get('type', 'postback')
+            # Normalize type: empty string, None, or missing should be 'postback'
+            btn_type = btn.get('type') or 'postback'
+            btn_type = btn_type.lower().strip() if btn_type else 'postback'
+            if btn_type not in ('web_url', 'postback'):
+                btn_type = 'postback'  # Default to postback for unknown types
+
             processed_btn = {
                 'type': btn_type,
                 'title': btn.get('title', 'Button')

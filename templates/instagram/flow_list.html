@@ -210,6 +210,64 @@
         50% { opacity: 0.5; }
     }
 
+    /* Toggle switch */
+    .flow-toggle {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .flow-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .flow-toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.3s;
+        border-radius: 24px;
+    }
+
+    .flow-toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .flow-toggle input:checked + .flow-toggle-slider {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+
+    .flow-toggle input:checked + .flow-toggle-slider:before {
+        transform: translateX(20px);
+    }
+
+    .flow-toggle input:disabled + .flow-toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .flow-header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
     .flow-trigger {
         display: flex;
         align-items: center;
@@ -707,14 +765,20 @@
 
                             {% if flows %}
                             {% for flow in flows %}
-                            <div class="flow-card">
+                            <div class="flow-card" data-flow-id="{{ flow.pk }}">
                                 <div class="flow-card-header">
                                     <div>
                                         <h3 class="flow-title">{{ flow.title }}</h3>
                                         <span class="flow-status {% if flow.is_active %}active{% else %}inactive{% endif %}">
                                             <span class="flow-status-dot"></span>
-                                            {% if flow.is_active %}Active{% else %}Paused{% endif %}
+                                            <span class="flow-status-text">{% if flow.is_active %}Active{% else %}Paused{% endif %}</span>
                                         </span>
+                                    </div>
+                                    <div class="flow-header-right">
+                                        <label class="flow-toggle" title="{% if flow.is_active %}Click to pause{% else %}Click to activate{% endif %}">
+                                            <input type="checkbox" class="flow-active-toggle" data-flow-id="{{ flow.pk }}" {% if flow.is_active %}checked{% endif %}>
+                                            <span class="flow-toggle-slider"></span>
+                                        </label>
                                     </div>
                                 </div>
 
@@ -931,6 +995,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 container.innerHTML += `<span class="flow-keyword" style="background: #e0e0e0;">+${allKeywords.length - 5} more</span>`;
             }
         }
+    });
+
+    // Flow active toggle handler
+    document.querySelectorAll('.flow-active-toggle').forEach(toggle => {
+        toggle.addEventListener('change', async function() {
+            const flowId = this.dataset.flowId;
+            const isActive = this.checked;
+            const card = this.closest('.flow-card');
+            const statusSpan = card.querySelector('.flow-status');
+            const statusText = card.querySelector('.flow-status-text');
+
+            // Disable toggle while processing
+            this.disabled = true;
+
+            try {
+                const response = await fetch(`/instagram/flows/${flowId}/toggle-active/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ is_active: isActive })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update UI
+                    if (data.is_active) {
+                        statusSpan.classList.remove('inactive');
+                        statusSpan.classList.add('active');
+                        statusText.textContent = 'Active';
+                        this.closest('.flow-toggle').title = 'Click to pause';
+                    } else {
+                        statusSpan.classList.remove('active');
+                        statusSpan.classList.add('inactive');
+                        statusText.textContent = 'Paused';
+                        this.closest('.flow-toggle').title = 'Click to activate';
+                    }
+                } else {
+                    // Revert toggle on error
+                    this.checked = !isActive;
+                    alert(data.error || 'Failed to update flow status');
+                }
+            } catch (error) {
+                // Revert toggle on error
+                this.checked = !isActive;
+                alert('Failed to update flow status. Please try again.');
+            } finally {
+                this.disabled = false;
+            }
+        });
     });
 });
 </script>

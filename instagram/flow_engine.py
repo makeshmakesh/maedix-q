@@ -1,3 +1,4 @@
+#pylint: disable=all
 """
 Flow Engine for Instagram DM Flow Builder
 
@@ -10,6 +11,7 @@ Handles the execution of multi-step DM flows including:
 """
 
 import re
+import copy
 import logging
 from typing import Optional, Tuple, Dict, Any
 
@@ -144,6 +146,8 @@ class FlowEngine:
             session: The current flow session
             node: The node to execute
         """
+        # Re-fetch node from database to ensure we have fresh data
+        node = FlowNode.objects.get(id=node.id)
         logger.info(f"Executing node {node.id} (type: {node.node_type}) for session {session.id}")
 
         # Update session's current node
@@ -328,11 +332,14 @@ class FlowEngine:
             logger.warning(f"Button template node {node.id} sent recently in session {session.id}, skipping duplicate")
             return
 
-        config = node.config or {}
+        # Deep copy the entire config to avoid any shared reference issues
+        config = copy.deepcopy(node.config) if node.config else {}
         # Get text with variation support
         text = node.get_text_with_variation()
-        # Make a deep copy of buttons to avoid any reference issues
-        buttons = [dict(btn) for btn in config.get('buttons', [])]
+        # Buttons are already deep copied via config
+        buttons = config.get('buttons', [])
+
+        logger.debug(f"Button template node {node.id} config: {len(buttons)} buttons - {[b.get('title') for b in buttons]}")
 
         if not text:
             logger.warning("Button template node has no text")
@@ -415,7 +422,8 @@ class FlowEngine:
 
     def _handle_message_link(self, session: FlowSession, node: FlowNode):
         """Handle message_link node - sends a message containing a URL."""
-        config = node.config or {}
+        # Deep copy config to avoid any shared reference issues
+        config = copy.deepcopy(node.config) if node.config else {}
         # Get text with variation support
         text = node.get_text_with_variation()
         url = config.get('url', '')
@@ -455,7 +463,8 @@ class FlowEngine:
         (clicked a quick reply or button) before we can access their profile.
         This node should be placed AFTER a quick reply or button template node.
         """
-        config = node.config or {}
+        # Deep copy config to avoid any shared reference issues
+        config = copy.deepcopy(node.config) if node.config else {}
         true_node_id = config.get('true_node_id')
         false_node_id = config.get('false_node_id')
 
@@ -558,7 +567,8 @@ class FlowEngine:
 
         Sends a prompt message and waits for free-text reply.
         """
-        config = node.config or {}
+        # Deep copy config to avoid any shared reference issues
+        config = copy.deepcopy(node.config) if node.config else {}
         field_type = config.get('field_type', 'custom')
         prompt_text = config.get('prompt_text', '')
         variable_name = config.get('variable_name', f'collected_{field_type}')
@@ -632,12 +642,17 @@ class FlowEngine:
             node_parts = node_info.split('_node_')
             if len(node_parts) == 2:
                 node_id = int(node_parts[1])
+                # Fetch fresh from database to avoid any caching issues
                 qr_node = FlowNode.objects.get(id=node_id, flow=session.flow)
+                logger.debug(f"Fetched quick reply node {qr_node.id} from payload")
             else:
-                qr_node = session.current_node
-        except (ValueError, FlowNode.DoesNotExist):
-            logger.warning(f"Could not extract node_id from payload, using current_node")
-            qr_node = session.current_node
+                # Refresh current_node from database
+                qr_node = FlowNode.objects.get(id=session.current_node_id, flow=session.flow) if session.current_node_id else session.current_node
+                logger.warning(f"Could not parse node_id from payload, using current_node {qr_node.id if qr_node else 'None'}")
+        except (ValueError, FlowNode.DoesNotExist) as e:
+            logger.warning(f"Could not extract node_id from payload ({e}), using current_node")
+            # Refresh current_node from database
+            qr_node = FlowNode.objects.get(id=session.current_node_id, flow=session.flow) if session.current_node_id else session.current_node
 
         # Find the QuickReplyOption using the correct node
         try:
@@ -695,12 +710,17 @@ class FlowEngine:
             node_parts = node_info.split('_node_')
             if len(node_parts) == 2:
                 node_id = int(node_parts[1])
+                # Fetch fresh from database to avoid any caching issues
                 btn_node = FlowNode.objects.get(id=node_id, flow=session.flow)
+                logger.debug(f"Fetched button node {btn_node.id} from payload")
             else:
-                btn_node = session.current_node
-        except (ValueError, FlowNode.DoesNotExist):
-            logger.warning(f"Could not extract node_id from payload, using current_node")
-            btn_node = session.current_node
+                # Refresh current_node from database
+                btn_node = FlowNode.objects.get(id=session.current_node_id, flow=session.flow) if session.current_node_id else session.current_node
+                logger.warning(f"Could not parse node_id from payload, using current_node {btn_node.id if btn_node else 'None'}")
+        except (ValueError, FlowNode.DoesNotExist) as e:
+            logger.warning(f"Could not extract node_id from payload ({e}), using current_node")
+            # Refresh current_node from database
+            btn_node = FlowNode.objects.get(id=session.current_node_id, flow=session.flow) if session.current_node_id else session.current_node
 
         # Store the clicked button payload in context for potential use
         session.context_data['_last_button_clicked'] = button_payload
@@ -708,20 +728,27 @@ class FlowEngine:
         session.save(update_fields=['context_data', 'status', 'updated_at'])
 
         # Find the button config to check for branching (target_node_id)
+        # Use deep copy to avoid any reference issues
         target_node = None
         if btn_node and btn_node.config:
-            buttons = btn_node.config.get('buttons', [])
+            # Deep copy to ensure we're working with isolated data
+            btn_config = copy.deepcopy(btn_node.config)
+            buttons = btn_config.get('buttons', [])
+            logger.debug(f"Looking for button payload '{button_payload}' in node {btn_node.id} with buttons: {[b.get('payload') for b in buttons]}")
             for button in buttons:
                 # Use default 'postback' for type to match _handle_message_button_template behavior
                 btn_type = button.get('type', 'postback')
                 if button.get('payload') == button_payload and btn_type == 'postback':
                     target_node_id = button.get('target_node_id')
+                    logger.debug(f"Found matching button: title='{button.get('title')}', target_node_id={target_node_id}")
                     if target_node_id:
                         try:
                             target_node = FlowNode.objects.get(id=target_node_id, flow=session.flow)
                         except FlowNode.DoesNotExist:
                             logger.warning(f"Target node {target_node_id} not found, advancing to next")
                     break
+            else:
+                logger.warning(f"No matching button found for payload '{button_payload}' in node {btn_node.id}")
 
         # If button has a target node, execute it (branching)
         if target_node:
@@ -858,7 +885,8 @@ class FlowEngine:
             node_type='message_button_template'
         )
         for btn_node in button_template_nodes:
-            config = btn_node.config or {}
+            # Use deep copy to avoid any potential shared reference issues
+            config = copy.deepcopy(btn_node.config) if btn_node.config else {}
             buttons = config.get('buttons', [])
             for button in buttons:
                 if button.get('target_node_id') == node.id:

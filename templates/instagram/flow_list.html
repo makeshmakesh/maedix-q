@@ -674,7 +674,11 @@
                             {% endif %}
                         </div>
 
-                        <div class="flex-shrink-0">
+                        <div class="flex-shrink-0 d-flex gap-2">
+                            <a href="{% url 'flow_builder_help' %}" class="btn btn-outline-light btn-sm" title="Learn how to build flows">
+                                <i class="bi bi-question-circle"></i>
+                                <span class="d-none d-sm-inline ms-1">Help</span>
+                            </a>
                             {% if can_create_more %}
                             <a href="{% url 'flow_create' %}" class="btn-create-flow">
                                 <i class="bi bi-plus-lg"></i>

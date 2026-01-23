@@ -549,6 +549,14 @@ class AutomationLandingView(View):
         return render(request, self.template_name, context)
 
 
+class FlowBuilderHelpView(LoginRequiredMixin, View):
+    """Help page explaining flow builder node types"""
+    template_name = 'instagram/flow_builder_help.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
+
+
 # =============================================================================
 # Instagram Posts API
 # =============================================================================
@@ -784,7 +792,6 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             # Get quick replies for this node
             quick_replies = []
             for qr in node.quick_reply_options.all().order_by('order'):
-                print(f"[LOAD] Node {node.id} QR: id={qr.id}, title={qr.title}, target_node_id={qr.target_node_id}")
                 quick_replies.append({
                     'id': qr.id,
                     'title': qr.title,
@@ -802,10 +809,6 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'quick_replies': quick_replies,
                 'next_node_id': node.next_node_id
             })
-            if node.node_type == 'message_quick_reply':
-                print(f"[LOAD] Quick reply node {node.id} sending: quick_replies={quick_replies}")
-            if node.next_node_id:
-                print(f"[LOAD] Node {node.id} has next_node_id={node.next_node_id}")
 
         context = {
             'flow': flow,
@@ -889,9 +892,6 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         try:
             data = json.loads(request.body)
             nodes_data = data.get('nodes', [])
-            print(f"[SAVE] Received {len(nodes_data)} nodes")
-            for nd in nodes_data:
-                print(f"[SAVE]   Node: id={nd.get('id')}, type={nd.get('node_type')}, quick_replies={nd.get('quick_replies')}")
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
@@ -912,13 +912,11 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 # Step 2: Delete nodes that are NOT being kept BEFORE creating new ones
                 # This prevents unique constraint violations on (flow_id, order)
                 deleted_count = flow.nodes.exclude(id__in=existing_node_ids_to_keep).delete()[0]
-                print(f"[SAVE] Deleted {deleted_count} old nodes")
 
                 # Step 3: Temporarily shift all existing node orders to avoid unique constraint conflicts
                 # This handles cases where nodes are being reordered (e.g., node A order 0->1, node B order 1->0)
                 for idx, node_id in enumerate(existing_node_ids_to_keep):
                     FlowNode.objects.filter(id=node_id).update(order=10000 + idx)
-                print(f"[SAVE] Temporarily shifted orders for {len(existing_node_ids_to_keep)} existing nodes")
 
                 # Step 4: Create/update all nodes (without resolving target_node_ids)
                 for node_data in nodes_data:
@@ -929,6 +927,12 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     order = node_data.get('order', 0)
                     # Deep copy config to prevent any shared reference issues
                     config = copy.deepcopy(node_data.get('config', {}))
+
+                    # Filter out empty variations
+                    if 'variations' in config:
+                        config['variations'] = [v for v in config['variations'] if v and v.strip()]
+                        if not config['variations']:
+                            del config['variations']
 
                     # Save visual editor positions in config
                     pos_x = node_data.get('pos_x')
@@ -986,8 +990,6 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                         obj_key = temp_id or drawflow_id or f"new_db_{node.id}"
                         node_objects[obj_key] = (node, node_data)
 
-                print(f"[SAVE] First pass complete. new_node_map: {new_node_map}")
-
                 # Helper to resolve target_node_id (handles int, "new_X", "node_X", etc.)
                 def resolve_target_id(target_id):
                     if target_id is None or target_id == '':
@@ -1030,7 +1032,6 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                         if resolved_next != node.next_node_id:
                             node.next_node_id = resolved_next
                             node.save(update_fields=['next_node_id'])
-                            print(f"[SAVE] Set next_node_id={resolved_next} for node {node.id}")
 
                     # Handle button template target_node_ids
                     if node.node_type == 'message_button_template' and config.get('buttons'):
@@ -1055,26 +1056,22 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
                     # Handle quick replies
                     quick_replies_data = node_data.get('quick_replies', [])
-                    print(f"[SAVE] Processing node {node.id} ({node.node_type}), quick_replies_data: {quick_replies_data}")
 
                     if node.node_type == 'message_quick_reply':
                         # Delete existing quick replies for this node
-                        deleted = node.quick_reply_options.all().delete()
-                        print(f"[SAVE] Deleted {deleted} existing quick reply options")
+                        node.quick_reply_options.all().delete()
 
                         # Create new quick replies with resolved target_node_ids
                         for idx, qr_data in enumerate(quick_replies_data):
                             raw_target = qr_data.get('target_node_id')
                             resolved_target = resolve_target_id(raw_target)
-                            print(f"[SAVE]   QR {idx}: title={qr_data.get('title')}, raw_target={raw_target}, resolved={resolved_target}")
-                            qr = QuickReplyOption.objects.create(
+                            QuickReplyOption.objects.create(
                                 node=node,
                                 title=qr_data.get('title', ''),
                                 payload=qr_data.get('payload', f'qr_{idx}'),
                                 order=idx,
                                 target_node_id=resolved_target
                             )
-                            print(f"[SAVE]   Created QR option id={qr.id}, target_node_id={qr.target_node_id}")
 
                 # Note: Deletion already happened at the beginning of the transaction
 

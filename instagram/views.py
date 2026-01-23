@@ -327,8 +327,21 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
         try:
             if hasattr(request.user, 'instagram_account'):
                 instagram_account = request.user.instagram_account
+
+                # Unsubscribe from webhook events before disconnecting
+                if instagram_account.instagram_user_id and instagram_account.access_token:
+                    try:
+                        url = f"https://graph.instagram.com/v21.0/{instagram_account.instagram_user_id}/subscribed_apps"
+                        params = {"access_token": instagram_account.access_token}
+                        response = requests.delete(url, params=params, timeout=10)
+                        print(f"Webhook unsubscribe on disconnect: {response.json()}")
+                    except Exception as e:
+                        logger.warning(f"Failed to unsubscribe webhooks on disconnect: {e}")
+
                 instagram_account.access_token = None
                 instagram_account.is_active = False
+                if instagram_account.instagram_data:
+                    instagram_account.instagram_data["webhook_subscribed"] = False
                 instagram_account.save()
                 messages.success(request, "Instagram account disconnected.")
             return redirect("instagram_connect")
@@ -406,6 +419,75 @@ class InstagramWebhookSubscribeView(LoginRequiredMixin, View):
             }, status=500)
         except Exception as e:
             logger.error(f"Error subscribing to webhook events: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+class InstagramWebhookUnsubscribeView(LoginRequiredMixin, View):
+    """Unsubscribe from Instagram webhook events"""
+
+    def post(self, request):
+        try:
+            if not hasattr(request.user, 'instagram_account'):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No Instagram account connected'
+                }, status=400)
+
+            instagram_account = request.user.instagram_account
+
+            ig_user_id = instagram_account.instagram_user_id
+            access_token = instagram_account.access_token
+
+            if not ig_user_id or not access_token:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Missing account credentials'
+                }, status=400)
+
+            # Use DELETE method to unsubscribe
+            url = f"https://graph.instagram.com/v21.0/{ig_user_id}/subscribed_apps"
+
+            params = {
+                "access_token": access_token,
+            }
+
+            print(f"Unsubscribing from webhook events for: {ig_user_id}")
+
+            response = requests.delete(url, params=params, timeout=10)
+            response_data = response.json()
+
+            print(f"Instagram unsubscribe response: {response_data}")
+
+            if response.status_code == 200 and response_data.get("success"):
+                if instagram_account.instagram_data:
+                    instagram_account.instagram_data["webhook_subscribed"] = False
+                else:
+                    instagram_account.instagram_data = {"webhook_subscribed": False}
+                instagram_account.save(update_fields=["instagram_data"])
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Successfully unsubscribed from webhook events'
+                })
+            else:
+                error_message = response_data.get("error", {}).get("message", "Unknown error")
+                logger.error(f"Failed to unsubscribe: {error_message}")
+                return JsonResponse({
+                    'success': False,
+                    'error': error_message
+                }, status=400)
+
+        except requests.RequestException as e:
+            logger.error(f"Request error during unsubscribe: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Network error: {str(e)}'
+            }, status=500)
+        except Exception as e:
+            logger.error(f"Error unsubscribing from webhook events: {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': str(e)

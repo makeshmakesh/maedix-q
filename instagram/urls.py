@@ -8,6 +8,7 @@ urlpatterns = [
     path('callback/', views.InstagramCallbackView.as_view(), name='instagram_callback'),
     path('disconnect/', views.InstagramDisconnectView.as_view(), name='instagram_disconnect'),
     path('subscribe/', views.InstagramWebhookSubscribeView.as_view(), name='instagram_subscribe'),
+    path('unsubscribe/', views.InstagramWebhookUnsubscribeView.as_view(), name='instagram_unsubscribe'),
     path('post/', views.InstagramPostPageView.as_view(), name='instagram_post_page'),
 
     # Instagram Posts API

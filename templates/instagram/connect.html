@@ -42,9 +42,12 @@
                                 <td class="text-muted">Webhook Events</td>
                                 <td>
                                     {% if instagram_account.instagram_data.webhook_subscribed %}
-                                    <span class="badge bg-success">Subscribed</span>
+                                    <span class="badge bg-success" id="webhookStatus">Subscribed</span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="unsubscribeBtn">
+                                        Unsubscribe
+                                    </button>
                                     {% else %}
-                                    <span class="badge bg-warning text-dark">Not Subscribed</span>
+                                    <span class="badge bg-warning text-dark" id="webhookStatus">Not Subscribed</span>
                                     <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="subscribeBtn">
                                         Subscribe Now
                                     </button>
@@ -162,6 +165,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const subscribeBtn = document.getElementById('subscribeBtn');
+    const unsubscribeBtn = document.getElementById('unsubscribeBtn');
+
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', function() {
             const btn = this;
@@ -179,10 +184,47 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Replace button with success badge
-                    btn.parentElement.innerHTML = '<span class="badge bg-success">Subscribed</span>';
+                    // Reload page to show updated status
+                    location.reload();
                 } else {
                     alert('Subscription failed: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+    }
+
+    if (unsubscribeBtn) {
+        unsubscribeBtn.addEventListener('click', function() {
+            if (!confirm('Are you sure you want to unsubscribe from webhook events? Automations will stop working.')) {
+                return;
+            }
+
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Unsubscribing...';
+
+            fetch('{% url "instagram_unsubscribe" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show updated status
+                    location.reload();
+                } else {
+                    alert('Unsubscribe failed: ' + (data.error || 'Unknown error'));
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }

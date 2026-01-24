@@ -177,6 +177,7 @@
 .node-header.button-template { background: var(--primary-light); color: var(--primary-dark); }
 .node-header.link-message { background: #fff3cd; color: #664d03; }
 .node-header.follower-check { background: #f8d7da; color: #842029; }
+.node-header.user-interacted { background: #e2d4f0; color: #5a2d82; }
 .node-header.collect-data { background: #f5d0e1; color: #8c1e56; }
 
 .node-body {
@@ -760,6 +761,7 @@
 .form-node-header .node-icon.button-template { background: var(--primary-dark); color: white; }
 .form-node-header .node-icon.link-message { background: #ffc107; color: #212529; }
 .form-node-header .node-icon.follower-check { background: #dc3545; color: white; }
+.form-node-header .node-icon.user-interacted { background: #5a2d82; color: white; }
 .form-node-header .node-icon.collect-data { background: #d63384; color: white; }
 
 .form-node-header .node-title {
@@ -1384,6 +1386,11 @@
                     </div>
                     {% endif %}
 
+                    <div class="palette-item" draggable="true" data-node="condition_user_interacted">
+                        <i class="bi bi-person-lines-fill" style="color: #5a2d82;"></i>
+                        <span>Returning User</span>
+                    </div>
+
                     <div class="palette-item disabled" title="Coming Soon">
                         <i class="bi bi-input-cursor-text text-muted"></i>
                         <span class="text-muted">Collect Data</span>
@@ -1709,6 +1716,9 @@
                                     <i class="bi bi-person-check text-danger"></i>Follower Check
                                 </a></li>
                                 {% endif %}
+                                <li><a class="dropdown-item" href="#" data-add-node="condition_user_interacted">
+                                    <i class="bi bi-person-lines-fill" style="color: #5a2d82;"></i>Returning User
+                                </a></li>
                                 <li><a class="dropdown-item disabled text-muted" href="#">
                                     <i class="bi bi-input-cursor-text"></i>Collect Data
                                     <span class="badge bg-secondary ms-2" style="font-size: 9px;">Coming Soon</span>
@@ -1779,6 +1789,7 @@ function generateNodeHtml(type, data = {}) {
         'message_button_template': { class: 'button-template', icon: 'bi-menu-button-wide', title: 'Button Template' },
         'message_link': { class: 'link-message', icon: 'bi-link', title: 'Link Message' },
         'condition_follower': { class: 'follower-check', icon: 'bi-person-check', title: 'Follower Check' },
+        'condition_user_interacted': { class: 'user-interacted', icon: 'bi-person-lines-fill', title: 'Returning User' },
         'collect_data': { class: 'collect-data', icon: 'bi-input-cursor-text', title: 'Collect Data' }
     };
 
@@ -1864,6 +1875,24 @@ function generateNodeHtml(type, data = {}) {
             `;
             break;
 
+        case 'condition_user_interacted':
+            const timePeriodLabels = { 'ever': 'Ever', '24h': 'Last 24h', '7d': 'Last 7 days', '30d': 'Last 30 days' };
+            const timePeriod = data.time_period || 'ever';
+            bodyHtml = `<div class="text-muted small">Completed flow (${timePeriodLabels[timePeriod] || 'Ever'})</div>`;
+            outputsHtml = `
+                <div class="node-outputs">
+                    <div class="output-row" data-output="1">
+                        <span class="output-label follower"><i class="bi bi-arrow-repeat me-1"></i>Returning</span>
+                        <span class="output-dot green"></span>
+                    </div>
+                    <div class="output-row" data-output="2">
+                        <span class="output-label not-follower"><i class="bi bi-plus-circle me-1"></i>New User</span>
+                        <span class="output-dot red"></span>
+                    </div>
+                </div>
+            `;
+            break;
+
         case 'collect_data':
             const fieldType = data.field_type || 'email';
             const prompt = data.prompt_text || 'Enter your info...';
@@ -1899,6 +1928,9 @@ function getOutputCount(type, data) {
     switch (type) {
         case 'condition_follower':
             return 2; // Follower / Not Follower
+
+        case 'condition_user_interacted':
+            return 2; // Returning User / New User
 
         case 'message_quick_reply':
             return (data.quick_replies || []).length || 1;
@@ -2080,6 +2112,10 @@ function loadExistingFlow() {
                 if (node.config.true_node_id) branchTargetNodeIds.add(node.config.true_node_id);
                 if (node.config.false_node_id) branchTargetNodeIds.add(node.config.false_node_id);
             }
+            if (node.node_type === 'condition_user_interacted') {
+                if (node.config.true_node_id) branchTargetNodeIds.add(node.config.true_node_id);
+                if (node.config.false_node_id) branchTargetNodeIds.add(node.config.false_node_id);
+            }
             if (node.node_type === 'message_quick_reply' && node.quick_replies) {
                 node.quick_replies.forEach(qr => {
                     if (qr.target_node_id) branchTargetNodeIds.add(qr.target_node_id);
@@ -2102,6 +2138,7 @@ function loadExistingFlow() {
 
             // Skip branching nodes - they have their own connection logic
             if (currentNode.node_type === 'condition_follower') return;
+            if (currentNode.node_type === 'condition_user_interacted') return;
             if (currentNode.node_type === 'message_quick_reply') return;
             if (currentNode.node_type === 'message_button_template') return;
 
@@ -2134,6 +2171,17 @@ function loadExistingFlow() {
                     editor.addConnection(fromId, dbToDrawflow[node.config.true_node_id], 'output_1', 'input_1');
                 }
                 // Not follower branch (output_2)
+                if (node.config.false_node_id && dbToDrawflow[node.config.false_node_id]) {
+                    editor.addConnection(fromId, dbToDrawflow[node.config.false_node_id], 'output_2', 'input_1');
+                }
+            }
+
+            if (node.node_type === 'condition_user_interacted') {
+                // Returning user branch (output_1)
+                if (node.config.true_node_id && dbToDrawflow[node.config.true_node_id]) {
+                    editor.addConnection(fromId, dbToDrawflow[node.config.true_node_id], 'output_1', 'input_1');
+                }
+                // New user branch (output_2)
                 if (node.config.false_node_id && dbToDrawflow[node.config.false_node_id]) {
                     editor.addConnection(fromId, dbToDrawflow[node.config.false_node_id], 'output_2', 'input_1');
                 }
@@ -2360,6 +2408,11 @@ function renderConfigFields(nodeType, data) {
 
         case 'condition_follower':
             html = `
+                <div class="alert alert-warning small mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Requires user interaction first!</strong><br>
+                    This node only works if a Quick Reply or Button Template appears <em>before</em> it in the flow, or if the user has already messaged you in this session.
+                </div>
                 <div class="alert alert-info small mb-3">
                     <i class="bi bi-info-circle me-1"></i>
                     This node checks if the user follows your account.
@@ -2378,6 +2431,39 @@ function renderConfigFields(nodeType, data) {
                     </div>
                 </div>
                 <p class="text-muted small">Connect the green output to the path for followers, and the red output for non-followers.</p>
+            `;
+            break;
+
+        case 'condition_user_interacted':
+            html = `
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Checks if user has previously completed this flow.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Time Period</label>
+                    <select class="form-select" name="time_period">
+                        <option value="ever" ${data.time_period === 'ever' || !data.time_period ? 'selected' : ''}>Ever</option>
+                        <option value="24h" ${data.time_period === '24h' ? 'selected' : ''}>Last 24 hours</option>
+                        <option value="7d" ${data.time_period === '7d' ? 'selected' : ''}>Last 7 days</option>
+                        <option value="30d" ${data.time_period === '30d' ? 'selected' : ''}>Last 30 days</option>
+                    </select>
+                    <small class="text-muted">How far back to check for completed sessions</small>
+                </div>
+                <div class="mb-3">
+                    <strong>Outputs:</strong>
+                    <div class="mt-2">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="output-dot green me-2" style="display:inline-block;width:12px;height:12px;border-radius:50%;"></span>
+                            <span><strong>Returning User</strong> - Has completed before</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="output-dot red me-2" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#dc3545;"></span>
+                            <span><strong>New User</strong> - First time</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted small">Connect the green output for returning users, red for new users.</p>
             `;
             break;
 
@@ -2622,6 +2708,10 @@ document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
             config.field_type = formData.get('field_type');
             config.prompt_text = formData.get('prompt_text');
             config.variable_name = formData.get('variable_name');
+            break;
+
+        case 'condition_user_interacted':
+            config.time_period = formData.get('time_period') || 'ever';
             break;
     }
 
@@ -3320,7 +3410,7 @@ function saveFlow() {
         // Save next_node_id for regular sequential connections (output_1 -> next node)
         // This applies to non-branching nodes like message_text, message_link, comment_reply
         // For branching nodes, output_1 is handled separately (e.g., follower check true branch)
-        const isBranchingNode = ['condition_follower', 'message_quick_reply', 'message_button_template'].includes(savedData.type);
+        const isBranchingNode = ['condition_follower', 'condition_user_interacted', 'message_quick_reply', 'message_button_template'].includes(savedData.type);
         if (!isBranchingNode) {
             if (outputs.output_1?.connections?.length > 0) {
                 const targetDrawflowId = outputs.output_1.connections[0].node;
@@ -3333,6 +3423,22 @@ function saveFlow() {
 
         if (savedData.type === 'condition_follower') {
             // output_1 = follower (true), output_2 = not follower (false)
+            if (outputs.output_1?.connections?.length > 0) {
+                const targetDrawflowId = outputs.output_1.connections[0].node;
+                node.config.true_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
+            } else {
+                node.config.true_node_id = null;
+            }
+            if (outputs.output_2?.connections?.length > 0) {
+                const targetDrawflowId = outputs.output_2.connections[0].node;
+                node.config.false_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
+            } else {
+                node.config.false_node_id = null;
+            }
+        }
+
+        if (savedData.type === 'condition_user_interacted') {
+            // output_1 = returning user (true), output_2 = new user (false)
             if (outputs.output_1?.connections?.length > 0) {
                 const targetDrawflowId = outputs.output_1.connections[0].node;
                 node.config.true_node_id = nodeDataMap[targetDrawflowId]?.dbId || `new_${targetDrawflowId}`;
@@ -3450,6 +3556,7 @@ const NODE_TYPES = {
     'message_button_template': { icon: 'bi-menu-button-wide', class: 'button-template', title: 'Button Template' },
     'message_link': { icon: 'bi-link', class: 'link-message', title: 'Link Message' },
     'condition_follower': { icon: 'bi-person-check', class: 'follower-check', title: 'Follower Check' },
+    'condition_user_interacted': { icon: 'bi-person-lines-fill', class: 'user-interacted', title: 'Returning User' },
     'collect_data': { icon: 'bi-input-cursor-text', class: 'collect-data', title: 'Collect Data' }
 };
 
@@ -3480,6 +3587,45 @@ function initFormNodesFromDB() {
         delete node.config.quick_replies;
 
         formNodes.push(node);
+    });
+
+    // Sequential fallback: if node has no explicit nextNodeId and is not a branching type,
+    // connect it to the next node in order (same logic as Visual Editor)
+    const branchingTypes = ['condition_follower', 'condition_user_interacted', 'message_quick_reply', 'message_button_template'];
+
+    // Collect all branch target IDs
+    const branchTargetIds = new Set();
+    formNodes.forEach(node => {
+        if (node.type === 'condition_follower' || node.type === 'condition_user_interacted') {
+            if (node.config.true_node_id) branchTargetIds.add(node.config.true_node_id);
+            if (node.config.false_node_id) branchTargetIds.add(node.config.false_node_id);
+        }
+        if (node.type === 'message_quick_reply' && node.quickReplies) {
+            node.quickReplies.forEach(qr => {
+                if (qr.targetNodeId) branchTargetIds.add(qr.targetNodeId);
+            });
+        }
+        if (node.type === 'message_button_template' && node.config?.buttons) {
+            node.config.buttons.forEach(btn => {
+                if (btn.target_node_id) branchTargetIds.add(btn.target_node_id);
+            });
+        }
+        if (node.nextNodeId) branchTargetIds.add(node.nextNodeId);
+    });
+
+    formNodes.forEach((node, i) => {
+        // Skip if already has explicit nextNodeId
+        if (node.nextNodeId) return;
+        // Skip branching nodes
+        if (branchingTypes.includes(node.type)) return;
+        // Skip if this node is a branch target (don't chain sequentially)
+        if (branchTargetIds.has(node.dbId)) return;
+
+        // Connect to next node in order
+        const nextNode = formNodes[i + 1];
+        if (nextNode) {
+            node.nextNodeId = nextNode.dbId;
+        }
     });
 }
 
@@ -3589,6 +3735,20 @@ function analyzeFlowConnections() {
             }
         }
 
+        // Returning user check branches
+        if (node.type === 'condition_user_interacted') {
+            if (node.config.true_node_id) {
+                const targetId = node.config.true_node_id;
+                if (!connections[targetId]) connections[targetId] = [];
+                connections[targetId].push({ from: nodeId, fromIndex: idx, type: 'returning_user' });
+            }
+            if (node.config.false_node_id) {
+                const targetId = node.config.false_node_id;
+                if (!connections[targetId]) connections[targetId] = [];
+                connections[targetId].push({ from: nodeId, fromIndex: idx, type: 'new_user' });
+            }
+        }
+
         // Quick reply buttons
         if (node.type === 'message_quick_reply' && node.quickReplies) {
             node.quickReplies.forEach((qr, i) => {
@@ -3638,6 +3798,10 @@ function buildConnectionBadges(node, index, connections) {
                 return `<span class="badge bg-success"><i class="bi bi-person-check me-1"></i>If Follower (Node ${stepNum})</span>`;
             case 'not_follower':
                 return `<span class="badge bg-danger"><i class="bi bi-person-x me-1"></i>If Not Follower (Node ${stepNum})</span>`;
+            case 'returning_user':
+                return `<span class="badge bg-success"><i class="bi bi-arrow-repeat me-1"></i>If Returning (Node ${stepNum})</span>`;
+            case 'new_user':
+                return `<span class="badge bg-danger"><i class="bi bi-plus-circle me-1"></i>If New User (Node ${stepNum})</span>`;
             case 'qr':
                 return `<span class="badge bg-info"><i class="bi bi-ui-radios me-1"></i>"${conn.label}" (Node ${stepNum})</span>`;
             case 'button':
@@ -3791,9 +3955,10 @@ function buildNodeFields(node, index) {
 
         case 'condition_follower':
             html = `
-                <div class="alert alert-info small mb-3">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Checks if user follows you and branches accordingly.
+                <div class="alert alert-warning small mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Requires user interaction first!</strong><br>
+                    This node only works if a Quick Reply or Button Template appears <em>before</em> it in the flow, or if the user has already messaged you.
                 </div>
                 <div class="form-node-connection follower mb-2">
                     <div class="connection-label"><i class="bi bi-check-circle text-success me-1"></i>If Follower:</div>
@@ -3804,6 +3969,38 @@ function buildNodeFields(node, index) {
                 <div class="form-node-connection not-follower">
                     <div class="connection-label"><i class="bi bi-x-circle text-danger me-1"></i>If Not Follower:</div>
                     <select class="form-select form-select-sm follower-target" data-branch="false">
+                        ${buildTargetOptions(node.config.false_node_id, index)}
+                    </select>
+                </div>
+            `;
+            break;
+
+        case 'condition_user_interacted':
+            const timePeriodLabels = { 'ever': 'Ever', '24h': 'Last 24 hours', '7d': 'Last 7 days', '30d': 'Last 30 days' };
+            const currentTimePeriod = node.config.time_period || 'ever';
+            html = `
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Checks if user has completed this flow before.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Time Period</label>
+                    <select class="form-select form-select-sm node-field" data-field="time_period">
+                        <option value="ever" ${currentTimePeriod === 'ever' ? 'selected' : ''}>Ever</option>
+                        <option value="24h" ${currentTimePeriod === '24h' ? 'selected' : ''}>Last 24 hours</option>
+                        <option value="7d" ${currentTimePeriod === '7d' ? 'selected' : ''}>Last 7 days</option>
+                        <option value="30d" ${currentTimePeriod === '30d' ? 'selected' : ''}>Last 30 days</option>
+                    </select>
+                </div>
+                <div class="form-node-connection returning mb-2">
+                    <div class="connection-label"><i class="bi bi-arrow-repeat text-success me-1"></i>If Returning User:</div>
+                    <select class="form-select form-select-sm user-interacted-target" data-branch="true">
+                        ${buildTargetOptions(node.config.true_node_id, index)}
+                    </select>
+                </div>
+                <div class="form-node-connection new-user">
+                    <div class="connection-label"><i class="bi bi-plus-circle text-danger me-1"></i>If New User:</div>
+                    <select class="form-select form-select-sm user-interacted-target" data-branch="false">
                         ${buildTargetOptions(node.config.false_node_id, index)}
                     </select>
                 </div>
@@ -4033,6 +4230,15 @@ function attachFormEventHandlers() {
                 node.config.false_node_id = e.target.value || null;
             }
         }
+        // User interacted check targets
+        else if (e.target.classList.contains('user-interacted-target')) {
+            const branch = e.target.dataset.branch;
+            if (branch === 'true') {
+                node.config.true_node_id = e.target.value || null;
+            } else {
+                node.config.false_node_id = e.target.value || null;
+            }
+        }
         // Next node selector
         else if (e.target.classList.contains('next-node-select')) {
             node.nextNodeId = e.target.value || null;
@@ -4096,6 +4302,10 @@ document.querySelectorAll('[data-add-node]').forEach(item => {
 
         if (nodeType === 'message_button_template') {
             newNode.config.buttons = [{ type: 'postback', title: '', payload: 'btn_0' }];
+        }
+
+        if (nodeType === 'condition_user_interacted') {
+            newNode.config.time_period = 'ever';
         }
 
         formNodes.push(newNode);

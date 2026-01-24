@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
-    FlowSession, FlowExecutionLog, CollectedLead
+    FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate
 )
 
 
@@ -72,3 +72,13 @@ class CollectedLeadAdmin(admin.ModelAdmin):
     search_fields = ('instagram_username', 'name', 'email', 'phone', 'user__email')
     readonly_fields = ('created_at', 'updated_at')
     raw_id_fields = ('user', 'flow', 'session')
+
+
+@admin.register(FlowTemplate)
+class FlowTemplateAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'is_active', 'order', 'created_at')
+    list_filter = ('is_active', 'category')
+    search_fields = ('title', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    list_editable = ('is_active', 'order')
+    ordering = ('order', 'title')

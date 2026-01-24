@@ -140,8 +140,10 @@ class FlowNode(models.Model):
         ('message_button_template', 'Button Template'),
         ('message_link', 'Link Message'),
         ('condition_follower', 'Follower Check'),
+        ('condition_user_interacted', 'Returning User Check'),
         ('collect_data', 'Collect Data'),
     ]
+    # condition_user_interacted config: {"true_node_id": N, "false_node_id": N, "time_period": "ever|24h|7d|30d"}
 
     flow = models.ForeignKey(
         DMFlow,
@@ -451,3 +453,52 @@ class CollectedLead(models.Model):
             models.Index(fields=['instagram_scoped_id']),
             models.Index(fields=['user', 'created_at']),
         ]
+
+
+# =============================================================================
+# Flow Templates
+# =============================================================================
+
+class FlowTemplate(models.Model):
+    """Pre-built flow templates that users can use to create flows quickly"""
+    CATEGORY_CHOICES = [
+        ('lead_gen', 'Lead Generation'),
+        ('follow_gate', 'Follow Gate'),
+        ('quiz', 'Quiz / Survey'),
+        ('giveaway', 'Giveaway'),
+        ('link_delivery', 'Link Delivery'),
+        ('other', 'Other'),
+    ]
+
+    title = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
+
+    # The flow structure as JSON
+    # Format: [{"node_type": "...", "config": {...}, "quick_replies": [...], "order": 0}, ...]
+    nodes_json = models.JSONField(
+        help_text="JSON array of node configurations"
+    )
+
+    # Optional preview/icon
+    icon = models.CharField(
+        max_length=50,
+        default='bi-lightning',
+        help_text="Bootstrap icon class (e.g., bi-lightning, bi-person-check)"
+    )
+
+    # Control visibility and ordering
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text="Display order (lower = first)")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Flow Template"
+        verbose_name_plural = "Flow Templates"
+        ordering = ['order', 'title']

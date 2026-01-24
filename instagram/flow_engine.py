@@ -166,6 +166,7 @@ class FlowEngine:
             'message_button_template': self._handle_message_button_template,
             'message_link': self._handle_message_link,
             'condition_follower': self._handle_condition_follower,
+            'condition_user_interacted': self._handle_condition_user_interacted,
             'collect_data': self._handle_collect_data,
         }
 
@@ -229,9 +230,9 @@ class FlowEngine:
 
     def _handle_message_quick_reply(self, session: FlowSession, node: FlowNode):
         """Handle message_quick_reply node - sends a message with clickable buttons."""
-        # Prevent rapid duplicate execution (within 5 seconds) - allows legitimate re-clicks later
+        # Prevent rapid duplicate execution (within 3 seconds) - allows legitimate re-clicks later
         from datetime import timedelta
-        recent_cutoff = timezone.now() - timedelta(seconds=5)
+        recent_cutoff = timezone.now() - timedelta(seconds=3)
         recent_send = FlowExecutionLog.objects.filter(
             session=session,
             node=node,
@@ -316,9 +317,9 @@ class FlowEngine:
         - web_url: Opens a URL in in-app browser
         - postback: Sends a webhook notification with payload
         """
-        # Prevent rapid duplicate execution (within 5 seconds) - allows legitimate re-clicks later
+        # Prevent rapid duplicate execution (within 3 seconds) - allows legitimate re-clicks later
         from datetime import timedelta
-        recent_cutoff = timezone.now() - timedelta(seconds=5)
+        recent_cutoff = timezone.now() - timedelta(seconds=3)
         recent_send = FlowExecutionLog.objects.filter(
             session=session,
             node=node,
@@ -542,6 +543,80 @@ class FlowEngine:
                 self._complete_flow(session)
         else:
             logger.info(f"User {session.instagram_username} is NOT a follower")
+            if false_node_id:
+                try:
+                    next_node = FlowNode.objects.get(id=false_node_id, flow=session.flow)
+                    self.execute_node(session, next_node)
+                except FlowNode.DoesNotExist:
+                    logger.error(f"False node {false_node_id} not found")
+                    self._complete_flow(session)
+            else:
+                self._complete_flow(session)
+
+    def _handle_condition_user_interacted(self, session: FlowSession, node: FlowNode):
+        """
+        Handle condition_user_interacted node - checks if user has previously completed this flow.
+
+        This enables detecting returning users (e.g., for quiz flows where the same user
+        comments on multiple posts). The node branches based on whether the user has
+        completed this flow before within the specified time period.
+
+        Config:
+            - true_node_id: Node to execute if user has previously completed flow (returning user)
+            - false_node_id: Node to execute if user hasn't completed flow before (new user)
+            - time_period: 'ever', '24h', '7d', or '30d'
+        """
+        from datetime import timedelta
+
+        config = node.config or {}
+        true_node_id = config.get('true_node_id')
+        false_node_id = config.get('false_node_id')
+        time_period = config.get('time_period', 'ever')
+
+        # Build query for completed sessions by same user in same flow
+        filters = {
+            'flow': session.flow,
+            'instagram_scoped_id': session.instagram_scoped_id,
+            'status': 'completed'
+        }
+
+        # Add time filter based on time_period
+        if time_period == '24h':
+            filters['completed_at__gte'] = timezone.now() - timedelta(hours=24)
+        elif time_period == '7d':
+            filters['completed_at__gte'] = timezone.now() - timedelta(days=7)
+        elif time_period == '30d':
+            filters['completed_at__gte'] = timezone.now() - timedelta(days=30)
+        # 'ever' doesn't need a time filter
+
+        # Check if user has completed this flow before (exclude current session)
+        has_interacted = FlowSession.objects.filter(**filters).exclude(pk=session.pk).exists()
+
+        # Store result in context
+        session.update_context('has_previously_interacted', has_interacted)
+        session.update_context('interaction_check_time_period', time_period)
+
+        self._log_action(session, 'condition_checked', node, {
+            'condition': 'user_interacted_check',
+            'result': 'returning_user' if has_interacted else 'new_user',
+            'time_period': time_period,
+            'next_node_id': true_node_id if has_interacted else false_node_id
+        })
+
+        # Route based on interaction status
+        if has_interacted:
+            logger.info(f"User {session.instagram_username} IS a returning user (completed flow before)")
+            if true_node_id:
+                try:
+                    next_node = FlowNode.objects.get(id=true_node_id, flow=session.flow)
+                    self.execute_node(session, next_node)
+                except FlowNode.DoesNotExist:
+                    logger.error(f"True node {true_node_id} not found")
+                    self._complete_flow(session)
+            else:
+                self._complete_flow(session)
+        else:
+            logger.info(f"User {session.instagram_username} is a NEW user (hasn't completed flow before)")
             if false_node_id:
                 try:
                     next_node = FlowNode.objects.get(id=false_node_id, flow=session.flow)
@@ -841,11 +916,11 @@ class FlowEngine:
         if QuickReplyOption.objects.filter(target_node=node).exists():
             return True
 
-        # Check if this node is a target of any follower condition
-        # (true_node_id or false_node_id in condition_follower configs)
+        # Check if this node is a target of any condition node
+        # (true_node_id or false_node_id in condition_follower/condition_user_interacted configs)
         condition_nodes = FlowNode.objects.filter(
             flow=node.flow,
-            node_type='condition_follower'
+            node_type__in=['condition_follower', 'condition_user_interacted']
         )
         for cond_node in condition_nodes:
             config = cond_node.config or {}

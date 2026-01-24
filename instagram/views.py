@@ -722,6 +722,10 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             total_completed=Sum('total_completed')
         )
 
+        # Get active flow templates
+        from .models import FlowTemplate
+        flow_templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
+
         context = {
             'instagram_connected': instagram_connected,
             'instagram_account': instagram_account,
@@ -732,6 +736,7 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'recent_sessions': recent_sessions,
             'total_triggered': stats['total_triggered'] or 0,
             'total_completed': stats['total_completed'] or 0,
+            'flow_templates': flow_templates,
         }
         return render(request, self.template_name, context)
 
@@ -874,6 +879,152 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'data_collection': subscription.plan.has_feature('ig_data_collection'),
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
         }
+
+
+class FlowCreateFromTemplateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Create a new DM flow from a template"""
+
+    def post(self, request, template_id):
+        from .models import FlowTemplate
+
+        if not hasattr(request.user, 'instagram_account') or \
+           not request.user.instagram_account.is_connected:
+            return JsonResponse({'error': 'Please connect your Instagram account first.'}, status=400)
+
+        # Check flow limit
+        if not request.user.is_staff:
+            current_count = DMFlow.objects.filter(user=request.user).count()
+            subscription = get_user_subscription(request.user)
+            if subscription and subscription.plan:
+                feature = subscription.plan.get_feature('ig_flow_builder')
+                if feature:
+                    limit = feature.get('limit')
+                    if limit and current_count >= limit:
+                        return JsonResponse({
+                            'error': f'You have reached your limit of {limit} flows. Please upgrade your plan.'
+                        }, status=400)
+
+        # Get template
+        try:
+            template = FlowTemplate.objects.get(id=template_id, is_active=True)
+        except FlowTemplate.DoesNotExist:
+            return JsonResponse({'error': 'Template not found.'}, status=404)
+
+        # Check if user can have this flow active
+        max_active = 1
+        if request.user.is_staff:
+            max_active = float('inf')
+        else:
+            subscription = get_user_subscription(request.user)
+            if subscription and subscription.plan:
+                max_active = float('inf')
+
+        active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
+        is_active = active_count < max_active
+
+        # Create the flow
+        flow = DMFlow.objects.create(
+            user=request.user,
+            title=f"{template.title}",
+            description=template.description,
+            trigger_type='comment_keyword',
+            keywords='',
+            is_active=is_active,
+        )
+
+        # Create nodes from template
+        # Template uses string IDs (e.g., "comment_reply", "send_link") for connections
+        nodes_data = template.nodes_json or []
+        id_to_node = {}  # Map template string ID -> DB node
+
+        # First pass: create all nodes
+        for idx, node_data in enumerate(nodes_data):
+            # Clean config - remove connection fields (will be set in second pass)
+            config = {k: v for k, v in node_data.get('config', {}).items()
+                      if k not in ['true_node_id', 'false_node_id']}
+
+            # Remove target_node_id from buttons (will be set in second pass)
+            if 'buttons' in config:
+                config['buttons'] = [
+                    {k: v for k, v in btn.items() if k != 'target_node_id'}
+                    for btn in config['buttons']
+                ]
+
+            node = FlowNode.objects.create(
+                flow=flow,
+                order=idx,
+                node_type=node_data.get('node_type', 'message_text'),
+                name=node_data.get('name', ''),
+                config=config,
+            )
+
+            # Map by string ID if provided, otherwise use index
+            template_id = node_data.get('id', idx)
+            id_to_node[template_id] = node
+
+            # Create quick reply options if present (without target_node for now)
+            quick_replies = node_data.get('quick_replies', [])
+            for qr_idx, qr_data in enumerate(quick_replies):
+                QuickReplyOption.objects.create(
+                    node=node,
+                    title=qr_data.get('title', ''),
+                    payload=qr_data.get('payload', f'qr_{qr_idx}'),
+                    order=qr_idx,
+                )
+
+        # Second pass: resolve all connections using string IDs
+        for idx, node_data in enumerate(nodes_data):
+            template_id = node_data.get('id', idx)
+            node = id_to_node[template_id]
+            config = node.config or {}
+            updated = False
+
+            # Handle next_node (sequential connection)
+            next_id = node_data.get('next_node')
+            if next_id and next_id in id_to_node:
+                node.next_node = id_to_node[next_id]
+                node.save(update_fields=['next_node'])
+
+            # Handle condition nodes (follower check, user interacted)
+            if node.node_type in ['condition_follower', 'condition_user_interacted']:
+                orig_config = node_data.get('config', {})
+                if orig_config.get('true_node') and orig_config['true_node'] in id_to_node:
+                    config['true_node_id'] = id_to_node[orig_config['true_node']].id
+                    updated = True
+                if orig_config.get('false_node') and orig_config['false_node'] in id_to_node:
+                    config['false_node_id'] = id_to_node[orig_config['false_node']].id
+                    updated = True
+
+            # Handle button template
+            if node.node_type == 'message_button_template':
+                orig_buttons = node_data.get('config', {}).get('buttons', [])
+                if config.get('buttons') and orig_buttons:
+                    for i, orig_btn in enumerate(orig_buttons):
+                        if i < len(config['buttons']) and orig_btn.get('target_node'):
+                            target_id = orig_btn['target_node']
+                            if target_id in id_to_node:
+                                config['buttons'][i]['target_node_id'] = id_to_node[target_id].id
+                                updated = True
+
+            if updated:
+                node.config = config
+                node.save(update_fields=['config'])
+
+            # Update quick reply target nodes
+            quick_replies = node_data.get('quick_replies', [])
+            for qr_idx, qr_data in enumerate(quick_replies):
+                target_id = qr_data.get('target_node')
+                if target_id and target_id in id_to_node:
+                    qr_option = node.quick_reply_options.filter(order=qr_idx).first()
+                    if qr_option:
+                        qr_option.target_node = id_to_node[target_id]
+                        qr_option.save(update_fields=['target_node'])
+
+        return JsonResponse({
+            'success': True,
+            'flow_id': flow.id,
+            'redirect_url': f'/instagram/flows/{flow.id}/edit/'
+        })
 
 
 class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
@@ -1143,6 +1294,15 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
                     # Handle condition_follower target_node_ids
                     if node.node_type == 'condition_follower':
+                        if 'true_node_id' in config:
+                            config['true_node_id'] = resolve_target_id(config['true_node_id'])
+                            config_updated = True
+                        if 'false_node_id' in config:
+                            config['false_node_id'] = resolve_target_id(config['false_node_id'])
+                            config_updated = True
+
+                    # Handle condition_user_interacted target_node_ids
+                    if node.node_type == 'condition_user_interacted':
                         if 'true_node_id' in config:
                             config['true_node_id'] = resolve_target_id(config['true_node_id'])
                             config_updated = True

@@ -21,7 +21,7 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
-    FlowSession, FlowExecutionLog, CollectedLead
+    FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate
 )
 from .flow_engine import FlowEngine, find_matching_flow, find_session_for_message, parse_quick_reply_payload
 from .instagram_api import get_api_client_for_account, InstagramAPIError
@@ -774,10 +774,24 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         # Get available features for the user
         features = self._get_user_features(request.user)
 
+        # Get templates for selection
+        templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
+
+        # Check if a template is pre-selected via URL param
+        selected_template = None
+        template_id = request.GET.get('template')
+        if template_id:
+            try:
+                selected_template = templates.get(id=template_id)
+            except FlowTemplate.DoesNotExist:
+                pass
+
         context = {
             'editing': False,
             'flow': None,
             'features': features,
+            'templates': templates,
+            'selected_template': selected_template,
         }
         return render(request, self.template_name, context)
 
@@ -853,10 +867,27 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             is_active=is_active,
         )
 
-        if is_active:
-            messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
+        # Check if a template was selected and create nodes from it
+        template_id = request.POST.get('template_id')
+        if template_id:
+            try:
+                template = FlowTemplate.objects.get(id=template_id, is_active=True)
+                self._create_nodes_from_template(flow, template)
+                if is_active:
+                    messages.success(request, f'Flow "{title}" created from template! Review and customize your flow.')
+                else:
+                    messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan.')
+            except FlowTemplate.DoesNotExist:
+                if is_active:
+                    messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
+                else:
+                    messages.warning(request, f'Flow "{title}" created as inactive.')
         else:
-            messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan. Deactivate another flow to activate this one.')
+            if is_active:
+                messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
+            else:
+                messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan. Deactivate another flow to activate this one.')
+
         return redirect('flow_edit', pk=flow.pk)
 
     def _get_user_features(self, user):
@@ -880,60 +911,8 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
         }
 
-
-class FlowCreateFromTemplateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
-    """Create a new DM flow from a template"""
-
-    def post(self, request, template_id):
-        from .models import FlowTemplate
-
-        if not hasattr(request.user, 'instagram_account') or \
-           not request.user.instagram_account.is_connected:
-            return JsonResponse({'error': 'Please connect your Instagram account first.'}, status=400)
-
-        # Check flow limit
-        if not request.user.is_staff:
-            current_count = DMFlow.objects.filter(user=request.user).count()
-            subscription = get_user_subscription(request.user)
-            if subscription and subscription.plan:
-                feature = subscription.plan.get_feature('ig_flow_builder')
-                if feature:
-                    limit = feature.get('limit')
-                    if limit and current_count >= limit:
-                        return JsonResponse({
-                            'error': f'You have reached your limit of {limit} flows. Please upgrade your plan.'
-                        }, status=400)
-
-        # Get template
-        try:
-            template = FlowTemplate.objects.get(id=template_id, is_active=True)
-        except FlowTemplate.DoesNotExist:
-            return JsonResponse({'error': 'Template not found.'}, status=404)
-
-        # Check if user can have this flow active
-        max_active = 1
-        if request.user.is_staff:
-            max_active = float('inf')
-        else:
-            subscription = get_user_subscription(request.user)
-            if subscription and subscription.plan:
-                max_active = float('inf')
-
-        active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
-        is_active = active_count < max_active
-
-        # Create the flow
-        flow = DMFlow.objects.create(
-            user=request.user,
-            title=f"{template.title}",
-            description=template.description,
-            trigger_type='comment_keyword',
-            keywords='',
-            is_active=is_active,
-        )
-
-        # Create nodes from template
-        # Template uses string IDs (e.g., "comment_reply", "send_link") for connections
+    def _create_nodes_from_template(self, flow, template):
+        """Create flow nodes from a template's JSON structure."""
         nodes_data = template.nodes_json or []
         id_to_node = {}  # Map template string ID -> DB node
 
@@ -941,12 +920,12 @@ class FlowCreateFromTemplateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, 
         for idx, node_data in enumerate(nodes_data):
             # Clean config - remove connection fields (will be set in second pass)
             config = {k: v for k, v in node_data.get('config', {}).items()
-                      if k not in ['true_node_id', 'false_node_id']}
+                      if k not in ['true_node', 'false_node']}
 
-            # Remove target_node_id from buttons (will be set in second pass)
+            # Remove target_node from buttons (will be set in second pass)
             if 'buttons' in config:
                 config['buttons'] = [
-                    {k: v for k, v in btn.items() if k != 'target_node_id'}
+                    {k: v for k, v in btn.items() if k != 'target_node'}
                     for btn in config['buttons']
                 ]
 
@@ -1019,12 +998,6 @@ class FlowCreateFromTemplateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, 
                     if qr_option:
                         qr_option.target_node = id_to_node[target_id]
                         qr_option.save(update_fields=['target_node'])
-
-        return JsonResponse({
-            'success': True,
-            'flow_id': flow.id,
-            'redirect_url': f'/instagram/flows/{flow.id}/edit/'
-        })
 
 
 class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):

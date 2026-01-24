@@ -18,7 +18,6 @@ urlpatterns = [
     path('flows/', views.FlowListView.as_view(), name='flow_list'),
     path('flows/help/', views.FlowBuilderHelpView.as_view(), name='flow_builder_help'),
     path('flows/create/', views.FlowCreateView.as_view(), name='flow_create'),
-    path('flows/create-from-template/<int:template_id>/', views.FlowCreateFromTemplateView.as_view(), name='flow_create_from_template'),
     path('flows/<int:pk>/edit/', views.FlowEditView.as_view(), name='flow_edit'),
     path('flows/<int:pk>/delete/', views.FlowDeleteView.as_view(), name='flow_delete'),
     path('flows/<int:pk>/toggle-active/', views.FlowToggleActiveView.as_view(), name='flow_toggle_active'),

@@ -1153,38 +1153,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Use template button handler
+    // Use template button handler - redirect to create page with template pre-selected
     const useTemplateBtn = document.getElementById('useTemplateBtn');
     if (useTemplateBtn) {
-        useTemplateBtn.addEventListener('click', async function() {
+        useTemplateBtn.addEventListener('click', function() {
             if (!selectedTemplateId) return;
-
-            this.disabled = true;
-            this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creating...';
-
-            try {
-                const response = await fetch(`/instagram/flows/create-from-template/${selectedTemplateId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    alert(data.error || 'Failed to create flow from template');
-                    this.disabled = false;
-                    this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Use This Template';
-                }
-            } catch (error) {
-                alert('Failed to create flow. Please try again.');
-                this.disabled = false;
-                this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Use This Template';
-            }
+            // Redirect to create page with template parameter
+            window.location.href = `/instagram/flows/create/?template=${selectedTemplateId}`;
         });
     }
 

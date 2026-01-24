@@ -3564,10 +3564,32 @@ const NODE_TYPES = {
 function initFormNodesFromDB() {
     formNodes = [];
 
+    // Get current positions from Drawflow (if Visual Editor has been used)
+    const drawflowPositions = {};
+    try {
+        const exportData = editor.export();
+        Object.entries(exportData.drawflow.Home.data).forEach(([drawflowId, nodeData]) => {
+            const savedData = nodeDataMap[drawflowId];
+            if (savedData?.dbId) {
+                drawflowPositions[savedData.dbId] = {
+                    x: nodeData.pos_x,
+                    y: nodeData.pos_y
+                };
+            }
+        });
+    } catch (e) {
+        // Editor may not be initialized yet
+    }
+
     // Sort by order from database
     const sorted = [...existingNodes].sort((a, b) => a.order - b.order);
 
     sorted.forEach((dbNode) => {
+        // Prefer Drawflow positions (current), fall back to existingNodes (page load)
+        const currentPos = drawflowPositions[dbNode.id];
+        const pos_x = currentPos?.x ?? dbNode.config?._pos_x;
+        const pos_y = currentPos?.y ?? dbNode.config?._pos_y;
+
         const node = {
             tempId: `node_${formNodeIdCounter++}`,
             dbId: dbNode.id,
@@ -3578,10 +3600,13 @@ function initFormNodesFromDB() {
                 payload: qr.payload || '',
                 targetNodeId: qr.target_node_id  // DB ID of target
             })),
-            nextNodeId: dbNode.next_node_id  // DB ID of next node
+            nextNodeId: dbNode.next_node_id,  // DB ID of next node
+            // Preserve visual editor positions (from Drawflow or existingNodes)
+            _pos_x: pos_x,
+            _pos_y: pos_y
         };
 
-        // Remove internal position fields from config display
+        // Remove internal position fields from config display (but keep in node._pos_x/_pos_y)
         delete node.config._pos_x;
         delete node.config._pos_y;
         delete node.config.quick_replies;
@@ -4331,6 +4356,10 @@ function saveFormFlow() {
                 delete config.variations;
             }
         }
+
+        // Restore visual editor positions if they exist
+        if (node._pos_x !== undefined) config._pos_x = node._pos_x;
+        if (node._pos_y !== undefined) config._pos_y = node._pos_y;
 
         const nodeData = {
             id: node.dbId || null,

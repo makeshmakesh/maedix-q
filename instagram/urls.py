@@ -22,6 +22,7 @@ urlpatterns = [
     path('flows/<int:pk>/delete/', views.FlowDeleteView.as_view(), name='flow_delete'),
     path('flows/<int:pk>/toggle-active/', views.FlowToggleActiveView.as_view(), name='flow_toggle_active'),
     path('flows/<int:pk>/sessions/', views.FlowSessionsView.as_view(), name='flow_sessions'),
+    path('flows/<int:pk>/sessions/<int:session_id>/', views.FlowSessionDetailView.as_view(), name='flow_session_detail'),
 
     # Flow Node API endpoints
     path('flows/<int:flow_id>/nodes/', views.FlowNodeCreateView.as_view(), name='flow_node_create'),

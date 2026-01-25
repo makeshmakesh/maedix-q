@@ -74,6 +74,7 @@
                                         <th>Current Step</th>
                                         <th>Started</th>
                                         <th>Completed</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -116,6 +117,11 @@
                                             {% else %}
                                             <small class="text-muted">-</small>
                                             {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'flow_session_detail' flow.pk session.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}

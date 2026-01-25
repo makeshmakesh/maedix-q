@@ -1388,6 +1388,25 @@ class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+class FlowSessionDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """View detailed execution logs for a session"""
+    template_name = 'instagram/flow_session_detail.html'
+
+    def get(self, request, pk, session_id):
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        session = get_object_or_404(FlowSession, pk=session_id, flow=flow)
+
+        # Get all execution logs for this session
+        logs = session.execution_logs.all().order_by('created_at').select_related('node')
+
+        context = {
+            'flow': flow,
+            'session': session,
+            'logs': logs,
+        }
+        return render(request, self.template_name, context)
+
+
 # =============================================================================
 # Flow Node API Views
 # =============================================================================

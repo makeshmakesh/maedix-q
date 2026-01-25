@@ -275,6 +275,130 @@
     </div>
 </section>
 
+<!-- Visual Flow Builder Demo -->
+<section class="section builder-demo-section">
+    <div class="container">
+        <div class="builder-demo-header">
+            <h2>Build flows visually. No code needed.</h2>
+            <p>Drag and drop nodes to create powerful automations in minutes.</p>
+        </div>
+
+        <div class="builder-demo-wrapper">
+            <div class="builder-canvas">
+                <!-- Grid Background -->
+                <div class="canvas-grid"></div>
+
+                <!-- Animated Flow Nodes -->
+                <div class="flow-builder-demo">
+                    <!-- Trigger Node -->
+                    <div class="builder-node trigger-node animate-node delay-1">
+                        <div class="node-header orange">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                            <span>Trigger</span>
+                        </div>
+                        <div class="node-body">
+                            <div class="node-label">When someone comments</div>
+                            <div class="node-value">"FREE" on any post</div>
+                        </div>
+                    </div>
+
+                    <!-- Connection Line 1 -->
+                    <svg class="connector-svg connector-1 animate-connector delay-2" width="2" height="40">
+                        <line x1="1" y1="0" x2="1" y2="40" stroke="#6366f1" stroke-width="2" stroke-dasharray="4"/>
+                    </svg>
+
+                    <!-- Follower Check Node -->
+                    <div class="builder-node condition-node animate-node delay-3">
+                        <div class="node-header green">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                            <span>Follow Gate</span>
+                        </div>
+                        <div class="node-body">
+                            <div class="node-label">Check if user</div>
+                            <div class="node-value">follows you</div>
+                        </div>
+                    </div>
+
+                    <!-- Branch Lines -->
+                    <div class="branch-container animate-branch delay-4">
+                        <div class="branch-line-left"></div>
+                        <div class="branch-line-right"></div>
+                        <span class="branch-label-yes">Yes</span>
+                        <span class="branch-label-no">No</span>
+                    </div>
+
+                    <!-- Branch Nodes -->
+                    <div class="branch-nodes">
+                        <!-- Follower Path -->
+                        <div class="builder-node message-node follower-path animate-node delay-5">
+                            <div class="node-header blue">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Send DM</span>
+                            </div>
+                            <div class="node-body">
+                                <div class="node-label">Send exclusive link</div>
+                                <div class="node-preview">"Thanks for following! Here's your free guide: [link]"</div>
+                            </div>
+                        </div>
+
+                        <!-- Non-Follower Path -->
+                        <div class="builder-node message-node nonfollower-path animate-node delay-6">
+                            <div class="node-header purple">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Send DM</span>
+                            </div>
+                            <div class="node-body">
+                                <div class="node-label">Ask to follow</div>
+                                <div class="node-preview">"Follow me first to get the free guide!"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating cursor animation -->
+                <div class="drag-cursor animate-cursor">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 4L10 20L12.5 13.5L19 11L4 4Z" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/></svg>
+                </div>
+            </div>
+
+            <!-- Side Info -->
+            <div class="builder-demo-info">
+                <h3>Follow-Gated DM Flow</h3>
+                <p>Reward your followers with exclusive content. Non-followers get a friendly nudge to follow first.</p>
+
+                <div class="demo-features">
+                    <div class="demo-feature">
+                        <span class="feature-check">✓</span>
+                        <span>Drag & drop interface</span>
+                    </div>
+                    <div class="demo-feature">
+                        <span class="feature-check">✓</span>
+                        <span>Conditional branching</span>
+                    </div>
+                    <div class="demo-feature">
+                        <span class="feature-check">✓</span>
+                        <span>Unlimited message steps</span>
+                    </div>
+                    <div class="demo-feature">
+                        <span class="feature-check">✓</span>
+                        <span>Works on Reels, Posts & Stories</span>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                <a href="{% url 'flow_list' %}" class="btn-primary">
+                    Try Flow Builder
+                </a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="btn-primary">
+                    Try Flow Builder Free
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Features Section -->
 <section class="section features-section" id="features-detail">
     <div class="container">
@@ -1215,6 +1339,316 @@
     margin: 0;
 }
 
+/* ========== Builder Demo Section ========== */
+.builder-demo-section {
+    background: var(--bg-white);
+    overflow: hidden;
+}
+
+.builder-demo-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.builder-demo-header h2 {
+    margin-bottom: 0.75rem;
+}
+
+.builder-demo-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.builder-demo-wrapper {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.builder-canvas {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    min-height: 480px;
+    overflow: hidden;
+}
+
+.canvas-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+.flow-builder-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+/* Builder Nodes */
+.builder-node {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 240px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.builder-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.builder-node .node-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.builder-node .node-header.orange {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.builder-node .node-header.green {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.builder-node .node-header.blue {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.builder-node .node-header.purple {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.builder-node .node-body {
+    padding: 0.75rem 1rem;
+}
+
+.builder-node .node-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.builder-node .node-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.builder-node .node-preview {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    padding: 0.5rem;
+    background: var(--bg-light);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+/* Connector */
+.connector-svg {
+    margin: 0.5rem 0;
+}
+
+/* Branch Container */
+.branch-container {
+    position: relative;
+    width: 280px;
+    height: 50px;
+    margin: 0.5rem 0;
+}
+
+.branch-line-left,
+.branch-line-right {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    border: 2px dashed var(--accent);
+    border-top: none;
+}
+
+.branch-line-left {
+    left: 0;
+    border-right: none;
+    border-radius: 0 0 0 16px;
+}
+
+.branch-line-right {
+    right: 0;
+    border-left: none;
+    border-radius: 0 0 16px 0;
+}
+
+.branch-label-yes,
+.branch-label-no {
+    position: absolute;
+    bottom: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.branch-label-yes {
+    left: 15%;
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.branch-label-no {
+    right: 15%;
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Branch Nodes */
+.branch-nodes {
+    display: flex;
+    gap: 2rem;
+    margin-top: 0.5rem;
+}
+
+.branch-nodes .builder-node {
+    width: 200px;
+}
+
+/* Drag Cursor Animation */
+.drag-cursor {
+    position: absolute;
+    top: 30%;
+    right: 15%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Animations */
+.animate-node {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: nodeAppear 0.5s ease forwards;
+}
+
+.animate-connector {
+    opacity: 0;
+    animation: connectorDraw 0.4s ease forwards;
+}
+
+.animate-branch {
+    opacity: 0;
+    animation: branchAppear 0.5s ease forwards;
+}
+
+.animate-cursor {
+    animation: cursorMove 4s ease-in-out infinite;
+}
+
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.6s; }
+.delay-3 { animation-delay: 1s; }
+.delay-4 { animation-delay: 1.4s; }
+.delay-5 { animation-delay: 1.8s; }
+.delay-6 { animation-delay: 2s; }
+
+@keyframes nodeAppear {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes connectorDraw {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes branchAppear {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes cursorMove {
+    0%, 100% {
+        opacity: 0;
+        transform: translate(0, 0);
+    }
+    10% {
+        opacity: 0.8;
+    }
+    30% {
+        opacity: 0.8;
+        transform: translate(-60px, 40px);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translate(-100px, 100px);
+    }
+    70% {
+        opacity: 0.8;
+        transform: translate(-40px, 160px);
+    }
+    90% {
+        opacity: 0;
+        transform: translate(-80px, 200px);
+    }
+}
+
+/* Builder Demo Info */
+.builder-demo-info h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.builder-demo-info > p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.demo-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.demo-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.feature-check {
+    color: #22c55e;
+    font-weight: 600;
+}
+
 /* ========== Features Section ========== */
 .features-section {
     background: var(--bg-light);
@@ -1841,6 +2275,25 @@
         flex-wrap: wrap;
         justify-content: center;
     }
+
+    /* Builder Demo */
+    .builder-demo-wrapper {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .builder-canvas {
+        min-height: 420px;
+        padding: 1.5rem;
+    }
+
+    .builder-demo-info {
+        text-align: center;
+    }
+
+    .demo-features {
+        align-items: center;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1966,6 +2419,40 @@
 
     .flow-step span {
         font-size: 0.65rem;
+    }
+
+    /* Builder Demo Mobile */
+    .builder-canvas {
+        min-height: auto;
+        padding: 1rem;
+    }
+
+    .builder-node {
+        width: 180px;
+    }
+
+    .branch-nodes .builder-node {
+        width: 150px;
+    }
+
+    .branch-nodes {
+        gap: 1rem;
+    }
+
+    .branch-container {
+        width: 220px;
+    }
+
+    .builder-node .node-preview {
+        font-size: 0.65rem;
+    }
+
+    .drag-cursor {
+        display: none;
+    }
+
+    .builder-demo-info h3 {
+        font-size: 1.25rem;
     }
 }
 </style>

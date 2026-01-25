@@ -1375,15 +1375,46 @@ class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """View sessions/logs for a flow"""
     template_name = 'instagram/flow_sessions.html'
+    paginate_by = 20
 
     def get(self, request, pk):
+        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
         flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
-        sessions = flow.sessions.all().order_by('-created_at')[:100]
+        sessions = flow.sessions.all().order_by('-created_at')
+
+        # Filter by status
+        status_filter = request.GET.get('status', '')
+        if status_filter:
+            sessions = sessions.filter(status=status_filter)
+
+        # Filter by username
+        username_filter = request.GET.get('username', '').strip()
+        if username_filter:
+            sessions = sessions.filter(instagram_username__icontains=username_filter)
+
+        # Pagination
+        paginator = Paginator(sessions, self.paginate_by)
+        page = request.GET.get('page', 1)
+
+        try:
+            sessions_page = paginator.page(page)
+        except PageNotAnInteger:
+            sessions_page = paginator.page(1)
+        except EmptyPage:
+            sessions_page = paginator.page(paginator.num_pages)
+
+        # Get status choices for filter dropdown
+        status_choices = FlowSession.STATUS_CHOICES
 
         context = {
             'flow': flow,
-            'sessions': sessions,
+            'sessions': sessions_page,
+            'status_filter': status_filter,
+            'username_filter': username_filter,
+            'status_choices': status_choices,
+            'total_count': paginator.count,
         }
         return render(request, self.template_name, context)
 

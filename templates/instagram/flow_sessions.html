@@ -10,6 +10,115 @@
         padding: 1rem;
         margin-bottom: 1rem;
     }
+
+    /* Mobile session cards */
+    .session-card-mobile {
+        display: none;
+    }
+
+    @media (max-width: 767px) {
+        .table-responsive {
+            display: none;
+        }
+
+        .session-card-mobile {
+            display: block;
+        }
+
+        .session-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .session-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .session-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .session-card-user {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .session-card-comment {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .session-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .session-card-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .session-card-actions {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .stat-card .card-body {
+            padding: 0.75rem !important;
+        }
+
+        .stat-card h4 {
+            font-size: 1.25rem;
+        }
+
+        .filter-bar .row {
+            gap: 0.5rem;
+        }
+
+        .filter-bar .col-md-4,
+        .filter-bar .col-md-3 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .page-header {
+            padding: 1rem;
+            margin: -1rem -12px 1rem -12px;
+            background: var(--gradient);
+            color: white;
+            border-radius: 0 0 1rem 1rem;
+        }
+
+        .page-header a {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .page-header h3 {
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .page-header p {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+        }
+
+        .page-header .bi-list-check {
+            color: white !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -19,20 +128,20 @@
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <!-- Header -->
-                <div class="mb-4">
+                <div class="mb-4 page-header d-md-block">
                     <a href="{% url 'flow_edit' flow.pk %}" class="text-decoration-none text-muted small">
                         <i class="bi bi-arrow-left me-1"></i>Back to {{ flow.title }}
                     </a>
                     <h3 class="mb-1 mt-2">
                         <i class="bi bi-list-check text-primary me-2"></i>Flow Sessions
                     </h3>
-                    <p class="text-muted">View users who have gone through this flow</p>
+                    <p class="text-muted mb-0">View users who have gone through this flow</p>
                 </div>
 
                 <!-- Stats (Overall Flow Stats - not affected by filters) -->
-                <div class="row mb-4">
+                <div class="row mb-4 g-2 g-md-3">
                     <div class="col-6 col-md-3">
-                        <div class="card text-center">
+                        <div class="card stat-card text-center">
                             <div class="card-body py-3">
                                 <h4 class="mb-0">{{ flow.total_triggered }}</h4>
                                 <small class="text-muted">Total Triggered</small>
@@ -40,7 +149,7 @@
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="card text-center">
+                        <div class="card stat-card text-center">
                             <div class="card-body py-3">
                                 <h4 class="mb-0">{{ flow.total_completed }}</h4>
                                 <small class="text-muted">Total Completed</small>
@@ -48,7 +157,7 @@
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="card text-center">
+                        <div class="card stat-card text-center">
                             <div class="card-body py-3">
                                 <h4 class="mb-0">{{ flow.sessions.count }}</h4>
                                 <small class="text-muted">Total Sessions</small>
@@ -56,7 +165,7 @@
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="card text-center">
+                        <div class="card stat-card text-center">
                             <div class="card-body py-3">
                                 {% if flow.total_triggered > 0 %}
                                 <h4 class="mb-0">{% widthratio flow.total_completed flow.total_triggered 100 %}%</h4>
@@ -173,6 +282,60 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Mobile Cards View -->
+                        <div class="session-card-mobile p-3">
+                            {% for session in sessions %}
+                            <div class="session-card">
+                                <div class="session-card-header">
+                                    <div>
+                                        <div class="session-card-user">@{{ session.instagram_username|default:"unknown" }}</div>
+                                        {% if session.trigger_comment_text %}
+                                        <div class="session-card-comment">{{ session.trigger_comment_text|truncatechars:40 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if session.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif session.status == 'error' %}
+                                        <span class="badge bg-danger">Error</span>
+                                        {% elif session.status == 'waiting_reply' %}
+                                        <span class="badge bg-warning">Waiting</span>
+                                        {% elif session.status == 'waiting_scheduled' %}
+                                        <span class="badge bg-info">Scheduled</span>
+                                        {% elif session.status == 'expired' %}
+                                        <span class="badge bg-secondary">Expired</span>
+                                        {% else %}
+                                        <span class="badge bg-primary">{{ session.status }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="session-card-meta">
+                                    {% if session.current_node %}
+                                    <div class="session-card-meta-item">
+                                        <i class="bi bi-node-plus"></i>
+                                        <span>{{ session.current_node.get_node_type_display }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="session-card-meta-item">
+                                        <i class="bi bi-calendar"></i>
+                                        <span>{{ session.created_at|date:"M j, H:i" }}</span>
+                                    </div>
+                                    {% if session.completed_at %}
+                                    <div class="session-card-meta-item">
+                                        <i class="bi bi-check-circle"></i>
+                                        <span>{{ session.completed_at|date:"M j, H:i" }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="session-card-actions">
+                                    <a href="{% url 'flow_session_detail' flow.pk session.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                                        <i class="bi bi-eye me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
 
                         <!-- Pagination -->

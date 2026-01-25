@@ -2,6 +2,17 @@
 
 {% block title %}Sessions: {{ flow.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .filter-bar {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="py-4 py-md-5">
     <div class="container">
@@ -18,13 +29,13 @@
                     <p class="text-muted">View users who have gone through this flow</p>
                 </div>
 
-                <!-- Stats -->
+                <!-- Stats (Overall Flow Stats - not affected by filters) -->
                 <div class="row mb-4">
                     <div class="col-6 col-md-3">
                         <div class="card text-center">
                             <div class="card-body py-3">
                                 <h4 class="mb-0">{{ flow.total_triggered }}</h4>
-                                <small class="text-muted">Triggered</small>
+                                <small class="text-muted">Total Triggered</small>
                             </div>
                         </div>
                     </div>
@@ -32,15 +43,15 @@
                         <div class="card text-center">
                             <div class="card-body py-3">
                                 <h4 class="mb-0">{{ flow.total_completed }}</h4>
-                                <small class="text-muted">Completed</small>
+                                <small class="text-muted">Total Completed</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="card text-center">
                             <div class="card-body py-3">
-                                <h4 class="mb-0">{{ sessions.count }}</h4>
-                                <small class="text-muted">Sessions</small>
+                                <h4 class="mb-0">{{ flow.sessions.count }}</h4>
+                                <small class="text-muted">Total Sessions</small>
                             </div>
                         </div>
                     </div>
@@ -48,7 +59,7 @@
                         <div class="card text-center">
                             <div class="card-body py-3">
                                 {% if flow.total_triggered > 0 %}
-                                <h4 class="mb-0">{{ flow.total_completed|floatformat:0 }}%</h4>
+                                <h4 class="mb-0">{% widthratio flow.total_completed flow.total_triggered 100 %}%</h4>
                                 {% else %}
                                 <h4 class="mb-0">0%</h4>
                                 {% endif %}
@@ -58,10 +69,45 @@
                     </div>
                 </div>
 
+                <!-- Filters -->
+                <div class="filter-bar">
+                    <form method="get" class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted mb-1">Username</label>
+                            <input type="text" name="username" class="form-control form-control-sm"
+                                   placeholder="Search @username..." value="{{ username_filter }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Status</label>
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="">All Statuses</option>
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-search me-1"></i>Filter
+                            </button>
+                            {% if status_filter or username_filter %}
+                            <a href="{% url 'flow_sessions' flow.pk %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-x-lg"></i> Clear
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Sessions List -->
                 <div class="card">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">Recent Sessions</h6>
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            Sessions
+                            {% if status_filter or username_filter %}
+                            <span class="badge bg-primary ms-2">Filtered: {{ sessions.paginator.count }}</span>
+                            {% endif %}
+                        </h6>
                     </div>
                     <div class="card-body p-0">
                         {% if sessions %}
@@ -128,11 +174,67 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination -->
+                        {% if sessions.has_other_pages %}
+                        <div class="card-footer bg-light">
+                            <nav aria-label="Sessions pagination">
+                                <ul class="pagination pagination-sm justify-content-center mb-0">
+                                    {% if sessions.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ sessions.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if username_filter %}&username={{ username_filter }}{% endif %}">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in sessions.paginator.page_range %}
+                                        {% if sessions.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% elif num > sessions.number|add:'-3' and num < sessions.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if username_filter %}&username={{ username_filter }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if sessions.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ sessions.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if username_filter %}&username={{ username_filter }}{% endif %}">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Showing {{ sessions.start_index }}-{{ sessions.end_index }} of {{ sessions.paginator.count }} sessions
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {% else %}
                         <div class="text-center py-5">
                             <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                            {% if status_filter or username_filter %}
+                            <p class="text-muted mt-2 mb-0">No sessions match your filters</p>
+                            <a href="{% url 'flow_sessions' flow.pk %}" class="btn btn-sm btn-outline-primary mt-2">Clear Filters</a>
+                            {% else %}
                             <p class="text-muted mt-2 mb-0">No sessions yet</p>
                             <small class="text-muted">Sessions will appear here when users trigger this flow</small>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>

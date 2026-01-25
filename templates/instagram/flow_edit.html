@@ -4357,10 +4357,6 @@ function saveFormFlow() {
             }
         }
 
-        // Restore visual editor positions if they exist
-        if (node._pos_x !== undefined) config._pos_x = node._pos_x;
-        if (node._pos_y !== undefined) config._pos_y = node._pos_y;
-
         const nodeData = {
             id: node.dbId || null,
             temp_id: node.tempId,
@@ -4369,7 +4365,10 @@ function saveFormFlow() {
             config: config,
             quick_replies: [],
             // Use explicit next node (null if not set)
-            next_node_id: node.nextNodeId || null
+            next_node_id: node.nextNodeId || null,
+            // Send positions same way Visual Editor does (separate fields)
+            pos_x: node._pos_x,
+            pos_y: node._pos_y
         };
 
         // Handle quick replies (message_quick_reply nodes)

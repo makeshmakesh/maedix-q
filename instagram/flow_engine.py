@@ -687,11 +687,6 @@ class FlowEngine:
         """
         logger.info(f"Handling quick reply click for session {session.id}: {payload}")
 
-        self._log_action(session, 'quick_reply_received', session.current_node, {
-            'payload': payload,
-            'message_id': message_id
-        })
-
         # Parse payload to find the option
         # Format: flow_{session_id}_node_{node_id}_opt_{option_payload}
         parts = payload.split('_opt_')
@@ -725,6 +720,13 @@ class FlowEngine:
             logger.error(f"QuickReplyOption not found for node {qr_node.id if qr_node else 'None'}, payload: {option_payload}")
             return
 
+        # Log with the title included
+        self._log_action(session, 'quick_reply_received', session.current_node, {
+            'payload': payload,
+            'title': option.title,
+            'message_id': message_id
+        })
+
         # If option has a target node, execute it
         if option.target_node:
             session.status = 'active'
@@ -749,12 +751,6 @@ class FlowEngine:
             message_id: Optional message ID for deduplication
         """
         logger.info(f"Handling button postback for session {session.id}: {payload}")
-
-        self._log_action(session, 'quick_reply_received', session.current_node, {
-            'payload': payload,
-            'type': 'button_postback',
-            'message_id': message_id
-        })
 
         # Parse payload to extract node info
         # Format: flow_{session_id}_node_{node_id}_btn_{button_payload}
@@ -785,11 +781,13 @@ class FlowEngine:
 
         # Find the button config to check for branching (target_node_id)
         target_node = None
+        button_title = None
         if btn_node and btn_node.config:
             buttons = btn_node.config.get('buttons', [])
             for button in buttons:
                 btn_type = button.get('type', 'postback')
                 if button.get('payload') == button_payload and btn_type == 'postback':
+                    button_title = button.get('title')
                     target_node_id = button.get('target_node_id')
                     if target_node_id:
                         try:
@@ -797,6 +795,14 @@ class FlowEngine:
                         except FlowNode.DoesNotExist:
                             logger.warning(f"Target node {target_node_id} not found, advancing to next")
                     break
+
+        # Log with the title included
+        self._log_action(session, 'quick_reply_received', session.current_node, {
+            'payload': payload,
+            'title': button_title,
+            'type': 'button_postback',
+            'message_id': message_id
+        })
 
         # If button has a target node, execute it (branching)
         if target_node:

@@ -1,416 +1,541 @@
 {% extends 'base.html' %}
 
-{% block title %}Instagram DM Automation | Auto Reply to Comments & DMs | Maedix{% endblock %}
-{% block meta_description %}Automate Instagram comment replies and DMs. Convert every comment into a conversation. Advanced flow builder, quick replies, follower checks. Meta verified. Start free.{% endblock %}
+{% block title %}Maedix — Turn Instagram Comments into Conversations{% endblock %}
+{% block meta_description %}Maedix helps creators reply faster, send smarter DMs, and convert engagement into leads — without manual work.{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <section class="hero">
-    <div class="hero-bg">
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
-    </div>
-
     <div class="container">
         <div class="hero-grid">
             <div class="hero-content">
-                <div class="hero-pill">
-                    <span class="pill-icon"><i class="bi bi-patch-check-fill"></i></span>
+                <div class="meta-badge">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
                     <span>Verified Meta Tech Provider</span>
                 </div>
 
                 <h1 class="hero-headline">
-                    Automate Your<br>
-                    <span class="gradient-text">Instagram DMs</span>
+                    Turn Instagram comments<br>
+                    into real conversations — automatically.
                 </h1>
 
                 <p class="hero-desc">
-                    Turn every comment into a customer conversation. Auto-reply to comments, send personalized DMs, and nurture leads — all on autopilot.
+                    Maedix helps creators reply faster, send smarter DMs,<br>
+                    and convert engagement into leads — without manual work.
                 </p>
-
-                <div class="hero-benefits">
-                    <div class="hero-benefit">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Auto-reply to comments instantly</span>
-                    </div>
-                    <div class="hero-benefit">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Send DMs to commenters automatically</span>
-                    </div>
-                    <div class="hero-benefit">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Build multi-step conversations</span>
-                    </div>
-                </div>
 
                 <div class="hero-actions">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'flow_list' %}" class="btn-hero-primary">
-                        Go to Dashboard <i class="bi bi-arrow-right"></i>
+                    <a href="{% url 'flow_list' %}" class="btn-primary">
+                        Go to Dashboard
                     </a>
                     {% else %}
-                    <a href="{% url 'signup' %}" class="btn-hero-primary">
-                        Start Free <i class="bi bi-arrow-right"></i>
+                    <a href="{% url 'signup' %}" class="btn-primary">
+                        Start free
                     </a>
                     {% endif %}
-                    <a href="#how-it-works" class="btn-hero-secondary">
-                        <i class="bi bi-play-circle"></i> See How It Works
+                    <a href="#how-it-works" class="btn-secondary">
+                        See how it works
                     </a>
                 </div>
-
-                <p class="hero-note">
-                    <i class="bi bi-check-lg"></i> No credit card required
-                    <i class="bi bi-check-lg"></i> Works with Reels, Posts, Stories
-                </p>
             </div>
 
             <div class="hero-visual">
-                <div class="demo-card">
-                    <div class="demo-header">
-                        <div class="demo-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <span class="demo-title">Live Demo</span>
-                    </div>
-
-                    <div class="demo-content">
-                        <!-- Automation Preview -->
-                        <div class="automation-preview">
-                            <div class="preview-comment">
-                                <div class="comment-avatar">JD</div>
-                                <div class="comment-content">
-                                    <span class="comment-user">@john_doe</span>
-                                    <span class="comment-text">Send me the link!</span>
-                                </div>
-                            </div>
-                            <div class="preview-arrow">
-                                <i class="bi bi-lightning-charge-fill"></i>
-                            </div>
-                            <div class="preview-actions">
-                                <div class="action-item reply">
-                                    <i class="bi bi-chat-dots"></i>
-                                    <span>Auto Reply</span>
-                                    <small>"Check your DM!"</small>
-                                </div>
-                                <div class="action-item dm">
-                                    <i class="bi bi-envelope"></i>
-                                    <span>Send DM</span>
-                                    <small>"Hey! Here's your link..."</small>
-                                </div>
-                            </div>
+                <div class="hero-demo">
+                    <!-- Comment triggers flow -->
+                    <div class="demo-comment">
+                        <div class="demo-avatar">S</div>
+                        <div class="demo-comment-content">
+                            <span class="demo-username">@sarah_creates</span>
+                            <span class="demo-text">Send me the link!</span>
                         </div>
                     </div>
-                </div>
 
-                <!-- Floating Stats -->
-                <div class="floating-badge badge-1">
-                    <i class="bi bi-lightning-charge"></i>
-                    <span>Instant Replies</span>
-                </div>
-                <div class="floating-badge badge-2">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <span>10x Engagement</span>
+                    <div class="demo-arrow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    </div>
+
+                    <!-- Auto actions -->
+                    <div class="demo-actions">
+                        <div class="demo-action">
+                            <div class="action-icon blue">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-label">Comment Reply</span>
+                                <span class="action-text">"Check your DM!"</span>
+                            </div>
+                        </div>
+                        <div class="demo-action">
+                            <div class="action-icon indigo">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-label">DM Sent</span>
+                                <span class="action-text">"Hey Sarah! Here's your link..."</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-badge">
+                        <span class="badge-dot"></span>
+                        Happens instantly
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Social Proof Bar -->
-<section class="trust-bar">
-    <div class="container">
-        <div class="trust-content">
-            <div class="trust-stats">
-                <div class="trust-stat">
-                    <span class="stat-number">50K+</span>
-                    <span class="stat-label">DMs Sent</span>
-                </div>
-                <div class="trust-divider"></div>
-                <div class="trust-stat">
-                    <span class="stat-number">1000+</span>
-                    <span class="stat-label">Active Users</span>
-                </div>
-                <div class="trust-divider"></div>
-                <div class="trust-stat">
-                    <span class="stat-number">99.9%</span>
-                    <span class="stat-label">Uptime</span>
-                </div>
-            </div>
-            <div class="trust-logos">
-                <span><i class="bi bi-instagram"></i> Instagram API</span>
-                <span><i class="bi bi-meta"></i> Meta Verified</span>
-                <span><i class="bi bi-shield-check"></i> 100% Safe</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Problem/Solution Section -->
+<!-- Problem Section -->
 <section class="section problem-section">
     <div class="container">
         <div class="problem-grid">
-            <div class="problem-side">
-                <span class="section-label red">The Problem</span>
-                <h2>You're Losing Leads Every Day</h2>
-                <ul class="problem-list">
-                    <li><i class="bi bi-x-circle"></i> Comments go unanswered for hours</li>
-                    <li><i class="bi bi-x-circle"></i> Manual DM replies take forever</li>
-                    <li><i class="bi bi-x-circle"></i> Interested followers slip away</li>
-                    <li><i class="bi bi-x-circle"></i> Can't scale your engagement</li>
-                </ul>
+            <div class="problem-content">
+                <h2>Comments are interest.<br>Silence kills it.</h2>
+
+                <div class="problem-text">
+                    <p>
+                        Creators lose leads every day — not because content is bad,<br>
+                        but because replies are slow, inconsistent, or forgotten.
+                    </p>
+                    <p>
+                        By the time a DM is sent,<br>
+                        the moment is already gone.
+                    </p>
+                </div>
             </div>
-            <div class="solution-side">
-                <span class="section-label green">The Solution</span>
-                <h2>Automate & Convert 24/7</h2>
-                <ul class="solution-list">
-                    <li><i class="bi bi-check-circle-fill"></i> Reply to comments in seconds</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Send DMs automatically</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Capture every lead</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Scale without extra work</li>
-                </ul>
+
+            <div class="problem-visual">
+                <div class="missed-comments">
+                    <div class="missed-comment">
+                        <div class="missed-avatar">J</div>
+                        <div class="missed-content">
+                            <span class="missed-user">@john_d</span>
+                            <span class="missed-text">How much is this?</span>
+                        </div>
+                        <span class="missed-time">3h ago</span>
+                    </div>
+                    <div class="missed-comment">
+                        <div class="missed-avatar">M</div>
+                        <div class="missed-content">
+                            <span class="missed-user">@maria_lee</span>
+                            <span class="missed-text">Send me the link please!</span>
+                        </div>
+                        <span class="missed-time">5h ago</span>
+                    </div>
+                    <div class="missed-comment">
+                        <div class="missed-avatar">A</div>
+                        <div class="missed-content">
+                            <span class="missed-user">@alex_fit</span>
+                            <span class="missed-text">Interested! How do I sign up?</span>
+                        </div>
+                        <span class="missed-time">8h ago</span>
+                    </div>
+                    <div class="missed-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        Unanswered comments = lost opportunities
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reframe Section -->
+<section class="section reframe-section">
+    <div class="container">
+        <div class="reframe-grid">
+            <div class="reframe-content">
+                <h2>Instagram rewards conversations, not posts.</h2>
+
+                <div class="reframe-points">
+                    <div class="reframe-point">
+                        <span class="point-marker"></span>
+                        <span>Early replies create momentum</span>
+                    </div>
+                    <div class="reframe-point">
+                        <span class="point-marker"></span>
+                        <span>Public comments signal intent</span>
+                    </div>
+                    <div class="reframe-point">
+                        <span class="point-marker"></span>
+                        <span>Private DMs continue trust</span>
+                    </div>
+                </div>
+
+                <p class="reframe-key">
+                    The problem isn't effort.<br>
+                    It's scale.
+                </p>
+            </div>
+
+            <div class="reframe-visual">
+                <div class="conversation-flow">
+                    <div class="flow-step">
+                        <div class="flow-icon post">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        </div>
+                        <span>Post</span>
+                    </div>
+                    <div class="flow-connector-line"></div>
+                    <div class="flow-step">
+                        <div class="flow-icon comment">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
+                        <span>Comment</span>
+                    </div>
+                    <div class="flow-connector-line"></div>
+                    <div class="flow-step">
+                        <div class="flow-icon reply">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>
+                        </div>
+                        <span>Reply</span>
+                    </div>
+                    <div class="flow-connector-line"></div>
+                    <div class="flow-step highlight">
+                        <div class="flow-icon dm">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        </div>
+                        <span>DM</span>
+                    </div>
+                    <div class="flow-connector-line"></div>
+                    <div class="flow-step highlight">
+                        <div class="flow-icon convert">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <span>Convert</span>
+                    </div>
+                </div>
+                <div class="flow-label">The engagement journey</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- What Maedix Does -->
+<section class="section what-section" id="features">
+    <div class="container">
+        <h2>Maedix handles the conversation flow for you.</h2>
+
+        <div class="what-grid">
+            <div class="what-block">
+                <h3>Automatically replies to comments</h3>
+                <p>When someone comments, they get a response — instantly.</p>
+            </div>
+
+            <div class="what-block">
+                <h3>Sends contextual DMs instantly</h3>
+                <p>Move the conversation to DMs without lifting a finger.</p>
+            </div>
+
+            <div class="what-block">
+                <h3>Guides users through conversations</h3>
+                <p>Multi-step flows with buttons let users choose their path.</p>
+            </div>
+
+            <div class="what-block">
+                <h3>Logs every interaction</h3>
+                <p>Session logs show what was sent, what users replied, and the full conversation history.</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- How It Works -->
-<section class="section how-it-works" id="how-it-works">
+<section class="section how-section" id="how-it-works">
     <div class="container">
-        <div class="section-intro">
-            <span class="section-label">How It Works</span>
-            <h2>Set Up in 3 Minutes, Save Hours Every Week</h2>
-            <p>No coding, no complicated setup — just connect and automate</p>
-        </div>
+        <h2>How it works</h2>
 
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <div class="step-icon"><i class="bi bi-instagram"></i></div>
-                <h3>Connect Instagram</h3>
-                <p>Link your Business or Creator account securely via Meta's official OAuth.</p>
+        <div class="steps">
+            <div class="step">
+                <span class="step-number">1</span>
+                <h3>Connect your Instagram account</h3>
+                <p>Business or Creator account. Takes 30 seconds.</p>
             </div>
-            <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
 
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <div class="step-icon"><i class="bi bi-gear"></i></div>
-                <h3>Set Trigger Keywords</h3>
-                <p>Choose words like "LINK", "INFO", "PRICE" that trigger your automation.</p>
+            <div class="step">
+                <span class="step-number">2</span>
+                <h3>Create a conversation flow</h3>
+                <p>Set triggers, write messages, add buttons if you want.</p>
             </div>
-            <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
 
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <div class="step-icon"><i class="bi bi-rocket-takeoff"></i></div>
-                <h3>Watch It Work</h3>
-                <p>Comments get replied, DMs get sent — all automatically, 24/7.</p>
+            <div class="step">
+                <span class="step-number">3</span>
+                <h3>A comment triggers replies + DMs</h3>
+                <p>When someone comments your keyword, the flow runs.</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <h3>Every interaction is logged</h3>
+                <p>See full session history — what was sent, what they replied.</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section class="section features-section" id="features">
+<section class="section features-section" id="features-detail">
     <div class="container">
-        <div class="section-intro">
-            <span class="section-label">Powerful Features</span>
-            <h2>Everything You Need to Automate Instagram</h2>
-            <p>Simple automations to advanced multi-step flows</p>
+        <div class="features-header">
+            <h2>Visual Flow Builder</h2>
+            <p>Build multi-step conversations with a drag-and-drop interface. No coding required.</p>
         </div>
 
-        <div class="features-grid">
-            <!-- Core Features -->
-            <div class="feature-card primary">
-                <div class="feature-icon"><i class="bi bi-chat-dots"></i></div>
-                <h3>Auto Comment Replies</h3>
-                <p>Instantly reply to comments with personalized messages. Keep your audience engaged and acknowledged.</p>
-                <div class="feature-tag">Core</div>
-            </div>
-
-            <div class="feature-card primary">
-                <div class="feature-icon"><i class="bi bi-envelope"></i></div>
-                <h3>Auto DM Follow-ups</h3>
-                <p>Send DMs to commenters automatically. Deliver links, info, or start conversations privately.</p>
-                <div class="feature-tag">Core</div>
-            </div>
-
-            <div class="feature-card primary">
-                <div class="feature-icon"><i class="bi bi-hash"></i></div>
-                <h3>Keyword Triggers</h3>
-                <p>Set specific words that trigger your automation. "LINK", "INFO", "PRICE" — you decide.</p>
-                <div class="feature-tag">Core</div>
-            </div>
-
-            <!-- Advanced Features -->
-            <div class="feature-card advanced">
-                <div class="feature-icon purple"><i class="bi bi-diagram-3"></i></div>
-                <h3>Visual Flow Builder</h3>
-                <p>Drag-and-drop builder for multi-step conversations. Create complex automation flows visually.</p>
-                <div class="feature-tag purple">Advanced</div>
-            </div>
-
-            <div class="feature-card advanced">
-                <div class="feature-icon green"><i class="bi bi-ui-radios-grid"></i></div>
-                <h3>Quick Reply Buttons</h3>
-                <p>Add tappable buttons to DMs. Let users choose options and branch conversations.</p>
-                <div class="feature-tag green">Advanced</div>
-            </div>
-
-            <div class="feature-card advanced">
-                <div class="feature-icon pink"><i class="bi bi-person-check"></i></div>
-                <h3>Follower Check</h3>
-                <p>Different responses for followers vs non-followers. Reward your loyal audience.</p>
-                <div class="feature-tag pink">Advanced</div>
-            </div>
-
-            <div class="feature-card advanced">
-                <div class="feature-icon orange"><i class="bi bi-menu-button-wide"></i></div>
-                <h3>Button Templates</h3>
-                <p>Rich messages with action buttons. Link to websites, products, or booking pages.</p>
-                <div class="feature-tag orange">Advanced</div>
-            </div>
-
-            <div class="feature-card advanced">
-                <div class="feature-icon blue"><i class="bi bi-phone"></i></div>
-                <h3>Mobile Editor</h3>
-                <p>Build and manage flows from your phone. No desktop required.</p>
-                <div class="feature-tag blue">Advanced</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Use Cases -->
-<section class="section use-cases">
-    <div class="container">
-        <div class="section-intro">
-            <span class="section-label">Use Cases</span>
-            <h2>How Creators & Businesses Use Maedix</h2>
-            <p>Real automation flows that drive results</p>
-        </div>
-
-        <div class="cases-grid">
-            <div class="case-card">
-                <div class="case-icon">🎁</div>
-                <h4>Lead Magnets & Freebies</h4>
-                <p>Someone comments "GUIDE" on your Reel → Auto-reply + DM with download link</p>
-                <div class="case-result">
-                    <i class="bi bi-arrow-up-right"></i> Grow your email list automatically
+        <div class="features-list">
+            <!-- Comment Reply -->
+            <div class="feature-row">
+                <div class="feature-info">
+                    <div class="feature-icon blue">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h3>Comment Reply</h3>
+                        <p>Automatically reply to comments on your posts. Acknowledge users publicly and drive them to DMs.</p>
+                        <span class="feature-tag">Public</span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="case-card">
-                <div class="case-icon">🛍️</div>
-                <h4>Product Inquiries</h4>
-                <p>Someone comments "PRICE" → Send product details, pricing, and purchase link via DM</p>
-                <div class="case-result">
-                    <i class="bi bi-arrow-up-right"></i> Convert interest to sales
-                </div>
-            </div>
-
-            <div class="case-card">
-                <div class="case-icon">📅</div>
-                <h4>Appointment Booking</h4>
-                <p>Someone comments "BOOK" → Send booking link or available slots via DM</p>
-                <div class="case-result">
-                    <i class="bi bi-arrow-up-right"></i> Fill your calendar hands-free
-                </div>
-            </div>
-
-            <div class="case-card">
-                <div class="case-icon">🎓</div>
-                <h4>Course Enrollment</h4>
-                <p>Someone comments "JOIN" → Check if follower → Send discount (followers) or regular price</p>
-                <div class="case-result">
-                    <i class="bi bi-arrow-up-right"></i> Reward loyal followers
-                </div>
-            </div>
-
-            <div class="case-card">
-                <div class="case-icon">🎯</div>
-                <h4>Contest & Giveaways</h4>
-                <p>Someone comments with keyword → Auto-reply confirmation + DM entry details</p>
-                <div class="case-result">
-                    <i class="bi bi-arrow-up-right"></i> Boost engagement 10x
-                </div>
-            </div>
-
-            <div class="case-card">
-                <div class="case-icon">💬</div>
-                <h4>Customer Support</h4>
-                <p>Someone comments "HELP" → DM with FAQ links or support options</p>
-                <div class="case-result">
-                    <i class="bi bi-arrow-up-right"></i> Support at scale
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Flow Builder Highlight -->
-<section class="section builder-highlight">
-    <div class="container">
-        <div class="builder-grid">
-            <div class="builder-content">
-                <span class="section-label">Advanced Feature</span>
-                <h2>Visual Flow Builder</h2>
-                <p class="builder-desc">
-                    Go beyond simple auto-replies. Build sophisticated multi-step conversations with our drag-and-drop flow builder.
-                </p>
-
-                <ul class="builder-features">
-                    <li><i class="bi bi-check-circle-fill"></i> Drag-and-drop interface</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited conversation steps</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Conditional branching</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Quick reply buttons</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Follower status checks</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Mobile-friendly editor</li>
-                </ul>
-
-                {% if user.is_authenticated %}
-                <a href="{% url 'flow_list' %}" class="btn-builder">
-                    Try Flow Builder <i class="bi bi-arrow-right"></i>
-                </a>
-                {% else %}
-                <a href="{% url 'signup' %}" class="btn-builder">
-                    Try Flow Builder Free <i class="bi bi-arrow-right"></i>
-                </a>
-                {% endif %}
-            </div>
-
-            <div class="builder-visual">
-                <div class="flow-preview-card">
-                    <div class="flow-preview">
-                        <div class="flow-node trigger-node">
-                            <div class="node-header"><i class="bi bi-lightning-charge"></i> Trigger</div>
-                            <div class="node-body">Comment: "INFO"</div>
+                <div class="feature-preview">
+                    <div class="preview-comment-box">
+                        <div class="preview-post-header">
+                            <div class="preview-avatar">Y</div>
+                            <span class="preview-username">your_brand</span>
                         </div>
-                        <div class="flow-connector"></div>
-                        <div class="flow-node message-node">
-                            <div class="node-header"><i class="bi bi-chat-left-text"></i> Send DM</div>
-                            <div class="node-body">Hey! Here's the info...</div>
+                        <div class="preview-comments">
+                            <div class="preview-comment">
+                                <span class="comment-user">@sarah_k</span>
+                                <span class="comment-text">Send me the link!</span>
+                            </div>
+                            <div class="preview-comment reply">
+                                <span class="comment-user">@your_brand</span>
+                                <span class="comment-text">Check your DM! Just sent it over</span>
+                            </div>
                         </div>
-                        <div class="flow-connector"></div>
-                        <div class="flow-node qr-node">
-                            <div class="node-header"><i class="bi bi-ui-radios-grid"></i> Quick Reply</div>
-                            <div class="node-body">
-                                <div class="qr-buttons">
-                                    <span class="qr-btn">Pricing</span>
-                                    <span class="qr-btn">Demo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Message -->
+            <div class="feature-row reverse">
+                <div class="feature-info">
+                    <div class="feature-icon indigo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </div>
+                    <div>
+                        <h3>Text Message</h3>
+                        <p>Send personalized DMs to users. Deliver information, links, or continue the conversation privately.</p>
+                        <span class="feature-tag">DM</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-dm-box">
+                        <div class="dm-header">
+                            <div class="preview-avatar small">Y</div>
+                            <span>your_brand</span>
+                        </div>
+                        <div class="dm-messages">
+                            <div class="dm-bubble sent">
+                                Hey Sarah! Here's the free guide you requested. Let me know if you have any questions!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Reply Buttons -->
+            <div class="feature-row">
+                <div class="feature-info">
+                    <div class="feature-icon purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    </div>
+                    <div>
+                        <h3>Quick Reply Buttons</h3>
+                        <p>Add tappable buttons to DMs. Let users choose options and branch the conversation based on their selection.</p>
+                        <span class="feature-tag">Interactive</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-dm-box">
+                        <div class="dm-header">
+                            <div class="preview-avatar small">Y</div>
+                            <span>your_brand</span>
+                        </div>
+                        <div class="dm-messages">
+                            <div class="dm-bubble sent">
+                                What would you like to know more about?
+                            </div>
+                            <div class="dm-quick-replies">
+                                <span class="qr-button">Pricing</span>
+                                <span class="qr-button">Features</span>
+                                <span class="qr-button">Book a Demo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Button Templates -->
+            <div class="feature-row reverse">
+                <div class="feature-info">
+                    <div class="feature-icon pink">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    </div>
+                    <div>
+                        <h3>Button Templates</h3>
+                        <p>Rich messages with action buttons. Link to your website, booking page, or product directly.</p>
+                        <span class="feature-tag">Links</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-dm-box">
+                        <div class="dm-header">
+                            <div class="preview-avatar small">Y</div>
+                            <span>your_brand</span>
+                        </div>
+                        <div class="dm-messages">
+                            <div class="dm-bubble sent">
+                                Ready to get started? Choose an option below:
+                            </div>
+                            <div class="dm-button-template">
+                                <a class="template-button">View Pricing</a>
+                                <a class="template-button">Book a Call</a>
+                                <a class="template-button">Visit Website</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link Message -->
+            <div class="feature-row">
+                <div class="feature-info">
+                    <div class="feature-icon teal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    </div>
+                    <div>
+                        <h3>Link Message</h3>
+                        <p>Send URLs directly via DM. Perfect for sharing resources, sign-up pages, or downloads.</p>
+                        <span class="feature-tag">DM</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-dm-box">
+                        <div class="dm-header">
+                            <div class="preview-avatar small">Y</div>
+                            <span>your_brand</span>
+                        </div>
+                        <div class="dm-messages">
+                            <div class="dm-bubble sent">
+                                Here's your free download link:
+                            </div>
+                            <div class="dm-link-preview">
+                                <div class="link-preview-content">
+                                    <span class="link-domain">yourbrand.com</span>
+                                    <span class="link-title">Free Marketing Guide 2024</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flow-branch">
-                            <div class="branch-line left"></div>
-                            <div class="branch-line right"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Follower Check -->
+            <div class="feature-row reverse">
+                <div class="feature-info">
+                    <div class="feature-icon green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                    </div>
+                    <div>
+                        <h3>Follower Check</h3>
+                        <p>Branch your flow based on follower status. Offer exclusive content to followers or encourage others to follow first.</p>
+                        <span class="feature-tag">Condition</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-condition-box">
+                        <div class="condition-node">
+                            <span class="condition-label">Is Follower?</span>
                         </div>
-                        <div class="flow-row">
-                            <div class="flow-node small-node">
-                                <i class="bi bi-currency-rupee"></i> Pricing
+                        <div class="condition-branches">
+                            <div class="condition-branch yes">
+                                <span class="branch-label">Yes</span>
+                                <div class="branch-result">Send exclusive discount code</div>
                             </div>
-                            <div class="flow-node small-node">
-                                <i class="bi bi-play-circle"></i> Demo
+                            <div class="condition-branch no">
+                                <span class="branch-label">No</span>
+                                <div class="branch-result">Ask to follow for access</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Returning User Check -->
+            <div class="feature-row">
+                <div class="feature-info">
+                    <div class="feature-icon orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <div>
+                        <h3>Returning User Check</h3>
+                        <p>Detect if someone has interacted before. Send different messages to new vs returning users.</p>
+                        <span class="feature-tag">Condition</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-condition-box">
+                        <div class="condition-node">
+                            <span class="condition-label">Interacted before?</span>
+                        </div>
+                        <div class="condition-branches">
+                            <div class="condition-branch yes">
+                                <span class="branch-label">Yes</span>
+                                <div class="branch-result">Welcome back! Here's what's new</div>
+                            </div>
+                            <div class="condition-branch no">
+                                <span class="branch-label">No</span>
+                                <div class="branch-result">Welcome! Let me introduce...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Logs -->
+            <div class="feature-row reverse">
+                <div class="feature-info">
+                    <div class="feature-icon gray">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    </div>
+                    <div>
+                        <h3>Session Logs</h3>
+                        <p>Track every message sent and received. See the complete conversation history for each user.</p>
+                        <span class="feature-tag">Analytics</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-logs-box">
+                        <div class="log-header">Session #1842 - @sarah_k</div>
+                        <div class="log-entries">
+                            <div class="log-entry">
+                                <span class="log-time">2:34 PM</span>
+                                <span class="log-action">Comment received</span>
+                                <span class="log-detail">"Send me the link!"</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">2:34 PM</span>
+                                <span class="log-action">Comment reply sent</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">2:34 PM</span>
+                                <span class="log-action">DM sent</span>
+                                <span class="log-detail">"Hey Sarah! Here's..."</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">2:35 PM</span>
+                                <span class="log-action">User replied</span>
+                                <span class="log-detail">"Pricing"</span>
                             </div>
                         </div>
                     </div>
@@ -420,151 +545,106 @@
     </div>
 </section>
 
-<!-- Pricing CTA -->
-<section class="section pricing-cta-section">
+<!-- Who It's For -->
+<section class="section audience-section">
     <div class="container">
-        <div class="pricing-cta-box">
-            <div class="section-intro">
-                <span class="section-label">Pricing</span>
-                <h2>Start Free, Upgrade When Ready</h2>
-                <p>No credit card required. No hidden fees. 1 active flow free forever.</p>
+        <h2>Built for creators who take engagement seriously.</h2>
+
+        <div class="audience-grid">
+            <div class="audience-block good">
+                <h3>Good fit</h3>
+                <ul>
+                    <li>Creators and businesses getting comments</li>
+                    <li>Anyone manually replying to DMs</li>
+                    <li>Anyone selling, booking, or capturing leads</li>
+                </ul>
             </div>
-            <div class="pricing-cta-actions">
-                {% if user.is_authenticated %}
-                <a href="{% url 'flow_list' %}" class="btn-pricing-primary">Go to Dashboard</a>
-                {% else %}
-                <a href="{% url 'signup' %}" class="btn-pricing-primary">Start Free</a>
-                {% endif %}
-                <a href="{% url 'pricing' %}" class="btn-pricing-secondary">View All Plans <i class="bi bi-arrow-right"></i></a>
+
+            <div class="audience-block not">
+                <h3>Not for</h3>
+                <ul>
+                    <li>Spammy mass DMs</li>
+                    <li>Fake engagement</li>
+                    <li>Growth hacks</li>
+                </ul>
             </div>
         </div>
     </div>
 </section>
 
-<!-- FAQ -->
-<section class="section faq-section">
+<!-- Social Proof -->
+<section class="section proof-section">
     <div class="container">
-        <div class="section-intro">
-            <span class="section-label">FAQ</span>
-            <h2>Common Questions</h2>
-        </div>
-
-        <div class="faq-grid">
-            <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> Is this safe for my account?</h4>
-                <p>100% safe. We use Meta's official Instagram Messaging API. No password sharing, no third-party hacks, no risk to your account.</p>
+        <div class="proof-items">
+            <div class="proof-item">
+                <span>Built using Instagram's official APIs</span>
             </div>
-
-            <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> What accounts work?</h4>
-                <p>Instagram Business or Creator accounts. Takes 30 seconds to connect via Meta's official OAuth.</p>
+            <div class="proof-item">
+                <span>Designed for account safety</span>
             </div>
-
-            <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> Are replies limited?</h4>
-                <p>No! Replies are unlimited on all plans. The only limit is how many flows can be active at once.</p>
-            </div>
-
-            <div class="faq-card">
-                <h4><i class="bi bi-question-circle"></i> Does it work with Reels?</h4>
-                <p>Yes! Comments on Reels, Feed Posts, and Carousels all trigger automations.</p>
+            <div class="proof-item">
+                <span>No password sharing, no third-party hacks</span>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Final CTA -->
-<section class="section final-cta">
+<section class="section cta-section">
     <div class="container">
-        <div class="cta-box">
-            <div class="cta-content">
-                <h2>Stop Losing Leads to Slow Replies</h2>
-                <p>Join thousands of creators who automate their Instagram engagement.</p>
+        <div class="cta-content">
+            <h2>Stop losing conversations you already earned.</h2>
 
-                <div class="cta-actions">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'flow_list' %}" class="btn-cta">
-                        Go to Dashboard <i class="bi bi-arrow-right"></i>
-                    </a>
-                    {% else %}
-                    <a href="{% url 'signup' %}" class="btn-cta">
-                        Start Automating Free <i class="bi bi-arrow-right"></i>
-                    </a>
-                    {% endif %}
-                </div>
-
-                <p class="cta-subtext">No credit card required • Setup in 3 minutes • Cancel anytime</p>
+            <div class="cta-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'flow_list' %}" class="btn-primary">
+                    Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="btn-primary">
+                    Start free
+                </a>
+                {% endif %}
             </div>
+
+            <p class="cta-note">No credit card. Cancel anytime.</p>
         </div>
     </div>
 </section>
 
 <style>
-/* ========== Variables ========== */
+/* ========== Base ========== */
 :root {
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    --gradient-warm: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --gradient-instagram: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-    --glow-primary: 0 0 60px rgba(102, 126, 234, 0.4);
-    --glow-pink: 0 0 60px rgba(240, 147, 251, 0.3);
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a4a68;
+    --text-muted: #7a7a8c;
+    --bg-white: #fff;
+    --bg-light: #f8f9fc;
+    --bg-soft: #f0f2f8;
+    --bg-dark: #1a1a2e;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --accent-soft: #eef2ff;
+    --border: #e5e7eb;
+    --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
 }
 
 /* ========== Hero ========== */
 .hero {
+    padding: 8rem 0 6rem;
+    background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg-white) 100%);
     position: relative;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding: 6rem 0 4rem;
-    overflow: hidden;
-    background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
 }
 
-.hero-bg {
+.hero::before {
+    content: '';
     position: absolute;
-    inset: 0;
-    overflow: hidden;
-    z-index: 0;
-}
-
-.gradient-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.6;
-    animation: float 20s ease-in-out infinite;
-}
-
-.orb-1 {
-    width: 600px;
-    height: 600px;
-    background: var(--gradient-primary);
-    top: -200px;
-    right: -100px;
-}
-
-.orb-2 {
-    width: 400px;
-    height: 400px;
-    background: var(--gradient-warm);
-    bottom: -100px;
-    left: -100px;
-    animation-delay: -5s;
-}
-
-.orb-3 {
-    width: 300px;
-    height: 300px;
-    background: #667eea;
-    top: 50%;
-    left: 30%;
-    animation-delay: -10s;
-}
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, -30px) scale(1.05); }
-    66% { transform: translate(-20px, 20px) scale(0.95); }
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+    pointer-events: none;
 }
 
 .hero-grid {
@@ -572,375 +652,222 @@
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: center;
+}
+
+.hero-content {
+    max-width: 600px;
     position: relative;
     z-index: 1;
 }
 
-.hero-content {
-    color: white;
+/* Hero Visual */
+.hero-visual {
+    display: flex;
+    justify-content: center;
 }
 
-.hero-pill {
-    display: inline-flex;
+.hero-demo {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+.demo-comment {
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
+    gap: 0.75rem;
+    background: var(--bg-light);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.demo-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.demo-comment-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.demo-username {
+    font-weight: 600;
     font-size: 0.85rem;
-    margin-bottom: 1.5rem;
+    color: var(--text-primary);
 }
 
-.pill-icon {
-    color: #60a5fa;
+.demo-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
-.hero-headline {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
+.demo-arrow {
+    display: flex;
+    justify-content: center;
+    color: var(--accent);
+    margin-bottom: 1rem;
 }
 
-.gradient-text {
-    background: var(--gradient-instagram);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.hero-desc {
-    font-size: 1.15rem;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.7;
-    margin-bottom: 1.5rem;
-    max-width: 500px;
-}
-
-.hero-benefits {
+.demo-actions {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
-.hero-benefit {
+.demo-action {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: rgba(255,255,255,0.9);
-    font-size: 0.95rem;
+    background: var(--bg-light);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
 }
 
-.hero-benefit i {
-    color: #22c55e;
-    font-size: 1.1rem;
+.demo-action .action-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.demo-action .action-icon.blue {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.demo-action .action-icon.indigo {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.action-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.action-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.demo-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.badge-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+.meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+}
+
+.meta-badge svg {
+    color: var(--accent);
+}
+
+.hero-headline {
+    font-size: 3rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.hero-desc {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
 }
 
 .hero-actions {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
     flex-wrap: wrap;
 }
 
-.btn-hero-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--gradient-instagram);
-    color: white;
+.btn-primary {
+    display: inline-block;
+    background: var(--gradient);
+    color: var(--bg-white);
     padding: 1rem 2rem;
-    border-radius: 12px;
+    border-radius: 10px;
     font-weight: 600;
+    font-size: 1rem;
     text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(225, 48, 108, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
 }
 
-.btn-hero-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(225, 48, 108, 0.5);
-    color: white;
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    color: var(--bg-white);
 }
 
-.btn-hero-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    color: white;
+.btn-secondary {
+    display: inline-block;
+    background: var(--bg-white);
+    color: var(--text-primary);
     padding: 1rem 2rem;
-    border-radius: 12px;
-    font-weight: 600;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 1rem;
     text-decoration: none;
-    border: 1px solid rgba(255,255,255,0.2);
-    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+    transition: background 0.2s, border-color 0.2s;
 }
 
-.btn-hero-secondary:hover {
-    background: rgba(255,255,255,0.2);
-    color: white;
-}
-
-.hero-note {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.5);
-    display: flex;
-    gap: 1.5rem;
-}
-
-.hero-note i {
-    color: #22c55e;
-    margin-right: 0.25rem;
-}
-
-/* Hero Visual */
-.hero-visual {
-    position: relative;
-}
-
-.demo-card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: var(--glow-primary);
-}
-
-.demo-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.demo-dots {
-    display: flex;
-    gap: 6px;
-}
-
-.demo-dots span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.3);
-}
-
-.demo-dots span:first-child { background: #ff5f57; }
-.demo-dots span:nth-child(2) { background: #ffbd2e; }
-.demo-dots span:last-child { background: #28c840; }
-
-.demo-title {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.85rem;
-}
-
-.demo-content {
-    padding: 1.5rem;
-}
-
-/* Automation Preview */
-.automation-preview {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-}
-
-.preview-comment {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(255,255,255,0.1);
-    padding: 1rem;
-    border-radius: 12px;
-    width: 100%;
-}
-
-.comment-avatar {
-    width: 40px;
-    height: 40px;
-    background: var(--gradient-instagram);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 0.85rem;
-}
-
-.comment-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.comment-user {
-    color: white;
-    font-weight: 600;
-    font-size: 0.85rem;
-}
-
-.comment-text {
-    color: rgba(255,255,255,0.7);
-    font-size: 0.9rem;
-}
-
-.preview-arrow {
-    width: 40px;
-    height: 40px;
-    background: var(--gradient-instagram);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
-
-.preview-actions {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-}
-
-.action-item {
-    flex: 1;
-    background: rgba(255,255,255,0.1);
-    padding: 1rem;
-    border-radius: 12px;
-    text-align: center;
-}
-
-.action-item i {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.action-item.reply i { color: #60a5fa; }
-.action-item.dm i { color: #f59e0b; }
-
-.action-item span {
-    display: block;
-    color: white;
-    font-weight: 600;
-    font-size: 0.85rem;
-    margin-bottom: 0.25rem;
-}
-
-.action-item small {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.75rem;
-}
-
-/* Floating Badges */
-.floating-badge {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255,255,255,0.95);
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #1a1a2e;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    animation: floatBadge 3s ease-in-out infinite;
-}
-
-.badge-1 {
-    top: 10%;
-    right: -20px;
-}
-
-.badge-1 i { color: #f59e0b; }
-
-.badge-2 {
-    bottom: 15%;
-    left: -30px;
-    animation-delay: -1.5s;
-}
-
-.badge-2 i { color: #22c55e; }
-
-@keyframes floatBadge {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-/* ========== Trust Bar ========== */
-.trust-bar {
-    background: #0f0f1a;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding: 2rem 0;
-}
-
-.trust-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 2rem;
-}
-
-.trust-stats {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-}
-
-.trust-stat {
-    text-align: center;
-}
-
-.stat-number {
-    display: block;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.stat-label {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.8rem;
-}
-
-.trust-divider {
-    width: 1px;
-    height: 40px;
-    background: rgba(255,255,255,0.2);
-}
-
-.trust-logos {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-}
-
-.trust-logos span {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: rgba(255,255,255,0.6);
-    font-size: 0.9rem;
-}
-
-.trust-logos i {
-    font-size: 1.25rem;
+.btn-secondary:hover {
+    background: var(--bg-light);
+    border-color: #d1d5db;
+    color: var(--text-primary);
 }
 
 /* ========== Sections ========== */
@@ -948,738 +875,1097 @@
     padding: 5rem 0;
 }
 
-.section-intro {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.section-label {
-    display: inline-block;
-    background: var(--primary-light);
-    color: var(--primary);
-    padding: 0.4rem 1rem;
-    border-radius: 50px;
-    font-size: 0.8rem;
+.section h2 {
+    font-size: 2rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    letter-spacing: -0.02em;
 }
 
-.section-label.red {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-.section-label.green {
-    background: #f0fdf4;
-    color: #16a34a;
-}
-
-.section-intro h2 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.section-intro p {
-    color: var(--text-muted);
-    font-size: 1.1rem;
-}
-
-/* ========== Problem/Solution ========== */
+/* ========== Problem Section ========== */
 .problem-section {
-    background: var(--bg-light);
+    background: var(--bg-white);
+    border-top: 1px solid var(--border);
 }
 
 .problem-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-}
-
-.problem-side, .solution-side {
-    padding: 2rem;
-    border-radius: 20px;
-}
-
-.problem-side {
-    background: #fef2f2;
-}
-
-.solution-side {
-    background: #f0fdf4;
-}
-
-.problem-side h2, .solution-side h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-}
-
-.problem-list, .solution-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.problem-list li, .solution-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    font-size: 1rem;
-}
-
-.problem-list i {
-    color: #dc2626;
-    font-size: 1.25rem;
-}
-
-.solution-list i {
-    color: #16a34a;
-    font-size: 1.25rem;
-}
-
-/* ========== How It Works ========== */
-.how-it-works {
-    background: white;
-}
-
-.steps-grid {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.step-card {
-    background: var(--bg-light);
-    border-radius: 20px;
-    padding: 2rem;
-    text-align: center;
-    max-width: 280px;
-    position: relative;
-}
-
-.step-number {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px;
-    height: 32px;
-    background: var(--gradient-instagram);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.9rem;
-}
-
-.step-icon {
-    width: 64px;
-    height: 64px;
-    background: white;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    font-size: 1.75rem;
-    color: var(--primary);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.step-card h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.step-card p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin: 0;
-}
-
-.step-arrow {
-    display: flex;
-    align-items: center;
-    color: #d1d5db;
-    font-size: 1.5rem;
-    padding-top: 2.5rem;
-}
-
-/* ========== Features Grid ========== */
-.features-section {
-    background: var(--bg-light);
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-}
-
-.feature-card {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-}
-
-.feature-card.primary {
-    grid-column: span 1;
-}
-
-.feature-card.advanced {
-    grid-column: span 1;
-}
-
-.feature-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--gradient-instagram);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-}
-
-.feature-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.feature-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.feature-icon.pink { background: linear-gradient(135deg, #ec4899, #db2777); }
-.feature-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.feature-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-
-.feature-card h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.feature-card p {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    line-height: 1.5;
-    margin: 0;
-}
-
-.feature-tag {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: var(--gradient-instagram);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.feature-tag.purple { background: #8b5cf6; }
-.feature-tag.green { background: #22c55e; }
-.feature-tag.pink { background: #ec4899; }
-.feature-tag.orange { background: #f59e0b; }
-.feature-tag.blue { background: #3b82f6; }
-
-/* ========== Use Cases ========== */
-.use-cases {
-    background: white;
-}
-
-.cases-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-}
-
-.case-card {
-    background: var(--bg-light);
-    border-radius: 20px;
-    padding: 1.75rem;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.case-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-}
-
-.case-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-}
-
-.case-card h4 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-}
-
-.case-card > p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin-bottom: 1rem;
-}
-
-.case-result {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.case-result i {
-    font-size: 1rem;
-}
-
-/* ========== Builder Highlight ========== */
-.builder-highlight {
-    background: linear-gradient(180deg, var(--bg-light) 0%, white 100%);
-}
-
-.builder-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: center;
 }
 
-.builder-content h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
+.problem-content {
+    max-width: 500px;
 }
 
-.builder-desc {
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    line-height: 1.7;
+.problem-content h2 {
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--text-primary) 0%, #4a4a68 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.problem-text p {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
     margin-bottom: 1.5rem;
 }
 
-.builder-features {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 2rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
+/* Problem Visual */
+.problem-visual {
+    display: flex;
+    justify-content: center;
 }
 
-.builder-features li {
+.missed-comments {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 360px;
+}
+
+.missed-comment {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-white);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    opacity: 0.7;
+    border-left: 3px solid #fca5a5;
+}
+
+.missed-avatar {
+    width: 36px;
+    height: 36px;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.missed-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.missed-user {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+
+.missed-text {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.missed-time {
+    font-size: 0.75rem;
+    color: #ef4444;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.missed-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #ef4444;
+    font-weight: 500;
+    padding-top: 0.5rem;
+}
+
+/* ========== Reframe Section ========== */
+.reframe-section {
+    background: var(--bg-light);
+}
+
+.reframe-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.reframe-content {
+    max-width: 500px;
+}
+
+.reframe-content h2 {
+    color: var(--accent);
+}
+
+.reframe-points {
+    margin-bottom: 2.5rem;
+}
+
+.reframe-point {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.point-marker {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.reframe-key {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Reframe Visual */
+.reframe-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.conversation-flow {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.95rem;
+    background: var(--bg-white);
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 
-.builder-features i {
-    color: #22c55e;
-}
-
-.btn-builder {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--gradient-instagram);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.btn-builder:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(225, 48, 108, 0.4);
-    color: white;
-}
-
-/* Builder Visual */
-.flow-preview-card {
-    background: white;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-}
-
-.flow-preview {
+.flow-step {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
 }
 
-.flow-node {
-    background: #f8f9fa;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 220px;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-}
-
-.flow-node .node-header {
-    padding: 8px 12px;
+.flow-step span {
     font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.flow-node .node-body {
-    padding: 8px 12px;
-    font-size: 0.7rem;
+    font-weight: 500;
     color: var(--text-muted);
-    background: white;
 }
 
-.trigger-node .node-header { background: #f59e0b; }
-.message-node .node-header { background: #3b82f6; }
-.qr-node .node-header { background: #22c55e; }
-
-.qr-buttons {
-    display: flex;
-    gap: 6px;
-}
-
-.qr-btn {
-    background: var(--bg-light);
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.65rem;
-    color: var(--text);
-    border: 1px solid var(--border-color);
-}
-
-.flow-connector {
-    width: 2px;
-    height: 20px;
-    background: linear-gradient(180deg, #d1d5db, #e5e7eb);
-}
-
-.flow-branch {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    height: 20px;
-    position: relative;
-}
-
-.branch-line {
-    position: absolute;
-    width: 50px;
-    height: 20px;
-    border: 2px solid #d1d5db;
-    border-top: none;
-}
-
-.branch-line.left {
-    left: calc(50% - 70px);
-    border-right: none;
-    border-radius: 0 0 0 12px;
-}
-
-.branch-line.right {
-    right: calc(50% - 70px);
-    border-left: none;
-    border-radius: 0 0 12px 0;
-}
-
-.flow-row {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-}
-
-.small-node {
-    padding: 8px 16px !important;
-    font-size: 0.7rem;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #8b5cf6 !important;
-    border: none !important;
-}
-
-/* ========== Pricing CTA ========== */
-.pricing-cta-section {
-    background: white;
-}
-
-.pricing-cta-box {
-    background: var(--bg-light);
-    border-radius: 24px;
-    padding: 3rem 2rem;
-    text-align: center;
-    border: 1px solid var(--border-color);
-}
-
-.pricing-cta-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn-pricing-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--gradient-instagram);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 12px;
+.flow-step.highlight span {
+    color: var(--accent);
     font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
 }
 
-.btn-pricing-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(225, 48, 108, 0.4);
-    color: white;
-}
-
-.btn-pricing-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: white;
-    color: var(--text);
-    padding: 1rem 2rem;
+.flow-icon {
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.btn-pricing-secondary:hover {
-    background: var(--bg-light);
-    color: var(--text);
+.flow-icon.post {
+    background: #fef3c7;
+    color: #d97706;
 }
 
-/* ========== FAQ ========== */
-.faq-section {
-    background: var(--bg-light);
+.flow-icon.comment {
+    background: #e0e7ff;
+    color: #4f46e5;
 }
 
-.faq-grid {
+.flow-icon.reply {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.flow-icon.dm {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #6366f1;
+}
+
+.flow-icon.convert {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #16a34a;
+}
+
+.flow-connector-line {
+    width: 24px;
+    height: 2px;
+    background: var(--border);
+}
+
+.flow-label {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ========== What Section ========== */
+.what-section {
+    background: var(--bg-white);
+}
+
+.what-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-    max-width: 900px;
-    margin: 0 auto;
+    margin-top: 2rem;
 }
 
-.faq-card {
-    background: white;
+.what-block {
+    background: var(--bg-light);
+    padding: 2rem;
     border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.faq-card h4 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
+.what-block:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);
+}
+
+.what-block h3 {
+    font-size: 1.05rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
 }
 
-.faq-card h4 i {
-    color: var(--primary);
-}
-
-.faq-card p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
+.what-block p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
 }
 
-/* ========== Final CTA ========== */
-.final-cta {
-    padding: 4rem 0;
+/* ========== How Section ========== */
+.how-section {
+    background: var(--bg-light);
 }
 
-.cta-box {
-    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
-    border-radius: 24px;
-    padding: 4rem 2rem;
+.steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.step {
+    position: relative;
+    background: var(--bg-white);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--gradient);
+    color: var(--bg-white);
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.step h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.step p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ========== Features Section ========== */
+.features-section {
+    background: var(--bg-light);
+}
+
+.features-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.features-header h2 {
+    margin-bottom: 0.75rem;
+}
+
+.features-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.feature-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    background: var(--bg-white);
+    border-radius: 20px;
+    padding: 2.5rem;
+    border: 1px solid var(--border);
+}
+
+.feature-row.reverse {
+    direction: rtl;
+}
+
+.feature-row.reverse > * {
+    direction: ltr;
+}
+
+.feature-info {
+    display: flex;
+    gap: 1.25rem;
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.feature-icon.blue {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #2563eb;
+}
+
+.feature-icon.indigo {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #4f46e5;
+}
+
+.feature-icon.purple {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #7c3aed;
+}
+
+.feature-icon.pink {
+    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+    color: #db2777;
+}
+
+.feature-icon.teal {
+    background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+    color: #0d9488;
+}
+
+.feature-icon.green {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #16a34a;
+}
+
+.feature-icon.orange {
+    background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+    color: #ea580c;
+}
+
+.feature-icon.gray {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #4b5563;
+}
+
+.feature-info h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.feature-info p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 0.75rem;
+}
+
+.feature-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    background: var(--bg-light);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+}
+
+/* Feature Previews */
+.feature-preview {
+    display: flex;
+    justify-content: center;
+}
+
+/* Comment Preview */
+.preview-comment-box {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 320px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.preview-post-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.preview-avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.preview-avatar.small {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+}
+
+.preview-username {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.preview-comments {
+    padding: 1rem;
+}
+
+.preview-comment {
+    margin-bottom: 0.75rem;
+}
+
+.preview-comment:last-child {
+    margin-bottom: 0;
+}
+
+.preview-comment .comment-user {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+}
+
+.preview-comment .comment-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.preview-comment.reply {
+    padding-left: 1rem;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0 8px 8px 0;
+    margin-top: 0.5rem;
+}
+
+/* DM Preview */
+.preview-dm-box {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 300px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.dm-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.dm-messages {
+    padding: 1rem;
+}
+
+.dm-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 18px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-width: 90%;
+}
+
+.dm-bubble.sent {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+}
+
+.dm-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.qr-button {
+    background: var(--bg-white);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.dm-button-template {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.template-button {
+    display: block;
+    text-align: center;
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.dm-link-preview {
+    margin-top: 0.75rem;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.link-preview-content {
+    padding: 0.75rem;
+}
+
+.link-domain {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.link-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Condition Preview */
+.preview-condition-box {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.condition-node {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.condition-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.condition-branches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.condition-branch {
+    text-align: center;
+}
+
+.branch-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.condition-branch.yes .branch-label {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.condition-branch.no .branch-label {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.branch-result {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Logs Preview */
+.preview-logs-box {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 340px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.log-header {
+    padding: 0.75rem 1rem;
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.log-entries {
+    padding: 0.75rem;
+}
+
+.log-entry {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.log-entry:nth-child(odd) {
+    background: var(--bg-light);
+}
+
+.log-time {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+.log-action {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.log-detail {
+    color: var(--text-muted);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========== Audience Section ========== */
+.audience-section {
+    background: var(--bg-white);
+}
+
+.audience-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.audience-block {
+    padding: 2rem;
+    border-radius: 16px;
+}
+
+.audience-block.good {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
+}
+
+.audience-block.not {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+}
+
+.audience-block h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.audience-block.good h3 {
+    color: #16a34a;
+}
+
+.audience-block.not h3 {
+    color: var(--text-muted);
+}
+
+.audience-block ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.audience-block li {
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.audience-block.good li::before {
+    content: "✓";
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.audience-block.not li::before {
+    content: "✗";
+    color: var(--text-muted);
+}
+
+/* ========== Proof Section ========== */
+.proof-section {
+    background: var(--bg-light);
+    padding: 2.5rem 0;
+}
+
+.proof-items {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.proof-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background: var(--bg-white);
+    padding: 0.75rem 1.25rem;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+}
+
+.proof-item::before {
+    content: "✓";
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ========== CTA Section ========== */
+.cta-section {
+    background: var(--bg-dark);
     text-align: center;
     position: relative;
     overflow: hidden;
 }
 
-.cta-box::before {
+.cta-section::before {
     content: '';
     position: absolute;
-    top: 0;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 600px;
     height: 600px;
-    background: var(--gradient-instagram);
-    opacity: 0.15;
-    border-radius: 50%;
-    filter: blur(100px);
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+    pointer-events: none;
 }
 
 .cta-content {
+    max-width: 500px;
+    margin: 0 auto;
     position: relative;
     z-index: 1;
 }
 
-.cta-box h2 {
-    color: white;
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.cta-box > .cta-content > p {
-    color: rgba(255,255,255,0.7);
-    font-size: 1.15rem;
+.cta-content h2 {
+    color: var(--bg-white);
     margin-bottom: 2rem;
 }
 
 .cta-actions {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-.btn-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: white;
-    color: var(--primary);
-    padding: 1rem 2.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
+.cta-section .btn-primary {
+    background: var(--bg-white);
+    color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-.btn-cta:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    color: var(--primary);
+.cta-section .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
 }
 
-.cta-subtext {
-    color: rgba(255,255,255,0.5);
+.cta-note {
     font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 /* ========== Responsive ========== */
 @media (max-width: 1024px) {
-    .hero-grid {
+    .hero-grid,
+    .problem-grid,
+    .reframe-grid {
         grid-template-columns: 1fr;
-        gap: 3rem;
+        gap: 2.5rem;
     }
 
+    /* Hero: content first, then visual */
+    .hero-content {
+        order: 1;
+    }
     .hero-visual {
+        order: 2;
+    }
+
+    /* Other sections: visual first */
+    .problem-visual,
+    .reframe-visual {
         order: -1;
     }
 
-    .floating-badge {
-        display: none;
+    .steps {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .problem-grid, .builder-grid {
-        grid-template-columns: 1fr;
+    .feature-row {
         gap: 2rem;
+        padding: 2rem;
     }
 
-    .features-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .conversation-flow {
+        flex-wrap: wrap;
+        justify-content: center;
     }
-
-    .cases-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
 }
 
 @media (max-width: 768px) {
     .hero {
-        padding: 4rem 0 3rem;
-        min-height: auto;
+        padding: 5rem 0 4rem;
+    }
+
+    .hero::before {
+        width: 100%;
+    }
+
+    .hero-headline {
+        font-size: 2rem;
+    }
+
+    .hero-desc {
+        font-size: 1.1rem;
+    }
+
+    .hero-desc br,
+    .problem-text br,
+    .reframe-key br {
+        display: none;
+    }
+
+    .section {
+        padding: 3rem 0;
+    }
+
+    .section h2 {
+        font-size: 1.5rem;
+    }
+
+    .hero-grid,
+    .problem-grid,
+    .reframe-grid {
+        gap: 2rem;
+    }
+
+    .hero-demo,
+    .missed-comments {
+        max-width: 100%;
+    }
+
+    .what-grid,
+    .steps,
+    .audience-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-row {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .feature-row.reverse {
+        direction: ltr;
+    }
+
+    .feature-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .feature-preview {
+        order: -1;
+    }
+
+    .preview-dm-box,
+    .preview-comment-box,
+    .preview-condition-box,
+    .preview-logs-box {
+        max-width: 100%;
+    }
+
+    .features-header {
+        margin-bottom: 2rem;
+    }
+
+    .features-header p {
+        font-size: 1rem;
     }
 
     .hero-actions {
         flex-direction: column;
     }
 
-    .btn-hero-primary, .btn-hero-secondary {
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+
+    .proof-items {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .proof-item {
         width: 100%;
         justify-content: center;
     }
 
-    .hero-note {
-        flex-direction: column;
-        gap: 0.5rem;
+    .cta-section {
+        padding: 4rem 0;
     }
 
-    .trust-content {
-        flex-direction: column;
-        text-align: center;
+    .conversation-flow {
+        padding: 1rem;
+        gap: 0.25rem;
     }
 
-    .trust-stats {
-        justify-content: center;
+    .flow-icon {
+        width: 36px;
+        height: 36px;
     }
 
-    .steps-grid {
-        flex-direction: column;
-        align-items: center;
+    .flow-connector-line {
+        width: 12px;
     }
 
-    .step-arrow {
-        transform: rotate(90deg);
-        padding: 0.5rem 0;
-    }
-
-    .step-card {
-        max-width: 100%;
-    }
-
-    .features-grid, .cases-grid, .faq-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .builder-features {
-        grid-template-columns: 1fr;
-    }
-
-    .cta-box {
-        padding: 3rem 1.5rem;
+    .flow-step span {
+        font-size: 0.65rem;
     }
 }
 </style>

@@ -115,6 +115,65 @@
         padding: 0.5rem 0.75rem;
         margin-top: 0.5rem;
     }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 767px) {
+        .session-header {
+            padding: 1rem;
+            border-radius: 0;
+            margin: -1rem -12px 1rem -12px;
+        }
+
+        .session-header .row > div {
+            margin-bottom: 0.75rem;
+        }
+
+        .session-header .row > div:last-child {
+            margin-bottom: 0;
+        }
+
+        .session-header h4 {
+            font-size: 1.1rem;
+        }
+
+        .timeline {
+            padding-left: 25px;
+        }
+
+        .timeline::before {
+            left: 8px;
+        }
+
+        .timeline-marker {
+            left: -22px;
+            width: 18px;
+            height: 18px;
+            font-size: 0.6rem;
+        }
+
+        .timeline-content {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .message-bubble {
+            max-width: 100%;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .card-header h6 {
+            font-size: 0.9rem;
+        }
+
+        .timeline-content .d-flex {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .timeline-content .d-flex small.text-muted {
+            order: -1;
+            font-size: 0.7rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -132,12 +191,12 @@
 
                 <!-- Session Header -->
                 <div class="session-header">
-                    <div class="row">
-                        <div class="col-md-6">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
                             <div class="detail-label">Instagram User</div>
                             <h4 class="mb-0">@{{ session.instagram_username|default:"unknown" }}</h4>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="detail-label">Status</div>
                             <div>
                                 {% if session.status == 'completed' %}
@@ -153,9 +212,9 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="detail-label">Started</div>
-                            <div>{{ session.created_at|date:"M j, Y H:i" }}</div>
+                            <div class="small">{{ session.created_at|date:"M j, H:i" }}</div>
                         </div>
                     </div>
 

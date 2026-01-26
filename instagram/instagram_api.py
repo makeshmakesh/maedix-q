@@ -8,10 +8,16 @@ Handles all Instagram API interactions including:
 """
 
 import logging
+import random
+import time
 import requests
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
+
+# Rate limiting configuration
+DM_DELAY_MIN_SECONDS = 2  # Minimum delay before sending DM
+DM_DELAY_MAX_SECONDS = 8  # Maximum delay before sending DM
 
 # Instagram API version
 API_VERSION = "v24.0"
@@ -41,6 +47,10 @@ class InstagramAPIError(Exception):
 class InstagramAPIClient:
     """Client for Instagram Graph API interactions"""
 
+    # Class-level tracking of last DM time per account (persists across instances)
+    # Key: ig_user_id, Value: timestamp of last DM sent
+    _account_last_dm_times: Dict[str, float] = {}
+
     def __init__(self, access_token: str, ig_user_id: str):
         """
         Initialize the API client.
@@ -52,6 +62,32 @@ class InstagramAPIClient:
         self.access_token = access_token
         self.ig_user_id = ig_user_id
         self.timeout = 30
+
+    def _apply_dm_delay(self):
+        """
+        Apply a randomized delay before sending a DM to mimic human behavior
+        and avoid Instagram spam detection.
+
+        The delay is randomized between DM_DELAY_MIN_SECONDS and DM_DELAY_MAX_SECONDS.
+        Tracks per-account timing to handle concurrent webhooks properly.
+        """
+        # Get last DM time for this account (default to 0 if never sent)
+        last_dm_time = self._account_last_dm_times.get(self.ig_user_id, 0)
+
+        # Calculate time since last DM
+        time_since_last = time.time() - last_dm_time
+
+        # Generate random delay
+        delay = random.uniform(DM_DELAY_MIN_SECONDS, DM_DELAY_MAX_SECONDS)
+
+        # Only sleep if we haven't already waited long enough
+        if time_since_last < delay:
+            actual_delay = delay - time_since_last
+            logger.debug(f"Applying DM rate limit delay for account {self.ig_user_id}: {actual_delay:.2f}s")
+            time.sleep(actual_delay)
+
+        # Update last DM time for this account
+        self._account_last_dm_times[self.ig_user_id] = time.time()
 
     def _make_request(
         self,
@@ -152,6 +188,7 @@ class InstagramAPIClient:
         Returns:
             API response containing the message ID and recipient IGSID
         """
+        self._apply_dm_delay()
         logger.info(f"Sending DM to commenter via comment {comment_id}")
 
         message_payload = {'text': message}
@@ -194,6 +231,7 @@ class InstagramAPIClient:
         Returns:
             API response
         """
+        self._apply_dm_delay()
         logger.info(f"Sending text DM to IGSID {igsid}")
         payload = {
             'recipient': {'id': igsid},
@@ -237,6 +275,7 @@ class InstagramAPIClient:
                 {"content_type": "text", "title": "Learn More", "payload": "learn_more"}
             ]
         """
+        self._apply_dm_delay()
         logger.info(f"Sending quick reply DM to IGSID {igsid} with {len(quick_replies)} options")
 
         # Validate quick replies (Instagram limits)
@@ -315,6 +354,7 @@ class InstagramAPIClient:
                 {"type": "postback", "title": "Get Started", "payload": "get_started"}
             ]
         """
+        self._apply_dm_delay()
         logger.info(f"Sending button template DM to IGSID {igsid} with {len(buttons)} buttons")
 
         # Validate and format buttons (Instagram limits: max 3 buttons)
@@ -379,6 +419,7 @@ class InstagramAPIClient:
         Returns:
             API response containing the message ID and recipient IGSID
         """
+        self._apply_dm_delay()
         # Validate and format buttons
         if len(buttons) > 3:
             buttons = buttons[:3]
@@ -441,6 +482,7 @@ class InstagramAPIClient:
         Returns:
             API response
         """
+        self._apply_dm_delay()
         logger.info(f"Sending {media_type} DM to IGSID {igsid}")
 
         payload = {

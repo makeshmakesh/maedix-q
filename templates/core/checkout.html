@@ -47,9 +47,44 @@
                             </div>
                             {% endif %}
 
+                            <!-- Coupon Code Section -->
+                            <div class="mb-4 pb-3 border-bottom">
+                                <label class="text-muted d-block mb-2">Have a coupon code?</label>
+                                <div class="input-group">
+                                    <input type="text" id="coupon-input" class="form-control" placeholder="Enter coupon code"
+                                           value="{% if applied_coupon %}{{ applied_coupon.code }}{% endif %}"
+                                           {% if applied_coupon %}disabled{% endif %}>
+                                    <button class="btn btn-outline-primary" type="button" id="apply-coupon-btn"
+                                            {% if applied_coupon %}style="display:none;"{% endif %}>
+                                        Apply
+                                    </button>
+                                    <button class="btn btn-outline-danger" type="button" id="remove-coupon-btn"
+                                            {% if not applied_coupon %}style="display:none;"{% endif %}>
+                                        Remove
+                                    </button>
+                                </div>
+                                <div id="coupon-message" class="mt-2 small">
+                                    {% if applied_coupon %}
+                                    <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ applied_coupon.discount_percentage }}% discount applied!</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Price Summary -->
+                            {% if applied_coupon %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Original Price</span>
+                                <span class="text-muted text-decoration-line-through">{{ currency_symbol }}{{ original_price }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-success">Discount ({{ applied_coupon.discount_percentage }}%)</span>
+                                <span class="text-success">-{{ currency_symbol }}{{ discount_amount }}</span>
+                            </div>
+                            {% endif %}
+
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                                 <span class="fs-5 fw-bold">Total Amount</span>
-                                <span class="fs-4 fw-bold text-primary">{{ currency_symbol }}{{ price }}</span>
+                                <span class="fs-4 fw-bold text-primary" id="total-price">{{ currency_symbol }}{{ price }}</span>
                             </div>
                         </div>
 
@@ -117,6 +152,71 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnText = rzpButton.querySelector('.btn-text');
     const spinner = rzpButton.querySelector('.spinner-border');
 
+    // Coupon elements
+    const couponInput = document.getElementById('coupon-input');
+    const applyCouponBtn = document.getElementById('apply-coupon-btn');
+    const removeCouponBtn = document.getElementById('remove-coupon-btn');
+    const couponMessage = document.getElementById('coupon-message');
+
+    // Current coupon code (if applied)
+    let appliedCouponCode = '{% if applied_coupon %}{{ applied_coupon.code }}{% endif %}';
+
+    // Apply coupon button click
+    applyCouponBtn.addEventListener('click', function() {
+        const code = couponInput.value.trim();
+        if (!code) {
+            couponMessage.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Please enter a coupon code</span>';
+            return;
+        }
+
+        applyCouponBtn.disabled = true;
+        applyCouponBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        // Validate coupon via AJAX
+        fetch('{% url "validate_coupon" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'code=' + encodeURIComponent(code)
+        })
+        .then(response => response.json())
+        .then(data => {
+            applyCouponBtn.disabled = false;
+            applyCouponBtn.innerHTML = 'Apply';
+
+            if (data.valid) {
+                // Reload page with coupon parameter to recalculate price
+                const url = new URL(window.location.href);
+                url.searchParams.set('coupon', code);
+                window.location.href = url.toString();
+            } else {
+                couponMessage.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>' + data.error + '</span>';
+            }
+        })
+        .catch(error => {
+            applyCouponBtn.disabled = false;
+            applyCouponBtn.innerHTML = 'Apply';
+            couponMessage.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Error validating coupon</span>';
+        });
+    });
+
+    // Remove coupon button click
+    removeCouponBtn.addEventListener('click', function() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('coupon');
+        window.location.href = url.toString();
+    });
+
+    // Allow Enter key to apply coupon
+    couponInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !appliedCouponCode) {
+            e.preventDefault();
+            applyCouponBtn.click();
+        }
+    });
+
     const options = {
         "key": "{{ razorpay_key_id }}",
         "amount": "{{ amount_paise }}",
@@ -136,6 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'razorpay_signature': response.razorpay_signature,
                 'plan_slug': '{{ plan.slug }}',
                 'billing': '{{ billing }}',
+                'coupon_code': appliedCouponCode,
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
             };
 

@@ -121,7 +121,7 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             url = f"https://graph.instagram.com/v21.0/{ig_user_id}/subscribed_apps"
 
             params = {
-                "subscribed_fields": "comments,messages",
+                "subscribed_fields": "comments,messages,messaging_postbacks",
                 "access_token": access_token,
             }
 

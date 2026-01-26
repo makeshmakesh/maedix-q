@@ -104,6 +104,56 @@ def robots_txt(request):
     return render(request, 'robots.txt', content_type='text/plain')
 
 
+def get_valid_coupon(code: str) -> dict | None:
+    """
+    Validate a coupon code and return coupon details if valid.
+
+    Coupon configuration format in Configuration model:
+    Key: 'coupon_codes'
+    Value: [{"code": "SAVE50", "discount_percentage": 50, "active": true}]
+
+    Returns dict with coupon details or None if invalid.
+    """
+    if not code:
+        return None
+
+    code = code.strip().upper()
+    coupons_json = Configuration.get_value('coupon_codes', '[]')
+
+    try:
+        coupons = json.loads(coupons_json)
+        for coupon in coupons:
+            if coupon.get('code', '').upper() == code and coupon.get('active', True):
+                return coupon
+    except (json.JSONDecodeError, TypeError):
+        logger.error("Invalid coupon_codes configuration format")
+
+    return None
+
+
+class ValidateCouponView(LoginRequiredMixin, View):
+    """AJAX endpoint to validate coupon code"""
+    login_url = '/users/login/'
+
+    def post(self, request):
+        code = request.POST.get('code', '').strip()
+
+        if not code:
+            return JsonResponse({'valid': False, 'error': 'Please enter a coupon code'})
+
+        coupon = get_valid_coupon(code)
+
+        if coupon:
+            return JsonResponse({
+                'valid': True,
+                'code': coupon['code'],
+                'discount_percentage': coupon.get('discount_percentage', 0),
+                'message': f"{coupon.get('discount_percentage', 0)}% discount applied!"
+            })
+        else:
+            return JsonResponse({'valid': False, 'error': 'Invalid or expired coupon code'})
+
+
 class CheckoutView(LoginRequiredMixin, View):
     """Checkout page with Razorpay integration"""
     template_name = 'core/checkout.html'
@@ -112,6 +162,7 @@ class CheckoutView(LoginRequiredMixin, View):
     def get(self, request):
         plan_slug = request.GET.get('plan')
         billing = request.GET.get('billing', 'monthly')
+        coupon_code = request.GET.get('coupon', '').strip()
 
         if not plan_slug:
             messages.error(request, 'Please select a plan.')
@@ -130,9 +181,21 @@ class CheckoutView(LoginRequiredMixin, View):
 
         # Get price based on billing cycle
         is_yearly = billing == 'yearly'
-        price = plan.price_yearly if is_yearly else plan.price_monthly
+        original_price = plan.price_yearly if is_yearly else plan.price_monthly
+        price = original_price
         currency = 'INR'
         currency_symbol = '₹'
+
+        # Apply coupon discount if valid
+        applied_coupon = None
+        discount_amount = Decimal('0')
+        if coupon_code:
+            coupon = get_valid_coupon(coupon_code)
+            if coupon:
+                discount_percentage = Decimal(str(coupon.get('discount_percentage', 0)))
+                discount_amount = (original_price * discount_percentage / 100).quantize(Decimal('0.01'))
+                price = original_price - discount_amount
+                applied_coupon = coupon
 
         # Create Razorpay order
         try:
@@ -150,19 +213,27 @@ class CheckoutView(LoginRequiredMixin, View):
             # Amount in paise (smallest unit)
             amount_paise = int(price * 100)
 
+            order_notes = {
+                'user_id': str(request.user.id),
+                'plan_slug': plan_slug,
+                'billing': billing,
+            }
+            if applied_coupon:
+                order_notes['coupon_code'] = applied_coupon['code']
+                order_notes['discount_percentage'] = applied_coupon.get('discount_percentage', 0)
+
             razorpay_order = client.order.create({
                 'amount': amount_paise,
                 'currency': currency,
-                'notes': {
-                    'user_id': str(request.user.id),
-                    'plan_slug': plan_slug,
-                    'billing': billing,
-                }
+                'notes': order_notes
             })
 
             context = {
                 'plan': plan,
+                'original_price': original_price,
                 'price': price,
+                'discount_amount': discount_amount,
+                'applied_coupon': applied_coupon,
                 'billing': billing,
                 'is_yearly': is_yearly,
                 'currency': currency,
@@ -189,6 +260,7 @@ class PaymentSuccessView(LoginRequiredMixin, View):
         razorpay_signature = request.POST.get('razorpay_signature')
         plan_slug = request.POST.get('plan_slug')
         billing = request.POST.get('billing', 'monthly')
+        coupon_code = request.POST.get('coupon_code', '').strip()
 
         try:
             plan = Plan.objects.get(slug=plan_slug, is_active=True)
@@ -197,7 +269,18 @@ class PaymentSuccessView(LoginRequiredMixin, View):
             return redirect('pricing')
 
         is_yearly = billing == 'yearly'
-        price = plan.price_yearly if is_yearly else plan.price_monthly
+        original_price = plan.price_yearly if is_yearly else plan.price_monthly
+        price = original_price
+
+        # Apply coupon discount if provided
+        applied_coupon = None
+        if coupon_code:
+            coupon = get_valid_coupon(coupon_code)
+            if coupon:
+                discount_percentage = Decimal(str(coupon.get('discount_percentage', 0)))
+                discount_amount = (original_price * discount_percentage / 100).quantize(Decimal('0.01'))
+                price = original_price - discount_amount
+                applied_coupon = coupon
 
         # Verify signature
         try:
@@ -215,7 +298,16 @@ class PaymentSuccessView(LoginRequiredMixin, View):
                 messages.error(request, 'Payment verification failed. Please contact support.')
                 return redirect('pricing')
 
-            # Create transaction record
+            # Create transaction record with coupon info if applied
+            transaction_metadata = {
+                'plan_slug': plan_slug,
+                'billing': billing,
+            }
+            if applied_coupon:
+                transaction_metadata['coupon_code'] = applied_coupon['code']
+                transaction_metadata['discount_percentage'] = applied_coupon.get('discount_percentage', 0)
+                transaction_metadata['original_price'] = str(original_price)
+
             transaction = Transaction.objects.create(
                 user=request.user,
                 amount=Decimal(str(price)),
@@ -224,10 +316,7 @@ class PaymentSuccessView(LoginRequiredMixin, View):
                 razorpay_order_id=razorpay_order_id,
                 razorpay_payment_id=razorpay_payment_id,
                 razorpay_signature=razorpay_signature,
-                metadata={
-                    'plan_slug': plan_slug,
-                    'billing': billing,
-                }
+                metadata=transaction_metadata
             )
 
             # Calculate subscription dates

@@ -14,6 +14,7 @@ urlpatterns = [
 
     # Payment URLs
     path('payment/checkout/', views.CheckoutView.as_view(), name='checkout'),
+    path('payment/validate-coupon/', views.ValidateCouponView.as_view(), name='validate_coupon'),
     path('payment/success/', views.PaymentSuccessView.as_view(), name='payment_success'),
     path('payment/success/page/', views.PaymentSuccessPageView.as_view(), name='payment_success_page'),
     path('payment/failed/', views.PaymentFailedView.as_view(), name='payment_failed'),

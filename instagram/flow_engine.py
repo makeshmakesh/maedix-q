@@ -1117,9 +1117,21 @@ class FlowEngine:
             self._complete_flow(session)
 
     def _is_branch_target(self, node: FlowNode) -> bool:
-        """Check if a node is a target of branching (quick reply, button template, or condition)."""
+        """
+        Check if a node is explicitly connected from another node.
+        This includes:
+        - Target of quick reply option
+        - Target of condition node (true/false branch)
+        - Target of button template button
+        - Connected via next_node from another node
+        """
         # Check if this node is a target of any quick reply option
         if QuickReplyOption.objects.filter(target_node=node).exists():
+            return True
+
+        # Check if this node is connected via next_node from another node
+        # This means it's explicitly part of a flow path, not just ordered
+        if FlowNode.objects.filter(flow=node.flow, next_node=node).exists():
             return True
 
         # Check if this node is a target of any condition node

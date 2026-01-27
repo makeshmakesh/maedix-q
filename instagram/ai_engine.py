@@ -326,18 +326,25 @@ class AIConversationHandler:
         CreditManager.deduct_credits(self.user, received_cost, "AI message received")
 
         # Extract data from user message
+        print(f"[AI DEBUG] Extracting data. Schema: {self.ai_config.collection_schema}")
+        print(f"[AI DEBUG] Existing data: {ai_data.data}")
         extracted_data = self._extract_data_from_message(message_text, ai_data.data)
+        print(f"[AI DEBUG] Extraction result: {extracted_data}")
+
         if extracted_data:
             ai_data.update_multiple_fields(extracted_data)
+            print(f"[AI DEBUG] After update - ai_data.data: {ai_data.data}")
+            print(f"[AI DEBUG] fields_collected: {ai_data.fields_collected}")
             result['collected_data'] = ai_data.data
+        else:
+            print(f"[AI DEBUG] No data extracted from message: {message_text[:100]}")
 
         # Check if goal is complete after extraction
-        logger.info(f"AI data status: is_complete={ai_data.is_complete}, "
-                    f"collected={ai_data.fields_collected}, "
-                    f"completion={ai_data.completion_percentage}%")
+        print(f"[AI DEBUG] is_complete={ai_data.is_complete}, "
+              f"collected={ai_data.fields_collected}, completion={ai_data.completion_percentage}%")
 
         if ai_data.is_complete:
-            logger.info(f"AI goal complete (all required fields collected), advancing to next node")
+            print(f"[AI DEBUG] Goal complete! Advancing to next node")
             result['success'] = True
             result['goal_complete'] = True
             result['next_action'] = 'complete'
@@ -373,7 +380,7 @@ class AIConversationHandler:
 
         # Check for goal complete markers in response
         if self._check_goal_complete_marker(ai_response):
-            logger.info(f"AI goal complete marker detected in response, advancing to next node")
+            print(f"[AI DEBUG] Goal complete marker detected in response!")
             result['goal_complete'] = True
             result['next_action'] = 'complete'
 
@@ -569,12 +576,16 @@ Keep it brief and engaging. Don't ask too many questions at once."""
     def _extract_data_from_message(self, message: str, existing_data: Dict) -> Dict:
         """Extract structured data from user message using LLM"""
         if not self.ai_config.collection_schema:
+            print("[AI DEBUG] No collection_schema configured, skipping extraction")
             return {}
 
         schema = self.ai_config.collection_schema
         missing_fields = [f for f in schema if not existing_data.get(f['field'])]
+        print(f"[AI DEBUG] Schema has {len(schema)} fields, {len(missing_fields)} missing: "
+              f"{[f['field'] for f in missing_fields]}")
 
         if not missing_fields:
+            print("[AI DEBUG] All fields already collected, skipping extraction")
             return {}
 
         extraction_prompt = f"""Extract the following information from the user's message if present.
@@ -613,13 +624,13 @@ Example: {{"email": "user@example.com", "budget": "50L-1Cr"}}"""
 
             extracted = json.loads(content)
             if extracted:
-                logger.info(f"Extracted data from message: {extracted}")
+                print(f"[AI DEBUG] Extracted data from message: {extracted}")
             return extracted
         except json.JSONDecodeError as e:
-            logger.error(f"JSON parse error in data extraction: {e}. Raw content: {content[:200]}")
+            print(f"[AI DEBUG] JSON parse error: {e}. Raw content: {content[:200]}")
             return {}
         except Exception as e:
-            logger.error(f"Error extracting data: {e}")
+            print(f"[AI DEBUG] Error extracting data: {e}")
             return {}
 
     def _format_schema_for_prompt(self) -> str:

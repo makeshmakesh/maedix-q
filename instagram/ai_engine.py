@@ -219,6 +219,10 @@ class AIConversationHandler:
                 ai_data.schema_snapshot = (ai_data.schema_snapshot or []) + new_fields
             ai_data.save(update_fields=['ai_config', 'schema_snapshot', 'updated_at'])
 
+        # Recalculate completion status (handles case of no required fields)
+        ai_data._recalculate_completion()
+        ai_data.save(update_fields=['is_complete', 'completion_percentage', 'updated_at'])
+
         # Store flag for context-aware prompt generation
         self._has_previous_context = previous_messages
 
@@ -328,7 +332,12 @@ class AIConversationHandler:
             result['collected_data'] = ai_data.data
 
         # Check if goal is complete after extraction
+        logger.info(f"AI data status: is_complete={ai_data.is_complete}, "
+                    f"collected={ai_data.fields_collected}, "
+                    f"completion={ai_data.completion_percentage}%")
+
         if ai_data.is_complete:
+            logger.info(f"AI goal complete (all required fields collected), advancing to next node")
             result['success'] = True
             result['goal_complete'] = True
             result['next_action'] = 'complete'
@@ -364,6 +373,7 @@ class AIConversationHandler:
 
         # Check for goal complete markers in response
         if self._check_goal_complete_marker(ai_response):
+            logger.info(f"AI goal complete marker detected in response, advancing to next node")
             result['goal_complete'] = True
             result['next_action'] = 'complete'
 
@@ -600,7 +610,14 @@ Example: {{"email": "user@example.com", "budget": "50L-1Cr"}}"""
             # Clean up response
             if content.startswith('```'):
                 content = content.split('\n', 1)[1].rsplit('```', 1)[0]
-            return json.loads(content)
+
+            extracted = json.loads(content)
+            if extracted:
+                logger.info(f"Extracted data from message: {extracted}")
+            return extracted
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error in data extraction: {e}. Raw content: {content[:200]}")
+            return {}
         except Exception as e:
             logger.error(f"Error extracting data: {e}")
             return {}

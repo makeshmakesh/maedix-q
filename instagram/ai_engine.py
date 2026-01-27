@@ -326,25 +326,25 @@ class AIConversationHandler:
         CreditManager.deduct_credits(self.user, received_cost, "AI message received")
 
         # Extract data from user message
-        print(f"[AI DEBUG] Extracting data. Schema: {self.ai_config.collection_schema}")
-        print(f"[AI DEBUG] Existing data: {ai_data.data}")
+        print(f"[AI DEBUG] Extracting data. Schema: {self.ai_config.collection_schema}", flush=True)
+        print(f"[AI DEBUG] Existing data: {ai_data.data}", flush=True)
         extracted_data = self._extract_data_from_message(message_text, ai_data.data)
-        print(f"[AI DEBUG] Extraction result: {extracted_data}")
+        print(f"[AI DEBUG] Extraction result: {extracted_data}", flush=True)
 
         if extracted_data:
             ai_data.update_multiple_fields(extracted_data)
-            print(f"[AI DEBUG] After update - ai_data.data: {ai_data.data}")
-            print(f"[AI DEBUG] fields_collected: {ai_data.fields_collected}")
+            print(f"[AI DEBUG] After update - ai_data.data: {ai_data.data}", flush=True)
+            print(f"[AI DEBUG] fields_collected: {ai_data.fields_collected}", flush=True)
             result['collected_data'] = ai_data.data
         else:
-            print(f"[AI DEBUG] No data extracted from message: {message_text[:100]}")
+            print(f"[AI DEBUG] No data extracted from message: {message_text[:100]}", flush=True)
 
         # Check if goal is complete after extraction
         print(f"[AI DEBUG] is_complete={ai_data.is_complete}, "
-              f"collected={ai_data.fields_collected}, completion={ai_data.completion_percentage}%")
+              f"collected={ai_data.fields_collected}, completion={ai_data.completion_percentage}%", flush=True)
 
         if ai_data.is_complete:
-            print(f"[AI DEBUG] Goal complete! Advancing to next node")
+            print(f"[AI DEBUG] Goal complete! Advancing to next node", flush=True)
             result['success'] = True
             result['goal_complete'] = True
             result['next_action'] = 'complete'
@@ -380,7 +380,7 @@ class AIConversationHandler:
 
         # Check for goal complete markers in response
         if self._check_goal_complete_marker(ai_response):
-            print(f"[AI DEBUG] Goal complete marker detected in response!")
+            print(f"[AI DEBUG] Goal complete marker detected in response!", flush=True)
             result['goal_complete'] = True
             result['next_action'] = 'complete'
 
@@ -576,16 +576,16 @@ Keep it brief and engaging. Don't ask too many questions at once."""
     def _extract_data_from_message(self, message: str, existing_data: Dict) -> Dict:
         """Extract structured data from user message using LLM"""
         if not self.ai_config.collection_schema:
-            print("[AI DEBUG] No collection_schema configured, skipping extraction")
+            print("[AI DEBUG] No collection_schema configured, skipping extraction", flush=True)
             return {}
 
         schema = self.ai_config.collection_schema
         missing_fields = [f for f in schema if not existing_data.get(f['field'])]
         print(f"[AI DEBUG] Schema has {len(schema)} fields, {len(missing_fields)} missing: "
-              f"{[f['field'] for f in missing_fields]}")
+              f"{[f['field'] for f in missing_fields]}", flush=True)
 
         if not missing_fields:
-            print("[AI DEBUG] All fields already collected, skipping extraction")
+            print("[AI DEBUG] All fields already collected, skipping extraction", flush=True)
             return {}
 
         extraction_prompt = f"""Extract the following information from the user's message if present.
@@ -624,13 +624,13 @@ Example: {{"email": "user@example.com", "budget": "50L-1Cr"}}"""
 
             extracted = json.loads(content)
             if extracted:
-                print(f"[AI DEBUG] Extracted data from message: {extracted}")
+                print(f"[AI DEBUG] Extracted data from message: {extracted}", flush=True)
             return extracted
         except json.JSONDecodeError as e:
-            print(f"[AI DEBUG] JSON parse error: {e}. Raw content: {content[:200]}")
+            print(f"[AI DEBUG] JSON parse error: {e}. Raw content: {content[:200]}", flush=True)
             return {}
         except Exception as e:
-            print(f"[AI DEBUG] Error extracting data: {e}")
+            print(f"[AI DEBUG] Error extracting data: {e}", flush=True)
             return {}
 
     def _format_schema_for_prompt(self) -> str:

@@ -324,15 +324,21 @@ class KnowledgeItemUploadView(LoginRequiredMixin, AIFeatureMixin, View):
             messages.error(request, 'Insufficient credits to process this document.')
             return redirect('ai_kb_detail', kb_id=kb.id)
 
-        service = KnowledgeService(request.user)
-        item, error = service.add_document_item(kb, uploaded_file, item_type, process_now=True)
+        try:
+            service = KnowledgeService(request.user)
+            item, error = service.add_document_item(kb, uploaded_file, item_type, process_now=True)
 
-        if error:
-            messages.error(request, f'Failed to upload document: {error}')
-        elif item.processing_status == 'completed':
-            messages.success(request, f'Document "{uploaded_file.name}" uploaded and processed successfully!')
-        else:
-            messages.warning(request, f'Document uploaded but processing failed: {item.processing_error}')
+            if error:
+                logger.error(f"Document upload failed for user {request.user.id}: {error}")
+                messages.error(request, f'Failed to upload document: {error}')
+            elif item.processing_status == 'completed':
+                messages.success(request, f'Document "{uploaded_file.name}" uploaded and processed successfully!')
+            else:
+                logger.warning(f"Document processing failed: {item.processing_error}")
+                messages.warning(request, f'Document uploaded but processing failed: {item.processing_error}')
+        except Exception as e:
+            logger.exception(f"Unexpected error uploading document for user {request.user.id}")
+            messages.error(request, f'An unexpected error occurred: {str(e)}')
 
         return redirect('ai_kb_detail', kb_id=kb.id)
 

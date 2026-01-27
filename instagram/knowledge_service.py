@@ -353,19 +353,30 @@ class KnowledgeService:
         Add a document item to knowledge base.
         Returns (item, error_message)
         """
+        logger.info(f"Adding document item: {uploaded_file.name}, type: {item_type}, size: {uploaded_file.size}")
+
         # Validate file type
         type_config = SUPPORTED_DOCUMENT_TYPES.get(item_type)
         if not type_config:
+            logger.error(f"Unsupported document type: {item_type}")
             return None, f"Unsupported document type: {item_type}"
 
         # Validate size
         max_size = type_config['max_size_mb'] * 1024 * 1024
         if uploaded_file.size > max_size:
+            logger.error(f"File too large: {uploaded_file.size} > {max_size}")
             return None, f"File too large. Maximum size: {type_config['max_size_mb']}MB"
 
         # Upload to S3
-        file_content = uploaded_file.read()
+        try:
+            file_content = uploaded_file.read()
+            logger.info(f"Read file content: {len(file_content)} bytes")
+        except Exception as e:
+            logger.exception("Failed to read uploaded file")
+            return None, f"Failed to read file: {str(e)}"
+
         s3_key = f"knowledge/{self.user.id}/{uuid.uuid4().hex}/{uploaded_file.name}"
+        logger.info(f"Uploading to S3 with key: {s3_key}")
 
         url, key, error = upload_to_s3(
             file_content,
@@ -374,7 +385,10 @@ class KnowledgeService:
         )
 
         if error:
+            logger.error(f"S3 upload failed: {error}")
             return None, f"Failed to upload file: {error}"
+
+        logger.info(f"S3 upload successful: {url}")
 
         # Create item
         item = KnowledgeItem.objects.create(

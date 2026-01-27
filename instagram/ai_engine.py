@@ -309,6 +309,8 @@ class AIConversationHandler:
 
         # Check max turns
         if ai_data.turn_count >= self.ai_config.max_turns:
+            print(f"[AI DEBUG] Max turns reached ({ai_data.turn_count} >= {self.ai_config.max_turns})", flush=True)
+            result['success'] = True  # This is a valid end condition, not an error
             result['next_action'] = 'max_turns'
             result['collected_data'] = ai_data.data
             return result

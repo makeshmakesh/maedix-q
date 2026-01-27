@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         color: white;
         padding: 1.5rem;
         border-radius: 0 0 var(--radius) var(--radius);
@@ -59,7 +59,7 @@
     }
 
     .form-card h3 i {
-        color: #667eea;
+        color: var(--primary);
     }
 
     .form-label {
@@ -87,11 +87,34 @@
     .action-buttons .btn {
         padding: 0.625rem 1.25rem;
     }
+
+    /* Back link */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .back-link:hover {
+        color: white;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<section class="py-3 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
 <div class="page-header">
+    <a href="{% if request.GET.agent %}{% url 'ai_agent_detail' request.GET.agent %}{% else %}{% url 'ai_agent_list' %}{% endif %}" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to {% if request.GET.agent %}Agent{% else %}Agents{% endif %}
+    </a>
     <h1><i class="bi bi-book me-2"></i>{{ page_title }}</h1>
     <p class="mb-0 mt-2" style="font-size: 0.9rem; opacity: 0.9;">Store information for your AI agents to use</p>
 </div>
@@ -142,4 +165,9 @@
         </form>
     </div>
 </div>
+
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

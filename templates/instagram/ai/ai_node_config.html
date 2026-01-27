@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         color: white;
         padding: 1.5rem;
         border-radius: 0 0 var(--radius) var(--radius);
@@ -21,12 +21,25 @@
         }
     }
 
+    .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 1.75rem;
+        }
+    }
+
     .form-card {
         background: white;
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 1.5rem;
         margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
     }
 
     .form-card h3 {
@@ -39,7 +52,7 @@
     }
 
     .form-card h3 i {
-        color: #667eea;
+        color: var(--primary);
         margin-right: 0.5rem;
     }
 
@@ -78,13 +91,13 @@
     }
 
     .agent-select-card:hover {
-        border-color: #aab4f0;
-        background: #fafbff;
+        border-color: rgba(var(--primary-rgb), 0.5);
+        background: var(--primary-light);
     }
 
     .agent-select-card.selected {
-        border-color: #667eea;
-        background: #f8f9ff;
+        border-color: var(--primary);
+        background: var(--primary-light);
     }
 
     .agent-select-card input {
@@ -95,7 +108,7 @@
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -188,9 +201,9 @@
     }
 
     .add-field-btn:hover {
-        border-color: #667eea;
-        color: #667eea;
-        background: #f8f9ff;
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-light);
     }
 
     /* Settings Grid */
@@ -207,7 +220,7 @@
 
     /* Info Box */
     .info-box {
-        background: #f0f4ff;
+        background: var(--primary-light);
         border-radius: var(--radius-sm);
         padding: 1rem;
         font-size: 0.9rem;
@@ -215,7 +228,7 @@
     }
 
     .info-box i {
-        color: #667eea;
+        color: var(--primary);
     }
 
     /* Sticky Sidebar */
@@ -225,13 +238,47 @@
             top: 1rem;
         }
     }
+
+    /* Action buttons */
+    .btn-primary {
+        background: var(--gradient);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
+    }
+
+    /* Back link */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .back-link:hover {
+        color: white;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<section class="py-3 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
 <div class="page-header">
+    <a href="{% url 'flow_edit' node.flow_id %}" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to Flow
+    </a>
     <h1><i class="bi bi-cpu me-2"></i>Configure AI Node</h1>
-    <p class="mb-0 mt-2">Flow: {{ node.flow.title }} &bull; Node #{{ node.order }}</p>
+    <p class="mb-0 mt-2" style="opacity: 0.9; font-size: 0.9rem;">Flow: {{ node.flow.title }} &bull; Node #{{ node.order }}</p>
 </div>
 
 <form method="post">
@@ -381,6 +428,11 @@
         </a>
     </div>
 </form>
+
+            </div>
+        </div>
+    </div>
+</section>
 
 <template id="fieldTemplate">
     <div class="field-item">

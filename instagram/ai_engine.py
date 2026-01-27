@@ -741,6 +741,8 @@ class AINodeExecutor:
         Handle user message during AI conversation.
         Returns dict with: success, response, next_node_id, should_complete_flow
         """
+        print(f"[AI DEBUG] handle_ai_message called for session {session.id}", flush=True)
+
         result = {
             'success': False,
             'response': '',
@@ -752,19 +754,34 @@ class AINodeExecutor:
 
         # Get current AI config
         current_node = session.current_node
+        print(f"[AI DEBUG] current_node: {current_node}, type: {current_node.node_type if current_node else 'None'}", flush=True)
+
         if not current_node or current_node.node_type != 'ai_conversation':
             result['error'] = "Session not in AI conversation"
+            print(f"[AI DEBUG] ERROR: {result['error']}", flush=True)
             return result
 
         try:
             ai_config = current_node.ai_config
+            print(f"[AI DEBUG] ai_config loaded: {ai_config.id}", flush=True)
         except AINodeConfig.DoesNotExist:
             result['error'] = "AI node not configured"
+            print(f"[AI DEBUG] ERROR: {result['error']}", flush=True)
             return result
 
         # Create handler and process message
-        handler = AIConversationHandler(session, ai_config)
-        ai_result = handler.handle_user_message(message_text, instagram_message_id)
+        try:
+            print(f"[AI DEBUG] Creating handler and processing message...", flush=True)
+            handler = AIConversationHandler(session, ai_config)
+            ai_result = handler.handle_user_message(message_text, instagram_message_id)
+            print(f"[AI DEBUG] ai_result: success={ai_result.get('success')}, "
+                  f"next_action={ai_result.get('next_action')}, error={ai_result.get('error')}", flush=True)
+        except Exception as e:
+            result['error'] = f"Handler error: {str(e)}"
+            print(f"[AI DEBUG] EXCEPTION in handler: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
+            return result
 
         result['success'] = ai_result['success']
         result['response'] = ai_result['response']

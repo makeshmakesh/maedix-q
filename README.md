@@ -417,3 +417,8 @@ Private - All rights reserved
 sudo systemctl daemon-reload
 sudo systemctl restart maedix-q
 sudo systemctl restart nginx
+
+
+live log
+
+sudo journalctl -u maedix-q -f

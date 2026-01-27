@@ -43,6 +43,24 @@ class InstagramAPIError(Exception):
             return True
         return False
 
+    def is_messaging_restricted_error(self) -> bool:
+        """
+        Check if this error indicates the user has restricted messaging.
+
+        This happens when the user has privacy settings that prevent
+        receiving messages from accounts they don't follow.
+        """
+        error_lower = self.message.lower()
+        restricted_phrases = [
+            "can't receive your message",
+            "don't allow new message requests",
+            "doesn't allow new message",
+            "message requests from everyone",
+            "messaging restricted",
+            "unable to send message",
+        ]
+        return any(phrase in error_lower for phrase in restricted_phrases)
+
 
 class InstagramAPIClient:
     """Client for Instagram Graph API interactions"""

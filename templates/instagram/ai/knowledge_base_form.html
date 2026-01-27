@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem;
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .form-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-card {
+            padding: 1.5rem;
+        }
+    }
+
+    .form-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-card h3 i {
+        color: #667eea;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #444;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #888;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 576px) {
+        .action-buttons {
+            flex-direction: row;
+        }
+    }
+
+    .action-buttons .btn {
+        padding: 0.625rem 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-book me-2"></i>{{ page_title }}</h1>
+    <p class="mb-0 mt-2" style="font-size: 0.9rem; opacity: 0.9;">Store information for your AI agents to use</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-card">
+                <h3><i class="bi bi-info-circle"></i>Knowledge Base Details</h3>
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name *</label>
+                    <input type="text" class="form-control" id="name" name="name" required
+                           placeholder="e.g., Product FAQ, Property Listings">
+                    <div class="form-text">Give your knowledge base a descriptive name</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description (Optional)</label>
+                    <textarea class="form-control" id="description" name="description" rows="2"
+                              placeholder="What kind of information will this knowledge base contain?"></textarea>
+                </div>
+
+                <div class="mb-0">
+                    <label for="agent_id" class="form-label">Link to Agent</label>
+                    <select class="form-select" id="agent_id" name="agent_id">
+                        <option value="">No agent (standalone)</option>
+                        {% for agent in agents %}
+                        <option value="{{ agent.id }}" {% if request.GET.agent == agent.id|stringformat:"s" %}selected{% endif %}>
+                            {{ agent.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Link this KB to a specific agent, or keep it standalone</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-2"></i>Create Knowledge Base
+                </button>
+                <a href="{% url 'ai_agent_list' %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

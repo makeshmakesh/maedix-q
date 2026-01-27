@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ kb.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: var(--radius-sm);
+        margin-top: 1rem;
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-buttons .btn-delete {
+        margin-left: auto;
+    }
+
+    @media (max-width: 575px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+        .action-buttons .btn-delete {
+            margin-left: 0;
+        }
+    }
+
+    .section-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .section-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .section-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-card h3 i {
+        color: #667eea;
+    }
+
+    /* Item Cards */
+    .item-card {
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .item-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+
+    .item-header {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+
+    .item-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .item-icon.text { background: #e8f5e9; color: #4caf50; }
+    .item-icon.pdf { background: #ffebee; color: #f44336; }
+    .item-icon.docx { background: #e3f2fd; color: #2196f3; }
+    .item-icon.csv { background: #fff3e0; color: #ff9800; }
+    .item-icon.excel { background: #e8f5e9; color: #4caf50; }
+
+    .item-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .item-title {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 0.25rem;
+        word-break: break-word;
+    }
+
+    .item-meta {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .item-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .item-status {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .status-completed { background: #d4edda; color: #155724; }
+    .status-processing { background: #fff3cd; color: #856404; }
+    .status-pending { background: #e2e3e5; color: #383d41; }
+    .status-failed { background: #f8d7da; color: #721c24; }
+
+    .btn-item-action {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+        border: 2px dashed #dee2e6;
+        border-radius: var(--radius-sm);
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .upload-zone:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .upload-zone i {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-zone p {
+        margin: 0;
+        color: #555;
+    }
+
+    .supported-types {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 0.25rem;
+    }
+
+    /* Form styling */
+    .form-label {
+        font-weight: 500;
+        color: #444;
+        font-size: 0.9rem;
+    }
+
+    /* Mobile order adjustment */
+    @media (max-width: 991px) {
+        .add-content-section {
+            order: -1;
+        }
+    }
+
+    /* Sticky sidebar on desktop */
+    @media (min-width: 992px) {
+        .sidebar-sticky {
+            position: sticky;
+            top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-book"></i>{{ kb.name }}</h1>
+    {% if kb.description %}
+    <p class="mb-0 mt-2 opacity-75" style="font-size: 0.9rem;">{{ kb.description }}</p>
+    {% endif %}
+    {% if kb.agent %}
+    <p class="mb-0 mt-2" style="font-size: 0.85rem;">
+        <i class="bi bi-robot me-1"></i>
+        Linked to: <a href="{% url 'ai_agent_detail' kb.agent.id %}" class="text-white text-decoration-underline">{{ kb.agent.name }}</a>
+    </p>
+    {% endif %}
+
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value">{{ kb.total_items }}</div>
+            <div class="stat-label">Items</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">{{ kb.total_chunks }}</div>
+            <div class="stat-label">Chunks</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">{{ kb.total_tokens|intcomma }}</div>
+            <div class="stat-label">Tokens</div>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    {% if kb.agent %}
+    <a href="{% url 'ai_agent_detail' kb.agent.id %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Agent
+    </a>
+    {% else %}
+    <a href="{% url 'ai_agent_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back
+    </a>
+    {% endif %}
+    <form method="post" action="{% url 'ai_kb_delete' kb.id %}" class="btn-delete"
+          onsubmit="return confirm('Delete this knowledge base and all its items?')">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-2"></i>Delete
+        </button>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 add-content-section">
+        <div class="sidebar-sticky">
+            <div class="section-card">
+                <h3><i class="bi bi-type"></i>Add Text</h3>
+                <form method="post" action="{% url 'ai_kb_add_text' kb.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <input type="text" class="form-control" name="title" placeholder="e.g., Product FAQ" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content *</label>
+                        <textarea class="form-control" name="content" rows="4" placeholder="Paste your text content here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg me-2"></i>Add Text
+                    </button>
+                </form>
+            </div>
+
+            <div class="section-card">
+                <h3><i class="bi bi-upload"></i>Upload Document</h3>
+                <form method="post" action="{% url 'ai_kb_upload' kb.id %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="upload-zone" onclick="document.getElementById('documentInput').click()">
+                        <i class="bi bi-cloud-upload d-block"></i>
+                        <p>Click to upload</p>
+                        <p class="supported-types">PDF, DOCX, CSV, Excel</p>
+                        <input type="file" id="documentInput" name="document" class="d-none"
+                               accept=".pdf,.docx,.csv,.xlsx,.xls,.txt" onchange="this.form.submit()">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="section-card">
+            <h3><i class="bi bi-folder"></i>Items ({{ items|length }})</h3>
+
+            {% if items %}
+            {% for item in items %}
+            <div class="item-card">
+                <div class="item-header">
+                    <div class="item-icon {{ item.item_type }}">
+                        {% if item.item_type == 'text' %}
+                        <i class="bi bi-file-text"></i>
+                        {% elif item.item_type == 'pdf' %}
+                        <i class="bi bi-file-pdf"></i>
+                        {% elif item.item_type == 'docx' %}
+                        <i class="bi bi-file-word"></i>
+                        {% elif item.item_type == 'csv' %}
+                        <i class="bi bi-file-spreadsheet"></i>
+                        {% elif item.item_type == 'excel' %}
+                        <i class="bi bi-file-excel"></i>
+                        {% else %}
+                        <i class="bi bi-file"></i>
+                        {% endif %}
+                    </div>
+                    <div class="item-content">
+                        <div class="item-title">{{ item.title|default:item.file_name }}</div>
+                        <div class="item-meta">
+                            {{ item.chunk_count }} chunks &bull; {{ item.token_count|intcomma }} tokens
+                            {% if item.file_size %}&bull; {{ item.file_size|filesizeformat }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="item-status status-{{ item.processing_status }}">
+                            {{ item.processing_status|title }}
+                        </span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-muted btn-item-action" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if item.processing_status == 'failed' %}
+                                <li>
+                                    <form method="post" action="{% url 'ai_kb_item_reprocess' item.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-arrow-repeat me-2"></i>Reprocess
+                                        </button>
+                                    </form>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <form method="post" action="{% url 'ai_kb_item_delete' item.id %}"
+                                          onsubmit="return confirm('Delete this item?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash me-2"></i>Delete
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {% if item.processing_status == 'failed' and item.processing_error %}
+                <div class="alert alert-danger mt-3 mb-0 py-2 px-3" style="font-size: 0.85rem;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>{{ item.processing_error }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-inbox text-muted" style="font-size: 2.5rem;"></i>
+                <p class="text-muted mt-2 mb-0">No items yet. Add text or upload documents to get started.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

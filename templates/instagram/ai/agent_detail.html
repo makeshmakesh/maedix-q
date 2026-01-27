@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ agent.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .agent-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .agent-avatar-lg {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: 3px solid rgba(255,255,255,0.3);
+        flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+        .agent-avatar-lg {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+    }
+
+    .agent-header h1 {
+        font-size: 1.25rem;
+        margin: 0 0 0.25rem 0;
+    }
+
+    @media (min-width: 768px) {
+        .agent-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .badge-tone {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: var(--radius-sm);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    @media (min-width: 768px) {
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+    }
+
+    @media (min-width: 768px) {
+        .stat-label {
+            font-size: 0.75rem;
+        }
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-buttons .btn {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    @media (min-width: 576px) {
+        .action-buttons .btn {
+            flex: none;
+        }
+    }
+
+    .action-buttons .btn-delete {
+        flex: none;
+        margin-left: auto;
+    }
+
+    @media (max-width: 575px) {
+        .action-buttons .btn-delete {
+            width: 100%;
+            margin-left: 0;
+        }
+    }
+
+    .section-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .section-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .section-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-card h3 i {
+        color: #667eea;
+    }
+
+    .prompt-preview {
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        word-break: break-word;
+    }
+
+    .kb-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.875rem 1rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+        gap: 0.75rem;
+    }
+
+    .kb-item:hover {
+        background: #f0f1f3;
+    }
+
+    .kb-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .kb-name {
+        font-weight: 500;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .kb-stats {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    @media (min-width: 576px) {
+        .info-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .info-item {
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #666;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .personality-text {
+        line-height: 1.6;
+        color: #444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="agent-header">
+        <div class="agent-avatar-lg">
+            {{ agent.name|slice:":1"|upper }}
+        </div>
+        <div>
+            <h1>{{ agent.name }}</h1>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge-tone">{{ agent.tone|title }}</span>
+                {% if not agent.is_active %}
+                <span class="badge bg-danger">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-value">{{ agent.total_conversations }}</div>
+            <div class="stat-label">Conversations</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ agent.total_messages_sent }}</div>
+            <div class="stat-label">Messages</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ usage_stats.total_credits|floatformat:1|default:"0" }}</div>
+            <div class="stat-label">Credits</div>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a href="{% url 'ai_agent_edit' agent.id %}" class="btn btn-primary">
+        <i class="bi bi-pencil me-2"></i>Edit
+    </a>
+    <a href="{% url 'ai_agent_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back
+    </a>
+    <form method="post" action="{% url 'ai_agent_delete' agent.id %}" class="btn-delete"
+          onsubmit="return confirm('Are you sure you want to delete this agent? This will also delete all associated knowledge bases.')">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger w-100">
+            <i class="bi bi-trash me-2"></i>Delete
+        </button>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="section-card">
+            <h3><i class="bi bi-chat-heart"></i>Personality</h3>
+            <p class="personality-text mb-0">{{ agent.personality }}</p>
+
+            {% if agent.language_style %}
+            <hr class="my-3">
+            <div class="info-label">Language Style</div>
+            <p class="mb-0">{{ agent.language_style }}</p>
+            {% endif %}
+
+            {% if agent.boundaries %}
+            <hr class="my-3">
+            <div class="info-label">Boundaries</div>
+            <p class="mb-0">{{ agent.boundaries }}</p>
+            {% endif %}
+        </div>
+
+        <div class="section-card">
+            <h3><i class="bi bi-code-square"></i>System Prompt</h3>
+            <div class="prompt-preview">{{ system_prompt_preview }}</div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="section-card">
+            <h3><i class="bi bi-book"></i>Knowledge Bases</h3>
+
+            {% if knowledge_bases %}
+            {% for kb in knowledge_bases %}
+            <a href="{% url 'ai_kb_detail' kb.id %}" class="kb-item text-decoration-none">
+                <div class="kb-info">
+                    <div class="kb-name">{{ kb.name }}</div>
+                    <div class="kb-stats">
+                        {{ kb.total_items }} items &bull; {{ kb.total_chunks }} chunks
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+            </a>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted mb-3">No knowledge bases yet.</p>
+            {% endif %}
+
+            <a href="{% url 'ai_kb_create' %}?agent={{ agent.id }}" class="btn btn-outline-primary btn-sm mt-2">
+                <i class="bi bi-plus-lg me-2"></i>Add Knowledge Base
+            </a>
+        </div>
+
+        <div class="section-card">
+            <h3><i class="bi bi-activity"></i>Activity</h3>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">API Calls</div>
+                    <div class="info-value">{{ usage_stats.total_messages|default:0 }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Tokens Used</div>
+                    <div class="info-value">{{ usage_stats.total_tokens|default:0|intcomma }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Created</div>
+                    <div class="info-value">{{ agent.created_at|date:"M d, Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Updated</div>
+                    <div class="info-value">{{ agent.updated_at|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

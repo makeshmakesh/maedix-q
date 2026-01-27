@@ -898,6 +898,7 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'follower_check': True,
                 'data_collection': True,
                 'advanced_branching': True,
+                'ai_social_agent': True,
             }
 
         subscription = get_user_subscription(user)
@@ -909,6 +910,7 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'follower_check': subscription.plan.has_feature('ig_follower_check'),
             'data_collection': subscription.plan.has_feature('ig_data_collection'),
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
+            'ai_social_agent': subscription.plan.has_feature('ai_social_agent'),
         }
 
     def _create_nodes_from_template(self, flow, template):
@@ -1023,13 +1025,27 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     'target_node_id': qr.target_node_id
                 })
 
+            node_config = node.config or {}
+
+            # Add AI node config data if this is an AI conversation node
+            if node.node_type == 'ai_conversation':
+                from django.urls import reverse
+                node_config['config_url'] = reverse('ai_node_config', kwargs={'node_id': node.id})
+                try:
+                    ai_config = node.ai_config
+                    node_config['agent_name'] = ai_config.agent.name if ai_config.agent else 'No agent selected'
+                    node_config['goal'] = ai_config.goal or 'No goal configured'
+                except Exception:
+                    node_config['agent_name'] = 'Not configured'
+                    node_config['goal'] = 'Click Configure to set up'
+
             nodes_json.append({
                 'id': node.id,
                 'order': node.order,
                 'node_type': node.node_type,
                 'name': node.name or node.get_node_type_display(),
                 'display': f"Step {node.order + 1}: {node.name or node.get_node_type_display()}",
-                'config': node.config or {},
+                'config': node_config,
                 'quick_replies': quick_replies,
                 'next_node_id': node.next_node_id
             })
@@ -1093,6 +1109,7 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'follower_check': True,
                 'data_collection': True,
                 'advanced_branching': True,
+                'ai_social_agent': True,
             }
 
         subscription = get_user_subscription(user)
@@ -1104,6 +1121,7 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'follower_check': subscription.plan.has_feature('ig_follower_check'),
             'data_collection': subscription.plan.has_feature('ig_data_collection'),
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
+            'ai_social_agent': subscription.plan.has_feature('ai_social_agent'),
         }
 
 
@@ -1312,11 +1330,22 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             logger.exception(f"Error saving flow {pk}: {str(e)}")
             return JsonResponse({'error': f'Failed to save flow: {str(e)}'}, status=500)
 
+        # Collect AI node config URLs for NEWLY CREATED AI conversation nodes only
+        ai_config_urls = {}
+        from django.urls import reverse
+        for node, node_data in node_objects.values():
+            if node.node_type == 'ai_conversation':
+                # Only include if this is a new node (original id was not an integer db id)
+                original_id = node_data.get('id')
+                if not original_id or not isinstance(original_id, int):
+                    ai_config_urls[node.id] = reverse('ai_node_config', kwargs={'node_id': node.id})
+
         return JsonResponse({
             'success': True,
             'message': f'Flow saved successfully. {len(keep_node_ids)} nodes saved.',
             'node_ids': new_node_map,
-            'deleted': deleted_count
+            'deleted': deleted_count,
+            'ai_config_urls': ai_config_urls
         })
 
 

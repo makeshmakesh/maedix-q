@@ -47,29 +47,33 @@ class UserProfile(models.Model):
     linkedin_url = models.URLField(blank=True)
     twitter_handle = models.CharField(max_length=15, blank=True)
     skills = models.JSONField(default=list)  # List of skill tags
-    credits = models.IntegerField(default=0)  # Roleplay credits balance
+    credits = models.FloatField(default=0.0)  # AI credits balance
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Profile: {self.user.email}"
 
-    def has_credits(self, required=10):
+    def has_credits(self, required: float = 1.0) -> bool:
         """Check if user has enough credits"""
         return self.credits >= required
 
-    def deduct_credits(self, amount=10):
+    def deduct_credits(self, amount: float = 1.0) -> bool:
         """Deduct credits from user balance"""
         if self.credits >= amount:
-            self.credits -= amount
-            self.save(update_fields=['credits'])
+            self.credits = round(self.credits - amount, 4)  # Avoid floating point issues
+            self.save(update_fields=['credits', 'updated_at'])
             return True
         return False
 
-    def add_credits(self, amount):
+    def add_credits(self, amount: float) -> None:
         """Add credits to user balance"""
-        self.credits += amount
-        self.save(update_fields=['credits'])
+        self.credits = round(self.credits + amount, 4)  # Avoid floating point issues
+        self.save(update_fields=['credits', 'updated_at'])
+
+    def get_credits_balance(self) -> float:
+        """Get current credits balance"""
+        return round(self.credits, 2)
 
 
 class UserStats(models.Model):

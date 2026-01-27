@@ -1395,14 +1395,14 @@
 
                     {% if features.ai_social_agent %}
                     <div class="palette-item" draggable="true" data-node="ai_conversation">
-                        <i class="bi bi-cpu" style="color: #667eea;"></i>
+                        <i class="bi bi-cpu" style="color: var(--primary);"></i>
                         <span>AI Conversation</span>
                     </div>
                     {% else %}
                     <div class="palette-item disabled" title="Upgrade to access AI">
                         <i class="bi bi-cpu text-muted"></i>
                         <span class="text-muted">AI Conversation</span>
-                        <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Pro</span>
+                        <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Upgrade</span>
                     </div>
                     {% endif %}
 
@@ -1734,10 +1734,15 @@
                                 <li><a class="dropdown-item" href="#" data-add-node="condition_user_interacted">
                                     <i class="bi bi-person-lines-fill" style="color: #5a2d82;"></i>Returning User
                                 </a></li>
-                                {% if features.ai_social_agent %}
                                 <li><hr class="dropdown-divider"></li>
+                                {% if features.ai_social_agent %}
                                 <li><a class="dropdown-item" href="#" data-add-node="ai_conversation">
-                                    <i class="bi bi-cpu" style="color: #667eea;"></i>AI Conversation
+                                    <i class="bi bi-cpu" style="color: var(--primary);"></i>AI Conversation
+                                </a></li>
+                                {% else %}
+                                <li><a class="dropdown-item disabled text-muted" href="#">
+                                    <i class="bi bi-cpu"></i>AI Conversation
+                                    <span class="badge bg-secondary ms-2" style="font-size: 9px;">Upgrade</span>
                                 </a></li>
                                 {% endif %}
                                 <li><a class="dropdown-item disabled text-muted" href="#">

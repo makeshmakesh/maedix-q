@@ -38,7 +38,24 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 class AIFeatureMixin:
-    """Mixin to check if user has AI feature access"""
+    """Mixin to add AI feature access info to context (no longer blocks access)"""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+
+        # Check feature access and store in request for templates
+        if request.user.is_staff:
+            request.has_ai_feature = True
+        else:
+            can_access, _, _ = check_feature_access(request.user, 'ai_social_agent')
+            request.has_ai_feature = can_access
+
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AIFeatureRequiredMixin:
+    """Mixin that REQUIRES AI feature access (for create/write operations)"""
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -51,7 +68,7 @@ class AIFeatureMixin:
         # Check for AI feature access
         can_access, message, _ = check_feature_access(request.user, 'ai_social_agent')
         if not can_access:
-            messages.error(request, 'You need to upgrade your plan to access AI Social Agents.')
+            messages.error(request, 'You need to upgrade your plan to use AI Social Agents. You can still view and explore the features.')
             return redirect('subscription')
 
         return super().dispatch(request, *args, **kwargs)
@@ -227,7 +244,7 @@ class KnowledgeBaseDetailView(LoginRequiredMixin, AIFeatureMixin, View):
         return render(request, 'instagram/ai/knowledge_base_detail.html', context)
 
 
-class KnowledgeBaseCreateView(LoginRequiredMixin, AIFeatureMixin, View):
+class KnowledgeBaseCreateView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Create a new knowledge base"""
 
     def get(self, request):
@@ -262,7 +279,7 @@ class KnowledgeBaseCreateView(LoginRequiredMixin, AIFeatureMixin, View):
         return redirect('ai_kb_detail', kb_id=kb.id)
 
 
-class KnowledgeItemAddTextView(LoginRequiredMixin, AIFeatureMixin, View):
+class KnowledgeItemAddTextView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Add text content to knowledge base"""
 
     def post(self, request, kb_id):
@@ -293,7 +310,7 @@ class KnowledgeItemAddTextView(LoginRequiredMixin, AIFeatureMixin, View):
         return redirect('ai_kb_detail', kb_id=kb.id)
 
 
-class KnowledgeItemUploadView(LoginRequiredMixin, AIFeatureMixin, View):
+class KnowledgeItemUploadView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Upload document to knowledge base"""
 
     def post(self, request, kb_id):
@@ -343,7 +360,7 @@ class KnowledgeItemUploadView(LoginRequiredMixin, AIFeatureMixin, View):
         return redirect('ai_kb_detail', kb_id=kb.id)
 
 
-class KnowledgeItemDeleteView(LoginRequiredMixin, AIFeatureMixin, View):
+class KnowledgeItemDeleteView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Delete a knowledge item"""
 
     def post(self, request, item_id):
@@ -358,7 +375,7 @@ class KnowledgeItemDeleteView(LoginRequiredMixin, AIFeatureMixin, View):
         return redirect('ai_kb_detail', kb_id=kb_id)
 
 
-class KnowledgeItemReprocessView(LoginRequiredMixin, AIFeatureMixin, View):
+class KnowledgeItemReprocessView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Reprocess a knowledge item"""
 
     def post(self, request, item_id):
@@ -375,7 +392,7 @@ class KnowledgeItemReprocessView(LoginRequiredMixin, AIFeatureMixin, View):
         return redirect('ai_kb_detail', kb_id=item.knowledge_base_id)
 
 
-class KnowledgeBaseDeleteView(LoginRequiredMixin, AIFeatureMixin, View):
+class KnowledgeBaseDeleteView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Delete a knowledge base"""
 
     def post(self, request, kb_id):
@@ -397,7 +414,7 @@ class KnowledgeBaseDeleteView(LoginRequiredMixin, AIFeatureMixin, View):
 # AI Node Configuration Views
 # =============================================================================
 
-class AINodeConfigView(LoginRequiredMixin, AIFeatureMixin, View):
+class AINodeConfigView(LoginRequiredMixin, AIFeatureRequiredMixin, View):
     """Configure AI node for a flow"""
 
     def get(self, request, node_id):

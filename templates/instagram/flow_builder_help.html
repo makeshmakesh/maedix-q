@@ -57,6 +57,7 @@
     .node-icon-large.link-message { background: #f3e5f5; color: #7b1fa2; }
     .node-icon-large.follower-check { background: #fce4ec; color: #c2185b; }
     .node-icon-large.collect-data { background: #e0f2f1; color: #00695c; }
+    .node-icon-large.ai-conversation { background: var(--primary-light); color: var(--primary); }
 
     .node-guide-title h3 {
         margin: 0;
@@ -407,6 +408,7 @@
                     <li><a href="#link-message"><i class="bi bi-link-45deg text-purple"></i> Link Message</a></li>
                     <li><a href="#follower-check"><i class="bi bi-person-check text-pink"></i> Follower Check</a></li>
                     <li><a href="#collect-data"><i class="bi bi-input-cursor-text text-teal"></i> Collect Data</a></li>
+                    <li><a href="#ai-conversation"><i class="bi bi-cpu text-primary"></i> AI Conversation</a></li>
                 </ul>
             </div>
         </div>
@@ -777,6 +779,102 @@
                     <div class="tip-box">
                         <div class="tip-box-title"><i class="bi bi-lightbulb"></i> Pro Tip</div>
                         <p>Collect data after providing value first. Users are more likely to share their email after receiving helpful content.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Conversation -->
+            <div class="node-guide-card" id="ai-conversation">
+                <div class="node-guide-header">
+                    <div class="node-icon-large ai-conversation">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <div class="node-guide-title">
+                        <h3>AI Conversation</h3>
+                        <span class="badge" style="background: var(--primary);">AI-Powered</span>
+                    </div>
+                </div>
+                <div class="node-guide-body">
+                    <p class="node-description">
+                        Hands over the conversation to an AI agent that can have natural, multi-turn conversations with users. The AI can answer questions, qualify leads, collect information, and guide users - all while maintaining your brand's personality.
+                    </p>
+
+                    <div class="visual-example">
+                        <div class="visual-example-title">
+                            <i class="bi bi-eye"></i> How it works
+                        </div>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="dm-message incoming">
+                                    Hi! I'm your property assistant. What type of property are you looking for?
+                                </div>
+                                <div class="dm-message outgoing">
+                                    2BHK apartment in HSR Layout
+                                </div>
+                                <div class="dm-message incoming">
+                                    Great choice! What's your budget range?
+                                </div>
+                                <div class="dm-message outgoing">
+                                    Around 50-60 lakhs
+                                </div>
+                                <div class="dm-message incoming">
+                                    Perfect! I have 3 options. Can I get your email to send the details?
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold mb-2">Key Features</h6>
+                            <ul class="feature-list">
+                                <li><strong>Natural conversations</strong> - AI understands context and responds naturally</li>
+                                <li><strong>Goal-driven</strong> - Define what the AI should accomplish</li>
+                                <li><strong>Data collection</strong> - Automatically collect and validate lead info</li>
+                                <li><strong>Knowledge base</strong> - AI can reference your product/service info</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold mb-2">Configuration</h6>
+                            <ul class="feature-list">
+                                <li><strong>Select Agent</strong> - Choose from your AI agents</li>
+                                <li><strong>Set Goal</strong> - What should the AI accomplish?</li>
+                                <li><strong>Define Fields</strong> - What data to collect (email, phone, etc.)</li>
+                                <li><strong>Max Turns</strong> - Limit conversation length</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="visual-example mt-3">
+                        <div class="visual-example-title">
+                            <i class="bi bi-diagram-3"></i> Flow integration
+                        </div>
+                        <div class="flow-diagram" style="flex-direction: column; gap: 0.75rem;">
+                            <div class="flow-step" style="background: #fff3e0; border-color: #e65100;">
+                                <i class="bi bi-ui-radios me-1"></i> Quick Reply<br>
+                                <small class="text-muted">"Talk to our AI assistant"</small>
+                            </div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="flow-step highlight" style="background: var(--primary-light); border-color: var(--primary);">
+                                <i class="bi bi-cpu me-1"></i> AI Conversation<br>
+                                <small class="text-muted">Qualifies lead & collects info</small>
+                            </div>
+                            <i class="bi bi-chevron-down flow-arrow"></i>
+                            <div class="flow-step" style="background: #e3f2fd; border-color: #1565c0;">
+                                <i class="bi bi-chat-left-text me-1"></i> Text Message<br>
+                                <small class="text-muted">"Thanks! Our team will reach out."</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info small mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Note:</strong> AI Conversation uses credits. Each AI message costs 0.5 credits and each user message processed costs 0.1 credits. <a href="{% url 'ai_usage_stats' %}">View your usage</a>.
+                    </div>
+
+                    <div class="tip-box">
+                        <div class="tip-box-title"><i class="bi bi-lightbulb"></i> Best Practices</div>
+                        <p>Be specific in your goal description. Instead of "Collect user info", try "Qualify the lead by understanding their budget, timeline, and location preference. Then collect their email for follow-up."</p>
                     </div>
                 </div>
             </div>

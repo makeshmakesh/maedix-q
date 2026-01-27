@@ -16,12 +16,12 @@
 
                 <h1 class="hero-headline">
                     Turn Instagram comments<br>
-                    into real conversations — automatically.
+                    into <span class="text-gradient">AI-powered</span> conversations.
                 </h1>
 
                 <p class="hero-desc">
-                    Maedix helps creators reply faster, send smarter DMs,<br>
-                    and convert engagement into leads — without manual work.
+                    Maedix helps creators reply faster, qualify leads with AI agents,<br>
+                    and convert engagement into customers — 24/7, on autopilot.
                 </p>
 
                 <div class="hero-actions">
@@ -219,6 +219,12 @@
         <h2>Maedix handles the conversation flow for you.</h2>
 
         <div class="what-grid">
+            <div class="what-block highlight">
+                <div class="what-badge">NEW</div>
+                <h3>AI-powered conversations</h3>
+                <p>Let AI agents have natural, multi-turn conversations that qualify leads and collect data.</p>
+            </div>
+
             <div class="what-block">
                 <h3>Automatically replies to comments</h3>
                 <p>When someone comments, they get a response — instantly.</p>
@@ -233,10 +239,113 @@
                 <h3>Guides users through conversations</h3>
                 <p>Multi-step flows with buttons let users choose their path.</p>
             </div>
+        </div>
+    </div>
+</section>
 
-            <div class="what-block">
-                <h3>Logs every interaction</h3>
-                <p>Session logs show what was sent, what users replied, and the full conversation history.</p>
+<!-- AI Conversations Section -->
+<section class="section ai-section" id="ai-conversations">
+    <div class="container">
+        <div class="ai-grid">
+            <div class="ai-content">
+                <div class="ai-badge">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                    <span>AI-Powered</span>
+                </div>
+
+                <h2>Let AI handle the conversation.</h2>
+
+                <p class="ai-desc">
+                    Your AI agent understands context, asks the right questions,
+                    and guides users naturally — just like your best salesperson, but available 24/7.
+                </p>
+
+                <div class="ai-features">
+                    <div class="ai-feature">
+                        <span class="ai-check">✓</span>
+                        <span>Natural, human-like conversations</span>
+                    </div>
+                    <div class="ai-feature">
+                        <span class="ai-check">✓</span>
+                        <span>Qualifies leads automatically</span>
+                    </div>
+                    <div class="ai-feature">
+                        <span class="ai-check">✓</span>
+                        <span>Collects emails, phones, preferences</span>
+                    </div>
+                    <div class="ai-feature">
+                        <span class="ai-check">✓</span>
+                        <span>Uses your knowledge base</span>
+                    </div>
+                    <div class="ai-feature">
+                        <span class="ai-check">✓</span>
+                        <span>Matches your brand personality</span>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                <a href="{% url 'ai_agent_list' %}" class="btn-primary">
+                    Create AI Agent
+                </a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="btn-primary">
+                    Try AI Agents Free
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="ai-visual">
+                <div class="ai-chat-demo">
+                    <div class="chat-header">
+                        <div class="chat-header-avatar">
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                        </div>
+                        <div>
+                            <span class="chat-header-name">AI Agent</span>
+                            <span class="chat-header-status"><span class="status-dot"></span>Online 24/7</span>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages">
+                        <div class="chat-msg incoming">
+                            Hi! I'm interested in your coaching program
+                        </div>
+                        <div class="chat-msg outgoing ai">
+                            <span class="ai-indicator">AI</span>
+                            Hey! Great to hear that. To help you find the right fit, what's your main goal - weight loss, muscle building, or overall fitness?
+                        </div>
+                        <div class="chat-msg incoming">
+                            Weight loss mainly, I want to lose about 10kg
+                        </div>
+                        <div class="chat-msg outgoing ai">
+                            <span class="ai-indicator">AI</span>
+                            Perfect! Our 12-week transformation program is ideal for that. What's your budget range? We have options starting from ₹5K/month.
+                        </div>
+                        <div class="chat-msg incoming">
+                            Around 8-10K works for me
+                        </div>
+                        <div class="chat-msg outgoing ai">
+                            <span class="ai-indicator">AI</span>
+                            Great fit! Can I get your email to send you the program details and a special discount code? 🎁
+                        </div>
+                        <div class="chat-msg incoming">
+                            Sure, john@email.com
+                        </div>
+                        <div class="chat-msg outgoing ai">
+                            <span class="ai-indicator">AI</span>
+                            Awesome John! ✅ Check your inbox in 2 mins. Our team will also reach out for a free consultation call!
+                        </div>
+                    </div>
+
+                    <div class="chat-footer">
+                        <div class="data-collected">
+                            <span class="data-label">Data Collected:</span>
+                            <span class="data-tag">Goal: Weight Loss</span>
+                            <span class="data-tag">Budget: 8-10K</span>
+                            <span class="data-tag">Email: john@...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -665,6 +774,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- AI Conversation -->
+            <div class="feature-row ai-feature-row">
+                <div class="feature-info">
+                    <div class="feature-icon ai-icon">
+                        <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                    </div>
+                    <div>
+                        <h3>AI Conversation <span class="new-badge">NEW</span></h3>
+                        <p>Hand off to an AI agent for natural, multi-turn conversations. Perfect for qualifying leads, answering FAQs, and collecting information.</p>
+                        <span class="feature-tag">AI-Powered</span>
+                    </div>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-ai-box">
+                        <div class="ai-preview-header">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                            <span>AI Agent Active</span>
+                        </div>
+                        <div class="ai-preview-msgs">
+                            <div class="ai-preview-msg user">What's your price?</div>
+                            <div class="ai-preview-msg bot">Our plans start at ₹999/mo. What's your budget range?</div>
+                            <div class="ai-preview-msg user">Around 2-3K</div>
+                            <div class="ai-preview-msg bot">Perfect! Our Pro plan at ₹2,499 includes...</div>
+                        </div>
+                        <div class="ai-preview-footer">
+                            <span class="ai-preview-collected">✓ Budget collected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -751,6 +891,13 @@
     --accent-soft: #eef2ff;
     --border: #e5e7eb;
     --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+}
+
+.text-gradient {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 /* ========== Hero ========== */
@@ -1289,6 +1436,232 @@
     color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
+}
+
+.what-block.highlight {
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #f5f3ff 100%);
+    border-color: rgba(99, 102, 241, 0.3);
+    position: relative;
+}
+
+.what-badge {
+    position: absolute;
+    top: -8px;
+    right: 16px;
+    background: var(--gradient);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+/* ========== AI Section ========== */
+.ai-section {
+    background: var(--bg-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60%;
+    height: 100%;
+    background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.ai-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.ai-content {
+    position: relative;
+    z-index: 1;
+}
+
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--accent-light);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+}
+
+.ai-section h2 {
+    color: var(--bg-white);
+    font-size: 2.25rem;
+}
+
+.ai-desc {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+}
+
+.ai-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.ai-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.ai-check {
+    color: #22c55e;
+    font-weight: 600;
+}
+
+/* AI Chat Demo */
+.ai-visual {
+    position: relative;
+    z-index: 1;
+}
+
+.ai-chat-demo {
+    background: var(--bg-white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    margin-left: auto;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--gradient);
+    color: white;
+}
+
+.chat-header-avatar {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-header-name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.chat-header-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+.chat-messages {
+    padding: 1rem;
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.chat-msg {
+    padding: 0.7rem 1rem;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-width: 85%;
+}
+
+.chat-msg.incoming {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-msg.outgoing {
+    background: var(--gradient);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    position: relative;
+}
+
+.chat-msg.outgoing.ai {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.ai-indicator {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.25);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+}
+
+.chat-footer {
+    padding: 0.75rem 1rem;
+    background: #f0fdf4;
+    border-top: 1px solid #bbf7d0;
+}
+
+.data-collected {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.data-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #16a34a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.data-tag {
+    font-size: 0.7rem;
+    background: white;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
 }
 
 /* ========== How Section ========== */
@@ -2086,6 +2459,91 @@
     text-overflow: ellipsis;
 }
 
+/* AI Feature Row */
+.ai-feature-row {
+    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.feature-icon.ai-icon {
+    background: var(--gradient);
+    color: white;
+}
+
+.new-badge {
+    display: inline-block;
+    background: var(--gradient);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+/* AI Preview Box */
+.preview-ai-box {
+    background: var(--bg-white);
+    border: 2px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 300px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+}
+
+.ai-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--gradient);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.ai-preview-msgs {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ai-preview-msg {
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    max-width: 85%;
+}
+
+.ai-preview-msg.user {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    align-self: flex-start;
+}
+
+.ai-preview-msg.bot {
+    background: var(--accent-soft);
+    color: var(--accent);
+    align-self: flex-end;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.ai-preview-footer {
+    padding: 0.5rem 1rem;
+    background: #f0fdf4;
+    border-top: 1px solid #bbf7d0;
+}
+
+.ai-preview-collected {
+    font-size: 0.7rem;
+    color: #16a34a;
+    font-weight: 600;
+}
+
 /* ========== Audience Section ========== */
 .audience-section {
     background: var(--bg-white);
@@ -2243,9 +2701,14 @@
 @media (max-width: 1024px) {
     .hero-grid,
     .problem-grid,
-    .reframe-grid {
+    .reframe-grid,
+    .ai-grid {
         grid-template-columns: 1fr;
         gap: 2.5rem;
+    }
+
+    .ai-chat-demo {
+        margin: 0 auto;
     }
 
     /* Hero: content first, then visual */
@@ -2315,8 +2778,21 @@
 
     .hero-desc br,
     .problem-text br,
-    .reframe-key br {
+    .reframe-key br,
+    .ai-desc br {
         display: none;
+    }
+
+    .ai-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .ai-chat-demo {
+        max-width: 100%;
+    }
+
+    .chat-messages {
+        max-height: 320px;
     }
 
     .section {

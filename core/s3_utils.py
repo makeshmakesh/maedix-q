@@ -1,10 +1,13 @@
 """
 S3 utility functions for file uploads
 """
+import logging
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
 from .models import Configuration
+
+logger = logging.getLogger(__name__)
 
 
 def get_s3_client():
@@ -133,7 +136,10 @@ def upload_to_s3(content, s3_key, content_type='application/octet-stream'):
     """
     bucket_name = Configuration.get_value('aws_s3_bucket', '')
     if not bucket_name:
+        logger.error("AWS S3 bucket not configured in Configuration table")
         return None, None, "AWS S3 bucket not configured"
+
+    logger.info(f"Uploading to S3: bucket={bucket_name}, key={s3_key}, content_type={content_type}, size={len(content)}")
 
     try:
         s3_client = get_s3_client()
@@ -147,14 +153,17 @@ def upload_to_s3(content, s3_key, content_type='application/octet-stream'):
                 ContentType=content_type,
                 ACL='public-read'
             )
-        except Exception:
+            logger.info(f"S3 upload with ACL successful: {s3_key}")
+        except Exception as acl_error:
             # If ACL fails, try without ACL
+            logger.warning(f"S3 ACL upload failed ({acl_error}), trying without ACL")
             s3_client.put_object(
                 Bucket=bucket_name,
                 Key=s3_key,
                 Body=content,
                 ContentType=content_type
             )
+            logger.info(f"S3 upload without ACL successful: {s3_key}")
 
         # Generate public URL
         aws_region = Configuration.get_value('aws_region', 'ap-south-1')
@@ -162,7 +171,17 @@ def upload_to_s3(content, s3_key, content_type='application/octet-stream'):
 
         return url, s3_key, None
 
+    except ValueError as e:
+        # Missing AWS credentials
+        logger.error(f"S3 configuration error: {e}")
+        return None, None, str(e)
+    except ClientError as e:
+        error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+        error_msg = e.response.get('Error', {}).get('Message', str(e))
+        logger.error(f"S3 ClientError: {error_code} - {error_msg}")
+        return None, None, f"S3 error ({error_code}): {error_msg}"
     except Exception as e:
+        logger.exception(f"Unexpected S3 upload error")
         return None, None, str(e)
 
 

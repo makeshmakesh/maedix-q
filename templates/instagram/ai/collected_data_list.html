@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         color: white;
         padding: 1.5rem;
         border-radius: 0 0 var(--radius) var(--radius);
@@ -65,7 +65,7 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -105,21 +105,68 @@
 
     .empty-state {
         text-align: center;
-        padding: 4rem 2rem;
+        padding: 3rem 1.5rem;
         background: white;
         border-radius: var(--radius);
         box-shadow: var(--shadow);
     }
 
-    .empty-state i {
-        font-size: 4rem;
-        color: #667eea;
-        margin-bottom: 1rem;
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--primary-rgb), 0.1) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .empty-state-icon i {
+        font-size: 2rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .empty-state h3 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-empty-action {
+        background: var(--gradient);
+        border: none;
+        color: white;
+        padding: 0.625rem 1.25rem;
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-empty-action:hover {
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<section class="py-3 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
@@ -270,12 +317,20 @@
 
 {% else %}
 <div class="empty-state">
-    <i class="bi bi-database"></i>
+    <div class="empty-state-icon">
+        <i class="bi bi-database"></i>
+    </div>
     <h3>No Data Yet</h3>
-    <p class="text-muted">AI collected data will appear here once your flows start conversations.</p>
-    <a href="{% url 'ai_agent_list' %}" class="btn btn-primary">
-        <i class="bi bi-robot me-2"></i>Manage Agents
+    <p>AI collected data will appear here once your flows start conversations.</p>
+    <a href="{% url 'ai_agent_list' %}" class="btn-empty-action">
+        <i class="bi bi-robot"></i>
+        Manage Agents
     </a>
 </div>
 {% endif %}
+
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

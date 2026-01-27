@@ -275,13 +275,11 @@
                         {% if field.required %}<span class="text-danger">*</span>{% endif %}
                     </div>
                     <div class="data-field-value">
-                        {% with value=collected_data.data|default_if_none:'' %}
-                        {% if field.field in collected_data.data %}
+                        {% if field.field in collected_data.fields_collected %}
                         {{ collected_data.data|get_item:field.field|default:"-" }}
                         {% else %}
                         <span class="text-muted">Not collected</span>
                         {% endif %}
-                        {% endwith %}
                     </div>
                 </div>
                 {% if field.field in collected_data.fields_collected %}

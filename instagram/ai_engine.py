@@ -590,16 +590,30 @@ Keep it brief and engaging. Don't ask too many questions at once."""
             print("[AI DEBUG] All fields already collected, skipping extraction", flush=True)
             return {}
 
-        extraction_prompt = f"""Extract the following information from the user's message if present.
-Return a JSON object with only the fields that were found in the message.
+        # Get recent conversation for context
+        recent_messages = AIConversationMessage.objects.filter(
+            session=self.session
+        ).order_by('-created_at')[:4]  # Last 4 messages for context
+
+        conversation_context = ""
+        if recent_messages:
+            msgs = list(reversed(recent_messages))
+            conversation_context = "\n".join([
+                f"{'AI' if m.role == 'assistant' else 'User'}: {m.content[:200]}"
+                for m in msgs
+            ])
+            conversation_context = f"\nRecent conversation:\n{conversation_context}\n"
+
+        extraction_prompt = f"""Extract the following information from the conversation.
+The user's latest message is a response to the AI's question. Use context to understand what field they're providing.
 
 Fields to look for:
 {json.dumps(missing_fields, indent=2)}
+{conversation_context}
+User's latest message: "{message}"
 
-User message: "{message}"
-
-Return ONLY a valid JSON object. If no fields found, return {{}}.
-Example: {{"email": "user@example.com", "budget": "50L-1Cr"}}"""
+Return ONLY a valid JSON object with fields found. If no fields found, return {{}}.
+Example: {{"name": "John", "email": "john@example.com"}}"""
 
         try:
             response = self.client.chat.completions.create(

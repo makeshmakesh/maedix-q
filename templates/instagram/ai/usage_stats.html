@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         color: white;
         padding: 1.5rem;
         border-radius: 0 0 var(--radius) var(--radius);
@@ -53,7 +53,7 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -93,7 +93,7 @@
     }
 
     .section-card h3 i {
-        color: #667eea;
+        color: var(--primary);
         margin-right: 0.5rem;
     }
 
@@ -141,7 +141,7 @@
 
     .bar {
         flex: 1;
-        background: linear-gradient(to top, #667eea, #764ba2);
+        background: var(--gradient);
         border-radius: 4px 4px 0 0;
         min-height: 2px;
         transition: all 0.3s ease;
@@ -162,6 +162,11 @@
 {% endblock %}
 
 {% block content %}
+<section class="py-3 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
 <div class="page-header">
     <h1><i class="bi bi-graph-up me-2"></i>AI Usage Statistics</h1>
     <p class="mb-0 mt-2">Monitor your AI credit usage and consumption</p>
@@ -230,7 +235,7 @@
             {% for stat in agent_stats %}
             <div class="breakdown-item">
                 <div class="breakdown-label">
-                    <span class="breakdown-dot" style="background: #667eea;"></span>
+                    <span class="breakdown-dot" style="background: var(--primary);"></span>
                     <span>{{ stat.agent__name }}</span>
                 </div>
                 <div>
@@ -253,7 +258,7 @@
             {% for stat in type_stats %}
             <div class="breakdown-item">
                 <div class="breakdown-label">
-                    <span class="breakdown-dot" style="background: {% cycle '#667eea' '#764ba2' '#28a745' '#ffc107' %}"></span>
+                    <span class="breakdown-dot" style="background: {% cycle 'var(--primary)' 'var(--primary-dark)' 'var(--success)' 'var(--warning)' %}"></span>
                     <span>{{ stat.usage_type|title }}</span>
                 </div>
                 <div class="breakdown-value">{{ stat.credits|floatformat:2 }}</div>
@@ -292,4 +297,9 @@
         </div>
     </div>
 </div>
+
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

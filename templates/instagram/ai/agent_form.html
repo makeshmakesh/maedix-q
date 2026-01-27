@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         color: white;
         padding: 1.5rem;
         border-radius: 0 0 var(--radius) var(--radius);
@@ -60,7 +60,7 @@
     }
 
     .form-card h3 i {
-        color: #667eea;
+        color: var(--primary);
     }
 
     .form-label {
@@ -109,14 +109,14 @@
     }
 
     .tone-option input:checked + label {
-        border-color: #667eea;
-        background: #f8f9ff;
-        color: #667eea;
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
         font-weight: 500;
     }
 
     .tone-option label:hover {
-        border-color: #aab4f0;
+        border-color: rgba(var(--primary-rgb), 0.5);
     }
 
     /* Active Toggle */
@@ -179,7 +179,7 @@
     }
 
     .advanced-toggle:hover {
-        color: #667eea;
+        color: var(--primary);
     }
 
     .advanced-content {
@@ -193,6 +193,11 @@
 {% endblock %}
 
 {% block content %}
+<section class="py-3 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
 <div class="page-header">
     <h1><i class="bi bi-robot me-2"></i>{{ page_title }}</h1>
     <p class="mb-0 mt-2" style="font-size: 0.9rem; opacity: 0.9;">
@@ -328,6 +333,11 @@
         </a>
     </div>
 </form>
+
+            </div>
+        </div>
+    </div>
+</section>
 
 <script>
 function toggleAdvanced() {

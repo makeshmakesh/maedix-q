@@ -581,7 +581,7 @@ class AICollectedDataDetailView(LoginRequiredMixin, AIFeatureMixin, View):
         context = {
             'session': session,
             'collected_data': collected_data,
-            'messages': messages_list,
+            'conversation_messages': messages_list,
             'usage_logs': usage_logs,
             'total_credits': total_credits,
             'page_title': f'AI Session - @{session.instagram_username}',

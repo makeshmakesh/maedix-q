@@ -179,6 +179,7 @@
 .node-header.follower-check { background: #f8d7da; color: #842029; }
 .node-header.user-interacted { background: #e2d4f0; color: #5a2d82; }
 .node-header.collect-data { background: #f5d0e1; color: #8c1e56; }
+.node-header.ai-conversation { background: linear-gradient(135deg, #e8e4f8 0%, #d4e4f7 100%); color: #4a3f82; }
 
 .node-body {
     padding: 10px 12px;
@@ -762,6 +763,7 @@
 .form-node-header .node-icon.link-message { background: #ffc107; color: #212529; }
 .form-node-header .node-icon.follower-check { background: #dc3545; color: white; }
 .form-node-header .node-icon.user-interacted { background: #5a2d82; color: white; }
+.form-node-header .node-icon.ai-conversation { background: #667eea; color: white; }
 .form-node-header .node-icon.collect-data { background: #d63384; color: white; }
 
 .form-node-header .node-title {
@@ -1391,6 +1393,19 @@
                         <span>Returning User</span>
                     </div>
 
+                    {% if features.ai_social_agent %}
+                    <div class="palette-item" draggable="true" data-node="ai_conversation">
+                        <i class="bi bi-cpu" style="color: #667eea;"></i>
+                        <span>AI Conversation</span>
+                    </div>
+                    {% else %}
+                    <div class="palette-item disabled" title="Upgrade to access AI">
+                        <i class="bi bi-cpu text-muted"></i>
+                        <span class="text-muted">AI Conversation</span>
+                        <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Pro</span>
+                    </div>
+                    {% endif %}
+
                     <div class="palette-item disabled" title="Coming Soon">
                         <i class="bi bi-input-cursor-text text-muted"></i>
                         <span class="text-muted">Collect Data</span>
@@ -1719,6 +1734,12 @@
                                 <li><a class="dropdown-item" href="#" data-add-node="condition_user_interacted">
                                     <i class="bi bi-person-lines-fill" style="color: #5a2d82;"></i>Returning User
                                 </a></li>
+                                {% if features.ai_social_agent %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" data-add-node="ai_conversation">
+                                    <i class="bi bi-cpu" style="color: #667eea;"></i>AI Conversation
+                                </a></li>
+                                {% endif %}
                                 <li><a class="dropdown-item disabled text-muted" href="#">
                                     <i class="bi bi-input-cursor-text"></i>Collect Data
                                     <span class="badge bg-secondary ms-2" style="font-size: 9px;">Coming Soon</span>
@@ -1790,7 +1811,8 @@ function generateNodeHtml(type, data = {}) {
         'message_link': { class: 'link-message', icon: 'bi-link', title: 'Link Message' },
         'condition_follower': { class: 'follower-check', icon: 'bi-person-check', title: 'Follower Check' },
         'condition_user_interacted': { class: 'user-interacted', icon: 'bi-person-lines-fill', title: 'Returning User' },
-        'collect_data': { class: 'collect-data', icon: 'bi-input-cursor-text', title: 'Collect Data' }
+        'collect_data': { class: 'collect-data', icon: 'bi-input-cursor-text', title: 'Collect Data' },
+        'ai_conversation': { class: 'ai-conversation', icon: 'bi-cpu', title: 'AI Conversation' }
     };
 
     const header = headers[type] || { class: '', icon: 'bi-circle', title: 'Node' };
@@ -1899,6 +1921,15 @@ function generateNodeHtml(type, data = {}) {
             bodyHtml = `
                 <div class="text-preview">Collecting: ${fieldType}</div>
                 <div class="small text-muted">${escapeHtml(prompt.substring(0, 30))}...</div>
+            `;
+            break;
+
+        case 'ai_conversation':
+            const agentName = data.agent_name || 'No agent selected';
+            const goal = data.goal || 'Configure AI goal...';
+            bodyHtml = `
+                <div class="text-preview"><i class="bi bi-robot me-1"></i>${escapeHtml(agentName)}</div>
+                <div class="small text-muted">${escapeHtml(goal.substring(0, 35))}${goal.length > 35 ? '...' : ''}</div>
             `;
             break;
     }
@@ -2245,7 +2276,8 @@ function showEditPanel(nodeId) {
     document.getElementById('editNodeType').value = nodeInfo.name;
 
     const data = nodeDataMap[nodeId]?.data || nodeInfo.data || {};
-    renderConfigFields(nodeInfo.name, data);
+    const dbId = nodeDataMap[nodeId]?.dbId || null;
+    renderConfigFields(nodeInfo.name, data, dbId);
 
     const titles = {
         'comment_reply': 'Comment Reply',
@@ -2254,7 +2286,9 @@ function showEditPanel(nodeId) {
         'message_button_template': 'Button Template',
         'message_link': 'Link Message',
         'condition_follower': 'Follower Check',
-        'collect_data': 'Collect Data'
+        'condition_user_interacted': 'Returning User',
+        'collect_data': 'Collect Data',
+        'ai_conversation': 'AI Conversation'
     };
     document.getElementById('editPanelTitle').textContent = titles[nodeInfo.name] || 'Edit Node';
 }
@@ -2268,7 +2302,7 @@ function hideEditPanel() {
 // Config Fields Rendering
 // ============================================================================
 
-function renderConfigFields(nodeType, data) {
+function renderConfigFields(nodeType, data, dbId = null) {
     const container = document.getElementById('nodeConfigFields');
     let html = '';
 
@@ -2488,6 +2522,62 @@ function renderConfigFields(nodeType, data) {
                     <small class="text-muted">Used to store the collected value</small>
                 </div>
             `;
+            break;
+
+        case 'ai_conversation':
+            if (dbId) {
+                // Node is saved - show configure button
+                const configUrl = `/instagram/ai/node/${dbId}/config/`;
+                const agentDisplay = data.agent_name || 'No agent selected';
+                const goalDisplay = data.goal || 'No goal configured';
+                html = `
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-cpu me-1"></i>
+                        AI-powered conversation node. The AI will handle the conversation dynamically.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Agent</label>
+                        <div class="form-control bg-light">${escapeHtml(agentDisplay)}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Goal</label>
+                        <div class="form-control bg-light" style="min-height:60px;white-space:pre-wrap;">${escapeHtml(goalDisplay)}</div>
+                    </div>
+                    <div class="d-grid">
+                        <a href="${configUrl}" class="btn btn-primary">
+                            <i class="bi bi-gear me-2"></i>Configure AI Node
+                        </a>
+                    </div>
+                    <p class="text-muted small mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Click the button above to configure the agent, goal, knowledge bases, and data collection schema.
+                    </p>
+                `;
+            } else {
+                // Node is not saved yet - show save message
+                html = `
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <strong>Save Required</strong>
+                    </div>
+                    <p class="text-muted">
+                        This AI node needs to be saved before you can configure it.
+                    </p>
+                    <ol class="text-muted small">
+                        <li>Click <strong>Save Flow</strong> button above</li>
+                        <li>Then click on this node again to configure</li>
+                    </ol>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-secondary" disabled>
+                            <i class="bi bi-gear me-2"></i>Configure AI Node
+                        </button>
+                    </div>
+                    <p class="text-muted small mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        After saving, you'll be able to select an agent, set goals, and configure data collection.
+                    </p>
+                `;
+            }
             break;
     }
 
@@ -2712,6 +2802,12 @@ document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
 
         case 'condition_user_interacted':
             config.time_period = formData.get('time_period') || 'ever';
+            break;
+
+        case 'ai_conversation':
+            // AI node config is handled on a separate page
+            // Preserve existing config data
+            config = { ...nodeDataMap[nodeId]?.data };
             break;
     }
 
@@ -3512,6 +3608,15 @@ function saveFlow() {
     })
     .then(data => {
         if (data.success) {
+            // Check if there are new AI nodes that need configuration
+            if (data.ai_config_urls && Object.keys(data.ai_config_urls).length > 0) {
+                const aiNodeIds = Object.keys(data.ai_config_urls);
+                const firstAiUrl = data.ai_config_urls[aiNodeIds[0]];
+                if (confirm('AI Conversation node added! Would you like to configure it now?')) {
+                    window.location.href = firstAiUrl;
+                    return;
+                }
+            }
             showToast('Flow saved successfully!', 'success');
             setTimeout(() => location.reload(), 500);
         } else {
@@ -3557,7 +3662,8 @@ const NODE_TYPES = {
     'message_link': { icon: 'bi-link', class: 'link-message', title: 'Link Message' },
     'condition_follower': { icon: 'bi-person-check', class: 'follower-check', title: 'Follower Check' },
     'condition_user_interacted': { icon: 'bi-person-lines-fill', class: 'user-interacted', title: 'Returning User' },
-    'collect_data': { icon: 'bi-input-cursor-text', class: 'collect-data', title: 'Collect Data' }
+    'collect_data': { icon: 'bi-input-cursor-text', class: 'collect-data', title: 'Collect Data' },
+    'ai_conversation': { icon: 'bi-cpu', class: 'ai-conversation', title: 'AI Conversation' }
 };
 
 // Initialize form nodes from database (existingNodes)
@@ -4059,6 +4165,58 @@ function buildNodeFields(node, index) {
                 </div>
             `;
             break;
+
+        case 'ai_conversation':
+            if (node.dbId) {
+                // Node is saved - show configure button
+                const configUrl = `/instagram/ai/node/${node.dbId}/config/`;
+                const agentName = node.config.agent_name || 'No agent selected';
+                const goal = node.config.goal || 'No goal configured';
+                html = `
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-cpu me-1"></i>
+                        AI-powered conversation. The AI handles responses dynamically.
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Agent</label>
+                        <div class="form-control form-control-sm bg-light">${escapeHtml(agentName)}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Goal</label>
+                        <div class="form-control form-control-sm bg-light" style="min-height:40px;white-space:pre-wrap;font-size:12px;">${escapeHtml(goal)}</div>
+                    </div>
+                    <a href="${configUrl}" class="btn btn-primary btn-sm w-100 mb-3">
+                        <i class="bi bi-gear me-1"></i>Configure AI Node
+                    </a>
+                    <div class="form-node-connection next-node">
+                        <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>On goal complete:</div>
+                        <select class="form-select form-select-sm next-node-select">
+                            ${buildTargetOptions(node.nextNodeId, index)}
+                        </select>
+                    </div>
+                `;
+            } else {
+                // Node not saved yet
+                html = `
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <strong>Save Required</strong>
+                    </div>
+                    <p class="small text-muted mb-2">
+                        Save the flow first to configure this AI node.
+                    </p>
+                    <button type="button" class="btn btn-secondary btn-sm w-100 mb-3" disabled>
+                        <i class="bi bi-gear me-1"></i>Configure AI Node
+                    </button>
+                    <div class="form-node-connection next-node">
+                        <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>On goal complete:</div>
+                        <select class="form-select form-select-sm next-node-select">
+                            ${buildTargetOptions(node.nextNodeId, index)}
+                        </select>
+                    </div>
+                `;
+            }
+            break;
     }
 
     return html;
@@ -4414,6 +4572,15 @@ function saveFormFlow() {
     })
     .then(data => {
         if (data.success) {
+            // Check if there are new AI nodes that need configuration
+            if (data.ai_config_urls && Object.keys(data.ai_config_urls).length > 0) {
+                const aiNodeIds = Object.keys(data.ai_config_urls);
+                const firstAiUrl = data.ai_config_urls[aiNodeIds[0]];
+                if (confirm('AI Conversation node added! Would you like to configure it now?')) {
+                    window.location.href = firstAiUrl;
+                    return;
+                }
+            }
             showToast('Flow saved successfully!', 'success');
             // Reload to show saved data
             location.reload();

@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem;
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .form-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .form-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-card h3 i {
+        color: #667eea;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #444;
+        font-size: 0.9rem;
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    /* Tone Options */
+    .tone-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    @media (min-width: 576px) {
+        .tone-options {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (min-width: 768px) {
+        .tone-options {
+            grid-template-columns: repeat(5, 1fr);
+        }
+    }
+
+    .tone-option input {
+        display: none;
+    }
+
+    .tone-option label {
+        display: block;
+        padding: 0.625rem 0.5rem;
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius-sm);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .tone-option input:checked + label {
+        border-color: #667eea;
+        background: #f8f9ff;
+        color: #667eea;
+        font-weight: 500;
+    }
+
+    .tone-option label:hover {
+        border-color: #aab4f0;
+    }
+
+    /* Active Toggle */
+    .active-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+    }
+
+    .active-toggle .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin: 0;
+    }
+
+    .active-toggle-text {
+        flex: 1;
+    }
+
+    .active-toggle-text .label {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .active-toggle-text .hint {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+    }
+
+    @media (min-width: 576px) {
+        .action-buttons {
+            flex-direction: row;
+        }
+    }
+
+    .action-buttons .btn {
+        padding: 0.625rem 1.25rem;
+    }
+
+    /* Collapsible Advanced Section */
+    .advanced-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        padding: 0.75rem 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .advanced-toggle:hover {
+        color: #667eea;
+    }
+
+    .advanced-content {
+        display: none;
+    }
+
+    .advanced-content.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-robot me-2"></i>{{ page_title }}</h1>
+    <p class="mb-0 mt-2" style="font-size: 0.9rem; opacity: 0.9;">
+        {% if agent %}Edit your AI agent's personality{% else %}Create a new AI agent{% endif %}
+    </p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="form-card">
+                <h3><i class="bi bi-person-badge"></i>Basic Information</h3>
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Agent Name *</label>
+                    <input type="text" class="form-control" id="name" name="name"
+                           value="{{ agent.name|default:'' }}" required maxlength="100"
+                           placeholder="e.g., Property Expert, Sales Assistant">
+                    <div class="form-text">Give your agent a memorable name</div>
+                </div>
+
+                <div class="mb-0">
+                    <label class="form-label">Tone *</label>
+                    <div class="tone-options">
+                        {% for tone in tone_choices %}
+                        <div class="tone-option">
+                            <input type="radio" name="tone" id="tone_{{ tone }}" value="{{ tone }}"
+                                   {% if agent.tone == tone or tone == 'friendly' and not agent %}checked{% endif %}>
+                            <label for="tone_{{ tone }}">{{ tone|title }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personality -->
+            <div class="form-card">
+                <h3><i class="bi bi-chat-heart"></i>Personality</h3>
+
+                <div class="mb-3">
+                    <label for="personality" class="form-label">Personality Description *</label>
+                    <textarea class="form-control" id="personality" name="personality" rows="4" required
+                              placeholder="e.g., I am a friendly real estate expert who helps people find their dream property. I'm knowledgeable, always positive, and keep responses concise.">{{ agent.personality|default:'' }}</textarea>
+                    <div class="form-text">This shapes how your agent communicates</div>
+                </div>
+
+                <div class="mb-0">
+                    <label for="language_style" class="form-label">Language Style <span class="text-muted fw-normal">(Optional)</span></label>
+                    <textarea class="form-control" id="language_style" name="language_style" rows="2"
+                              placeholder="e.g., Use simple English mixed with Hindi (Hinglish). Keep responses short.">{{ agent.language_style|default:'' }}</textarea>
+                    <div class="form-text">Specify language preferences or communication style</div>
+                </div>
+            </div>
+
+            <!-- Boundaries -->
+            <div class="form-card">
+                <h3><i class="bi bi-shield-exclamation"></i>Boundaries</h3>
+
+                <div class="mb-0">
+                    <label for="boundaries" class="form-label">What the agent should NOT do <span class="text-muted fw-normal">(Optional)</span></label>
+                    <textarea class="form-control" id="boundaries" name="boundaries" rows="3"
+                              placeholder="e.g., Never discuss competitors. Never promise discounts. Escalate refund requests to human.">{{ agent.boundaries|default:'' }}</textarea>
+                    <div class="form-text">Define guardrails to keep your agent on track</div>
+                </div>
+            </div>
+
+            <!-- Advanced (Collapsible) -->
+            <div class="form-card">
+                <div class="advanced-toggle" onclick="toggleAdvanced()">
+                    <span><i class="bi bi-code-square me-2"></i>Advanced Settings</span>
+                    <i class="bi bi-chevron-down" id="advancedIcon"></i>
+                </div>
+                <div class="advanced-content" id="advancedContent">
+                    <div class="pt-3">
+                        <label for="custom_system_prompt" class="form-label">Custom System Prompt</label>
+                        <textarea class="form-control" id="custom_system_prompt" name="custom_system_prompt" rows="5"
+                                  placeholder="Leave empty to auto-generate from the fields above. Only use this for complete control over the system prompt.">{{ agent.custom_system_prompt|default:'' }}</textarea>
+                        <div class="form-text">Override the auto-generated prompt. If empty, prompt is built from personality, tone, and boundaries.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            {% if agent %}
+            <!-- Status Card (Edit mode only) -->
+            <div class="form-card">
+                <h3><i class="bi bi-toggle-on"></i>Status</h3>
+                <div class="active-toggle">
+                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                           {% if agent.is_active %}checked{% endif %}>
+                    <div class="active-toggle-text">
+                        <div class="label">Active</div>
+                        <div class="hint">Inactive agents won't be used in flows</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tips Card -->
+            <div class="form-card">
+                <h3><i class="bi bi-lightbulb"></i>Tips</h3>
+                <ul class="mb-0 ps-3" style="font-size: 0.85rem; color: #555; line-height: 1.7;">
+                    <li>Be specific about your agent's expertise</li>
+                    <li>Define clear boundaries to avoid off-topic responses</li>
+                    <li>Test different tones to find what works best</li>
+                    <li>Keep personality descriptions concise but detailed</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons (Desktop) -->
+            <div class="d-none d-lg-block">
+                <button type="submit" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-check-lg me-2"></i>{% if agent %}Save Changes{% else %}Create Agent{% endif %}
+                </button>
+                <a href="{% if agent %}{% url 'ai_agent_detail' agent.id %}{% else %}{% url 'ai_agent_list' %}{% endif %}" class="btn btn-outline-secondary w-100">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons (Mobile) -->
+    <div class="d-lg-none action-buttons">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-2"></i>{% if agent %}Save Changes{% else %}Create Agent{% endif %}
+        </button>
+        <a href="{% if agent %}{% url 'ai_agent_detail' agent.id %}{% else %}{% url 'ai_agent_list' %}{% endif %}" class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
+</form>
+
+<script>
+function toggleAdvanced() {
+    const content = document.getElementById('advancedContent');
+    const icon = document.getElementById('advancedIcon');
+    content.classList.toggle('show');
+    icon.classList.toggle('bi-chevron-down');
+    icon.classList.toggle('bi-chevron-up');
+}
+
+// Show advanced if there's content
+{% if agent.custom_system_prompt %}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleAdvanced();
+});
+{% endif %}
+</script>
+{% endblock %}

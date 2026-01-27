@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import ai_views
 
 urlpatterns = [
     # Connection management
@@ -43,4 +44,40 @@ urlpatterns = [
     # Facebook App Callback URLs (Required for App Review)
     path('data-deletion/', views.DataDeletionCallbackView.as_view(), name='instagram_data_deletion'),
     path('deauthorize/', views.DeauthorizationCallbackView.as_view(), name='instagram_deauthorize'),
+
+    # ==========================================================================
+    # AI Social Agent URLs
+    # ==========================================================================
+
+    # Social Agents
+    path('ai/agents/', ai_views.AgentListView.as_view(), name='ai_agent_list'),
+    path('ai/agents/create/', ai_views.AgentCreateView.as_view(), name='ai_agent_create'),
+    path('ai/agents/<int:agent_id>/', ai_views.AgentDetailView.as_view(), name='ai_agent_detail'),
+    path('ai/agents/<int:agent_id>/edit/', ai_views.AgentEditView.as_view(), name='ai_agent_edit'),
+    path('ai/agents/<int:agent_id>/delete/', ai_views.AgentDeleteView.as_view(), name='ai_agent_delete'),
+
+    # Knowledge Bases
+    path('ai/knowledge/', ai_views.KnowledgeBaseCreateView.as_view(), name='ai_kb_create'),
+    path('ai/knowledge/<int:kb_id>/', ai_views.KnowledgeBaseDetailView.as_view(), name='ai_kb_detail'),
+    path('ai/knowledge/<int:kb_id>/delete/', ai_views.KnowledgeBaseDeleteView.as_view(), name='ai_kb_delete'),
+    path('ai/knowledge/<int:kb_id>/add-text/', ai_views.KnowledgeItemAddTextView.as_view(), name='ai_kb_add_text'),
+    path('ai/knowledge/<int:kb_id>/upload/', ai_views.KnowledgeItemUploadView.as_view(), name='ai_kb_upload'),
+    path('ai/knowledge/item/<int:item_id>/delete/', ai_views.KnowledgeItemDeleteView.as_view(), name='ai_kb_item_delete'),
+    path('ai/knowledge/item/<int:item_id>/reprocess/', ai_views.KnowledgeItemReprocessView.as_view(), name='ai_kb_item_reprocess'),
+
+    # AI Node Configuration
+    path('ai/node/<int:node_id>/config/', ai_views.AINodeConfigView.as_view(), name='ai_node_config'),
+
+    # AI Collected Data
+    path('ai/data/', ai_views.AICollectedDataListView.as_view(), name='ai_collected_data_list'),
+    path('ai/data/export/', ai_views.AICollectedDataExportView.as_view(), name='ai_collected_data_export'),
+    path('ai/data/session/<int:session_id>/', ai_views.AICollectedDataDetailView.as_view(), name='ai_collected_data_detail'),
+
+    # AI Usage Stats
+    path('ai/usage/', ai_views.AIUsageStatsView.as_view(), name='ai_usage_stats'),
+
+    # AI API Endpoints
+    path('api/ai/agents/<int:agent_id>/preview/', ai_views.AgentPreviewAPIView.as_view(), name='ai_agent_preview_api'),
+    path('api/ai/knowledge/<int:kb_id>/search/', ai_views.KnowledgeSearchAPIView.as_view(), name='ai_kb_search_api'),
+    path('api/ai/node/<int:node_id>/schema/', ai_views.AINodeSchemaAPIView.as_view(), name='ai_node_schema_api'),
 ]

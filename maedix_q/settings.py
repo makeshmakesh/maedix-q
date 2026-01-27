@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'channels',
     'django.contrib.sitemaps',
+    'django.contrib.humanize',
 
     # Local apps
     'core',
@@ -79,6 +80,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.site_settings',
+                'core.context_processors.user_features',
             ],
         },
     },

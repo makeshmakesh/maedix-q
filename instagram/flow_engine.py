@@ -168,6 +168,7 @@ class FlowEngine:
             'condition_follower': self._handle_condition_follower,
             'condition_user_interacted': self._handle_condition_user_interacted,
             'collect_data': self._handle_collect_data,
+            'ai_conversation': self._handle_ai_conversation,  # AI Node
         }
 
         handler = handlers.get(node.node_type)
@@ -222,8 +223,16 @@ class FlowEngine:
             logger.info(f"Sent text DM to {session.instagram_username}")
         except InstagramAPIError as e:
             logger.error(f"Failed to send text DM: {e}")
-            session.set_error(str(e))
-            self._log_action(session, 'error', node, {'error': str(e)})
+            if e.is_messaging_restricted_error():
+                # User has privacy settings that prevent DMs - not a system error
+                session.set_error("User doesn't allow message requests")
+                self._log_action(session, 'dm_restricted', node, {
+                    'error': str(e),
+                    'reason': 'user_messaging_restricted'
+                })
+            else:
+                session.set_error(str(e))
+                self._log_action(session, 'error', node, {'error': str(e)})
             return
 
         self._advance_to_next_node(session, node)
@@ -302,8 +311,15 @@ class FlowEngine:
             logger.info(f"Sent quick reply DM to {session.instagram_username}")
         except InstagramAPIError as e:
             logger.error(f"Failed to send quick reply DM: {e}")
-            session.set_error(str(e))
-            self._log_action(session, 'error', node, {'error': str(e)})
+            if e.is_messaging_restricted_error():
+                session.set_error("User doesn't allow message requests")
+                self._log_action(session, 'dm_restricted', node, {
+                    'error': str(e),
+                    'reason': 'user_messaging_restricted'
+                })
+            else:
+                session.set_error(str(e))
+                self._log_action(session, 'error', node, {'error': str(e)})
             return
 
         # Wait for user to click a button
@@ -402,8 +418,15 @@ class FlowEngine:
             logger.info(f"Sent button template DM to {session.instagram_username}")
         except InstagramAPIError as e:
             logger.error(f"Failed to send button template DM: {e}")
-            session.set_error(str(e))
-            self._log_action(session, 'error', node, {'error': str(e)})
+            if e.is_messaging_restricted_error():
+                session.set_error("User doesn't allow message requests")
+                self._log_action(session, 'dm_restricted', node, {
+                    'error': str(e),
+                    'reason': 'user_messaging_restricted'
+                })
+            else:
+                session.set_error(str(e))
+                self._log_action(session, 'error', node, {'error': str(e)})
             return
 
         # If any button is a postback type, wait for response
@@ -441,8 +464,15 @@ class FlowEngine:
             logger.info(f"Sent link DM to {session.instagram_username}")
         except InstagramAPIError as e:
             logger.error(f"Failed to send link DM: {e}")
-            session.set_error(str(e))
-            self._log_action(session, 'error', node, {'error': str(e)})
+            if e.is_messaging_restricted_error():
+                session.set_error("User doesn't allow message requests")
+                self._log_action(session, 'dm_restricted', node, {
+                    'error': str(e),
+                    'reason': 'user_messaging_restricted'
+                })
+            else:
+                session.set_error(str(e))
+                self._log_action(session, 'error', node, {'error': str(e)})
             return
 
         self._advance_to_next_node(session, node)
@@ -660,12 +690,177 @@ class FlowEngine:
             logger.info(f"Sent data collection prompt to {session.instagram_username}")
         except InstagramAPIError as e:
             logger.error(f"Failed to send data collection prompt: {e}")
-            session.set_error(str(e))
-            self._log_action(session, 'error', node, {'error': str(e)})
+            if e.is_messaging_restricted_error():
+                session.set_error("User doesn't allow message requests")
+                self._log_action(session, 'dm_restricted', node, {
+                    'error': str(e),
+                    'reason': 'user_messaging_restricted'
+                })
+            else:
+                session.set_error(str(e))
+                self._log_action(session, 'error', node, {'error': str(e)})
             return
 
         # Wait for user's text reply
         session.set_waiting_for_reply()
+
+    def _handle_ai_conversation(self, session: FlowSession, node: FlowNode):
+        """
+        Handle ai_conversation node - delegates to AI engine.
+
+        This node hands off control to the AI conversation handler which:
+        - Generates AI responses using the configured agent
+        - Collects data according to the schema
+        - Manages the conversation until goal is complete
+        """
+        from .ai_engine import AINodeExecutor
+        from core.subscription_utils import check_feature_access
+
+        logger.info(f"Starting AI conversation for session {session.id}")
+
+        # Check if user has AI feature access
+        user = session.flow.user
+        can_access, message, _ = check_feature_access(user, 'ai_social_agent')
+        if not can_access:
+            logger.warning(f"User {user.id} does not have AI feature access, skipping AI node")
+            session.set_error("AI feature not available on current plan")
+            self._log_action(session, 'feature_blocked', node, {'feature': 'ai_social_agent'})
+            # Try to advance to next node instead of blocking the flow
+            if node.next_node:
+                self.execute_node(session, node.next_node)
+            else:
+                self._complete_flow(session)
+            return
+
+        # Execute AI node (sends first message)
+        result = AINodeExecutor.execute_ai_node(session, node)
+
+        if not result['success']:
+            logger.error(f"AI node failed: {result['message']}")
+            session.set_error(result['message'])
+            self._log_action(session, 'error', node, {'error': result['message']})
+            return
+
+        # Send the AI-generated first message via Instagram
+        try:
+            if session.trigger_comment_id and not self._has_sent_dm(session):
+                self.api_client.send_dm_to_commenter(
+                    session.trigger_comment_id,
+                    result['message']
+                )
+            else:
+                self.api_client.send_text_dm(
+                    session.instagram_scoped_id,
+                    result['message']
+                )
+
+            self._log_action(session, 'message_sent', node, {
+                'text': result['message'],
+                'ai_generated': True
+            })
+            logger.info(f"Sent AI first message to {session.instagram_username}")
+
+        except InstagramAPIError as e:
+            logger.error(f"Failed to send AI message: {e}")
+            if e.is_messaging_restricted_error():
+                session.set_error("User doesn't allow message requests")
+                self._log_action(session, 'dm_restricted', node, {
+                    'error': str(e),
+                    'reason': 'user_messaging_restricted'
+                })
+            else:
+                session.set_error(str(e))
+                self._log_action(session, 'error', node, {'error': str(e)})
+            return
+
+        # Mark session as waiting for AI conversation reply
+        session.status = 'waiting_reply'
+        session.context_data['_ai_conversation'] = True
+        session.context_data['_ai_node_id'] = node.id
+        session.save(update_fields=['status', 'context_data', 'updated_at'])
+
+    def handle_ai_text_reply(
+        self,
+        session: FlowSession,
+        text: str,
+        message_id: Optional[str] = None
+    ):
+        """
+        Handle text reply during AI conversation.
+
+        Args:
+            session: The flow session
+            text: The user's text message
+            message_id: Optional message ID for deduplication
+        """
+        from .ai_engine import AINodeExecutor
+        from core.subscription_utils import check_feature_access
+
+        logger.info(f"Handling AI text reply for session {session.id}: {text[:50]}...")
+
+        # Check if user still has AI feature access
+        user = session.flow.user
+        can_access, _, _ = check_feature_access(user, 'ai_social_agent')
+        if not can_access:
+            logger.warning(f"User {user.id} lost AI feature access during conversation")
+            # Clear AI state and complete the flow gracefully
+            session.context_data.pop('_ai_conversation', None)
+            session.context_data.pop('_ai_node_id', None)
+            session.save(update_fields=['context_data', 'updated_at'])
+            self._complete_flow(session)
+            return
+
+        # Process through AI engine
+        result = AINodeExecutor.handle_ai_message(session, text, message_id or '')
+
+        if not result['success']:
+            logger.error(f"AI response failed: {result.get('error', 'Unknown error')}")
+            return
+
+        # Send AI response via Instagram
+        if result['response']:
+            try:
+                self.api_client.send_text_dm(session.instagram_scoped_id, result['response'])
+                self._log_action(session, 'message_sent', session.current_node, {
+                    'text': result['response'],
+                    'ai_generated': True
+                })
+            except InstagramAPIError as e:
+                logger.error(f"Failed to send AI response: {e}")
+                self._log_action(session, 'error', session.current_node, {'error': str(e)})
+                return
+
+        # Check if AI conversation is complete
+        if not result['should_continue_ai']:
+            # Merge collected data into session context for use by subsequent nodes
+            if result.get('collected_data'):
+                session.context_data.update(result['collected_data'])
+                logger.info(f"Merged AI collected data into context: {list(result['collected_data'].keys())}")
+
+            # Clear AI conversation state flags
+            session.context_data.pop('_ai_conversation', None)
+            session.context_data.pop('_ai_node_id', None)
+            session.save(update_fields=['context_data', 'updated_at'])
+
+            if result['should_complete_flow']:
+                self._complete_flow(session)
+            elif result['next_node_id']:
+                try:
+                    next_node = FlowNode.objects.get(id=result['next_node_id'])
+                    session.status = 'active'
+                    session.save(update_fields=['status', 'updated_at'])
+                    self.execute_node(session, next_node)
+                except FlowNode.DoesNotExist:
+                    logger.error(f"Next node {result['next_node_id']} not found")
+                    self._complete_flow(session)
+            else:
+                # No next node specified, try to advance normally
+                if session.current_node and session.current_node.next_node:
+                    session.status = 'active'
+                    session.save(update_fields=['status', 'updated_at'])
+                    self.execute_node(session, session.current_node.next_node)
+                else:
+                    self._complete_flow(session)
 
     # =========================================================================
     # User Response Handling
@@ -818,7 +1013,7 @@ class FlowEngine:
         message_id: Optional[str] = None
     ):
         """
-        Handle when a user sends a text message (for data collection).
+        Handle when a user sends a text message (for data collection or AI conversation).
 
         Args:
             session: The flow session
@@ -827,7 +1022,12 @@ class FlowEngine:
         """
         logger.info(f"Handling text reply for session {session.id}: {text[:50]}...")
 
-        # Check if we're collecting data
+        # Check if this is an AI conversation - delegate to AI handler
+        if session.context_data.get('_ai_conversation'):
+            self.handle_ai_text_reply(session, text, message_id)
+            return
+
+        # Check if we're collecting data (existing flow)
         variable_name = session.context_data.get('_collecting_variable')
         field_type = session.context_data.get('_collecting_field_type')
         node_id = session.context_data.get('_collecting_node_id')

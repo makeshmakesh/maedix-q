@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .form-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .form-card h3 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #444;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #888;
+    }
+
+    /* Agent Selection Grid */
+    .agent-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 576px) {
+        .agent-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .agent-select-card {
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .agent-select-card:hover {
+        border-color: #aab4f0;
+        background: #fafbff;
+    }
+
+    .agent-select-card.selected {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .agent-select-card input {
+        display: none;
+    }
+
+    .agent-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .agent-info .agent-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .agent-info .agent-meta {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    /* Field Items */
+    .field-item {
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .field-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .field-item-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .btn-remove-field {
+        color: #dc3545;
+        background: none;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+        opacity: 0.7;
+        font-size: 1rem;
+    }
+
+    .btn-remove-field:hover {
+        opacity: 1;
+    }
+
+    .field-inputs {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .field-inputs {
+            grid-template-columns: 1fr 120px 1fr;
+        }
+    }
+
+    .field-footer {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .field-footer .form-check-input {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    .add-field-btn {
+        border: 2px dashed #dee2e6;
+        border-radius: var(--radius-sm);
+        padding: 0.875rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .add-field-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+        background: #f8f9ff;
+    }
+
+    /* Settings Grid */
+    .settings-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    @media (min-width: 576px) {
+        .settings-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* Info Box */
+    .info-box {
+        background: #f0f4ff;
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .info-box i {
+        color: #667eea;
+    }
+
+    /* Sticky Sidebar */
+    @media (min-width: 992px) {
+        .sidebar-sticky {
+            position: sticky;
+            top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-cpu me-2"></i>Configure AI Node</h1>
+    <p class="mb-0 mt-2">Flow: {{ node.flow.title }} &bull; Node #{{ node.order }}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Agent Selection -->
+            <div class="form-card">
+                <h3><i class="bi bi-robot"></i>Select Agent</h3>
+
+                {% if agents %}
+                <div class="agent-grid">
+                    {% for agent in agents %}
+                    <label class="agent-select-card {% if ai_config.agent_id == agent.id %}selected{% endif %}">
+                        <input type="radio" name="agent_id" value="{{ agent.id }}"
+                               {% if ai_config.agent_id == agent.id %}checked{% endif %}>
+                        <div class="agent-avatar">{{ agent.name|slice:":1"|upper }}</div>
+                        <div class="agent-info">
+                            <div class="agent-name">{{ agent.name }}</div>
+                            <div class="agent-meta">{{ agent.tone|title }} &bull; {{ agent.knowledge_bases.count }} KBs</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    No agents found. <a href="{% url 'ai_agent_create' %}">Create an agent</a> first.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Goal & Message -->
+            <div class="form-card">
+                <h3><i class="bi bi-bullseye"></i>Goal & Message</h3>
+
+                <div class="mb-3">
+                    <label for="goal" class="form-label">Goal *</label>
+                    <textarea class="form-control" id="goal" name="goal" rows="3" required
+                              placeholder="e.g., Qualify the lead by collecting their budget, location preference, and timeline. Then collect their email for follow-up.">{{ ai_config.goal }}</textarea>
+                    <div class="form-text">What should the AI accomplish in this conversation?</div>
+                </div>
+
+                <div class="mb-0">
+                    <label for="first_message" class="form-label">First Message (Optional)</label>
+                    <textarea class="form-control" id="first_message" name="first_message" rows="2"
+                              placeholder="Leave empty for AI to generate based on goal and personality">{{ ai_config.first_message }}</textarea>
+                    <div class="form-text">Custom opening message, or let AI generate one</div>
+                </div>
+            </div>
+
+            <!-- Data to Collect -->
+            <div class="form-card">
+                <h3><i class="bi bi-collection"></i>Data to Collect</h3>
+
+                <div id="fieldsContainer">
+                    {% for field in ai_config.collection_schema %}
+                    <div class="field-item">
+                        <div class="field-item-header">
+                            <span class="field-item-title">Field {{ forloop.counter }}</span>
+                            <button type="button" class="btn-remove-field" onclick="removeField(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <div class="field-inputs">
+                            <input type="text" class="form-control" name="field_name[]"
+                                   value="{{ field.field }}" placeholder="Field name (e.g., email)" required>
+                            <select class="form-select" name="field_type[]">
+                                <option value="text" {% if field.type == 'text' %}selected{% endif %}>Text</option>
+                                <option value="email" {% if field.type == 'email' %}selected{% endif %}>Email</option>
+                                <option value="phone" {% if field.type == 'phone' %}selected{% endif %}>Phone</option>
+                                <option value="number" {% if field.type == 'number' %}selected{% endif %}>Number</option>
+                            </select>
+                            <input type="text" class="form-control" name="field_label[]"
+                                   value="{{ field.label }}" placeholder="Display label (optional)">
+                        </div>
+                        <div class="field-footer">
+                            <input type="checkbox" class="form-check-input" name="field_required[]"
+                                   id="req_{{ forloop.counter0 }}" value="{{ forloop.counter0 }}"
+                                   {% if field.required %}checked{% endif %}>
+                            <label class="form-check-label" for="req_{{ forloop.counter0 }}">Required field</label>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-3" id="noFieldsMsg">No fields added yet. Add fields you want the AI to collect from the conversation.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="add-field-btn" onclick="addField()">
+                    <i class="bi bi-plus-lg me-2"></i>Add Field
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="sidebar-sticky">
+                <!-- Settings -->
+                <div class="form-card">
+                    <h3><i class="bi bi-sliders"></i>Settings</h3>
+
+                    <div class="settings-grid">
+                        <div>
+                            <label for="max_turns" class="form-label">Max Turns</label>
+                            <input type="number" class="form-control" id="max_turns" name="max_turns"
+                                   value="{{ ai_config.max_turns|default:10 }}" min="1" max="50">
+                            <div class="form-text">Max messages</div>
+                        </div>
+                        <div>
+                            <label for="timeout_minutes" class="form-label">Timeout</label>
+                            <input type="number" class="form-control" id="timeout_minutes" name="timeout_minutes"
+                                   value="{{ ai_config.timeout_minutes|default:60 }}" min="5" max="1440">
+                            <div class="form-text">Minutes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow Connection Info -->
+                <div class="form-card">
+                    <h3><i class="bi bi-diagram-3"></i>Flow Connection</h3>
+                    <div class="info-box">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        After the AI completes its goal, the flow continues to the next connected node. Configure connections in the Flow Editor.
+                    </div>
+                </div>
+
+                <!-- Action Buttons (Desktop) -->
+                <div class="d-none d-lg-block">
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-check-lg me-2"></i>Save Configuration
+                    </button>
+                    <a href="{% url 'flow_edit' node.flow_id %}" class="btn btn-outline-secondary w-100">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons (Mobile) -->
+    <div class="d-lg-none d-flex gap-3 mb-4">
+        <button type="submit" class="btn btn-primary flex-fill">
+            <i class="bi bi-check-lg me-2"></i>Save Configuration
+        </button>
+        <a href="{% url 'flow_edit' node.flow_id %}" class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
+</form>
+
+<template id="fieldTemplate">
+    <div class="field-item">
+        <div class="field-item-header">
+            <span class="field-item-title">New Field</span>
+            <button type="button" class="btn-remove-field" onclick="removeField(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="field-inputs">
+            <input type="text" class="form-control" name="field_name[]" placeholder="Field name (e.g., email)" required>
+            <select class="form-select" name="field_type[]">
+                <option value="text">Text</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="number">Number</option>
+            </select>
+            <input type="text" class="form-control" name="field_label[]" placeholder="Display label (optional)">
+        </div>
+        <div class="field-footer">
+            <input type="checkbox" class="form-check-input" name="field_required[]" value="">
+            <label class="form-check-label">Required field</label>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let fieldIndex = {{ ai_config.collection_schema|length }};
+
+function addField() {
+    const template = document.getElementById('fieldTemplate');
+    const clone = template.content.cloneNode(true);
+
+    // Update the checkbox value and ID
+    const checkbox = clone.querySelector('input[type="checkbox"]');
+    checkbox.value = fieldIndex;
+    checkbox.id = 'req_new_' + fieldIndex;
+    clone.querySelector('.field-footer label').setAttribute('for', 'req_new_' + fieldIndex);
+
+    // Update field title
+    const title = clone.querySelector('.field-item-title');
+    title.textContent = 'Field ' + (fieldIndex + 1);
+    fieldIndex++;
+
+    const container = document.getElementById('fieldsContainer');
+    const noFieldsMsg = document.getElementById('noFieldsMsg');
+    if (noFieldsMsg) noFieldsMsg.remove();
+
+    container.appendChild(clone);
+    updateFieldNumbers();
+}
+
+function removeField(btn) {
+    btn.closest('.field-item').remove();
+    updateFieldNumbers();
+
+    // Show empty message if no fields
+    const container = document.getElementById('fieldsContainer');
+    if (!container.querySelector('.field-item')) {
+        container.innerHTML = '<p class="text-muted mb-3" id="noFieldsMsg">No fields added yet. Add fields you want the AI to collect from the conversation.</p>';
+    }
+}
+
+function updateFieldNumbers() {
+    document.querySelectorAll('.field-item').forEach((item, index) => {
+        item.querySelector('.field-item-title').textContent = 'Field ' + (index + 1);
+    });
+}
+
+// Agent card selection
+document.querySelectorAll('.agent-select-card').forEach(card => {
+    card.addEventListener('click', function() {
+        document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+    });
+});
+</script>
+{% endblock %}

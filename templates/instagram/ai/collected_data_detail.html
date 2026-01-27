@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-avatar-lg {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: 3px solid rgba(255,255,255,0.3);
+    }
+
+    .section-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .section-card h3 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+
+    .data-field {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+    }
+
+    .data-field-label {
+        font-weight: 500;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .data-field-value {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .data-field-status {
+        font-size: 0.8rem;
+    }
+
+    .data-field-status.collected {
+        color: #28a745;
+    }
+
+    .data-field-status.missing {
+        color: #dc3545;
+    }
+
+    .chat-container {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+    }
+
+    .chat-message {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .chat-message.user {
+        flex-direction: row-reverse;
+    }
+
+    .chat-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .chat-message.assistant .chat-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .chat-message.user .chat-avatar {
+        background: #e9ecef;
+        color: #666;
+    }
+
+    .chat-bubble {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .chat-message.assistant .chat-bubble {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-message.user .chat-bubble {
+        background: #667eea;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .chat-time {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 0.25rem;
+    }
+
+    .chat-message.user .chat-time {
+        text-align: right;
+    }
+
+    .progress-circle {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-box {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+    }
+
+    .stat-box-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .stat-box-label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="user-info">
+        <div class="user-avatar-lg">
+            {{ session.instagram_username|slice:":1"|upper }}
+        </div>
+        <div>
+            <h1 class="mb-1">@{{ session.instagram_username }}</h1>
+            <p class="mb-0 opacity-75">
+                {{ session.flow.title }}
+                {% if collected_data and collected_data.is_complete %}
+                <span class="badge bg-success ms-2">Complete</span>
+                {% else %}
+                <span class="badge bg-warning ms-2">In Progress</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex gap-2 mb-4">
+    <a href="{% url 'ai_collected_data_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to List
+    </a>
+    <a href="{% url 'flow_session_detail' session.flow_id session.id %}" class="btn btn-outline-primary">
+        <i class="bi bi-box-arrow-up-right me-2"></i>View Full Session
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="section-card">
+            <h3><i class="bi bi-pie-chart"></i>Completion Status</h3>
+
+            {% if collected_data %}
+            <div class="text-center mb-3">
+                <div class="progress-circle">
+                    <svg viewBox="0 0 36 36">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none" stroke="#e9ecef" stroke-width="3"/>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none" stroke="#667eea" stroke-width="3"
+                              stroke-dasharray="{{ collected_data.completion_percentage }}, 100"/>
+                        <text x="18" y="20.35" text-anchor="middle" font-size="8" font-weight="bold" fill="#333">
+                            {{ collected_data.completion_percentage|floatformat:0 }}%
+                        </text>
+                    </svg>
+                </div>
+                <p class="text-muted mb-0">{{ collected_data.fields_collected|length }} of {{ collected_data.schema_snapshot|length }} fields collected</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-box-value">{{ collected_data.turn_count }}</div>
+                    <div class="stat-box-label">Turns</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-value">{{ total_credits|floatformat:2 }}</div>
+                    <div class="stat-box-label">Credits Used</div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-muted text-center">No AI data collected yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="section-card">
+            <h3><i class="bi bi-collection"></i>Collected Data</h3>
+
+            {% if collected_data and collected_data.schema_snapshot %}
+            {% for field in collected_data.schema_snapshot %}
+            <div class="data-field">
+                <div>
+                    <div class="data-field-label">
+                        {{ field.label|default:field.field }}
+                        {% if field.required %}<span class="text-danger">*</span>{% endif %}
+                    </div>
+                    <div class="data-field-value">
+                        {% with value=collected_data.data|default_if_none:'' %}
+                        {% if field.field in collected_data.data %}
+                        {{ collected_data.data|get_item:field.field|default:"-" }}
+                        {% else %}
+                        <span class="text-muted">Not collected</span>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                {% if field.field in collected_data.fields_collected %}
+                <span class="data-field-status collected"><i class="bi bi-check-circle"></i></span>
+                {% else %}
+                <span class="data-field-status missing"><i class="bi bi-circle"></i></span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">No schema defined.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="section-card">
+            <h3><i class="bi bi-chat-dots"></i>Conversation ({{ messages|length }} messages)</h3>
+
+            <div class="chat-container">
+                {% for msg in messages %}
+                <div class="chat-message {{ msg.role }}">
+                    <div class="chat-avatar">
+                        {% if msg.role == 'assistant' %}
+                        <i class="bi bi-robot"></i>
+                        {% else %}
+                        <i class="bi bi-person"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="chat-bubble">{{ msg.content }}</div>
+                        <div class="chat-time">{{ msg.created_at|date:"H:i" }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center">No messages yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if usage_logs %}
+        <div class="section-card">
+            <h3><i class="bi bi-lightning"></i>Usage Details</h3>
+
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Model</th>
+                            <th>Tokens</th>
+                            <th>Credits</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in usage_logs %}
+                        <tr>
+                            <td>{{ log.usage_type|title }}</td>
+                            <td><code>{{ log.model }}</code></td>
+                            <td>{{ log.total_tokens|intcomma }}</td>
+                            <td>{{ log.credits_charged|floatformat:3 }}</td>
+                            <td><small class="text-muted">{{ log.created_at|date:"H:i:s" }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="2"><strong>Total</strong></td>
+                            <td><strong>{{ usage_logs|sum_attr:"total_tokens"|intcomma }}</strong></td>
+                            <td><strong>{{ total_credits|floatformat:3 }}</strong></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,7 +1,10 @@
 from django.contrib import admin
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
-    FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate
+    FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate,
+    # AI Models
+    SocialAgent, KnowledgeBase, KnowledgeItem, KnowledgeChunk,
+    AINodeConfig, AIConversationMessage, AIUsageLog, AICollectedData
 )
 
 
@@ -82,3 +85,109 @@ class FlowTemplateAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     list_editable = ('is_active', 'order')
     ordering = ('order', 'title')
+
+
+# =============================================================================
+# AI Social Agent Admin
+# =============================================================================
+
+@admin.register(SocialAgent)
+class SocialAgentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'tone', 'is_active', 'total_conversations', 'total_messages_sent', 'created_at')
+    list_filter = ('is_active', 'tone')
+    search_fields = ('name', 'user__email', 'personality')
+    readonly_fields = ('total_conversations', 'total_messages_sent', 'created_at', 'updated_at')
+    raw_id_fields = ('user',)
+
+
+class KnowledgeItemInline(admin.TabularInline):
+    model = KnowledgeItem
+    extra = 0
+    fields = ('title', 'item_type', 'processing_status', 'chunk_count', 'token_count')
+    readonly_fields = ('processing_status', 'chunk_count', 'token_count')
+
+
+@admin.register(KnowledgeBase)
+class KnowledgeBaseAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'agent', 'total_items', 'total_chunks', 'total_tokens', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'user__email', 'agent__name')
+    readonly_fields = ('total_items', 'total_chunks', 'total_tokens', 'created_at', 'updated_at')
+    raw_id_fields = ('user', 'agent')
+    inlines = [KnowledgeItemInline]
+
+
+class KnowledgeChunkInline(admin.TabularInline):
+    model = KnowledgeChunk
+    extra = 0
+    fields = ('chunk_index', 'token_count', 'content')
+    readonly_fields = ('chunk_index', 'token_count', 'content')
+    max_num = 10
+
+
+@admin.register(KnowledgeItem)
+class KnowledgeItemAdmin(admin.ModelAdmin):
+    list_display = ('title', 'knowledge_base', 'item_type', 'processing_status', 'chunk_count', 'token_count', 'created_at')
+    list_filter = ('item_type', 'processing_status')
+    search_fields = ('title', 'file_name', 'knowledge_base__name')
+    readonly_fields = ('chunk_count', 'token_count', 'embedding_cost', 'processed_at', 'created_at', 'updated_at')
+    raw_id_fields = ('knowledge_base',)
+    inlines = [KnowledgeChunkInline]
+
+
+@admin.register(KnowledgeChunk)
+class KnowledgeChunkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'knowledge_item', 'chunk_index', 'token_count', 'created_at')
+    search_fields = ('content', 'knowledge_item__title')
+    readonly_fields = ('created_at',)
+    raw_id_fields = ('knowledge_item',)
+
+
+class AIConversationMessageInline(admin.TabularInline):
+    model = AIConversationMessage
+    extra = 0
+    fields = ('role', 'content', 'input_tokens', 'output_tokens', 'created_at')
+    readonly_fields = ('role', 'content', 'input_tokens', 'output_tokens', 'created_at')
+    ordering = ('created_at',)
+
+
+@admin.register(AINodeConfig)
+class AINodeConfigAdmin(admin.ModelAdmin):
+    list_display = ('flow_node', 'agent', 'max_turns', 'on_goal_complete', 'created_at')
+    list_filter = ('on_goal_complete', 'on_failure')
+    search_fields = ('flow_node__flow__title', 'agent__name', 'goal')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('flow_node', 'agent', 'goal_complete_node', 'failure_node', 'max_turns_node')
+    filter_horizontal = ('additional_knowledge_bases',)
+
+
+@admin.register(AIConversationMessage)
+class AIConversationMessageAdmin(admin.ModelAdmin):
+    list_display = ('session', 'role', 'content_preview', 'input_tokens', 'output_tokens', 'created_at')
+    list_filter = ('role',)
+    search_fields = ('content', 'session__instagram_username')
+    readonly_fields = ('created_at',)
+    raw_id_fields = ('session', 'ai_config')
+
+    def content_preview(self, obj):
+        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
+    content_preview.short_description = 'Content'
+
+
+@admin.register(AIUsageLog)
+class AIUsageLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'usage_type', 'model', 'total_tokens', 'cost_usd', 'credits_charged', 'created_at')
+    list_filter = ('usage_type', 'model')
+    search_fields = ('user__email',)
+    readonly_fields = ('created_at',)
+    raw_id_fields = ('user', 'session', 'agent')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(AICollectedData)
+class AICollectedDataAdmin(admin.ModelAdmin):
+    list_display = ('session', 'is_complete', 'completion_percentage', 'turn_count', 'created_at')
+    list_filter = ('is_complete',)
+    search_fields = ('session__instagram_username',)
+    readonly_fields = ('completion_percentage', 'fields_collected', 'created_at', 'updated_at')
+    raw_id_fields = ('session', 'ai_config')

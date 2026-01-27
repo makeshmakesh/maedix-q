@@ -45,3 +45,18 @@ def user_has_feature(user, feature_code):
     Usage: {% if user|user_has_feature:'ig_automation' %}
     """
     return has_feature(user, feature_code)
+
+
+@register.filter
+def plan_has_feature(plan, feature_code):
+    """
+    Filter to check if a plan has a specific feature.
+    Usage: {% if plan|plan_has_feature:'ai_social_agent' %}
+    """
+    if not plan or not plan.features:
+        return False
+
+    for feature in plan.features:
+        if feature.get('code') == feature_code:
+            return True
+    return False

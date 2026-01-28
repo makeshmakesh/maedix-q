@@ -851,6 +851,9 @@
                                 <div class="flow-card-header">
                                     <div>
                                         <h3 class="flow-title">{{ flow.title }}</h3>
+                                        {% if request.user.is_staff and flow.user != request.user %}
+                                        <span class="badge bg-secondary me-1" style="font-size: 0.7rem;">{{ flow.user.email }}</span>
+                                        {% endif %}
                                         <span class="flow-status {% if flow.is_active %}active{% else %}inactive{% endif %}">
                                             <span class="flow-status-dot"></span>
                                             <span class="flow-status-text">{% if flow.is_active %}Active{% else %}Paused{% endif %}</span>

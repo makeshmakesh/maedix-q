@@ -694,7 +694,11 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             instagram_account = request.user.instagram_account
             instagram_connected = instagram_account.is_connected
 
-        flows = DMFlow.objects.filter(user=request.user).prefetch_related('nodes')
+        # Admin can see all flows, regular users see only their own
+        if request.user.is_staff:
+            flows = DMFlow.objects.all().select_related('user').prefetch_related('nodes')
+        else:
+            flows = DMFlow.objects.filter(user=request.user).prefetch_related('nodes')
         flow_count = flows.count()
 
         # Get flow limit from subscription
@@ -1007,7 +1011,11 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     template_name = 'instagram/flow_edit.html'
 
     def get(self, request, pk):
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        # Admin can access any flow, regular users only their own
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
         nodes = flow.nodes.all().order_by('order').prefetch_related('quick_reply_options')
 
         features = self._get_user_features(request.user)
@@ -1060,7 +1068,10 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
     def post(self, request, pk):
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
@@ -1129,7 +1140,10 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to save flow from visual editor"""
 
     def post(self, request, pk):
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
         try:
             data = json.loads(request.body)
@@ -1353,7 +1367,10 @@ class FlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """Delete a DM flow"""
 
     def post(self, request, pk):
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
         title = flow.title
         flow.delete()
         messages.success(request, f'Flow "{title}" deleted.')
@@ -1364,7 +1381,10 @@ class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """Toggle flow active status"""
 
     def post(self, request, pk):
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
         try:
             data = json.loads(request.body)
@@ -1409,7 +1429,10 @@ class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     def get(self, request, pk):
         from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
         sessions = flow.sessions.all().order_by('-created_at')
 
@@ -1453,7 +1476,10 @@ class FlowSessionDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View)
     template_name = 'instagram/flow_session_detail.html'
 
     def get(self, request, pk, session_id):
-        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
         session = get_object_or_404(FlowSession, pk=session_id, flow=flow)
 
         # Get all execution logs for this session
@@ -1475,7 +1501,10 @@ class FlowNodeCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to create a new node"""
 
     def post(self, request, flow_id):
-        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=flow_id)
+        else:
+            flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
 
         try:
             data = json.loads(request.body)
@@ -1548,7 +1577,10 @@ class FlowNodeUpdateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to update a node"""
 
     def post(self, request, flow_id, node_id):
-        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=flow_id)
+        else:
+            flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
         node = get_object_or_404(FlowNode, pk=node_id, flow=flow)
 
         try:
@@ -1600,7 +1632,10 @@ class FlowNodeDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to delete a node"""
 
     def post(self, request, flow_id, node_id):
-        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=flow_id)
+        else:
+            flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
         node = get_object_or_404(FlowNode, pk=node_id, flow=flow)
 
         # Prevent deleting interaction nodes if follower check depends on them
@@ -1631,7 +1666,10 @@ class FlowNodeReorderView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to reorder nodes"""
 
     def post(self, request, flow_id):
-        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=flow_id)
+        else:
+            flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
 
         try:
             data = json.loads(request.body)
@@ -1655,7 +1693,10 @@ class FlowNodeDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """API endpoint to get node details"""
 
     def get(self, request, flow_id, node_id):
-        flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=flow_id)
+        else:
+            flow = get_object_or_404(DMFlow, pk=flow_id, user=request.user)
         node = get_object_or_404(FlowNode, pk=node_id, flow=flow)
 
         quick_replies = [

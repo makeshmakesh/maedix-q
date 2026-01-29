@@ -1738,15 +1738,65 @@ class FlowNodeDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """View all collected leads"""
     template_name = 'instagram/leads_list.html'
+    paginate_by = 25
 
     def get(self, request):
+        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
         leads = CollectedLead.objects.filter(
             user=request.user
         ).select_related('flow').order_by('-created_at')
 
+        # Filter by flow
+        flow_id = request.GET.get('flow')
+        if flow_id:
+            leads = leads.filter(flow_id=flow_id)
+
+        # Filter by is_follower
+        is_follower = request.GET.get('is_follower')
+        if is_follower == '1':
+            leads = leads.filter(is_follower=True)
+        elif is_follower == '0':
+            leads = leads.filter(is_follower=False)
+
+        # Filter by username (search)
+        username = request.GET.get('username', '').strip()
+        if username:
+            leads = leads.filter(instagram_username__icontains=username)
+
+        # Filter by date range
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
+        if date_from:
+            leads = leads.filter(created_at__date__gte=date_from)
+        if date_to:
+            leads = leads.filter(created_at__date__lte=date_to)
+
+        total_leads = leads.count()
+
+        # Pagination
+        page = request.GET.get('page', 1)
+        paginator = Paginator(leads, self.paginate_by)
+        try:
+            leads_page = paginator.page(page)
+        except PageNotAnInteger:
+            leads_page = paginator.page(1)
+        except EmptyPage:
+            leads_page = paginator.page(paginator.num_pages)
+
+        # Get user's flows for filter dropdown
+        user_flows = DMFlow.objects.filter(user=request.user).order_by('title')
+
         context = {
-            'leads': leads,
-            'total_leads': leads.count(),
+            'leads': leads_page,
+            'total_leads': total_leads,
+            'user_flows': user_flows,
+            # Preserve filter values
+            'filter_flow': flow_id,
+            'filter_is_follower': is_follower,
+            'filter_username': username,
+            'filter_date_from': date_from,
+            'filter_date_to': date_to,
         }
         return render(request, self.template_name, context)
 
@@ -1757,17 +1807,53 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     def get(self, request):
         leads = CollectedLead.objects.filter(user=request.user).order_by('-created_at')
 
+        # Apply same filters as list view
+        flow_id = request.GET.get('flow')
+        if flow_id:
+            leads = leads.filter(flow_id=flow_id)
+
+        is_follower = request.GET.get('is_follower')
+        if is_follower == '1':
+            leads = leads.filter(is_follower=True)
+        elif is_follower == '0':
+            leads = leads.filter(is_follower=False)
+
+        username = request.GET.get('username', '').strip()
+        if username:
+            leads = leads.filter(instagram_username__icontains=username)
+
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
+        if date_from:
+            leads = leads.filter(created_at__date__gte=date_from)
+        if date_to:
+            leads = leads.filter(created_at__date__lte=date_to)
+
+        # Collect all unique custom field labels
+        custom_fields = {}  # {variable_name: label}
+        for lead in leads:
+            if lead.custom_data:
+                for key, val in lead.custom_data.items():
+                    if isinstance(val, dict) and 'label' in val:
+                        custom_fields[key] = val['label']
+                    elif key not in custom_fields:
+                        custom_fields[key] = key
+
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="leads.csv"'
 
         writer = csv.writer(response)
-        writer.writerow([
+
+        # Header row with custom fields
+        header = [
             'Instagram Username', 'Name', 'Email', 'Phone',
             'Is Follower', 'Flow', 'Created At'
-        ])
+        ]
+        header.extend(custom_fields.values())
+        writer.writerow(header)
 
         for lead in leads:
-            writer.writerow([
+            row = [
                 lead.instagram_username,
                 lead.name,
                 lead.email,
@@ -1775,7 +1861,15 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'Yes' if lead.is_follower else 'No',
                 lead.flow.title if lead.flow else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M'),
-            ])
+            ]
+            # Add custom field values
+            for key in custom_fields.keys():
+                val = lead.custom_data.get(key, '') if lead.custom_data else ''
+                if isinstance(val, dict) and 'value' in val:
+                    row.append(val['value'])
+                else:
+                    row.append(val)
+            writer.writerow(row)
 
         return response
 

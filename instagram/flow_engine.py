@@ -672,6 +672,7 @@ class FlowEngine:
         field_type = config.get('field_type', 'custom')
         prompt_text = config.get('prompt_text', '')
         variable_name = config.get('variable_name', f'collected_{field_type}')
+        field_label = config.get('field_label', '')  # For custom fields
 
         if not prompt_text:
             logger.warning("Collect data node has no prompt text")
@@ -681,6 +682,7 @@ class FlowEngine:
         # Store which variable we're collecting
         session.context_data['_collecting_variable'] = variable_name
         session.context_data['_collecting_field_type'] = field_type
+        session.context_data['_collecting_field_label'] = field_label
         session.context_data['_collecting_node_id'] = node.id
         session.save(update_fields=['context_data', 'updated_at'])
 
@@ -1034,6 +1036,7 @@ class FlowEngine:
         # Check if we're collecting data (existing flow)
         variable_name = session.context_data.get('_collecting_variable')
         field_type = session.context_data.get('_collecting_field_type')
+        field_label = session.context_data.get('_collecting_field_label', '')
         node_id = session.context_data.get('_collecting_node_id')
 
         if not variable_name or not node_id:
@@ -1064,12 +1067,14 @@ class FlowEngine:
         # Clean up collection state
         session.context_data.pop('_collecting_variable', None)
         session.context_data.pop('_collecting_field_type', None)
+        session.context_data.pop('_collecting_field_label', None)
         session.context_data.pop('_collecting_node_id', None)
         session.save(update_fields=['context_data', 'updated_at'])
 
         self._log_action(session, 'data_collected', node, {
             'field_type': field_type,
             'variable_name': variable_name,
+            'field_label': field_label,
             'value': cleaned_value if field_type != 'phone' else '***',
             'message_id': message_id
         })
@@ -1080,7 +1085,7 @@ class FlowEngine:
         })
 
         # Update or create lead record
-        self._update_lead_record(session, field_type, cleaned_value)
+        self._update_lead_record(session, field_type, cleaned_value, variable_name, field_label)
 
         # Continue to next node
         session.status = 'active'
@@ -1255,7 +1260,9 @@ class FlowEngine:
         self,
         session: FlowSession,
         field_type: str,
-        value: str
+        value: str,
+        variable_name: str = None,
+        field_label: str = None
     ):
         """Update or create lead record with collected data."""
         # Get or create lead
@@ -1278,8 +1285,12 @@ class FlowEngine:
         elif field_type == 'phone':
             lead.phone = value
         else:
-            # Custom field
-            lead.custom_data[field_type] = value
+            # Custom field - store with label for display
+            key = variable_name or field_type
+            lead.custom_data[key] = {
+                'value': value,
+                'label': field_label or key
+            }
 
         lead.is_follower = session.context_data.get('is_follower', lead.is_follower)
         lead.save()

@@ -1884,6 +1884,7 @@ class QueuedFlowTriggerView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View)
             engine = FlowEngine(instagram_account)
 
             if queued.trigger_type == 'comment':
+                logger.info(f"Triggering queued flow with context: comment_id={ctx['comment_id']}, commenter_id={ctx['commenter_id']}, commenter_username={ctx['commenter_username']}")
                 engine.trigger_flow_from_comment(
                     flow=queued.flow,
                     comment_id=ctx['comment_id'],

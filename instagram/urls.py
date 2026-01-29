@@ -38,6 +38,11 @@ urlpatterns = [
     path('leads/export/', views.LeadsExportView.as_view(), name='leads_export'),
     path('leads/<int:pk>/', views.LeadDetailView.as_view(), name='lead_detail'),
 
+    # Queued Flow Triggers
+    path('queue/', views.QueuedFlowListView.as_view(), name='queued_flows'),
+    path('queue/<int:pk>/trigger/', views.QueuedFlowTriggerView.as_view(), name='queued_flow_trigger'),
+    path('queue/<int:pk>/delete/', views.QueuedFlowDeleteView.as_view(), name='queued_flow_delete'),
+
     # Webhook
     path('webhook/', views.InstagramWebhookView.as_view(), name='instagram_webhook'),
 

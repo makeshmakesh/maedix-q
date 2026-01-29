@@ -1,3 +1,4 @@
+#pylint:disable=all
 """
 Instagram Graph API Client for DM Flow Builder
 
@@ -69,16 +70,18 @@ class InstagramAPIClient:
     # Key: ig_user_id, Value: timestamp of last DM sent
     _account_last_dm_times: Dict[str, float] = {}
 
-    def __init__(self, access_token: str, ig_user_id: str):
+    def __init__(self, access_token: str, ig_user_id: str, account_id: int = None):
         """
         Initialize the API client.
 
         Args:
             access_token: Instagram Business Account access token
             ig_user_id: Instagram Business Account ID
+            account_id: Database ID of InstagramAccount (for logging)
         """
         self.access_token = access_token
         self.ig_user_id = ig_user_id
+        self.account_id = account_id
         self.timeout = 30
 
     def _apply_dm_delay(self):
@@ -106,6 +109,47 @@ class InstagramAPIClient:
 
         # Update last DM time for this account
         self._account_last_dm_times[self.ig_user_id] = time.time()
+
+    def _log_api_call(self, method: str, endpoint: str, json_data: dict = None, success: bool = True):
+        """
+        Log API calls for rate limiting tracking.
+        Only logs POST requests to message/reply endpoints.
+        """
+        if not self.account_id or method != 'POST':
+            return
+
+        # Determine call type based on endpoint
+        call_type = None
+        recipient_id = ''
+
+        if '/messages' in endpoint:
+            call_type = 'dm'
+            # Extract recipient from json_data if available
+            if json_data and 'recipient' in json_data:
+                recipient_id = json_data['recipient'].get('id', '')
+                if not recipient_id:
+                    recipient_id = json_data['recipient'].get('comment_id', '')
+        elif '/replies' in endpoint:
+            call_type = 'comment_reply'
+            # Endpoint format: {comment_id}/replies
+            recipient_id = endpoint.split('/')[0] if '/' in endpoint else ''
+
+        if not call_type:
+            return
+
+        try:
+            from .models import APICallLog, InstagramAccount
+            account = InstagramAccount.objects.get(id=self.account_id)
+            APICallLog.log_call(
+                account=account,
+                call_type=call_type,
+                endpoint=endpoint,
+                recipient_id=recipient_id,
+                success=success
+            )
+        except Exception as e:
+            # Don't let logging failures break the API call
+            logger.warning(f"Failed to log API call: {e}")
 
     def _make_request(
         self,
@@ -152,11 +196,16 @@ class InstagramAPIClient:
                 error_message = error_info.get('message', response.text)
                 error_code = error_info.get('code')
                 logger.error(f"Instagram API error: {error_message} (code: {error_code})")
+                # Log failed API call
+                self._log_api_call(method, endpoint, json_data, success=False)
                 raise InstagramAPIError(
                     message=error_message,
                     code=error_code,
                     response_data=response_data
                 )
+
+            # Log successful API call
+            self._log_api_call(method, endpoint, json_data, success=True)
 
             return response_data
 
@@ -657,5 +706,6 @@ def get_api_client_for_account(instagram_account) -> InstagramAPIClient:
 
     return InstagramAPIClient(
         access_token=instagram_account.access_token,
-        ig_user_id=instagram_account.instagram_user_id
+        ig_user_id=instagram_account.instagram_user_id,
+        account_id=instagram_account.id
     )

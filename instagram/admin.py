@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
     FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate,
+    APICallLog, QueuedFlowTrigger,
     # AI Models
     SocialAgent, KnowledgeBase, KnowledgeItem, KnowledgeChunk,
     AINodeConfig, AIConversationMessage, AIUsageLog, AICollectedData
@@ -85,6 +86,44 @@ class FlowTemplateAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     list_editable = ('is_active', 'order')
     ordering = ('order', 'title')
+
+
+# =============================================================================
+# Rate Limiting Admin
+# =============================================================================
+
+@admin.register(APICallLog)
+class APICallLogAdmin(admin.ModelAdmin):
+    list_display = ('account', 'call_type', 'endpoint', 'recipient_id', 'success', 'sent_at')
+    list_filter = ('call_type', 'success', 'sent_at')
+    search_fields = ('account__username', 'endpoint', 'recipient_id')
+    readonly_fields = ('sent_at',)
+    raw_id_fields = ('account',)
+    date_hierarchy = 'sent_at'
+    ordering = ('-sent_at',)
+
+
+@admin.register(QueuedFlowTrigger)
+class QueuedFlowTriggerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'account', 'flow', 'trigger_type', 'status', 'created_at', 'processed_at')
+    list_filter = ('status', 'trigger_type', 'created_at')
+    search_fields = ('account__username', 'flow__title', 'instagram_event_id')
+    readonly_fields = ('created_at',)
+    raw_id_fields = ('account', 'flow')
+    date_hierarchy = 'created_at'
+    ordering = ('-created_at',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('account', 'flow', 'trigger_type', 'status')
+        }),
+        ('Event Details', {
+            'fields': ('instagram_event_id', 'trigger_context')
+        }),
+        ('Processing', {
+            'fields': ('error_message', 'created_at', 'processed_at')
+        }),
+    )
 
 
 # =============================================================================

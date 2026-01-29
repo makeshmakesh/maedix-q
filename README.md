@@ -422,3 +422,7 @@ sudo systemctl restart nginx
 live log
 
 sudo journalctl -u maedix-q -f
+
+
+python manage.py fake_api_calls --email your@email.com --count 0 --clear
+python manage.py fake_api_calls --email your@email.com --count 200

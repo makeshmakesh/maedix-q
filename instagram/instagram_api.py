@@ -164,6 +164,17 @@ class InstagramAPIClient:
         """Make an HTTP request to the Instagram API."""
         url = f"{BASE_URL}/{endpoint}"
 
+        # Debug logging for API requests
+        logger.info(f"API Request: {method} {url}")
+        if json_data:
+            logger.info(f"API Payload: {json_data}")
+        if data:
+            logger.info(f"API Data: {data}")
+        if params:
+            # Don't log access_token for security
+            safe_params = {k: v for k, v in params.items() if k != 'access_token'}
+            logger.info(f"API Params: {safe_params}")
+
         default_headers = {}
         if json_data:
             default_headers = {
@@ -191,6 +202,7 @@ class InstagramAPIClient:
             )
 
             response_data = response.json()
+            logger.info(f"API Response: status={response.status_code}, data={response_data}")
 
             if not response.ok:
                 error_info = response_data.get('error', {})

@@ -1,4 +1,4 @@
-from .models import Configuration
+from .models import Configuration, Banner
 
 
 def site_settings(request):
@@ -33,3 +33,12 @@ def user_features(request):
         pass
 
     return {'user_features': features}
+
+
+def banners(request):
+    """Add active banners to template context"""
+    active_banners = list(Banner.get_active_banners().values(
+        'id', 'title', 'message', 'banner_type', 'link_url',
+        'link_text', 'display_seconds', 'is_dismissible'
+    ))
+    return {'banners': active_banners}

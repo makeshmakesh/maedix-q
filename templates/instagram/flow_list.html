@@ -809,9 +809,13 @@
                         </div>
 
                         <div class="flex-shrink-0 d-flex gap-2 align-items-center flex-wrap">
-                            <a href="{% url 'flow_builder_help' %}" class="btn btn-outline-light btn-sm d-inline-flex align-items-center" title="Learn about node types and how to build flows">
-                                <i class="bi bi-question-circle me-1"></i>
-                                <span>Help</span>
+                            <a href="{% url 'queued_flows' %}" class="btn-template" title="{% if queued_count > 0 %}{{ queued_count }} queued flows{% else %}API Usage: {{ calls_last_hour }}/{{ rate_limit }}{% endif %}">
+                                <i class="bi bi-{% if queued_count > 0 %}hourglass-split{% else %}speedometer2{% endif %}"></i>
+                                {% if queued_count > 0 %}Queue ({{ queued_count }}){% else %}API {{ calls_last_hour }}/{{ rate_limit }}{% endif %}
+                            </a>
+                            <a href="{% url 'flow_builder_help' %}" class="btn-template" title="Learn about node types and how to build flows">
+                                <i class="bi bi-question-circle"></i>
+                                Help
                             </a>
                             {% if can_create_more %}
                             {% if flow_templates %}
@@ -1028,27 +1032,6 @@
                                     <div class="how-step-text">Collect leads and grow your business!</div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- API Usage & Queue -->
-                        <div class="section-card">
-                            <a href="{% url 'queued_flows' %}" class="quick-link">
-                                <div class="quick-link-content">
-                                    <div class="quick-link-icon" style="background: linear-gradient(135deg, {% if queued_count > 0 %}#ffc107, #ff9800{% else %}#17a2b8, #138496{% endif %}); color: white;">
-                                        <i class="bi bi-{% if queued_count > 0 %}hourglass-split{% else %}speedometer2{% endif %}"></i>
-                                    </div>
-                                    <div class="quick-link-text">
-                                        {% if queued_count > 0 %}
-                                        <h6>Queued Flows <span class="badge bg-warning text-dark">{{ queued_count }}</span></h6>
-                                        <p>Rate-limited triggers waiting</p>
-                                        {% else %}
-                                        <h6>API Usage <span class="badge bg-info">{{ calls_last_hour }}/{{ rate_limit }}</span></h6>
-                                        <p>Calls in last hour</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <i class="bi bi-chevron-right quick-link-arrow"></i>
-                            </a>
                         </div>
 
                         <!-- Instagram Account -->

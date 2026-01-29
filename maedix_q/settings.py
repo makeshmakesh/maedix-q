@@ -81,6 +81,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.site_settings',
                 'core.context_processors.user_features',
+                'core.context_processors.banners',
             ],
         },
     },

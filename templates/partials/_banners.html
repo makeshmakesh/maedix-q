@@ -1,0 +1,244 @@
+{% if banners %}
+<div id="site-banners" class="banner-container">
+    {% for banner in banners %}
+    <div class="site-banner site-banner-{{ banner.banner_type }}{% if not forloop.first %} d-none{% endif %}"
+         data-banner-id="{{ banner.id }}"
+         data-display-seconds="{{ banner.display_seconds }}"
+         data-dismissible="{{ banner.is_dismissible|yesno:'true,false' }}">
+        <div class="container">
+            <div class="banner-content">
+                <div class="banner-text">
+                    <strong>{{ banner.title }}</strong>
+                    <span class="banner-message">{{ banner.message }}</span>
+                </div>
+                <div class="banner-actions">
+                    {% if banner.link_url %}
+                    <a href="{{ banner.link_url }}" class="banner-link">{{ banner.link_text|default:"Learn More" }}</a>
+                    {% endif %}
+                    {% if banner.is_dismissible %}
+                    <button type="button" class="banner-close" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.banner-container {
+    position: relative;
+    z-index: 1000;
+    width: 100%;
+}
+
+.site-banner {
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
+    transition: opacity 0.3s ease;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.site-banner.d-none {
+    display: none !important;
+}
+
+.site-banner-info {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+}
+
+.site-banner-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+}
+
+.site-banner-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+}
+
+.site-banner-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+}
+
+.site-banner-promo {
+    background: var(--gradient);
+    color: #fff;
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.banner-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.banner-text strong {
+    white-space: nowrap;
+}
+
+.banner-message {
+    opacity: 0.95;
+}
+
+.banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.banner-link {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.banner-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.banner-close {
+    background: none;
+    border: none;
+    color: #fff;
+    opacity: 0.8;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    transition: opacity 0.2s ease;
+}
+
+.banner-close:hover {
+    opacity: 1;
+}
+
+@media (max-width: 576px) {
+    .banner-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .banner-text {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
+</style>
+
+<script>
+(function() {
+    const container = document.getElementById('site-banners');
+    if (!container) return;
+
+    const banners = container.querySelectorAll('.site-banner');
+    if (banners.length === 0) return;
+
+    // Get dismissed banners from localStorage
+    const dismissedKey = 'dismissed_banners';
+    let dismissed = JSON.parse(localStorage.getItem(dismissedKey) || '[]');
+
+    // Filter out dismissed banners
+    const activeBanners = Array.from(banners).filter(banner => {
+        const id = banner.dataset.bannerId;
+        if (dismissed.includes(id)) {
+            banner.remove();
+            return false;
+        }
+        return true;
+    });
+
+    if (activeBanners.length === 0) {
+        container.remove();
+        return;
+    }
+
+    let currentIndex = 0;
+    let rotationTimer = null;
+
+    function showBanner(index) {
+        activeBanners.forEach((banner, i) => {
+            if (i === index) {
+                banner.classList.remove('d-none');
+            } else {
+                banner.classList.add('d-none');
+            }
+        });
+    }
+
+    function scheduleNext() {
+        if (activeBanners.length <= 1) return;
+
+        const currentBanner = activeBanners[currentIndex];
+        const seconds = parseInt(currentBanner.dataset.displaySeconds) || 5;
+
+        rotationTimer = setTimeout(() => {
+            currentIndex = (currentIndex + 1) % activeBanners.length;
+            showBanner(currentIndex);
+            scheduleNext();
+        }, seconds * 1000);
+    }
+
+    // Handle dismiss clicks
+    container.addEventListener('click', function(e) {
+        const closeBtn = e.target.closest('.banner-close');
+        if (!closeBtn) return;
+
+        const banner = closeBtn.closest('.site-banner');
+        const id = banner.dataset.bannerId;
+
+        // Save to dismissed list
+        dismissed.push(id);
+        localStorage.setItem(dismissedKey, JSON.stringify(dismissed));
+
+        // Remove from active banners
+        const idx = activeBanners.indexOf(banner);
+        if (idx > -1) {
+            activeBanners.splice(idx, 1);
+        }
+
+        banner.remove();
+
+        // If no banners left, remove container
+        if (activeBanners.length === 0) {
+            container.remove();
+            return;
+        }
+
+        // Adjust current index and show next banner
+        if (currentIndex >= activeBanners.length) {
+            currentIndex = 0;
+        }
+        showBanner(currentIndex);
+
+        // Restart rotation
+        clearTimeout(rotationTimer);
+        scheduleNext();
+    });
+
+    // Show first banner and start rotation
+    showBanner(0);
+    scheduleNext();
+})();
+</script>
+{% endif %}

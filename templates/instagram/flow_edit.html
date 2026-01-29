@@ -4787,9 +4787,21 @@ updateFollowerCheckPaletteState();
 // Auto-detect mobile and suggest form mode
 if (window.innerWidth < 768) {
     setTimeout(() => {
-        if (confirm('Mobile detected. Switch to form editor for easier editing?')) {
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-info position-fixed d-flex align-items-center gap-2';
+        toast.style.cssText = 'bottom: 20px; left: 20px; right: 20px; z-index: 9999;';
+        toast.innerHTML = `
+            <i class="bi bi-phone me-1"></i>
+            <span class="flex-grow-1">Mobile detected. Form editor works better on small screens.</span>
+            <button class="btn btn-sm btn-primary" id="switchToFormBtn">Switch</button>
+            <button class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(toast);
+        document.getElementById('switchToFormBtn').addEventListener('click', () => {
             document.querySelector('#editorModeToggle button[data-mode="form"]').click();
-        }
+            toast.remove();
+        });
+        setTimeout(() => toast.remove(), 8000);
     }, 500);
 }
 

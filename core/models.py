@@ -208,3 +208,37 @@ class ContactMessage(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class Banner(models.Model):
+    """Site-wide rotating banners for announcements"""
+    BANNER_TYPES = [
+        ('info', 'Info'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('danger', 'Danger'),
+        ('promo', 'Promotional'),
+    ]
+
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    banner_type = models.CharField(max_length=20, choices=BANNER_TYPES, default='info')
+    link_url = models.URLField(blank=True, help_text="Optional link for CTA button")
+    link_text = models.CharField(max_length=50, blank=True, help_text="Button text (e.g., 'Learn More')")
+    display_seconds = models.PositiveIntegerField(default=5, help_text="Seconds to display before switching to next banner")
+    is_active = models.BooleanField(default=True)
+    is_dismissible = models.BooleanField(default=True, help_text="Allow users to close the banner")
+    order = models.IntegerField(default=0, help_text="Lower numbers appear first")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    @classmethod
+    def get_active_banners(cls):
+        """Get all currently active banners ordered by priority"""
+        return cls.objects.filter(is_active=True).order_by('order', '-created_at')
+
+    class Meta:
+        ordering = ['order', '-created_at']

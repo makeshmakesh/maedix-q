@@ -424,5 +424,5 @@ live log
 sudo journalctl -u maedix-q -f
 
 
-python manage.py fake_api_calls --email your@email.com --count 0 --clear
-python manage.py fake_api_calls --email your@email.com --count 200
+python manage.py fake_api_calls --email techveins01@gmail.com --count 180 --clear
+python manage.py fake_api_calls --email techveins01@gmail.com --count 210

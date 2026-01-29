@@ -59,6 +59,7 @@ class InstagramAPIError(Exception):
             "message requests from everyone",
             "messaging restricted",
             "unable to send message",
+            "disabled access to instagram direct messaging",
         ]
         return any(phrase in error_lower for phrase in restricted_phrases)
 

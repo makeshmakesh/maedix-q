@@ -214,9 +214,13 @@ class FlowEngine:
 
         try:
             # For first message, use comment_id; for subsequent, use IGSID
-            if session.trigger_comment_id and not self._has_sent_dm(session):
+            has_sent = self._has_sent_dm(session)
+            logger.info(f"DM check: trigger_comment_id={session.trigger_comment_id}, has_sent_dm={has_sent}, igsid={session.instagram_scoped_id}")
+            if session.trigger_comment_id and not has_sent:
+                logger.info(f"Sending DM via comment_id: {session.trigger_comment_id}")
                 self.api_client.send_dm_to_commenter(session.trigger_comment_id, text)
             else:
+                logger.info(f"Sending DM via IGSID: {session.instagram_scoped_id}")
                 self.api_client.send_text_dm(session.instagram_scoped_id, text)
 
             self._log_action(session, 'message_sent', node, {'text': text})

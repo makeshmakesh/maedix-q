@@ -44,6 +44,58 @@ class InstagramAccount(models.Model):
         verbose_name_plural = "Instagram Accounts"
 
 
+class APICallLog(models.Model):
+    """
+    Logs Instagram API calls for rate limiting tracking.
+    Used to count messages sent in rolling time windows.
+    """
+    CALL_TYPE_CHOICES = [
+        ('dm', 'Direct Message'),
+        ('comment_reply', 'Comment Reply'),
+    ]
+
+    account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        related_name='api_call_logs'
+    )
+    call_type = models.CharField(max_length=20, choices=CALL_TYPE_CHOICES)
+    endpoint = models.CharField(max_length=255)
+    recipient_id = models.CharField(max_length=255, blank=True)
+    success = models.BooleanField(default=True)
+    sent_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "API Call Log"
+        verbose_name_plural = "API Call Logs"
+        indexes = [
+            models.Index(fields=['account', 'sent_at']),
+            models.Index(fields=['account', 'call_type', 'sent_at']),
+        ]
+
+    @classmethod
+    def get_calls_last_hour(cls, account, call_type=None):
+        """Count API calls in the last hour for an account."""
+        from django.utils import timezone
+        from datetime import timedelta
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+        qs = cls.objects.filter(account=account, sent_at__gte=one_hour_ago, success=True)
+        if call_type:
+            qs = qs.filter(call_type=call_type)
+        return qs.count()
+
+    @classmethod
+    def log_call(cls, account, call_type, endpoint, recipient_id='', success=True):
+        """Log an API call."""
+        return cls.objects.create(
+            account=account,
+            call_type=call_type,
+            endpoint=endpoint,
+            recipient_id=recipient_id,
+            success=success
+        )
+
+
 # =============================================================================
 # DM Flow Builder Models
 # =============================================================================
@@ -1044,6 +1096,70 @@ class AIUsageLog(models.Model):
             models.Index(fields=['usage_type']),
             models.Index(fields=['session']),
         ]
+
+
+class QueuedFlowTrigger(models.Model):
+    """Stores flow triggers that were rate-limited and need to be processed later."""
+    TRIGGER_TYPE_CHOICES = [
+        ('comment', 'Comment'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+
+    account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        related_name='queued_flow_triggers'
+    )
+    flow = models.ForeignKey(
+        DMFlow,
+        on_delete=models.CASCADE,
+        related_name='queued_triggers'
+    )
+    trigger_type = models.CharField(max_length=20, choices=TRIGGER_TYPE_CHOICES, default='comment')
+
+    # Deduplication - unique identifier from Instagram
+    instagram_event_id = models.CharField(max_length=255)  # comment_id or message_id
+
+    # Context needed to trigger flow later
+    trigger_context = models.JSONField()
+    # For comment: {comment_id, post_id, commenter_id, commenter_username, comment_text}
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    error_message = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Queued Flow Trigger"
+        verbose_name_plural = "Queued Flow Triggers"
+        ordering = ['created_at']
+        unique_together = ['account', 'instagram_event_id']
+        indexes = [
+            models.Index(fields=['account', 'status', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"Queued: {self.flow.title} - {self.instagram_event_id[:20]}"
+
+    @classmethod
+    def get_rate_limit(cls):
+        """Get configured rate limit from Configuration, default 200"""
+        from core.models import Configuration
+        try:
+            return int(Configuration.get_value('INSTAGRAM_RATE_LIMIT', '200'))
+        except (ValueError, TypeError):
+            return 200
+
+    @classmethod
+    def get_pending_for_account(cls, account):
+        """Get all pending triggers for an account, ordered by created_at"""
+        return cls.objects.filter(account=account, status='pending').order_by('created_at')
 
 
 class AICollectedData(models.Model):

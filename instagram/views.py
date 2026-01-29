@@ -21,7 +21,8 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
-    FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate
+    FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate,
+    APICallLog, QueuedFlowTrigger
 )
 from .flow_engine import FlowEngine, find_matching_flow, find_session_for_message, parse_quick_reply_payload
 from .instagram_api import get_api_client_for_account, InstagramAPIError
@@ -727,8 +728,15 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         )
 
         # Get active flow templates
-        from .models import FlowTemplate
         flow_templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
+
+        # Get queued flow count
+        queued_count = 0
+        if instagram_account:
+            queued_count = QueuedFlowTrigger.objects.filter(
+                account=instagram_account,
+                status='pending'
+            ).count()
 
         context = {
             'instagram_connected': instagram_connected,
@@ -741,6 +749,7 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'total_triggered': stats['total_triggered'] or 0,
             'total_completed': stats['total_completed'] or 0,
             'flow_templates': flow_templates,
+            'queued_count': queued_count,
         }
         return render(request, self.template_name, context)
 
@@ -1364,13 +1373,11 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
 
 class FlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
-    """Delete a DM flow"""
+    """Delete a DM flow - only owner can delete"""
 
     def post(self, request, pk):
-        if request.user.is_staff:
-            flow = get_object_or_404(DMFlow, pk=pk)
-        else:
-            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        # Only the owner can delete, not staff
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
         title = flow.title
         flow.delete()
         messages.success(request, f'Flow "{title}" deleted.')
@@ -1378,13 +1385,11 @@ class FlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
 
 class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
-    """Toggle flow active status"""
+    """Toggle flow active status - only owner can toggle"""
 
     def post(self, request, pk):
-        if request.user.is_staff:
-            flow = get_object_or_404(DMFlow, pk=pk)
-        else:
-            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        # Only the owner can toggle active status, not staff
+        flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
 
         try:
             data = json.loads(request.body)
@@ -1784,6 +1789,151 @@ class LeadDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
 
 # =============================================================================
+# Queued Flow Triggers Views
+# =============================================================================
+
+class QueuedFlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """View all queued flow triggers for the user's account"""
+    template_name = 'instagram/queued_flows.html'
+
+    def get(self, request):
+        # Get user's Instagram account
+        instagram_account = getattr(request.user, 'instagram_account', None)
+        if not instagram_account:
+            messages.warning(request, 'Please connect your Instagram account first.')
+            return redirect('instagram_connect')
+
+        # Get rate limit info
+        calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
+        rate_limit = QueuedFlowTrigger.get_rate_limit()
+        available_slots = max(0, rate_limit - calls_last_hour)
+
+        # Calculate how many flows can be triggered (assume ~10 API calls per flow)
+        CALLS_PER_FLOW = 10
+        max_triggerable = available_slots // CALLS_PER_FLOW
+
+        # Get pending queued triggers
+        queued_flows = QueuedFlowTrigger.objects.filter(
+            account=instagram_account,
+            status='pending'
+        ).select_related('flow').order_by('created_at')
+
+        # Get recently processed (last 24 hours)
+        recent_processed = QueuedFlowTrigger.objects.filter(
+            account=instagram_account,
+            status__in=['completed', 'failed'],
+            processed_at__gte=timezone.now() - timedelta(hours=24)
+        ).select_related('flow').order_by('-processed_at')[:10]
+
+        context = {
+            'queued_flows': queued_flows,
+            'recent_processed': recent_processed,
+            'calls_last_hour': calls_last_hour,
+            'rate_limit': rate_limit,
+            'available_slots': available_slots,
+            'max_triggerable': max_triggerable,
+            'pending_count': queued_flows.count(),
+        }
+        return render(request, self.template_name, context)
+
+
+class QueuedFlowTriggerView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Manually trigger a queued flow"""
+
+    def post(self, request, pk):
+        # Get the queued trigger
+        instagram_account = getattr(request.user, 'instagram_account', None)
+        if not instagram_account:
+            messages.error(request, 'Instagram account not connected.')
+            return redirect('queued_flows')
+
+        queued = get_object_or_404(
+            QueuedFlowTrigger,
+            pk=pk,
+            account=instagram_account,
+            status='pending'
+        )
+
+        # Check rate limit - need at least 20 slots free (buffer for flow to complete)
+        calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
+        rate_limit = QueuedFlowTrigger.get_rate_limit()
+        TRIGGER_THRESHOLD = rate_limit - 20  # Need 20 slots buffer
+
+        if calls_last_hour > TRIGGER_THRESHOLD:
+            available = rate_limit - calls_last_hour
+            messages.error(
+                request,
+                f'Only {available} API calls available. Need at least 20 free slots to safely trigger a flow. Try later.'
+            )
+            return redirect('queued_flows')
+
+        # Check if already processed (dedup)
+        ctx = queued.trigger_context
+        if FlowSession.objects.filter(trigger_comment_id=ctx.get('comment_id', '')).exists():
+            queued.status = 'completed'
+            queued.processed_at = timezone.now()
+            queued.save()
+            messages.info(request, 'This comment was already processed.')
+            return redirect('queued_flows')
+
+        # Trigger the flow
+        try:
+            queued.status = 'processing'
+            queued.save()
+
+            engine = FlowEngine(instagram_account)
+
+            if queued.trigger_type == 'comment':
+                engine.trigger_flow_from_comment(
+                    flow=queued.flow,
+                    comment_id=ctx['comment_id'],
+                    post_id=ctx['post_id'],
+                    commenter_id=ctx['commenter_id'],
+                    commenter_username=ctx['commenter_username'],
+                    comment_text=ctx['comment_text'],
+                )
+
+            queued.status = 'completed'
+            queued.processed_at = timezone.now()
+            queued.save()
+
+            messages.success(request, f'Flow "{queued.flow.title}" triggered successfully!')
+
+        except Exception as e:
+            logger.error(f"Error triggering queued flow {pk}: {str(e)}")
+            queued.status = 'failed'
+            queued.error_message = str(e)
+            queued.processed_at = timezone.now()
+            queued.save()
+            messages.error(request, f'Failed to trigger flow: {str(e)}')
+
+        return redirect('queued_flows')
+
+
+class QueuedFlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Delete a queued flow trigger"""
+
+    def post(self, request, pk):
+        instagram_account = getattr(request.user, 'instagram_account', None)
+        if not instagram_account:
+            messages.error(request, 'Instagram account not connected.')
+            return redirect('queued_flows')
+
+        queued = get_object_or_404(
+            QueuedFlowTrigger,
+            pk=pk,
+            account=instagram_account,
+            status='pending'
+        )
+
+        flow_title = queued.flow.title
+        queued.delete()
+        messages.success(request, f'Removed queued trigger for "{flow_title}".')
+
+        return redirect('queued_flows')
+
+
+# =============================================================================
 # Instagram Webhook Handler
 # =============================================================================
 
@@ -1875,6 +2025,30 @@ class InstagramWebhookView(View):
         flow = find_matching_flow(user, post_id, comment_text)
         if not flow:
             logger.info(f"No matching flow for comment {comment_id}")
+            return
+
+        # Check rate limit before triggering
+        calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
+        rate_limit = QueuedFlowTrigger.get_rate_limit()
+
+        if calls_last_hour >= rate_limit:
+            # Queue the flow trigger for later
+            QueuedFlowTrigger.objects.get_or_create(
+                account=instagram_account,
+                instagram_event_id=comment_id,
+                defaults={
+                    'flow': flow,
+                    'trigger_type': 'comment',
+                    'trigger_context': {
+                        'comment_id': comment_id,
+                        'post_id': post_id,
+                        'commenter_id': commenter_id,
+                        'commenter_username': commenter_username,
+                        'comment_text': comment_text,
+                    }
+                }
+            )
+            logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - queued flow trigger for comment {comment_id}")
             return
 
         # Trigger the flow

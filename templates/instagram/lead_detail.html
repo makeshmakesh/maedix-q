@@ -103,8 +103,13 @@
                             <div class="card-body">
                                 {% for key, value in lead.custom_data.items %}
                                 <div class="mb-2">
+                                    {% if value.label %}
+                                    <label class="form-label text-muted small">{{ value.label }}</label>
+                                    <div><strong>{{ value.value }}</strong></div>
+                                    {% else %}
                                     <label class="form-label text-muted small">{{ key }}</label>
                                     <div><strong>{{ value }}</strong></div>
+                                    {% endif %}
                                 </div>
                                 {% endfor %}
                             </div>

@@ -1034,8 +1034,20 @@
                             </div>
                         </div>
 
-                        <!-- Instagram Account -->
+                        <!-- Quick Links -->
                         <div class="section-card">
+                            <a href="{% url 'leads_list' %}" class="quick-link" style="border-bottom: 1px solid #f0f0f0;">
+                                <div class="quick-link-content">
+                                    <div class="quick-link-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                    <div class="quick-link-text">
+                                        <h6>Collected Leads</h6>
+                                        <p>View & export leads</p>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right quick-link-arrow"></i>
+                            </a>
                             <a href="{% url 'instagram_connect' %}" class="quick-link">
                                 <div class="quick-link-content">
                                     <div class="quick-link-icon" style="background: linear-gradient(135deg, #E1306C 0%, #F56040 100%); color: white;">

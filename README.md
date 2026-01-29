@@ -418,6 +418,7 @@ sudo systemctl daemon-reload
 sudo systemctl restart maedix-q
 sudo systemctl restart nginx
 
+sudo systemctl reload maedix-q
 
 live log
 

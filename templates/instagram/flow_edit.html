@@ -1406,10 +1406,9 @@
                     </div>
                     {% endif %}
 
-                    <div class="palette-item disabled" title="Coming Soon">
-                        <i class="bi bi-input-cursor-text text-muted"></i>
-                        <span class="text-muted">Collect Data</span>
-                        <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Soon</span>
+                    <div class="palette-item" draggable="true" data-node="collect_data">
+                        <i class="bi bi-input-cursor-text text-orange"></i>
+                        <span>Collect Data</span>
                     </div>
                 </div>
 
@@ -1745,9 +1744,8 @@
                                     <span class="badge bg-secondary ms-2" style="font-size: 9px;">Upgrade</span>
                                 </a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item disabled text-muted" href="#">
-                                    <i class="bi bi-input-cursor-text"></i>Collect Data
-                                    <span class="badge bg-secondary ms-2" style="font-size: 9px;">Coming Soon</span>
+                                <li><a class="dropdown-item" href="#" data-add-node="collect_data">
+                                    <i class="bi bi-input-cursor-text text-orange"></i>Collect Data
                                 </a></li>
                             </ul>
                         </div>
@@ -1922,9 +1920,10 @@ function generateNodeHtml(type, data = {}) {
 
         case 'collect_data':
             const fieldType = data.field_type || 'email';
+            const collectLabel = fieldType === 'custom' && data.field_label ? data.field_label : fieldType;
             const prompt = data.prompt_text || 'Enter your info...';
             bodyHtml = `
-                <div class="text-preview">Collecting: ${fieldType}</div>
+                <div class="text-preview">Collecting: ${escapeHtml(collectLabel)}</div>
                 <div class="small text-muted">${escapeHtml(prompt.substring(0, 30))}...</div>
             `;
             break;
@@ -2507,25 +2506,31 @@ function renderConfigFields(nodeType, data, dbId = null) {
             break;
 
         case 'collect_data':
+            const collectFieldType = data.field_type || 'email';
+            const isCustomType = collectFieldType === 'custom';
+            const autoVarName = isCustomType
+                ? (data.variable_name || `custom_${Math.random().toString(36).substring(2, 8)}`)
+                : `collected_${collectFieldType}`;
+            const fieldLabel = data.field_label || '';
             html = `
                 <div class="mb-3">
                     <label class="form-label">Data Type</label>
-                    <select class="form-select" name="field_type" required>
-                        <option value="name" ${data.field_type === 'name' ? 'selected' : ''}>Name</option>
-                        <option value="email" ${data.field_type === 'email' ? 'selected' : ''}>Email</option>
-                        <option value="phone" ${data.field_type === 'phone' ? 'selected' : ''}>Phone</option>
-                        <option value="custom" ${data.field_type === 'custom' ? 'selected' : ''}>Custom</option>
+                    <select class="form-select" name="field_type" id="collectFieldType" required>
+                        <option value="name" ${collectFieldType === 'name' ? 'selected' : ''}>Name</option>
+                        <option value="email" ${collectFieldType === 'email' ? 'selected' : ''}>Email</option>
+                        <option value="phone" ${collectFieldType === 'phone' ? 'selected' : ''}>Phone</option>
+                        <option value="custom" ${collectFieldType === 'custom' ? 'selected' : ''}>Custom</option>
                     </select>
+                </div>
+                <div class="mb-3 ${isCustomType ? '' : 'd-none'}" id="customLabelGroup">
+                    <label class="form-label">Field Label <small class="text-muted">(shown in Leads)</small></label>
+                    <input type="text" class="form-control" name="field_label" id="collectFieldLabel" value="${fieldLabel}" placeholder="e.g. Company Name" ${isCustomType ? 'required' : ''}>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Prompt Message</label>
                     <textarea class="form-control" name="prompt_text" rows="2" required placeholder="What's your email?">${data.prompt_text || ''}</textarea>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Variable Name</label>
-                    <input type="text" class="form-control" name="variable_name" value="${data.variable_name || ''}" placeholder="user_email">
-                    <small class="text-muted">Used to store the collected value</small>
-                </div>
+                <input type="hidden" name="variable_name" id="collectVarName" value="${autoVarName}">
             `;
             break;
 
@@ -2690,6 +2695,7 @@ function setupDynamicFormHandlers() {
 
     setupRemoveHandlers();
     setupBtnTypeHandlers();
+    setupCollectDataHandler();
 }
 
 function updateVariationsCount() {
@@ -2698,6 +2704,36 @@ function updateVariationsCount() {
     if (list && toggleBtn) {
         const count = list.querySelectorAll('.variation-row').length;
         toggleBtn.innerHTML = `<i class="bi bi-shuffle me-1"></i>Variations ${count > 0 ? `(${count})` : ''}`;
+    }
+}
+
+function setupCollectDataHandler() {
+    const fieldTypeSelect = document.getElementById('collectFieldType');
+    const varNameInput = document.getElementById('collectVarName');
+    const customLabelGroup = document.getElementById('customLabelGroup');
+    const fieldLabelInput = document.getElementById('collectFieldLabel');
+
+    if (fieldTypeSelect && varNameInput) {
+        fieldTypeSelect.addEventListener('change', function() {
+            const isCustom = this.value === 'custom';
+            if (isCustom) {
+                // Custom: show label field, generate random var name
+                if (customLabelGroup) customLabelGroup.classList.remove('d-none');
+                if (fieldLabelInput) fieldLabelInput.required = true;
+                // Generate random variable name if empty
+                if (!varNameInput.value || !varNameInput.value.startsWith('custom_')) {
+                    varNameInput.value = `custom_${Math.random().toString(36).substring(2, 8)}`;
+                }
+            } else {
+                // Preset types: hide label field, auto-generate var name
+                if (customLabelGroup) customLabelGroup.classList.add('d-none');
+                if (fieldLabelInput) {
+                    fieldLabelInput.required = false;
+                    fieldLabelInput.value = '';
+                }
+                varNameInput.value = `collected_${this.value}`;
+            }
+        });
     }
 }
 
@@ -2803,6 +2839,7 @@ document.getElementById('nodeEditForm').addEventListener('submit', function(e) {
             config.field_type = formData.get('field_type');
             config.prompt_text = formData.get('prompt_text');
             config.variable_name = formData.get('variable_name');
+            config.field_label = formData.get('field_label') || '';
             break;
 
         case 'condition_user_interacted':
@@ -4144,24 +4181,32 @@ function buildNodeFields(node, index) {
             break;
 
         case 'collect_data':
+            const sidebarFieldType = node.config.field_type || 'email';
+            const sidebarIsCustom = sidebarFieldType === 'custom';
+            const sidebarVarName = sidebarIsCustom
+                ? (node.config.variable_name || `custom_${Math.random().toString(36).substring(2, 8)}`)
+                : `collected_${sidebarFieldType}`;
+            const sidebarFieldLabel = node.config.field_label || '';
             html = `
                 <div class="mb-3">
                     <label class="form-label">Data Type</label>
-                    <select class="form-select node-field" data-field="field_type">
-                        <option value="name" ${node.config.field_type === 'name' ? 'selected' : ''}>Name</option>
-                        <option value="email" ${node.config.field_type === 'email' ? 'selected' : ''}>Email</option>
-                        <option value="phone" ${node.config.field_type === 'phone' ? 'selected' : ''}>Phone</option>
-                        <option value="custom" ${node.config.field_type === 'custom' ? 'selected' : ''}>Custom</option>
+                    <select class="form-select node-field collect-field-type" data-field="field_type" data-node-index="${index}">
+                        <option value="name" ${sidebarFieldType === 'name' ? 'selected' : ''}>Name</option>
+                        <option value="email" ${sidebarFieldType === 'email' ? 'selected' : ''}>Email</option>
+                        <option value="phone" ${sidebarFieldType === 'phone' ? 'selected' : ''}>Phone</option>
+                        <option value="custom" ${sidebarFieldType === 'custom' ? 'selected' : ''}>Custom</option>
                     </select>
+                </div>
+                <div class="mb-3 collect-label-group ${sidebarIsCustom ? '' : 'd-none'}" data-node-index="${index}">
+                    <label class="form-label">Field Label</label>
+                    <input type="text" class="form-control node-field" data-field="field_label" value="${escapeHtml(sidebarFieldLabel)}" placeholder="e.g. Company Name">
+                    <small class="text-muted">Shown in Leads</small>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Prompt</label>
                     <textarea class="form-control node-field" data-field="prompt_text" rows="2">${escapeHtml(node.config.prompt_text || '')}</textarea>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Variable</label>
-                    <input type="text" class="form-control node-field" data-field="variable_name" value="${escapeHtml(node.config.variable_name || '')}">
-                </div>
+                <input type="hidden" class="node-field collect-var-input" data-field="variable_name" data-node-index="${index}" value="${escapeHtml(sidebarVarName)}">
                 <div class="form-node-connection next-node">
                     <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>Then go to:</div>
                     <select class="form-select form-select-sm next-node-select">
@@ -4375,6 +4420,30 @@ function attachFormEventHandlers() {
         if (e.target.classList.contains('node-field')) {
             const field = e.target.dataset.field;
             node.config[field] = e.target.value;
+
+            // Auto-update variable_name and toggle field_label visibility for collect_data nodes
+            if (field === 'field_type' && node.type === 'collect_data') {
+                const varNameInput = card.querySelector('.collect-var-input');
+                const labelGroup = card.querySelector('.collect-label-group');
+                const isCustom = e.target.value === 'custom';
+
+                if (isCustom) {
+                    // Custom: show label field, generate random var name
+                    if (labelGroup) labelGroup.classList.remove('d-none');
+                    if (varNameInput && (!varNameInput.value || !varNameInput.value.startsWith('custom_'))) {
+                        varNameInput.value = `custom_${Math.random().toString(36).substring(2, 8)}`;
+                        node.config.variable_name = varNameInput.value;
+                    }
+                } else {
+                    // Preset types: hide label field, auto-generate var name
+                    if (labelGroup) labelGroup.classList.add('d-none');
+                    if (varNameInput) {
+                        varNameInput.value = `collected_${e.target.value}`;
+                        node.config.variable_name = varNameInput.value;
+                    }
+                    node.config.field_label = '';
+                }
+            }
         }
         // Quick reply title
         else if (e.target.classList.contains('qr-title')) {

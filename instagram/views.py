@@ -730,13 +730,16 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         # Get active flow templates
         flow_templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
 
-        # Get queued flow count
+        # Get queued flow count and API usage
         queued_count = 0
+        calls_last_hour = 0
+        rate_limit = QueuedFlowTrigger.get_rate_limit()
         if instagram_account:
             queued_count = QueuedFlowTrigger.objects.filter(
                 account=instagram_account,
                 status='pending'
             ).count()
+            calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
 
         context = {
             'instagram_connected': instagram_connected,
@@ -750,6 +753,8 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'total_completed': stats['total_completed'] or 0,
             'flow_templates': flow_templates,
             'queued_count': queued_count,
+            'calls_last_hour': calls_last_hour,
+            'rate_limit': rate_limit,
         }
         return render(request, self.template_name, context)
 

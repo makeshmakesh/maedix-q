@@ -656,69 +656,7 @@
         }
     }
 
-    /* Template Modal Styles */
-    .template-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1rem;
-        padding: 1rem;
-    }
-
-    .template-card {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1.25rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .template-card:hover {
-        border-color: var(--primary);
-        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.15);
-        transform: translateY(-2px);
-    }
-
-    .template-card.selected {
-        border-color: var(--primary);
-        background: rgba(var(--primary-rgb), 0.05);
-    }
-
-    .template-card-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: var(--gradient);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .template-card-title {
-        font-weight: 600;
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .template-card-description {
-        font-size: 0.85rem;
-        color: #6c757d;
-        line-height: 1.5;
-    }
-
-    .template-card-category {
-        display: inline-block;
-        padding: 0.2rem 0.6rem;
-        background: #f0f0f0;
-        border-radius: 2rem;
-        font-size: 0.7rem;
-        color: #6c757d;
-        margin-top: 0.75rem;
-    }
-
+    /* Header button styles */
     .btn-template {
         background: rgba(255,255,255,0.15);
         border: 2px solid rgba(255,255,255,0.25);
@@ -737,18 +675,6 @@
     .btn-template:hover {
         background: rgba(255,255,255,0.25);
         color: white;
-    }
-
-    .templates-empty {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #6c757d;
-    }
-
-    .templates-empty i {
-        font-size: 3rem;
-        opacity: 0.3;
-        margin-bottom: 1rem;
     }
 </style>
 {% endblock %}
@@ -811,20 +737,14 @@
                         <div class="flex-shrink-0 d-flex gap-2 align-items-center flex-wrap">
                             <a href="{% url 'queued_flows' %}" class="btn-template" title="{% if queued_count > 0 %}{{ queued_count }} queued flows{% else %}API Usage: {{ calls_last_hour }}/{{ rate_limit }}{% endif %}">
                                 <i class="bi bi-{% if queued_count > 0 %}hourglass-split{% else %}speedometer2{% endif %}"></i>
-                                {% if queued_count > 0 %}Queue ({{ queued_count }}){% else %}API {{ calls_last_hour }}/{{ rate_limit }}{% endif %}
+                                {% if queued_count > 0 %}Queue ({{ queued_count }}){% else %} 1hr {{ calls_last_hour }}/{{ rate_limit }}{% endif %}
                             </a>
                             <a href="{% url 'flow_builder_help' %}" class="btn-template" title="Learn about node types and how to build flows">
                                 <i class="bi bi-question-circle"></i>
-                                Help
+                                Guide
                             </a>
                             {% if can_create_more %}
-                            {% if flow_templates %}
-                            <button type="button" class="btn-template" data-bs-toggle="modal" data-bs-target="#templateModal">
-                                <i class="bi bi-lightning"></i>
-                                Use Template
-                            </button>
-                            {% endif %}
-                            <a href="{% url 'flow_create' %}" class="btn-create-flow">
+                            <a href="{% url 'flow_templates' %}" class="btn-create-flow">
                                 <i class="bi bi-plus-lg"></i>
                                 Create Flow
                             </a>
@@ -940,10 +860,10 @@
                                 {% if can_create_more %}
                                 <div class="d-flex gap-2 justify-content-center flex-wrap">
                                     {% if flow_templates %}
-                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#templateModal">
+                                    <a href="{% url 'flow_templates' %}" class="btn btn-outline-primary">
                                         <i class="bi bi-lightning me-1"></i>
-                                        Use a Template
-                                    </button>
+                                        Browse Templates
+                                    </a>
                                     {% endif %}
                                     <a href="{% url 'flow_create' %}" class="btn-create-first">
                                         <i class="bi bi-plus-lg"></i>
@@ -1070,46 +990,6 @@
     </div>
 </section>
 
-<!-- Template Selection Modal -->
-{% if flow_templates %}
-<div class="modal fade" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="templateModalLabel">
-                    <i class="bi bi-lightning me-2 text-primary"></i>Choose a Template
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="template-grid">
-                    {% for template in flow_templates %}
-                    <div class="template-card" data-template-id="{{ template.id }}">
-                        <div class="template-card-icon">
-                            <i class="bi {{ template.icon }}"></i>
-                        </div>
-                        <div class="template-card-title">{{ template.title }}</div>
-                        <div class="template-card-description">{{ template.description }}</div>
-                        <span class="template-card-category">{{ template.get_category_display }}</span>
-                    </div>
-                    {% empty %}
-                    <div class="templates-empty">
-                        <i class="bi bi-inbox d-block"></i>
-                        <p>No templates available yet.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="useTemplateBtn" disabled>
-                    <i class="bi bi-check-lg me-1"></i>Use This Template
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -1131,45 +1011,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
-    // Template selection handler
-    let selectedTemplateId = null;
-    document.querySelectorAll('.template-card').forEach(card => {
-        card.addEventListener('click', function() {
-            // Deselect all
-            document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-            // Select this one
-            this.classList.add('selected');
-            selectedTemplateId = this.dataset.templateId;
-            // Enable the use button
-            const useBtn = document.getElementById('useTemplateBtn');
-            if (useBtn) useBtn.disabled = false;
-        });
-    });
-
-    // Use template button handler - redirect to create page with template pre-selected
-    const useTemplateBtn = document.getElementById('useTemplateBtn');
-    if (useTemplateBtn) {
-        useTemplateBtn.addEventListener('click', function() {
-            if (!selectedTemplateId) return;
-            // Redirect to create page with template parameter
-            window.location.href = `/instagram/flows/create/?template=${selectedTemplateId}`;
-        });
-    }
-
-    // Reset modal state when closed
-    const templateModal = document.getElementById('templateModal');
-    if (templateModal) {
-        templateModal.addEventListener('hidden.bs.modal', function() {
-            selectedTemplateId = null;
-            document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-            const useBtn = document.getElementById('useTemplateBtn');
-            if (useBtn) {
-                useBtn.disabled = true;
-                useBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Use This Template';
-            }
-        });
-    }
 
     // Flow active toggle handler
     document.querySelectorAll('.flow-active-toggle').forEach(toggle => {

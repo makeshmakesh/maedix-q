@@ -1,0 +1,1266 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ template.title }} - Flow Template{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Mobile First Base */
+    .template-page {
+        padding: 0;
+    }
+
+    /* Page Header */
+    .page-header {
+        background: var(--gradient);
+        color: white;
+        padding: 1rem;
+        margin: -1rem -12px 1rem -12px;
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+        }
+    }
+
+    .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .header-back {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    .header-back:hover {
+        color: white;
+        opacity: 1;
+    }
+
+    .header-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+
+    .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+        .header-icon {
+            width: 52px;
+            height: 52px;
+            font-size: 1.5rem;
+        }
+    }
+
+    .header-text h1 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 0.125rem 0;
+        line-height: 1.3;
+    }
+
+    @media (min-width: 768px) {
+        .header-text h1 {
+            font-size: 1.35rem;
+        }
+    }
+
+    .header-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    /* Main Layout */
+    .template-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    @media (min-width: 992px) {
+        .template-content {
+            flex-direction: row;
+            gap: 1.5rem;
+        }
+    }
+
+    /* Preview Section */
+    .preview-section {
+        flex: 1;
+        min-width: 0;
+    }
+
+    @media (min-width: 992px) {
+        .preview-section {
+            flex: 0 0 380px;
+            order: 2;
+        }
+    }
+
+    .preview-wrapper {
+        position: sticky;
+        top: 1rem;
+    }
+
+    /* Phone Frame */
+    .phone-frame {
+        background: #1a1a1a;
+        border-radius: 2rem;
+        padding: 0.5rem;
+        max-width: 340px;
+        margin: 0 auto;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    @media (min-width: 768px) {
+        .phone-frame {
+            padding: 0.625rem;
+            border-radius: 2.5rem;
+        }
+    }
+
+    .phone-screen {
+        background: white;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        position: relative;
+    }
+
+    @media (min-width: 768px) {
+        .phone-screen {
+            border-radius: 2rem;
+        }
+    }
+
+    /* Instagram Post View */
+    .ig-post-view {
+        display: none;
+    }
+
+    .ig-post-view.active {
+        display: block;
+    }
+
+    .ig-post-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #efefef;
+        gap: 0.625rem;
+    }
+
+    .ig-post-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .ig-post-username {
+        font-weight: 600;
+        font-size: 0.8rem;
+        flex: 1;
+    }
+
+    .ig-post-image {
+        width: 100%;
+        aspect-ratio: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+    }
+
+    .ig-post-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 0.75rem;
+    }
+
+    .ig-post-actions i {
+        font-size: 1.4rem;
+        cursor: pointer;
+    }
+
+    .ig-post-likes {
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 0 0.75rem;
+    }
+
+    .ig-comments-section {
+        padding: 0.5rem 0.75rem;
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .ig-comment {
+        margin-bottom: 0.625rem;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        opacity: 0;
+        transform: translateY(5px);
+        animation: fadeInUp 0.3s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ig-comment-user {
+        font-weight: 600;
+        margin-right: 0.25rem;
+    }
+
+    .ig-comment.bot-reply {
+        background: #f0f8ff;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        margin-left: 1rem;
+        border-left: 2px solid #0095f6;
+    }
+
+    .ig-comment-input {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-top: 1px solid #efefef;
+        gap: 0.5rem;
+    }
+
+    .ig-comment-input input {
+        flex: 1;
+        border: none;
+        font-size: 0.8rem;
+        outline: none;
+    }
+
+    .ig-comment-input button {
+        background: none;
+        border: none;
+        color: #0095f6;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    /* DM View */
+    .ig-dm-view {
+        display: none;
+    }
+
+    .ig-dm-view.active {
+        display: block;
+    }
+
+    .ig-dm-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #efefef;
+        gap: 0.625rem;
+        background: white;
+    }
+
+    .ig-dm-back {
+        font-size: 1.25rem;
+        color: #262626;
+    }
+
+    .ig-dm-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #f09433, #e6683c, #dc2743);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 600;
+    }
+
+    .ig-dm-name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        flex: 1;
+    }
+
+    .ig-dm-messages {
+        height: 320px;
+        overflow-y: auto;
+        padding: 0.75rem;
+        background: #fafafa;
+    }
+
+    .dm-message {
+        display: flex;
+        margin-bottom: 0.5rem;
+        opacity: 0;
+        transform: translateY(8px);
+        animation: fadeInUp 0.3s ease forwards;
+    }
+
+    .dm-message.sent {
+        justify-content: flex-end;
+    }
+
+    .dm-message.received {
+        justify-content: flex-start;
+    }
+
+    .dm-bubble {
+        max-width: 80%;
+        padding: 0.625rem 0.875rem;
+        border-radius: 1.25rem;
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .dm-message.sent .dm-bubble {
+        background: #0095f6;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .dm-message.received .dm-bubble {
+        background: #efefef;
+        color: #262626;
+        border-bottom-left-radius: 4px;
+    }
+
+    /* Quick Replies */
+    .dm-quick-replies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin-top: 0.375rem;
+    }
+
+    .dm-quick-btn {
+        background: white;
+        border: 1px solid #0095f6;
+        color: #0095f6;
+        padding: 0.375rem 0.75rem;
+        border-radius: 1.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .dm-quick-btn:hover, .dm-quick-btn.selected {
+        background: #0095f6;
+        color: white;
+    }
+
+    /* Buttons */
+    .dm-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        margin-top: 0.375rem;
+    }
+
+    .dm-btn {
+        background: white;
+        border: 1px solid #dbdbdb;
+        color: #0095f6;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .dm-btn:hover {
+        background: #fafafa;
+    }
+
+    /* Typing */
+    .dm-typing {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        padding: 0.625rem 0.875rem;
+        background: #efefef;
+        border-radius: 1.25rem;
+        width: fit-content;
+    }
+
+    .dm-typing-dot {
+        width: 6px;
+        height: 6px;
+        background: #8e8e8e;
+        border-radius: 50%;
+        animation: typingDot 1.4s infinite ease-in-out;
+    }
+
+    .dm-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .dm-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingDot {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-3px); }
+    }
+
+    .ig-dm-input {
+        display: flex;
+        align-items: center;
+        padding: 0.625rem 0.75rem;
+        border-top: 1px solid #efefef;
+        gap: 0.5rem;
+        background: white;
+    }
+
+    .ig-dm-input input {
+        flex: 1;
+        border: 1px solid #dbdbdb;
+        border-radius: 1.25rem;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8rem;
+        outline: none;
+    }
+
+    .ig-dm-input input:focus {
+        border-color: #a8a8a8;
+    }
+
+    /* Demo Controls */
+    .demo-controls {
+        text-align: center;
+        margin-top: 0.75rem;
+    }
+
+    .restart-btn {
+        background: white;
+        border: 1px solid #dbdbdb;
+        color: #262626;
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        transition: all 0.15s ease;
+    }
+
+    .restart-btn:hover {
+        background: #fafafa;
+        border-color: #262626;
+    }
+
+    /* Info Section */
+    .info-section {
+        flex: 1;
+        min-width: 0;
+    }
+
+    @media (min-width: 992px) {
+        .info-section {
+            order: 1;
+        }
+    }
+
+    .info-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .info-card {
+            padding: 1.25rem;
+        }
+    }
+
+    .info-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.625rem;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .info-title i {
+        color: var(--primary);
+    }
+
+    .description-text {
+        font-size: 0.875rem;
+        color: #495057;
+        line-height: 1.6;
+    }
+
+    /* Flow Steps */
+    .flow-steps {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .flow-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.625rem;
+        padding: 0.625rem 0;
+        position: relative;
+    }
+
+    .flow-step:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 38px;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .step-icon.comment { background: #e3f2fd; color: #1976d2; }
+    .step-icon.message { background: #e8f5e9; color: #388e3c; }
+    .step-icon.quick { background: #fff3e0; color: #f57c00; }
+    .step-icon.button { background: #f3e5f5; color: #7b1fa2; }
+    .step-icon.link { background: #e0f7fa; color: #0097a7; }
+    .step-icon.condition { background: #fce4ec; color: #c2185b; }
+    .step-icon.collect { background: #fff8e1; color: #ffa000; }
+    .step-icon.ai { background: #ede7f6; color: #5e35b1; }
+    .step-icon.default { background: #f5f5f5; color: #757575; }
+
+    .step-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .step-title {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: #212529;
+    }
+
+    .step-detail {
+        font-size: 0.75rem;
+        color: #6c757d;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Action Card */
+    .action-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
+    @media (min-width: 768px) {
+        .action-card {
+            position: static;
+            box-shadow: none;
+            padding: 1.25rem;
+        }
+    }
+
+    .use-template-btn {
+        background: var(--gradient);
+        border: none;
+        color: white;
+        padding: 0.875rem 1.5rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .use-template-btn:hover {
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+    }
+
+    .action-note {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+
+    /* Bottom spacing for fixed button on mobile */
+    .bottom-spacer {
+        height: 80px;
+    }
+
+    @media (min-width: 768px) {
+        .bottom-spacer {
+            display: none;
+        }
+    }
+
+    /* Transition */
+    .view-transition {
+        position: absolute;
+        inset: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .view-transition.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .transition-content {
+        text-align: center;
+    }
+
+    .transition-content i {
+        font-size: 2rem;
+        color: #0095f6;
+        margin-bottom: 0.5rem;
+    }
+
+    .transition-content p {
+        font-size: 0.8rem;
+        color: #8e8e8e;
+    }
+
+    /* Completion Overlay */
+    .completion-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+    }
+
+    .completion-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .completion-content {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .completion-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin: 0 auto 1rem;
+        animation: scaleIn 0.4s ease;
+    }
+
+    @keyframes scaleIn {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .completion-content h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.25rem;
+    }
+
+    .completion-content p {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="template-page py-2 py-md-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="header-top">
+                        <a href="{% url 'flow_templates' %}" class="header-back">
+                            <i class="bi bi-chevron-left"></i> Templates
+                        </a>
+                        <span class="header-badge">{{ template.nodes_json|length }} steps</span>
+                    </div>
+                    <div class="header-info">
+                        <div class="header-icon">
+                            <i class="bi {{ template.icon }}"></i>
+                        </div>
+                        <div class="header-text">
+                            <h1>{{ template.title }}</h1>
+                            <span class="header-badge">{{ template.get_category_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="template-content">
+                    <!-- Preview Section -->
+                    <div class="preview-section">
+                        <div class="preview-wrapper">
+                            <div class="phone-frame">
+                                <div class="phone-screen">
+                                    <!-- Transition Overlay -->
+                                    <div class="view-transition" id="viewTransition">
+                                        <div class="transition-content">
+                                            <i class="bi bi-envelope-paper"></i>
+                                            <p>Opening DMs...</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Completion Overlay -->
+                                    <div class="completion-overlay" id="completionOverlay">
+                                        <div class="completion-content">
+                                            <div class="completion-icon">
+                                                <i class="bi bi-check-lg"></i>
+                                            </div>
+                                            <h5>Flow Complete</h5>
+                                            <p>Demo finished successfully</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Post View (for comment_reply) -->
+                                    <div class="ig-post-view" id="postView">
+                                        <div class="ig-post-header">
+                                            <div class="ig-post-avatar">YB</div>
+                                            <span class="ig-post-username">your_brand</span>
+                                            <i class="bi bi-three-dots"></i>
+                                        </div>
+                                        <div class="ig-post-image">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                        <div class="ig-post-actions">
+                                            <i class="bi bi-heart"></i>
+                                            <i class="bi bi-chat"></i>
+                                            <i class="bi bi-send"></i>
+                                        </div>
+                                        <div class="ig-post-likes">1,234 likes</div>
+                                        <div class="ig-comments-section" id="commentsSection">
+                                            <!-- Comments will be added here -->
+                                        </div>
+                                        <div class="ig-comment-input">
+                                            <input type="text" placeholder="Add a comment..." disabled>
+                                            <button>Post</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- DM View -->
+                                    <div class="ig-dm-view" id="dmView">
+                                        <div class="ig-dm-header">
+                                            <i class="bi bi-chevron-left ig-dm-back"></i>
+                                            <div class="ig-dm-avatar">YB</div>
+                                            <span class="ig-dm-name">your_brand</span>
+                                            <i class="bi bi-info-circle"></i>
+                                        </div>
+                                        <div class="ig-dm-messages" id="dmMessages">
+                                            <!-- DM messages will be added here -->
+                                        </div>
+                                        <div class="ig-dm-input">
+                                            <input type="text" placeholder="Message..." disabled>
+                                            <i class="bi bi-heart"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="demo-controls">
+                                <button class="restart-btn" id="restartBtn">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    Watch Again
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Section -->
+                    <div class="info-section">
+                        <!-- Description -->
+                        <div class="info-card">
+                            <div class="info-title">
+                                <i class="bi bi-info-circle"></i> About
+                            </div>
+                            <p class="description-text">{{ template.description }}</p>
+                        </div>
+
+                        <!-- Flow Steps -->
+                        <div class="info-card">
+                            <div class="info-title">
+                                <i class="bi bi-diagram-3"></i> Flow Steps
+                            </div>
+                            <div class="flow-steps">
+                                {% for node in template.nodes_json %}
+                                <div class="flow-step">
+                                    {% if node.node_type == 'comment_reply' %}
+                                    <div class="step-icon comment"><i class="bi bi-chat-dots"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Comment Reply</div>
+                                        <div class="step-detail">{{ node.config.text|default:"Auto-reply"|truncatechars:35 }}</div>
+                                    </div>
+                                    {% elif node.node_type == 'message_text' %}
+                                    <div class="step-icon message"><i class="bi bi-chat-left-text"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Send Message</div>
+                                        <div class="step-detail">{{ node.config.text|default:"Text message"|truncatechars:35 }}</div>
+                                    </div>
+                                    {% elif node.node_type == 'message_quick_reply' %}
+                                    <div class="step-icon quick"><i class="bi bi-ui-radios-grid"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Quick Reply</div>
+                                        <div class="step-detail">{{ node.config.quick_replies|length|default:0 }} options</div>
+                                    </div>
+                                    {% elif node.node_type == 'message_button_template' %}
+                                    <div class="step-icon button"><i class="bi bi-menu-button-wide"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Button Template</div>
+                                        <div class="step-detail">{{ node.config.buttons|length }} button{{ node.config.buttons|length|pluralize }}</div>
+                                    </div>
+                                    {% elif node.node_type == 'message_link' %}
+                                    <div class="step-icon link"><i class="bi bi-link"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Link Message</div>
+                                        <div class="step-detail">{{ node.config.url|default:"Link"|truncatechars:35 }}</div>
+                                    </div>
+                                    {% elif node.node_type == 'condition_follower' %}
+                                    <div class="step-icon condition"><i class="bi bi-signpost-split"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Follower Check</div>
+                                        <div class="step-detail">Verify follower status</div>
+                                    </div>
+                                    {% elif node.node_type == 'collect_data' %}
+                                    <div class="step-icon collect"><i class="bi bi-input-cursor-text"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">Collect Data</div>
+                                        <div class="step-detail">{{ node.config.field_label|default:node.config.field_type|default:"User input" }}</div>
+                                    </div>
+                                    {% elif node.node_type == 'ai_conversation' %}
+                                    <div class="step-icon ai"><i class="bi bi-robot"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">AI Conversation</div>
+                                        <div class="step-detail">AI-powered response</div>
+                                    </div>
+                                    {% else %}
+                                    <div class="step-icon default"><i class="bi bi-circle"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">{{ node.node_type }}</div>
+                                        <div class="step-detail">Flow step</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Action Card (Desktop) -->
+                        <div class="info-card d-none d-md-block">
+                            <a href="{% url 'flow_create' %}?template={{ template.id }}" class="use-template-btn">
+                                <i class="bi bi-plus-lg"></i>
+                                Use This Template
+                            </a>
+                            <p class="action-note">Customize after creating</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-spacer"></div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Fixed Action Button (Mobile) -->
+<div class="action-card d-md-none">
+    <a href="{% url 'flow_create' %}?template={{ template.id }}" class="use-template-btn">
+        <i class="bi bi-plus-lg"></i>
+        Use This Template
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ template.nodes_json|json_script:"template-nodes" }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nodes = JSON.parse(document.getElementById('template-nodes').textContent);
+
+    const postView = document.getElementById('postView');
+    const dmView = document.getElementById('dmView');
+    const commentsSection = document.getElementById('commentsSection');
+    const dmMessages = document.getElementById('dmMessages');
+    const viewTransition = document.getElementById('viewTransition');
+    const completionOverlay = document.getElementById('completionOverlay');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let isRunning = false;
+
+    // Build node map for easy lookup by ID
+    const nodeMap = {};
+    nodes.forEach(node => {
+        nodeMap[node.id] = node;
+    });
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function addComment(username, text, isBot = false) {
+        const comment = document.createElement('div');
+        comment.className = 'ig-comment' + (isBot ? ' bot-reply' : '');
+        comment.innerHTML = `<span class="ig-comment-user">${isBot ? '@your_brand' : '@' + username}</span>${text}`;
+        commentsSection.appendChild(comment);
+        commentsSection.scrollTop = commentsSection.scrollHeight;
+    }
+
+    function addDM(text, isSent = false, extra = '') {
+        const msg = document.createElement('div');
+        msg.className = 'dm-message ' + (isSent ? 'sent' : 'received');
+        msg.innerHTML = `<div class="dm-bubble">${text}${extra}</div>`;
+        dmMessages.appendChild(msg);
+        dmMessages.scrollTop = dmMessages.scrollHeight;
+    }
+
+    function showTyping() {
+        const typing = document.createElement('div');
+        typing.className = 'dm-message received';
+        typing.id = 'typingIndicator';
+        typing.innerHTML = `<div class="dm-typing"><div class="dm-typing-dot"></div><div class="dm-typing-dot"></div><div class="dm-typing-dot"></div></div>`;
+        dmMessages.appendChild(typing);
+        dmMessages.scrollTop = dmMessages.scrollHeight;
+    }
+
+    function hideTyping() {
+        const typing = document.getElementById('typingIndicator');
+        if (typing) typing.remove();
+    }
+
+    async function showTransition() {
+        viewTransition.classList.add('active');
+        await delay(1000);
+        postView.classList.remove('active');
+        dmView.classList.add('active');
+        await delay(300);
+        viewTransition.classList.remove('active');
+    }
+
+    function showCompletion() {
+        completionOverlay.classList.add('active');
+        isRunning = false;
+    }
+
+    async function runDemo() {
+        if (isRunning) return;
+        isRunning = true;
+
+        // Debug
+        console.log('Starting demo with nodes:', nodes);
+        console.log('Node map:', nodeMap);
+
+        // Reset
+        commentsSection.innerHTML = '';
+        dmMessages.innerHTML = '';
+        postView.classList.remove('active');
+        dmView.classList.remove('active');
+        completionOverlay.classList.remove('active');
+
+        if (nodes.length === 0) {
+            dmView.classList.add('active');
+            addDM('No flow steps to preview', false);
+            isRunning = false;
+            return;
+        }
+
+        const firstNode = nodes[0];
+        const hasCommentReply = firstNode.node_type === 'comment_reply';
+
+        // Always start with post view - trigger is always from comment
+        postView.classList.add('active');
+        await delay(800);
+
+        // User comments with trigger keyword
+        const keywords = hasCommentReply ? (firstNode.config?.trigger_keywords || []) : [];
+        const keyword = (keywords.length > 0 ? keywords[0] : null) || 'INFO';
+        addComment('demo_user', keyword);
+        await delay(1200);
+
+        let nextNodeId = null;
+
+        if (hasCommentReply) {
+            // Bot replies to comment
+            const replyText = firstNode.config?.text || 'Thanks for your comment!';
+            addComment('your_brand', replyText, true);
+            nextNodeId = firstNode.next_node;
+
+            // If comment reply is the only node, show completion
+            if (!nextNodeId) {
+                await delay(1200);
+                showCompletion();
+                return;
+            }
+            await delay(1500);
+        } else {
+            // No comment reply - first node is a DM node
+            nextNodeId = firstNode.id;
+            await delay(800);
+        }
+
+        // Transition to DM
+        await showTransition();
+
+        // Process nodes following the graph
+        await processNodeGraph(nextNodeId);
+
+        // Show completion overlay
+        await delay(800);
+        showCompletion();
+    }
+
+    async function processNodeGraph(startNodeId) {
+        console.log('processNodeGraph starting with:', startNodeId);
+        let currentNodeId = startNodeId;
+        let followerCheckCount = 0; // Track follower check visits
+
+        while (currentNodeId) {
+            const node = nodeMap[currentNodeId];
+            console.log('Processing node:', currentNodeId, node);
+            if (!node) {
+                console.log('Node not found in nodeMap!');
+                break;
+            }
+
+            const result = await processNodeInDM(node, followerCheckCount);
+            console.log('Node result:', result);
+
+            // Track follower check visits
+            if (node.node_type === 'condition_follower') {
+                followerCheckCount++;
+            }
+
+            currentNodeId = result.nextNodeId;
+            console.log('Next node ID:', currentNodeId);
+
+            if (currentNodeId) {
+                await delay(400);
+            }
+        }
+    }
+
+    async function processNodeInDM(node, followerCheckCount = 0) {
+        showTyping();
+        await delay(800);
+        hideTyping();
+
+        let nextNodeId = null;
+
+        switch (node.node_type) {
+            case 'comment_reply':
+                // Already handled in post view
+                nextNodeId = node.next_node;
+                break;
+
+            case 'message_text':
+                addDM(node.config?.text || 'Hello! Thanks for reaching out.');
+                nextNodeId = node.next_node;
+                break;
+
+            case 'message_quick_reply': {
+                const qrOptions = node.config?.quick_replies || [];
+                let qrExtra = '<div class="dm-quick-replies">';
+                qrOptions.forEach(qr => {
+                    if (qr.title) qrExtra += `<span class="dm-quick-btn">${qr.title}</span>`;
+                });
+                qrExtra += '</div>';
+                addDM(node.config?.text || 'Please choose:', false, qrOptions.length > 0 ? qrExtra : '');
+
+                if (qrOptions.length > 0) {
+                    await delay(1000);
+                    const selected = qrOptions[0];
+                    addDM(selected.title, true);
+                    nextNodeId = selected.target_node || node.next_node;
+                }
+                break;
+            }
+
+            case 'message_button_template': {
+                const btnOptions = node.config?.buttons || [];
+                let btnExtra = '<div class="dm-buttons">';
+                btnOptions.forEach(btn => {
+                    if (btn.title) btnExtra += `<span class="dm-btn">${btn.title}</span>`;
+                });
+                btnExtra += '</div>';
+                addDM(node.config?.text || 'Choose an option:', false, btnOptions.length > 0 ? btnExtra : '');
+
+                if (btnOptions.length > 0) {
+                    await delay(1000);
+                    const selected = btnOptions[0];
+                    addDM(selected.title, true);
+                    nextNodeId = selected.target_node || node.next_node;
+                }
+                break;
+            }
+
+            case 'message_link':
+                const linkUrl = node.config?.url || 'https://example.com';
+                addDM(`${node.config?.text || 'Here is your link:'}<br><a href="#" style="color:#00376b;">${linkUrl}</a>`);
+                nextNodeId = node.next_node;
+                break;
+
+            case 'condition_follower':
+                addDM('<span style="color:#8e8e8e;"><i class="bi bi-shield-check me-1"></i>Checking if you follow us...</span>');
+                await delay(1000);
+                showTyping();
+                await delay(600);
+                hideTyping();
+
+                // First time: show non-follower path (to demo full flow)
+                // Second time: show follower path (user followed)
+                if (followerCheckCount === 0 && node.config?.false_node) {
+                    addDM('<i class="bi bi-x-circle text-danger me-1"></i> Not following yet...');
+                    nextNodeId = node.config.false_node;
+                } else {
+                    addDM('<i class="bi bi-check-circle text-success me-1"></i> You\'re a follower!');
+                    nextNodeId = node.config?.true_node;
+                }
+                break;
+
+            case 'collect_data': {
+                const fieldType = node.config?.field_type || 'email';
+                const fieldLabel = (node.config?.field_label || '').toLowerCase();
+                addDM(node.config?.prompt_text || node.config?.text || `Please share your ${fieldLabel || fieldType}:`);
+                await delay(1000);
+
+                // Sample inputs based on field type or label
+                let sampleInput = 'user@email.com';
+                if (fieldType === 'phone') sampleInput = '+1 234 567 8900';
+                else if (fieldType === 'name') sampleInput = 'John Doe';
+                else if (fieldType === 'custom') {
+                    // Check field label for better sample
+                    if (fieldLabel.includes('location') || fieldLabel.includes('city')) sampleInput = 'New York';
+                    else if (fieldLabel.includes('company') || fieldLabel.includes('business')) sampleInput = 'Acme Inc';
+                    else if (fieldLabel.includes('website') || fieldLabel.includes('url')) sampleInput = 'www.example.com';
+                    else sampleInput = 'Sample response';
+                }
+                addDM(sampleInput, true);
+                nextNodeId = node.next_node;
+                break;
+            }
+
+            case 'ai_conversation':
+                addDM('<span style="color:#8e8e8e;"><i class="bi bi-robot me-1"></i>AI is thinking...</span>');
+                await delay(1000);
+                showTyping();
+                await delay(800);
+                hideTyping();
+                addDM('Based on your interest, I recommend checking out our latest collection!');
+                nextNodeId = node.next_node;
+                break;
+
+            default:
+                addDM(node.config?.text || 'Processing...');
+                nextNodeId = node.next_node;
+        }
+
+        return { nextNodeId };
+    }
+
+    // Event listeners
+    restartBtn.addEventListener('click', () => {
+        if (!isRunning) {
+            runDemo();
+        }
+    });
+
+    // Auto-start demo
+    setTimeout(runDemo, 500);
+});
+</script>
+{% endblock %}

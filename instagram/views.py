@@ -914,6 +914,20 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
         is_active = active_count < max_active
 
+        # Check if a template was selected
+        template_id = request.POST.get('template_id')
+        template = None
+        metadata = {}
+        if template_id:
+            try:
+                template = FlowTemplate.objects.get(id=template_id, is_active=True)
+                metadata['template'] = {
+                    'id': template.id,
+                    'title': template.title,
+                }
+            except FlowTemplate.DoesNotExist:
+                pass
+
         flow = DMFlow.objects.create(
             user=request.user,
             title=title,
@@ -922,23 +936,16 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             instagram_post_id=instagram_post_id,
             keywords=keywords,
             is_active=is_active,
+            metadata=metadata,
         )
 
-        # Check if a template was selected and create nodes from it
-        template_id = request.POST.get('template_id')
-        if template_id:
-            try:
-                template = FlowTemplate.objects.get(id=template_id, is_active=True)
-                self._create_nodes_from_template(flow, template)
-                if is_active:
-                    messages.success(request, f'Flow "{title}" created from template! Review and customize your flow.')
-                else:
-                    messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan.')
-            except FlowTemplate.DoesNotExist:
-                if is_active:
-                    messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')
-                else:
-                    messages.warning(request, f'Flow "{title}" created as inactive.')
+        # Create nodes from template if selected
+        if template:
+            self._create_nodes_from_template(flow, template)
+            if is_active:
+                messages.success(request, f'Flow "{title}" created from template! Review and customize your flow.')
+            else:
+                messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan.')
         else:
             if is_active:
                 messages.success(request, f'Flow "{title}" created! Now add steps to your flow.')

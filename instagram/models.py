@@ -141,6 +141,7 @@ class DMFlow(models.Model):
     total_completed = models.PositiveIntegerField(default=0)
 
     # Metadata
+    metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

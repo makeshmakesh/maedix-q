@@ -303,67 +303,6 @@
         margin-bottom: 1.5rem;
     }
 
-    /* Quick Start Cards */
-    .quick-start {
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: var(--radius);
-        padding: 1.25rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .quick-start-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #212529;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .quick-start-title i {
-        color: var(--primary);
-    }
-
-    .quick-start-options {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-
-    @media (min-width: 576px) {
-        .quick-start-options {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    .quick-start-option {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.875rem;
-        background: #f8f9fa;
-        border-radius: var(--radius-sm);
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.15s ease;
-    }
-
-    .quick-start-option:hover {
-        background: #f0f0f0;
-        color: inherit;
-    }
-
-    .quick-start-option i {
-        font-size: 1.25rem;
-        color: var(--primary);
-    }
-
-    .quick-start-option span {
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
 </style>
 {% endblock %}
 
@@ -390,24 +329,6 @@
                                 <span class="d-none d-sm-inline">Back</span>
                             </a>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Quick Start Section -->
-                <div class="quick-start d-md-none">
-                    <div class="quick-start-title">
-                        <i class="bi bi-rocket-takeoff"></i>
-                        Quick Start
-                    </div>
-                    <div class="quick-start-options">
-                        <a href="{% url 'flow_create' %}" class="quick-start-option">
-                            <i class="bi bi-file-earmark-plus"></i>
-                            <span>Blank Flow</span>
-                        </a>
-                        <a href="{% url 'flow_builder_help' %}" class="quick-start-option">
-                            <i class="bi bi-question-circle"></i>
-                            <span>View Guide</span>
-                        </a>
                     </div>
                 </div>
 

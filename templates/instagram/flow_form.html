@@ -499,27 +499,7 @@
             <form method="post" id="flowForm">
                 {% csrf_token %}
 
-                {% if selected_template %}
-                <!-- Template Info Section -->
-                <div class="section-card" style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0.04) 100%); border-color: var(--primary);">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="template-icon" style="width: 48px; height: 48px; background: var(--gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; flex-shrink: 0;">
-                            <i class="bi {{ selected_template.icon }}"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge" style="background: var(--gradient); font-size: 0.7rem;">TEMPLATE</span>
-                                <h6 class="mb-0 fw-bold">{{ selected_template.title }}</h6>
-                            </div>
-                            <p class="text-muted mb-0 small">{{ selected_template.description }}</p>
-                        </div>
-                        <a href="{% url 'flow_create' %}" class="btn btn-sm btn-outline-secondary" title="Remove template">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                    </div>
-                    <input type="hidden" name="template_id" value="{{ selected_template.id }}">
-                </div>
-                {% elif templates %}
+                {% if not selected_template and templates %}
                 <!-- Template Selection Prompt -->
                 <div class="section-card" style="background: #f8f9fa; border: 2px dashed #dee2e6;">
                     <div class="text-center py-2">
@@ -681,6 +661,20 @@
                         </span>
                     </div>
                 </div>
+
+                {% if selected_template %}
+                <!-- Selected Template Info -->
+                <div class="section-card" style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0.04) 100%); border-color: var(--primary);">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background: var(--gradient); font-size: 0.7rem;">TEMPLATE</span>
+                        <h6 class="mb-0 fw-bold flex-grow-1">{{ selected_template.title }}</h6>
+                        <a href="{% url 'flow_create' %}" class="btn btn-sm btn-outline-secondary" title="Remove template">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </div>
+                    <input type="hidden" name="template_id" value="{{ selected_template.id }}">
+                </div>
+                {% endif %}
 
                 <!-- Submit Actions -->
                 <div class="form-actions">

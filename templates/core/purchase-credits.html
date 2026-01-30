@@ -55,12 +55,13 @@
                                     </span>
                                 </div>
                                 <div class="text-center text-sm-end">
-                                    <div class="fs-4 fs-md-3 fw-bold text-primary">&#8377;{{ package.price_inr }}</div>
+                                    <div class="fs-4 fs-md-3 fw-bold text-primary">{{ package.symbol }}{{ package.price }}</div>
                                     <button class="btn btn-primary mt-2 buy-btn"
                                             data-package-id="{{ package.id }}"
                                             data-package-name="{{ package.name }}"
-                                            data-price="{{ package.price_inr }}"
-                                            data-credits="{{ package.credits }}">
+                                            data-price="{{ package.price }}"
+                                            data-credits="{{ package.credits }}"
+                                            data-symbol="{{ package.symbol }}">
                                         <i class="bi bi-cart-plus me-1"></i> Buy Now
                                     </button>
                                 </div>
@@ -96,7 +97,7 @@
                                         <div class="fw-medium">{{ transaction.credits }} credits</div>
                                         <small class="text-muted">{{ transaction.created_at|date:"M d, Y" }}</small>
                                     </div>
-                                    <span class="badge bg-success">&#8377;{{ transaction.amount }}</span>
+                                    <span class="badge bg-success">{% if transaction.currency == 'USD' %}${% else %}&#8377;{% endif %}{{ transaction.amount }}</span>
                                 </div>
                                 {% endfor %}
                             </div>

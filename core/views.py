@@ -1,3 +1,4 @@
+#pylint: disable=all
 import hmac
 import hashlib
 import json
@@ -15,6 +16,7 @@ from dateutil.relativedelta import relativedelta
 from .models import Plan, ContactMessage, Configuration, Subscription, Transaction
 from roleplay.models import CreditTransaction
 from .forms import ContactForm
+from .utils import get_user_country, is_indian_user, get_currency_for_user
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +54,29 @@ class PricingPage(View):
             if subscription:
                 current_plan = subscription.plan
 
+        # Get user's country and currency
+        user_country = get_user_country(request)
+        currency_info = get_currency_for_user(request)
+
+        # Build pricing data for each plan based on user's country
+        plans_with_pricing = []
+        for plan in plans:
+            pricing = plan.get_pricing_for_country(user_country)
+            plans_with_pricing.append({
+                'plan': plan,
+                'price_monthly': pricing['monthly'],
+                'price_yearly': pricing['yearly'],
+                'currency': pricing['currency'],
+                'symbol': pricing['symbol'],
+            })
+
         return render(request, self.template_name, {
             'plans': plans,
+            'plans_with_pricing': plans_with_pricing,
             'current_plan': current_plan,
+            'user_country': user_country,
+            'currency': currency_info['currency'],
+            'currency_symbol': currency_info['symbol'],
         })
 
 
@@ -179,12 +201,16 @@ class CheckoutView(LoginRequiredMixin, View):
             messages.info(request, 'Free plan does not require payment.')
             return redirect('pricing')
 
+        # Get user's country and pricing
+        user_country = get_user_country(request)
+        pricing = plan.get_pricing_for_country(user_country)
+
         # Get price based on billing cycle
         is_yearly = billing == 'yearly'
-        original_price = plan.price_yearly if is_yearly else plan.price_monthly
+        original_price = Decimal(str(pricing['yearly'] if is_yearly else pricing['monthly']))
         price = original_price
-        currency = 'INR'
-        currency_symbol = '₹'
+        currency = pricing['currency']
+        currency_symbol = pricing['symbol']
 
         # Apply coupon discount if valid
         applied_coupon = None
@@ -268,8 +294,13 @@ class PaymentSuccessView(LoginRequiredMixin, View):
             messages.error(request, 'Invalid plan.')
             return redirect('pricing')
 
+        # Get user's country and pricing
+        user_country = get_user_country(request)
+        pricing = plan.get_pricing_for_country(user_country)
+        currency = pricing['currency']
+
         is_yearly = billing == 'yearly'
-        original_price = plan.price_yearly if is_yearly else plan.price_monthly
+        original_price = Decimal(str(pricing['yearly'] if is_yearly else pricing['monthly']))
         price = original_price
 
         # Apply coupon discount if provided
@@ -311,7 +342,7 @@ class PaymentSuccessView(LoginRequiredMixin, View):
             transaction = Transaction.objects.create(
                 user=request.user,
                 amount=Decimal(str(price)),
-                currency='INR',
+                currency=currency,
                 status='success',
                 razorpay_order_id=razorpay_order_id,
                 razorpay_payment_id=razorpay_payment_id,
@@ -489,13 +520,16 @@ class PaymentWebhookView(View):
             return JsonResponse({'status': 'error'}, status=500)
 
 
-# Credit package configuration
+# Credit package configuration with country-based pricing
 CREDIT_PACKAGES = [
     {
         'id': 'starter',
         'name': 'Starter Pack',
         'credits': 100,
         'price_inr': 99,
+        'pricing_data': {
+            'default': {'price': 2.99, 'currency': 'USD', 'symbol': '$'},
+        },
         'description': 'Great for trying out AI features',
     },
     {
@@ -503,6 +537,9 @@ CREDIT_PACKAGES = [
         'name': 'Popular Pack',
         'credits': 500,
         'price_inr': 449,
+        'pricing_data': {
+            'default': {'price': 5.99, 'currency': 'USD', 'symbol': '$'},
+        },
         'description': 'Best value for regular users',
     },
     {
@@ -510,9 +547,28 @@ CREDIT_PACKAGES = [
         'name': 'Pro Pack',
         'credits': 1200,
         'price_inr': 999,
+        'pricing_data': {
+            'default': {'price': 10.99, 'currency': 'USD', 'symbol': '$'},
+        },
         'description': 'For power users and creators',
     },
 ]
+
+
+def get_credit_package_price(package, country_code):
+    """Get price for a credit package based on country."""
+    if country_code == 'IN':
+        return {
+            'price': package['price_inr'],
+            'currency': 'INR',
+            'symbol': '₹'
+        }
+    # Check for country-specific pricing
+    pricing_data = package.get('pricing_data', {})
+    if country_code in pricing_data:
+        return pricing_data[country_code]
+    # Fall back to default international pricing
+    return pricing_data.get('default', {'price': package['price_inr'], 'currency': 'INR', 'symbol': '₹'})
 
 
 class PurchaseCreditsView(LoginRequiredMixin, View):
@@ -530,10 +586,30 @@ class PurchaseCreditsView(LoginRequiredMixin, View):
             status='completed'
         )[:5]
 
+        # Get user's country for pricing
+        user_country = get_user_country(request)
+        currency_info = get_currency_for_user(request)
+
+        # Build packages with country-specific pricing
+        packages_with_pricing = []
+        for package in CREDIT_PACKAGES:
+            pricing = get_credit_package_price(package, user_country)
+            packages_with_pricing.append({
+                'id': package['id'],
+                'name': package['name'],
+                'credits': package['credits'],
+                'description': package['description'],
+                'price': pricing['price'],
+                'currency': pricing['currency'],
+                'symbol': pricing['symbol'],
+            })
+
         context = {
-            'packages': CREDIT_PACKAGES,
+            'packages': packages_with_pricing,
             'credits': credits,
             'transactions': transactions,
+            'currency': currency_info['currency'],
+            'currency_symbol': currency_info['symbol'],
         }
         return render(request, self.template_name, context)
 
@@ -565,11 +641,18 @@ class CreditCheckoutView(LoginRequiredMixin, View):
 
             client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
 
-            amount_paise = int(package['price_inr'] * 100)
+            # Get country-based pricing
+            user_country = get_user_country(request)
+            pricing = get_credit_package_price(package, user_country)
+            price = pricing['price']
+            currency = pricing['currency']
+
+            # Amount in smallest unit (paise for INR, cents for USD)
+            amount_smallest_unit = int(price * 100)
 
             razorpay_order = client.order.create({
-                'amount': amount_paise,
-                'currency': 'INR',
+                'amount': amount_smallest_unit,
+                'currency': currency,
                 'notes': {
                     'user_id': str(request.user.id),
                     'package_id': package_id,
@@ -581,19 +664,20 @@ class CreditCheckoutView(LoginRequiredMixin, View):
             transaction = CreditTransaction.objects.create(
                 user=request.user,
                 credits=package['credits'],
-                amount=Decimal(str(package['price_inr'])),
-                currency='INR',
+                amount=Decimal(str(price)),
+                currency=currency,
                 status='pending',
                 razorpay_order_id=razorpay_order['id'],
             )
 
             return JsonResponse({
                 'order_id': razorpay_order['id'],
-                'amount': amount_paise,
-                'currency': 'INR',
+                'amount': amount_smallest_unit,
+                'currency': currency,
                 'key_id': razorpay_key,
                 'package_name': package['name'],
                 'credits': package['credits'],
+                'symbol': pricing['symbol'],
             })
 
         except Exception as e:

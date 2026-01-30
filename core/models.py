@@ -45,6 +45,8 @@ class Plan(models.Model):
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='free')
     price_monthly = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     price_yearly = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Country-based pricing: {"US": {"monthly": 5.99, "yearly": 59.99, "currency": "USD", "symbol": "$"}, ...}
+    pricing_data = models.JSONField(default=dict, blank=True)
     description = models.TextField(blank=True)
     # Features structure: [{"code": "video_gen", "description": "...", "limit": 10}, ...]
     features = models.JSONField(default=list)
@@ -77,6 +79,22 @@ class Plan(models.Model):
         if feature:
             return feature.get('limit', default)
         return default
+
+    def get_pricing_for_country(self, country_code):
+        """
+        Get pricing for a specific country.
+        Returns dict with monthly, yearly, currency, symbol.
+        Falls back to INR pricing if country not found.
+        """
+        if country_code and country_code in self.pricing_data:
+            return self.pricing_data[country_code]
+        # Default to INR pricing
+        return {
+            'monthly': float(self.price_monthly),
+            'yearly': float(self.price_yearly),
+            'currency': 'INR',
+            'symbol': '₹'
+        }
 
     class Meta:
         ordering = ['order', 'price_monthly']

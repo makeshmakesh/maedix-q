@@ -18,8 +18,12 @@ class PlanAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('name', 'slug', 'plan_type', 'description')
         }),
-        ('Pricing', {
+        ('Pricing (INR - Indian Users)', {
             'fields': ('price_monthly', 'price_yearly')
+        }),
+        ('International Pricing', {
+            'fields': ('pricing_data',),
+            'description': 'JSON format for country-based pricing: {"US": {"monthly": 5.99, "yearly": 59.99, "currency": "USD", "symbol": "$"}, "GB": {"monthly": 4.99, "yearly": 49.99, "currency": "GBP", "symbol": "£"}}'
         }),
         ('Features', {
             'fields': ('features',),

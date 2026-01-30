@@ -16,20 +16,20 @@
             <p class="text-muted">Build advanced DM flows with our Visual Flow Builder. No hidden fees.</p>
         </div>
 
-        {% if plans %}
+        {% if plans_with_pricing %}
         <!-- Pricing Cards -->
         <div class="row g-4 justify-content-center">
-            {% for plan in plans %}
+            {% for item in plans_with_pricing %}
             <div class="col-lg-4 col-md-6">
-                <div class="card h-100 {% if plan.is_popular %}border-primary border-2 shadow{% elif current_plan and current_plan.id == plan.id %}border-success border-2{% endif %}">
+                <div class="card h-100 {% if item.plan.is_popular %}border-primary border-2 shadow{% elif current_plan and current_plan.id == item.plan.id %}border-success border-2{% endif %}">
 
-                    {% if plan.is_popular and not current_plan or current_plan and current_plan.id != plan.id and plan.is_popular %}
+                    {% if item.plan.is_popular and not current_plan or current_plan and current_plan.id != item.plan.id and item.plan.is_popular %}
                     <div class="card-header bg-primary text-white text-center py-2 border-0">
                         <small class="fw-semibold">MOST POPULAR</small>
                     </div>
                     {% endif %}
 
-                    {% if current_plan and current_plan.id == plan.id %}
+                    {% if current_plan and current_plan.id == item.plan.id %}
                     <div class="card-header bg-success text-white text-center py-2 border-0">
                         <small class="fw-semibold"><i class="bi bi-check-circle me-1"></i>CURRENT PLAN</small>
                     </div>
@@ -38,16 +38,16 @@
                     <div class="card-body p-4">
                         <!-- Plan Name & Price -->
                         <div class="text-center mb-4">
-                            <h4 class="fw-bold">{{ plan.name }}</h4>
-                            {% if plan.description %}
-                            <p class="text-muted small">{{ plan.description }}</p>
+                            <h4 class="fw-bold">{{ item.plan.name }}</h4>
+                            {% if item.plan.description %}
+                            <p class="text-muted small">{{ item.plan.description }}</p>
                             {% endif %}
 
                             <div class="my-3">
-                                {% if plan.plan_type == 'enterprise' %}
+                                {% if item.plan.plan_type == 'enterprise' %}
                                 <span class="h2 fw-bold">Custom</span>
-                                {% elif plan.price_monthly > 0 %}
-                                <span class="h2 fw-bold">₹{{ plan.price_monthly|floatformat:0 }}</span>
+                                {% elif item.price_monthly > 0 %}
+                                <span class="h2 fw-bold">{{ item.symbol }}{% if item.currency == 'INR' %}{{ item.price_monthly|floatformat:0 }}{% else %}{{ item.price_monthly|floatformat:2 }}{% endif %}</span>
                                 <span class="text-muted">/month</span>
                                 {% else %}
                                 <span class="h2 fw-bold">Free</span>
@@ -57,7 +57,7 @@
 
                         <!-- Features -->
                         <ul class="list-unstyled mb-4">
-                            {% for feature in plan.features %}
+                            {% for feature in item.plan.features %}
                             <li class="py-2 border-bottom">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="small">{{ feature.description }}</span>
@@ -72,20 +72,20 @@
                         </ul>
 
                         <!-- CTA Button -->
-                        {% if current_plan and current_plan.id == plan.id %}
+                        {% if current_plan and current_plan.id == item.plan.id %}
                         <a href="{% url 'subscription' %}" class="btn btn-success w-100">
                             Manage Subscription
                         </a>
-                        {% elif plan.plan_type == 'free' %}
+                        {% elif item.plan.plan_type == 'free' %}
                             {% if user.is_authenticated %}
                             <button class="btn btn-outline-secondary w-100" disabled>Free Plan</button>
                             {% else %}
                             <a href="{% url 'signup' %}" class="btn btn-outline-primary w-100">Get Started Free</a>
                             {% endif %}
-                        {% elif plan.plan_type == 'enterprise' %}
+                        {% elif item.plan.plan_type == 'enterprise' %}
                         <a href="{% url 'contact' %}" class="btn btn-outline-primary w-100">Contact Sales</a>
                         {% else %}
-                        <a href="{% url 'checkout' %}?plan={{ plan.slug }}" class="btn {% if plan.is_popular %}btn-primary{% else %}btn-dark{% endif %} w-100">
+                        <a href="{% url 'checkout' %}?plan={{ item.plan.slug }}" class="btn {% if item.plan.is_popular %}btn-primary{% else %}btn-dark{% endif %} w-100">
                             Upgrade Now
                         </a>
                         {% endif %}
@@ -117,7 +117,7 @@
 </section>
 
 <!-- Feature Comparison -->
-{% if plans and plans|length > 1 %}
+{% if plans_with_pricing and plans_with_pricing|length > 1 %}
 <section class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-4">
@@ -130,15 +130,15 @@
                 <thead>
                     <tr>
                         <th class="py-3 border-0" style="min-width: 220px;">Feature</th>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <th class="py-3 border-0 text-center" style="min-width: 120px;">
-                            <strong>{{ plan.name }}</strong>
-                            {% if plan.price_monthly > 0 %}
-                            <br><small class="text-muted">₹{{ plan.price_monthly|floatformat:0 }}/mo</small>
+                            <strong>{{ item.plan.name }}</strong>
+                            {% if item.price_monthly > 0 %}
+                            <br><small class="text-muted">{{ item.symbol }}{% if item.currency == 'INR' %}{{ item.price_monthly|floatformat:0 }}{% else %}{{ item.price_monthly|floatformat:2 }}{% endif %}/mo</small>
                             {% else %}
                             <br><small class="text-muted">Free</small>
                             {% endif %}
-                            {% if current_plan and current_plan.id == plan.id %}
+                            {% if current_plan and current_plan.id == item.plan.id %}
                             <br><span class="badge bg-success">Current</span>
                             {% endif %}
                         </th>
@@ -153,9 +153,9 @@
                             <strong>Active DM Flows</strong>
                             <br><small class="text-muted">Automated flows running simultaneously</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
-                            {% for f in plan.features %}
+                            {% for f in item.plan.features %}
                                 {% if f.code == 'ig_flow_builder' %}
                                     {% if f.limit %}
                                     <strong class="fs-5">{{ f.limit }}</strong>
@@ -175,7 +175,7 @@
                             Visual Flow Builder
                             <br><small class="text-muted">Drag-and-drop interface</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -189,7 +189,7 @@
                             Mobile-Friendly Editor
                             <br><small class="text-muted">Edit flows on any device</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -203,7 +203,7 @@
                             Quick Reply Buttons
                             <br><small class="text-muted">Interactive button messages</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -217,7 +217,7 @@
                             Button Templates
                             <br><small class="text-muted">Action & URL buttons</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -231,7 +231,7 @@
                             Follower Check
                             <br><small class="text-muted">Branch based on follow status</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -245,7 +245,7 @@
                             Auto Comment Replies
                             <br><small class="text-muted">Reply to comments automatically</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -259,7 +259,7 @@
                             Auto Follow-up DMs
                             <br><small class="text-muted">Send DMs to commenters</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -273,7 +273,7 @@
                             Keyword Triggers
                             <br><small class="text-muted">Trigger on specific words</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -287,7 +287,7 @@
                             Link Messages
                             <br><small class="text-muted">Send clickable links in DMs</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
@@ -301,7 +301,7 @@
                             Replies per Flow
                             <br><small class="text-muted">No limits on responses</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <span class="text-success fw-bold">Unlimited</span>
                         </td>
@@ -315,9 +315,9 @@
                             <strong>AI Social Agents</strong>
                             <br><small class="text-muted">AI-powered conversations & data collection</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
-                            {% if plan|plan_has_feature:'ai_social_agent' %}
+                            {% if item.plan|plan_has_feature:'ai_social_agent' %}
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                             {% else %}
                             <i class="bi bi-dash text-muted"></i>
@@ -333,7 +333,7 @@
                             Lead Collection
                             <br><small class="text-muted">Collect name, email, phone</small>
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
                             <span class="badge bg-secondary">Coming Soon</span>
                         </td>
@@ -346,9 +346,9 @@
                             <i class="bi bi-headset me-2"></i>
                             Priority Support
                         </td>
-                        {% for plan in plans %}
+                        {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
-                            {% if plan.plan_type == 'free' %}
+                            {% if item.plan.plan_type == 'free' %}
                             <i class="bi bi-dash text-muted"></i>
                             {% else %}
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>

@@ -18,6 +18,8 @@ urlpatterns = [
     # DM Flow Builder
     path('flows/', views.FlowListView.as_view(), name='flow_list'),
     path('flows/help/', views.FlowBuilderHelpView.as_view(), name='flow_builder_help'),
+    path('flows/templates/', views.FlowTemplatesView.as_view(), name='flow_templates'),
+    path('flows/templates/<int:template_id>/', views.FlowTemplateDetailView.as_view(), name='flow_template_detail'),
     path('flows/create/', views.FlowCreateView.as_view(), name='flow_create'),
     path('flows/<int:pk>/edit/', views.FlowEditView.as_view(), name='flow_edit'),
     path('flows/<int:pk>/delete/', views.FlowDeleteView.as_view(), name='flow_delete'),

@@ -759,6 +759,45 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+class FlowTemplatesView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Browse flow templates by category"""
+    template_name = 'instagram/flow_templates.html'
+
+    def get(self, request):
+        # Get all active templates
+        templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
+
+        # Group templates by category
+        categories = {}
+        for choice_value, choice_label in FlowTemplate.CATEGORY_CHOICES:
+            category_templates = [t for t in templates if t.category == choice_value]
+            if category_templates:
+                categories[choice_value] = {
+                    'label': choice_label,
+                    'templates': category_templates
+                }
+
+        context = {
+            'categories': categories,
+            'templates': templates,
+            'selected_category': request.GET.get('category', ''),
+        }
+        return render(request, self.template_name, context)
+
+
+class FlowTemplateDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """View template details with live preview"""
+    template_name = 'instagram/flow_template_detail.html'
+
+    def get(self, request, template_id):
+        template = get_object_or_404(FlowTemplate, id=template_id, is_active=True)
+
+        context = {
+            'template': template,
+        }
+        return render(request, self.template_name, context)
+
+
 class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """Create a new DM flow"""
     template_name = 'instagram/flow_form.html'

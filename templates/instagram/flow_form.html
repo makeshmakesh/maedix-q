@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Flow{% endblock %}
+{% block title %}Create Automation{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -490,16 +490,23 @@
             <!-- Header -->
             <div class="flow-header">
                 <a href="{% url 'flow_list' %}" class="back-link">
-                    <i class="bi bi-arrow-left"></i> Back to Flows
+                    <i class="bi bi-arrow-left"></i> Back to Automations
                 </a>
-                <h1><i class="bi bi-magic me-2"></i>Create New Flow</h1>
+                <h1><i class="bi bi-magic me-2"></i>Create New Automation</h1>
                 <p>Set up automated DM responses for your Instagram posts</p>
             </div>
 
             <form method="post" id="flowForm">
                 {% csrf_token %}
 
-                {% if not selected_template and templates %}
+                {% if selected_template %}
+                <!-- Selected Template Info -->
+                <div class="d-flex align-items-center gap-2 mb-3 px-1">
+                    <span class="badge" style="background: var(--gradient); font-size: 0.65rem; padding: 0.25rem 0.5rem;">TEMPLATE</span>
+                    <span class="text-muted" style="font-size: 0.8rem;">{{ selected_template.title }}</span>
+                    <input type="hidden" name="template_id" value="{{ selected_template.id }}">
+                </div>
+                {% elif templates %}
                 <!-- Template Selection Prompt -->
                 <div class="section-card" style="background: #f8f9fa; border: 2px dashed #dee2e6;">
                     <div class="text-center py-2">
@@ -520,11 +527,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="title" class="form-label">Flow Name <span class="text-danger">*</span></label>
+                        <label for="title" class="form-label">Automation Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title"
                                value="{{ flow.title|default:'' }}" maxlength="100" required
                                placeholder="e.g., Free Guide Giveaway">
-                        <div class="form-text">Give your flow a name you'll remember</div>
+                        <div class="form-text">Give your automation a name you'll remember</div>
                     </div>
 
                     <div class="mb-0">
@@ -541,7 +548,7 @@
                         Trigger Settings
                     </div>
 
-                    <label class="form-label">When should this flow start?</label>
+                    <label class="form-label">When should this automation start?</label>
 
                     <div class="trigger-options">
                         <label class="trigger-option">
@@ -631,7 +638,7 @@
                         Post Selection
                     </div>
 
-                    <label class="form-label">Which post should trigger this flow?</label>
+                    <label class="form-label">Which post should trigger this automation?</label>
 
                     <input type="hidden" id="instagram_post_id" name="instagram_post_id"
                            value="{{ flow.instagram_post_id|default:'' }}">
@@ -662,25 +669,11 @@
                     </div>
                 </div>
 
-                {% if selected_template %}
-                <!-- Selected Template Info -->
-                <div class="section-card" style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0.04) 100%); border-color: var(--primary);">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge" style="background: var(--gradient); font-size: 0.7rem;">TEMPLATE</span>
-                        <h6 class="mb-0 fw-bold flex-grow-1">{{ selected_template.title }}</h6>
-                        <a href="{% url 'flow_create' %}" class="btn btn-sm btn-outline-secondary" title="Remove template">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                    </div>
-                    <input type="hidden" name="template_id" value="{{ selected_template.id }}">
-                </div>
-                {% endif %}
-
                 <!-- Submit Actions -->
                 <div class="form-actions">
                     <button type="submit" class="btn btn-create">
                         <i class="bi bi-check-lg"></i>
-                        Create Flow
+                        Create Automation
                     </button>
                     <a href="{% url 'flow_list' %}" class="btn btn-cancel text-center">Cancel</a>
                 </div>

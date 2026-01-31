@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}My Flows{% endblock %}
+{% block title %}My Automations{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -707,14 +707,14 @@
                 <div class="page-header">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                         <div>
-                            <h1><i class="bi bi-robot me-2"></i>My Flows</h1>
+                            <h1><i class="bi bi-robot me-2"></i>My Automations</h1>
                             <p class="mb-0">Automate your Instagram DM conversations</p>
 
                             <!-- Stats -->
                             <div class="header-stats">
                                 <div class="header-stat">
                                     <div class="header-stat-value">{{ flow_count }}</div>
-                                    <div class="header-stat-label">Flows</div>
+                                    <div class="header-stat-label">Automations</div>
                                 </div>
                                 <div class="header-stat">
                                     <div class="header-stat-value">{{ total_triggered|default:0 }}</div>
@@ -730,7 +730,7 @@
                             <div class="flow-limit-bar">
                                 <div class="flow-limit-fill" style="width: {% widthratio flow_count flow_limit 100 %}%"></div>
                             </div>
-                            <div class="flow-limit-text">{{ flow_count }} of {{ flow_limit }} flows used</div>
+                            <div class="flow-limit-text">{{ flow_count }} of {{ flow_limit }} automations used</div>
                             {% endif %}
                         </div>
 
@@ -746,7 +746,7 @@
                             {% if can_create_more %}
                             <a href="{% url 'flow_templates' %}" class="btn-create-flow">
                                 <i class="bi bi-plus-lg"></i>
-                                Create Flow
+                                Create
                             </a>
                             {% else %}
                             <a href="{% url 'pricing' %}" class="btn-upgrade">
@@ -765,7 +765,7 @@
                             <div class="section-header">
                                 <h2 class="section-title">
                                     <i class="bi bi-collection text-primary"></i>
-                                    Your Flows
+                                    Your Automations
                                 </h2>
                             </div>
 
@@ -855,7 +855,7 @@
                                 <div class="empty-state-icon">
                                     <i class="bi bi-diagram-3"></i>
                                 </div>
-                                <h3>Create Your First Flow</h3>
+                                <h3>Create Your First Automation</h3>
                                 <p>Set up automated DM responses when people comment on your posts.</p>
                                 {% if can_create_more %}
                                 <div class="d-flex gap-2 justify-content-center flex-wrap">
@@ -873,7 +873,7 @@
                                 {% else %}
                                 <a href="{% url 'pricing' %}" class="btn-upgrade">
                                     <i class="bi bi-arrow-up-circle"></i>
-                                    Upgrade to Create Flows
+                                    Upgrade to Create Automations
                                 </a>
                                 {% endif %}
                             </div>
@@ -921,7 +921,7 @@
                             <div class="text-center py-4">
                                 <i class="bi bi-chat-dots text-muted" style="font-size: 2rem;"></i>
                                 <p class="text-muted small mt-2 mb-0">No activity yet</p>
-                                <p class="text-muted small">Activity will appear here when your flows run</p>
+                                <p class="text-muted small">Activity will appear here when your automations run</p>
                             </div>
                             {% endif %}
                         </div>
@@ -941,7 +941,7 @@
                                 </div>
                                 <div class="how-step">
                                     <div class="how-step-num">2</div>
-                                    <div class="how-step-text">Your flow automatically replies and sends a DM</div>
+                                    <div class="how-step-text">Your automation automatically replies and sends a DM</div>
                                 </div>
                                 <div class="how-step">
                                     <div class="how-step-num">3</div>

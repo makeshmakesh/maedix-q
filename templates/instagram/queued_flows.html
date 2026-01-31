@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Queued Flows{% endblock %}
+{% block title %}Queue{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -309,8 +309,8 @@
                 <div class="page-header">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                         <div class="flex-grow-1">
-                            <h1><i class="bi bi-hourglass-split me-2"></i>Queued Flows</h1>
-                            <p class="mb-0">Manage flow triggers that were delayed due to rate limiting</p>
+                            <h1><i class="bi bi-hourglass-split me-2"></i>Queue</h1>
+                            <p class="mb-0">Manage automation triggers that were delayed due to rate limiting</p>
 
                             <!-- Rate Limit Info -->
                             <div class="rate-limit-info">
@@ -325,7 +325,7 @@
                                 </div>
                                 <div class="rate-limit-text">
                                     <span>{{ available_slots }} slots available</span>
-                                    <span>Can trigger {{ max_triggerable }} flow{% if max_triggerable != 1 %}s{% endif %}</span>
+                                    <span>Can trigger {{ max_triggerable }}</span>
                                 </div>
                             </div>
                         </div>
@@ -333,7 +333,7 @@
                         <div class="flex-shrink-0">
                             <a href="{% url 'flow_list' %}" class="btn btn-outline-light">
                                 <i class="bi bi-arrow-left me-1"></i>
-                                Back to Flows
+                                Back to Automations
                             </a>
                         </div>
                     </div>
@@ -344,8 +344,8 @@
                 <div class="info-card">
                     <p>
                         <i class="bi bi-info-circle me-2"></i>
-                        <strong>{{ max_triggerable }}</strong> flow{% if max_triggerable != 1 %}s{% endif %} can be triggered now.
-                        Flows are processed in order (oldest first).
+                        <strong>{{ max_triggerable }}</strong> automation{% if max_triggerable != 1 %}s{% endif %} can be triggered now.
+                        Processed in order (oldest first).
                     </p>
                 </div>
                 {% elif pending_count > 0 and max_triggerable == 0 %}
@@ -432,7 +432,7 @@
                                     <i class="bi bi-check-circle"></i>
                                 </div>
                                 <h3>Queue is Empty</h3>
-                                <p>No flow triggers are waiting to be processed.</p>
+                                <p>No automation triggers are waiting to be processed.</p>
                             </div>
                             {% endif %}
                         </div>

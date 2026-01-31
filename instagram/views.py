@@ -1538,8 +1538,10 @@ class FlowSessionDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View)
             flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
         session = get_object_or_404(FlowSession, pk=session_id, flow=flow)
 
-        # Get all execution logs for this session
-        logs = session.execution_logs.all().order_by('created_at').select_related('node')
+        # Get execution logs for this session (exclude generic node_executed logs)
+        logs = session.execution_logs.exclude(
+            action='node_executed'
+        ).order_by('created_at').select_related('node')
 
         context = {
             'flow': flow,

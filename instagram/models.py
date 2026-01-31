@@ -516,12 +516,12 @@ class CollectedLead(models.Model):
 class FlowTemplate(models.Model):
     """Pre-built flow templates that users can use to create flows quickly"""
     CATEGORY_CHOICES = [
-        ('lead_gen', 'Lead Generation'),
         ('follow_gate', 'Follow Gate'),
         ('quiz', 'Quiz / Survey'),
         ('giveaway', 'Giveaway'),
         ('link_delivery', 'Link Delivery'),
         ('other', 'Other'),
+        ('lead_gen', 'Lead Generation'),
     ]
 
     title = models.CharField(max_length=100)

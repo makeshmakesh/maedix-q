@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit Flow: {{ flow.title }}{% endblock %}
+{% block title %}Edit Automation: {{ flow.title }}{% endblock %}
 
 {% block content %}
 <style>
@@ -1359,7 +1359,7 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                 <div class="flex-grow-1 min-width-0">
                     <a href="{% url 'flow_list' %}" class="back-link">
-                        <i class="bi bi-arrow-left"></i> Back to Flows
+                        <i class="bi bi-arrow-left"></i> Back to Automations
                     </a>
                     <h1 class="text-truncate">
                         <i class="bi bi-diagram-3 me-2"></i>{{ flow.title }}
@@ -2669,7 +2669,7 @@ function renderConfigFields(nodeType, data, dbId = null) {
                         This AI node needs to be saved before you can configure it.
                     </p>
                     <ol class="text-muted small">
-                        <li>Click <strong>Save Flow</strong> button above</li>
+                        <li>Click <strong>Save</strong> button above</li>
                         <li>Then click on this node again to configure</li>
                     </ol>
                     <div class="d-grid">
@@ -3597,7 +3597,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================================================
-// Save Flow
+// Save
 // ============================================================================
 
 // Save button handler - will be wrapped by form editor code
@@ -3759,14 +3759,14 @@ function saveFlow() {
         } else {
             showToast(data.error || 'Failed to save flow', 'error');
             saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Flow';
+            saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save';
         }
     })
     .catch(error => {
         console.error('Save error:', error);
         showToast('Failed to save: ' + error.message, 'error');
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Flow';
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save';
     });
 }
 
@@ -4419,7 +4419,7 @@ function buildNodeFields(node, index) {
                         <strong>Save flow first</strong>
                     </div>
                     <p class="small text-muted mb-2">
-                        Click "Save Flow" below, then you can set up the AI agent.
+                        Click "Save" below, then you can set up the AI agent.
                     </p>
                     <button type="button" class="btn btn-secondary btn-sm w-100 mb-3" disabled>
                         <i class="bi bi-gear me-1"></i>Set Up AI Agent

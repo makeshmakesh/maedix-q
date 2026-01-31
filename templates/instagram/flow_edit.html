@@ -1073,6 +1073,49 @@
         font-size: 0.8rem;
     }
 
+    /* Mobile: Smaller variations button and section */
+    @media (max-width: 767px) {
+        .variations-section {
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .variations-section .d-flex.align-items-center {
+            flex-wrap: wrap;
+        }
+
+        .toggle-variations {
+            font-size: 0.7rem;
+            padding: 4px 10px !important;
+        }
+
+        .variations-section .text-muted {
+            font-size: 0.7rem;
+            display: none;
+        }
+
+        .variations-container {
+            padding: 0.5rem;
+        }
+
+        .variation-item {
+            padding: 0.375rem;
+        }
+
+        .variation-item .variation-text {
+            font-size: 0.8rem;
+        }
+
+        .variations-container .add-variation {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+        }
+
+        .variations-container .small.text-muted {
+            font-size: 0.7rem;
+        }
+    }
+
     /* Quick reply and button template options */
     .form-node-body .quick-reply-option,
     .form-node-body .button-option {
@@ -1306,48 +1349,154 @@
     }
 }
 
-/* Sticky Save Button for Form Editor on Mobile */
+/* Mobile Bottom Action Bar for Form Editor */
 @media (max-width: 768px) {
-    .form-editor-active #saveFlowBtn {
-        position: fixed !important;
-        bottom: 20px;
-        right: 20px;
-        left: 20px;
+    /* Bottom action bar container */
+    .form-editor-active .add-node-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
         z-index: 1050;
-        padding: 14px 20px !important;
-        font-size: 16px !important;
+        margin: 0;
+        padding: 14px 16px;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+        background: white;
+        border-top: 1px solid #e5e5e5;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 0;
+    }
+
+    .form-editor-active .add-node-section p {
+        display: none;
+    }
+
+    /* Add Step dropdown */
+    .form-editor-active .add-node-dropdown {
+        width: 100%;
+    }
+
+    .form-editor-active .add-node-dropdown .btn {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 15px;
+        font-weight: 600;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        background: var(--primary);
+        color: white;
+        border: none;
+        box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        /* Theme colors */
-        background: var(--primary) !important;
-        color: white !important;
     }
 
-    .form-editor-active #saveFlowBtn:hover,
-    .form-editor-active #saveFlowBtn:active {
-        background: var(--primary-dark) !important;
-        color: white !important;
+    .form-editor-active .add-node-dropdown .btn:hover,
+    .form-editor-active .add-node-dropdown .btn:focus,
+    .form-editor-active .add-node-dropdown .btn:active {
+        background: var(--primary-dark);
+        color: white;
     }
 
-    .form-editor-active #saveFlowBtn span {
-        display: inline !important;
+    .form-editor-active .add-node-dropdown .dropdown-menu {
+        bottom: 100%;
+        top: auto !important;
+        transform: none !important;
+        margin-bottom: 10px;
+        max-height: 60vh;
+        overflow-y: auto;
+        width: calc(100vw - 32px);
+        left: 16px !important;
+        right: 16px !important;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+        padding: 8px 0;
     }
 
-    .form-editor-active #saveFlowBtn i {
+    .form-editor-active .add-node-dropdown .dropdown-header {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        padding: 12px 16px 6px;
+    }
+
+    .form-editor-active .add-node-dropdown .dropdown-item {
+        padding: 14px 16px;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-editor-active .add-node-dropdown .dropdown-item:active {
+        background: var(--primary);
+        color: white;
+    }
+
+    .form-editor-active .add-node-dropdown .dropdown-item i {
+        width: 24px;
         font-size: 18px;
+        text-align: center;
     }
 
-    /* Add padding to bottom of form container so content isn't hidden behind sticky button */
+    /* Hide original save button from header - we'll add it to bottom bar */
+    .form-editor-active .header-actions #saveFlowBtn {
+        display: none !important;
+    }
+
+    /* Add padding to bottom of form container */
     .form-editor-active #formNodesContainer {
-        padding-bottom: 80px;
+        padding-bottom: 120px;
+    }
+}
+
+/* Mobile save button class - will be added via JS */
+.mobile-bottom-save {
+    width: 100%;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    background: var(--primary) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mobile-save-btn:hover,
+.mobile-save-btn:active {
+    background: var(--primary-dark) !important;
+    color: white !important;
+}
+
+/* Mobile empty state - more compact and centered */
+@media (max-width: 768px) {
+    #formNodesContainer .text-center.text-muted.py-4 {
+        padding: 2rem 1.5rem !important;
+        margin-bottom: 0;
     }
 
-    .form-editor-active .add-node-section {
-        margin-bottom: 70px;
+    #formNodesContainer .text-center.text-muted.py-4 i.fs-1 {
+        font-size: 2.5rem !important;
+        margin-bottom: 0.75rem !important;
+        color: var(--primary);
+        opacity: 0.6;
+    }
+
+    #formNodesContainer .text-center.text-muted.py-4 p {
+        margin-bottom: 0.25rem !important;
+        font-size: 0.9rem;
+    }
+
+    #formNodesContainer .text-center.text-muted.py-4 p.small {
+        font-size: 0.8rem;
     }
 }
 </style>
@@ -4168,7 +4317,7 @@ function buildNodeFields(node, index) {
                 <div class="mb-3">
                     <label class="form-label">What to reply</label>
                     <textarea class="form-control node-field" data-field="text" rows="2" placeholder="e.g., Thanks for commenting! Check your DMs 📩">${escapeHtml(node.config.text || '')}</textarea>
-                    <small class="text-muted">This message is sent privately to the user's DM</small>
+                    <small class="text-muted">This reply will be posted publicly under the user's comment</small>
                 </div>
                 ${buildVariationsSection(node, index)}
                 <div class="form-node-connection next-node">
@@ -5100,6 +5249,55 @@ if (leftPanelCollapsed) {
 // Event listeners
 toggleLeftPanel?.addEventListener('click', toggleLeftPanelFn);
 floatingToggleLeft?.addEventListener('click', toggleLeftPanelFn);
+
+// ============================================================================
+// Mobile: Setup bottom action bar
+// ============================================================================
+
+function setupMobileBottomBar() {
+    const isMobile = window.innerWidth <= 768;
+    const addNodeSection = document.querySelector('.add-node-section');
+    const addNodeDropdown = document.querySelector('.add-node-dropdown');
+    const originalSaveBtn = document.getElementById('saveFlowBtn');
+
+    if (!addNodeDropdown) return;
+
+    // Add dropup class on mobile
+    if (isMobile) {
+        addNodeDropdown.classList.add('dropup');
+    } else {
+        addNodeDropdown.classList.remove('dropup');
+    }
+
+    // Add save button to bottom bar on mobile
+    let mobileSaveBtn = document.getElementById('mobileSaveBtn');
+
+    if (isMobile && addNodeSection) {
+        if (!mobileSaveBtn) {
+            mobileSaveBtn = document.createElement('button');
+            mobileSaveBtn.id = 'mobileSaveBtn';
+            mobileSaveBtn.className = 'btn btn-success mobile-bottom-save mt-2';
+            mobileSaveBtn.style.cssText = 'width: 100%; padding: 14px 20px; font-size: 15px; font-weight: 600; border-radius: 12px; background: #198754; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 8px;';
+            mobileSaveBtn.innerHTML = '<i class="bi bi-check-lg"></i> Save Changes';
+            mobileSaveBtn.onclick = function(e) {
+                e.preventDefault();
+                if (originalSaveBtn) originalSaveBtn.click();
+            };
+            addNodeSection.appendChild(mobileSaveBtn);
+        }
+    } else if (mobileSaveBtn) {
+        mobileSaveBtn.remove();
+    }
+}
+
+// Run on load and resize
+setupMobileBottomBar();
+window.addEventListener('resize', setupMobileBottomBar);
+
+// Run when switching to form mode
+document.querySelectorAll('#editorModeToggle button').forEach(btn => {
+    btn.addEventListener('click', () => setTimeout(setupMobileBottomBar, 150));
+});
 </script>
 
 <!-- Post Selection Modal -->

@@ -1,0 +1,373 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Admin Dashboard</h4>
+    <div class="btn-group" role="group">
+        {% for p in periods %}
+        <a href="?period={{ p.value }}" class="btn btn-sm {% if period == p.value %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            {{ p.label }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-people text-primary fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ overview.total_users }}</h3>
+            <small class="text-muted">Total Users</small>
+            <small class="text-success d-block">+{{ overview.new_users }} new</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-lightning text-warning fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ overview.active_automations }}</h3>
+            <small class="text-muted">Active Automations</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-play-circle text-info fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ overview.sessions_today }}</h3>
+            <small class="text-muted">Sessions Today</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-person-check text-success fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ overview.leads_collected }}</h3>
+            <small class="text-muted">Leads Collected</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-currency-rupee text-danger fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ overview.total_revenue }}</h3>
+            <small class="text-muted">Total Revenue</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-instagram text-danger fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ user_analytics.connected_ig_accounts }}</h3>
+            <small class="text-muted">IG Connected</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- User Analytics -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-people me-2"></i>User Analytics</h5>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Free Users</span>
+                    <strong>{{ user_analytics.free_users }}</strong>
+                </div>
+                {% for item in user_analytics.plan_distribution %}
+                <div class="d-flex justify-content-between mb-1">
+                    <span>{{ item.plan.name }}</span>
+                    <strong>{{ item.count }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <span>Active IG Accounts</span>
+                <strong>{{ user_analytics.active_ig_accounts }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Connected IG Accounts</span>
+                <strong>{{ user_analytics.connected_ig_accounts }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Automation Metrics -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>Automation Metrics</h5>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div class="bg-light p-2 rounded text-center">
+                        <small class="text-muted d-block">Active</small>
+                        <strong class="text-success">{{ automation.status_breakdown.active|default:0 }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-2 rounded text-center">
+                        <small class="text-muted d-block">Waiting</small>
+                        <strong class="text-warning">{{ automation.status_breakdown.waiting_reply|default:0 }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-2 rounded text-center">
+                        <small class="text-muted d-block">Completed</small>
+                        <strong class="text-primary">{{ automation.status_breakdown.completed|default:0 }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-2 rounded text-center">
+                        <small class="text-muted d-block">Error</small>
+                        <strong class="text-danger">{{ automation.status_breakdown.error|default:0 }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Completion Rate</span>
+                <strong>{{ automation.completion_rate }}%</strong>
+            </div>
+            <div class="progress mb-3" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: {{ automation.completion_rate }}%"></div>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Total Flows</span>
+                <strong>{{ automation.total_flows }} ({{ automation.active_flows }} active)</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Total Triggered</span>
+                <strong>{{ automation.total_triggered }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Total Completed</span>
+                <strong>{{ automation.total_completed }}</strong>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Queued Pending</span>
+                <strong class="text-warning">{{ automation.queued_pending }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Queued Failed</span>
+                <strong class="text-danger">{{ automation.queued_failed }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Performance -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>API Performance</h5>
+            {% for api in api_performance.api_stats %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>{{ api.call_type_display }}</span>
+                    <span>{{ api.success }}/{{ api.total }}</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: {{ api.success_rate }}%"></div>
+                    <div class="progress-bar bg-danger" style="width: {% widthratio api.failed api.total 100 %}%"></div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No API calls recorded.</p>
+            {% endfor %}
+            <hr>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Total Calls</span>
+                <strong>{{ api_performance.total_calls }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Failed Calls</span>
+                <strong class="text-danger">{{ api_performance.total_failed }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Error Rate</span>
+                <strong class="{% if api_performance.error_rate > 5 %}text-danger{% else %}text-success{% endif %}">{{ api_performance.error_rate }}%</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Rate Limit</span>
+                <strong>{{ api_performance.rate_limit }}/hr</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- AI Usage -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-robot me-2"></i>AI Usage</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded">
+                        <small class="text-muted d-block">Input Tokens</small>
+                        <strong class="fs-5">{{ ai_usage.total_input_tokens|floatformat:0 }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded">
+                        <small class="text-muted d-block">Output Tokens</small>
+                        <strong class="fs-5">{{ ai_usage.total_output_tokens|floatformat:0 }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded">
+                        <small class="text-muted d-block">API Cost (USD)</small>
+                        <strong class="fs-5">${{ ai_usage.total_cost_usd }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded">
+                        <small class="text-muted d-block">Credits Charged</small>
+                        <strong class="fs-5">{{ ai_usage.total_credits }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Active Agents</span>
+                <strong>{{ ai_usage.active_agents }}</strong>
+            </div>
+            {% if ai_usage.top_agents %}
+            <h6 class="fw-bold mt-3 mb-2">Top Agents by Usage</h6>
+            {% for agent in ai_usage.top_agents %}
+            <div class="d-flex justify-content-between mb-1">
+                <span>{{ agent.agent__name }}</span>
+                <span>{{ agent.total_credits }} credits ({{ agent.total_calls }} calls)</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-currency-rupee me-2"></i>Revenue</h5>
+            <div class="bg-success bg-opacity-10 p-3 rounded mb-3 text-center">
+                <small class="text-muted d-block">Monthly Recurring Revenue (MRR)</small>
+                <strong class="fs-3 text-success">₹{{ revenue.mrr|floatformat:2 }}</strong>
+            </div>
+            <h6 class="fw-bold mb-2">Subscriptions by Plan</h6>
+            {% for plan_name, data in revenue.subs_by_plan.items %}
+            <div class="d-flex justify-content-between mb-1">
+                <span>{{ plan_name }}</span>
+                <span>{{ data.count }} subs - ₹{{ data.revenue|floatformat:2 }}/mo</span>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No active subscriptions.</p>
+            {% endfor %}
+            <hr>
+            <div class="d-flex justify-content-between">
+                <span>Pending Transactions</span>
+                <strong class="text-warning">{{ revenue.pending_transactions }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+{% if revenue.recent_transactions %}
+<div class="card p-4 mb-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-receipt me-2"></i>Recent Transactions</h5>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in revenue.recent_transactions %}
+                <tr>
+                    <td>{{ txn.user.email }}</td>
+                    <td>{{ txn.subscription.plan.name|default:"-" }}</td>
+                    <td>{{ txn.currency }} {{ txn.amount }}</td>
+                    <td>
+                        {% if txn.status == 'success' %}
+                        <span class="badge bg-success">Success</span>
+                        {% elif txn.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif txn.status == 'failed' %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ txn.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ txn.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div class="row g-4">
+    <!-- Recent Sessions -->
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Recent Sessions</h5>
+            {% for session in recent_sessions %}
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <span class="fw-bold">@{{ session.instagram_username|default:session.instagram_scoped_id|truncatechars:15 }}</span>
+                    <br><small class="text-muted">{{ session.flow.title|truncatechars:20 }}</small>
+                </div>
+                {% if session.status == 'completed' %}
+                <span class="badge bg-success">{{ session.status }}</span>
+                {% elif session.status == 'active' %}
+                <span class="badge bg-primary">{{ session.status }}</span>
+                {% elif session.status == 'waiting_reply' %}
+                <span class="badge bg-warning">waiting</span>
+                {% elif session.status == 'error' %}
+                <span class="badge bg-danger">{{ session.status }}</span>
+                {% else %}
+                <span class="badge bg-secondary">{{ session.status }}</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No sessions yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Leads -->
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-plus me-2"></i>Recent Leads</h5>
+            {% for lead in recent_leads %}
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <span class="fw-bold">@{{ lead.instagram_username|default:lead.instagram_scoped_id|truncatechars:15 }}</span>
+                    <br><small class="text-muted">{{ lead.email|default:lead.name|default:"No contact" }}</small>
+                </div>
+                <small class="text-muted">{{ lead.created_at|date:"M d" }}</small>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No leads yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Signups -->
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-add me-2"></i>Recent Signups</h5>
+            {% for user in recent_signups %}
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <span class="fw-bold">{{ user.get_short_name }}</span>
+                    <br><small class="text-muted">{{ user.email|truncatechars:25 }}</small>
+                </div>
+                <small class="text-muted">{{ user.date_joined|date:"M d" }}</small>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No signups yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

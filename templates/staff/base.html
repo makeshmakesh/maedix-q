@@ -41,6 +41,13 @@
                         </a>
                     </nav>
                     <hr>
+                    <h6 class="fw-bold text-muted mb-3">Instagram</h6>
+                    <nav class="nav flex-column">
+                        <a href="{% url 'instagram_admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'instagram_admin_dashboard' %}text-primary fw-bold{% else %}text-dark{% endif %}">
+                            <i class="bi bi-bar-chart me-2"></i> Admin Dashboard
+                        </a>
+                    </nav>
+                    <hr>
                     <a href="{% url 'quiz_home' %}" class="nav-link text-muted small">
                         <i class="bi bi-arrow-left me-2"></i> Back to Site
                     </a>

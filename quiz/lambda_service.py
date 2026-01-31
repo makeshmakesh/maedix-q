@@ -172,7 +172,7 @@ def invoke_video_generation(user, quiz, questions, config, social_posting=None):
         'questions': serialize_questions(questions),
         'config': {
             'show_answer': config.get('show_answer', True),
-            'handle_name': config.get('handle_name', '@maedix-q'),
+            'handle_name': config.get('handle_name', '@quiz'),
             'audio_url': config.get('audio_url'),
             'audio_volume': config.get('audio_volume', 0.3),
             'intro_text': config.get('intro_text'),

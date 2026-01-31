@@ -1,8 +1,12 @@
 from django.urls import path
 from . import views
 from . import ai_views
+from . import admin_views
 
 urlpatterns = [
+    # Admin Dashboard
+    path('admin/dashboard/', admin_views.AdminDashboardView.as_view(), name='instagram_admin_dashboard'),
+
     # Connection management
     path('connect/', views.InstagramConnectView.as_view(), name='instagram_connect'),
     path('oauth/', views.InstagramOAuthRedirectView.as_view(), name='instagram_oauth'),

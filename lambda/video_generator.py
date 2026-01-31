@@ -42,7 +42,7 @@ class QuizVideoGenerator:
         'card_bg': (28, 28, 30),  # Slightly lighter than bg for cards
     }
 
-    def __init__(self, handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
+    def __init__(self, handle_name="@quiz", audio_url=None, audio_volume=0.3,
                  intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
                  pre_outro_text=None, template_config=None, quiz_heading=None,
                  answer_reveal_audio_url=None, answer_reveal_audio_volume=0.5):
@@ -1038,7 +1038,7 @@ class QuizVideoGenerator:
 
 
 def generate_quiz_video(questions, output_path, progress_callback=None, show_answer=True,
-                        handle_name="@maedix-q", audio_url=None, audio_volume=0.3,
+                        handle_name="@quiz", audio_url=None, audio_volume=0.3,
                         intro_text=None, intro_audio_url=None, intro_audio_volume=0.5,
                         pre_outro_text=None, template_config=None, quiz_heading=None,
                         answer_reveal_audio_url=None, answer_reveal_audio_volume=0.5):

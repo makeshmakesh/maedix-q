@@ -942,7 +942,7 @@ class SingleVideoCreateView(LoginRequiredMixin, View):
         show_answer = request.POST.get('show_answer') == 'on'
 
         # Handle name
-        handle_name = "@maedix-q"
+        handle_name = "@quiz"
         can_custom_handle = (
             (subscription and subscription.plan.has_feature('custom_handle_name_in_video_export'))
             or request.user.is_staff
@@ -1310,7 +1310,7 @@ class BulkVideoCreateView(LoginRequiredMixin, View):
                 # Build Lambda config
                 lambda_config = {
                     'show_answer': show_answer,
-                    'handle_name': '@maedix-q',
+                    'handle_name': '@quiz',
                     'audio_url': audio_url,
                     'audio_volume': audio_volume,
                     'intro_text': intro_text,
@@ -3051,12 +3051,12 @@ class TopicExportView(LoginRequiredMixin, View):
                 }, status=403)
 
         # Get handle name (only if user has the feature)
-        handle_name = request.POST.get('handle_name', '@maedix-q').strip()
+        handle_name = request.POST.get('handle_name', '@quiz').strip()
         if not handle_name.startswith('@'):
             handle_name = '@' + handle_name
         # Reset to default if user doesn't have custom handle feature
-        if not can_custom_handle and handle_name != '@maedix-q':
-            handle_name = '@maedix-q'
+        if not can_custom_handle and handle_name != '@quiz':
+            handle_name = '@quiz'
 
         # Generate unique task ID
         task_id = str(uuid.uuid4())

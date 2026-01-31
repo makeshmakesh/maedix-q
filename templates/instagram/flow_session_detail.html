@@ -336,9 +336,18 @@
                                     {% endif %}
                                     {% if log.details.condition %}
                                     <div class="mt-1">
-                                        <span class="badge {% if log.details.result %}bg-success{% else %}bg-secondary{% endif %}">
-                                            {{ log.details.condition }}: {% if log.details.result %}Yes{% else %}No{% endif %}
+                                        {% if log.details.condition == 'follower_check' %}
+                                        <span class="badge {% if log.details.result == 'is_follower' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if log.details.result == 'is_follower' %}Is Follower{% else %}Not Follower{% endif %}
                                         </span>
+                                        {% if log.details.username %}
+                                        <small class="text-muted ms-2">@{{ log.details.username }}</small>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="badge {% if log.details.result == True or log.details.result == 'true' or log.details.result == 'yes' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ log.details.condition }}: {{ log.details.result }}
+                                        </span>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
                                 </div>

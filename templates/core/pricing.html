@@ -2,8 +2,8 @@
 {% load subscription_tags %}
 
 {% block title %}Pricing Plans{% endblock %}
-{% block meta_description %}Choose the perfect Maedix plan for Instagram DM automation. Visual Flow Builder, Quick Replies, Follower Check. Free, Pro, and Creator plans available.{% endblock %}
-{% block og_description %}Choose the perfect Maedix plan for Instagram DM automation. Visual Flow Builder with Quick Replies and Follower Check.{% endblock %}
+{% block meta_description %}Choose the perfect Maedix plan for Instagram DM automation. Visual Automation Builder, Quick Replies, Follower Check. Free, Pro, and Creator plans available.{% endblock %}
+{% block og_description %}Choose the perfect Maedix plan for Instagram DM automation. Visual Automation Builder with Quick Replies and Follower Check.{% endblock %}
 {% block twitter_title %}Pricing Plans | Maedix{% endblock %}
 {% block twitter_description %}Choose the perfect Maedix plan for Instagram DM automation. Free, Pro, and Creator plans available.{% endblock %}
 
@@ -13,7 +13,7 @@
         <!-- Header -->
         <div class="text-center mb-5">
             <h1 class="fw-bold mb-2">Simple Pricing for Powerful Automation</h1>
-            <p class="text-muted">Build advanced DM flows with our Visual Flow Builder. No hidden fees.</p>
+            <p class="text-muted">Build advanced DM automations with our Visual Automation Builder. No hidden fees.</p>
         </div>
 
         {% if plans_with_pricing %}
@@ -122,7 +122,7 @@
     <div class="container">
         <div class="text-center mb-4">
             <h3 class="fw-bold">Compare Plans</h3>
-            <p class="text-muted">All plans include our powerful Visual Flow Builder</p>
+            <p class="text-muted">All plans include our powerful Visual Automation Builder</p>
         </div>
 
         <div class="table-responsive">
@@ -146,12 +146,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Active Flows -->
+                    <!-- Active Automations -->
                     <tr class="table-light">
                         <td class="py-3">
                             <i class="bi bi-diagram-3 text-primary me-2"></i>
-                            <strong>Active DM Flows</strong>
-                            <br><small class="text-muted">Automated flows running simultaneously</small>
+                            <strong>Active DM Automations</strong>
+                            <br><small class="text-muted">Automations running simultaneously</small>
                         </td>
                         {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
@@ -168,11 +168,11 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Visual Flow Builder -->
+                    <!-- Visual Automation Builder -->
                     <tr>
                         <td class="py-3">
                             <i class="bi bi-window-stack text-info me-2"></i>
-                            Visual Flow Builder
+                            Visual Automation Builder
                             <br><small class="text-muted">Drag-and-drop interface</small>
                         </td>
                         {% for item in plans_with_pricing %}
@@ -187,7 +187,7 @@
                         <td class="py-3">
                             <i class="bi bi-phone text-purple me-2"></i>
                             Mobile-Friendly Editor
-                            <br><small class="text-muted">Edit flows on any device</small>
+                            <br><small class="text-muted">Edit automations on any device</small>
                         </td>
                         {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
@@ -294,11 +294,11 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Replies per Flow -->
+                    <!-- Replies per Automation -->
                     <tr class="table-light">
                         <td class="py-3">
                             <i class="bi bi-infinity text-success me-2"></i>
-                            Replies per Flow
+                            Replies per Automation
                             <br><small class="text-muted">No limits on responses</small>
                         </td>
                         {% for item in plans_with_pricing %}
@@ -386,12 +386,12 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                What is a "DM Flow"?
+                                What is a "DM Automation"?
                             </button>
                         </h2>
                         <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                A DM Flow is an automated conversation sequence. When someone comments on your post with a trigger keyword, the flow automatically:
+                                A DM Automation is an automated conversation sequence. When someone comments on your post with a trigger keyword, it automatically:
                                 <ul class="mt-2">
                                     <li>Replies to their comment</li>
                                     <li>Sends them a DM with your message</li>
@@ -406,14 +406,14 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                What does "1 active flow" mean on the Free plan?
+                                What does "1 active automation" mean on the Free plan?
                             </button>
                         </h2>
                         <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                <strong>You can have 1 automated flow running at a time.</strong> That flow can be as complex as you want - with multiple steps, Quick Replies, Follower Checks, etc. And it handles <strong>unlimited responses</strong>!
+                                <strong>You can have 1 automation running at a time.</strong> That automation can be as complex as you want - with multiple steps, Quick Replies, Follower Checks, etc. And it handles <strong>unlimited responses</strong>!
                                 <br><br>
-                                Want to run automation on multiple posts? Upgrade to Pro (5 flows) or Creator (unlimited flows).
+                                Want to run automation on multiple posts? Upgrade to Pro (5 automations) or Creator (unlimited automations).
                             </div>
                         </div>
                     </div>
@@ -426,7 +426,7 @@
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                <strong>No! Replies are unlimited on all plans.</strong> Whether you're on Free, Pro, or Creator - every comment that triggers your flow gets the full automated experience. The only difference between plans is how many flows can be active simultaneously.
+                                <strong>No! Replies are unlimited on all plans.</strong> Whether you're on Free, Pro, or Creator - every comment that triggers your automation gets the full automated experience. The only difference between plans is how many automations can be active simultaneously.
                             </div>
                         </div>
                     </div>
@@ -469,7 +469,7 @@
                         </h2>
                         <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Yes, Instagram automation requires a Business or Creator account connected to a Facebook Page. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
+                                Yes, Instagram automation requires a Business or Creator account. This is an Instagram API requirement and allows us to access the necessary permissions for automation.
                             </div>
                         </div>
                     </div>
@@ -499,7 +499,7 @@
         <p class="mb-4 opacity-75">Join creators who are saving hours every week with automated conversations.</p>
         {% if user.is_authenticated %}
         <a href="{% url 'flow_list' %}" class="btn btn-light btn-lg">
-            <i class="bi bi-diagram-3 me-2"></i>Go to Flow Builder
+            <i class="bi bi-diagram-3 me-2"></i>Go to Automations
         </a>
         {% else %}
         <a href="{% url 'signup' %}" class="btn btn-light btn-lg">

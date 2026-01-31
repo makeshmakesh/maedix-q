@@ -11,7 +11,7 @@
                 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
                     <div>
                         <a href="{% url 'flow_list' %}" class="text-decoration-none text-muted small">
-                            <i class="bi bi-arrow-left me-1"></i>Back to Flows
+                            <i class="bi bi-arrow-left me-1"></i>Back to Automations
                         </a>
                         <h3 class="mb-1 mt-2">
                             <i class="bi bi-people text-primary me-2"></i>Collected Leads
@@ -34,9 +34,9 @@
                                 <input type="text" class="form-control" name="username" value="{{ filter_username|default:'' }}" placeholder="Search @username">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small text-muted">Flow</label>
+                                <label class="form-label small text-muted">Automation</label>
                                 <select class="form-select" name="flow">
-                                    <option value="">All Flows</option>
+                                    <option value="">All Automations</option>
                                     {% for flow in user_flows %}
                                     <option value="{{ flow.pk }}" {% if filter_flow == flow.pk|stringformat:"s" %}selected{% endif %}>{{ flow.title|truncatechars:25 }}</option>
                                     {% endfor %}
@@ -87,7 +87,7 @@
                                         <th>Email</th>
                                         <th>Phone</th>
                                         <th>Follower</th>
-                                        <th>Flow</th>
+                                        <th>Automation</th>
                                         <th>Date</th>
                                     </tr>
                                 </thead>
@@ -192,10 +192,10 @@
                             {% else %}
                             <h5 class="mt-3">No Leads Yet</h5>
                             <p class="text-muted">
-                                Leads will appear here when users provide their information through your flows.
+                                Leads will appear here when users provide their information through your automations.
                             </p>
                             <a href="{% url 'flow_list' %}" class="btn btn-primary">
-                                <i class="bi bi-diagram-3 me-1"></i>Create a Flow
+                                <i class="bi bi-diagram-3 me-1"></i>Create an Automation
                             </a>
                             {% endif %}
                         </div>

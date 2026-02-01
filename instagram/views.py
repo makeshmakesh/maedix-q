@@ -629,7 +629,36 @@ class AutomationLandingView(View):
             can_access, _, _ = check_feature_access(request.user, 'ig_flow_builder')
             context['has_feature_access'] = can_access
 
+        # Fetch social proof metrics
+        context['social_proof'] = self._get_social_proof_metrics()
+
         return render(request, self.template_name, context)
+
+    def _get_social_proof_metrics(self):
+        """Return social proof metrics - static stats, live users"""
+        # Fetch last 10 created Instagram accounts with usernames
+        active_accounts = InstagramAccount.objects.filter(
+            access_token__isnull=False
+        ).exclude(username__isnull=True).exclude(username='').order_by('-id')[:20]
+
+        # Build active users list (filter out accounts with ignore_social_proof flag)
+        active_users = []
+        for account in active_accounts:
+            if account.instagram_data.get('ignore_social_proof'):
+                continue
+            active_users.append({
+                'username': account.username,
+            })
+            if len(active_users) >= 20:
+                break
+
+        return {
+            'total_dms': 15400,
+            'total_comments': 18200,
+            'total_messages': 20600,
+            'active_automations': 156,
+            'active_users': active_users,
+        }
 
 
 class FlowBuilderHelpView(LoginRequiredMixin, View):

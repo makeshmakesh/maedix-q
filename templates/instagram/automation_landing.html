@@ -1,7 +1,60 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
-{% block title %}Maedix — Turn Instagram Comments into Conversations{% endblock %}
-{% block meta_description %}Maedix helps creators reply faster, send smarter DMs, and convert engagement into leads — without manual work.{% endblock %}
+{% block title %}Instagram Comment & DM Automation Tool | Auto Reply to Comments - Maedix{% endblock %}
+{% block meta_description %}Automate Instagram comment replies and DMs instantly. When someone comments, auto-reply and send a DM with your link. Free Instagram automation tool. ManyChat alternative.{% endblock %}
+{% block keywords %}instagram automation, instagram auto reply, auto dm instagram, comment to dm, instagram bot, manychat alternative, instagram marketing automation, auto reply comments instagram{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Maedix",
+  "description": "Instagram comment and DM automation tool. Automatically reply to comments and send DMs when users engage with your posts.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free plan available"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Instagram comment automation?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Instagram comment automation automatically replies to comments on your posts and sends DMs to users who engage. When someone comments a keyword like 'link' or 'info', your automation instantly replies to their comment and sends them a direct message with your content."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Instagram DM automation allowed?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, when done through official Meta APIs. Maedix is a verified Meta Tech Provider and uses Instagram's official Messaging API, which is fully compliant with Instagram's terms of service."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is Maedix different from ManyChat?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Maedix offers a simpler, more affordable solution focused specifically on Instagram comment-to-DM automation. It includes features like follower gating, lead collection, and optional AI conversations at a lower price point."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -15,13 +68,13 @@
                 </div>
 
                 <h1 class="hero-headline">
-                    Turn Instagram comments<br>
-                    into <span class="text-gradient">AI-powered</span> conversations.
+                    Auto-reply to Instagram comments<br>
+                    and <span class="text-gradient">send DMs instantly</span>.
                 </h1>
 
                 <p class="hero-desc">
-                    Maedix helps creators reply faster, qualify leads with AI agents,<br>
-                    and convert engagement into customers — 24/7, on autopilot.
+                    Someone comments on your post? Maedix automatically replies<br>
+                    and sends them a DM with your link, offer, or message — in seconds.
                 </p>
 
                 <div class="hero-actions">
@@ -220,24 +273,24 @@
 
         <div class="what-grid">
             <div class="what-block highlight">
-                <div class="what-badge">NEW</div>
-                <h3>AI-powered conversations</h3>
-                <p>Let AI agents have natural, multi-turn conversations that qualify leads and collect data.</p>
-            </div>
-
-            <div class="what-block">
                 <h3>Automatically replies to comments</h3>
-                <p>When someone comments, they get a response — instantly.</p>
+                <p>When someone comments on your post, they get a response — instantly, 24/7.</p>
             </div>
 
             <div class="what-block">
-                <h3>Sends contextual DMs instantly</h3>
-                <p>Move the conversation to DMs without lifting a finger.</p>
+                <h3>Sends DMs instantly</h3>
+                <p>Automatically send your link, offer, or message to their inbox in seconds.</p>
             </div>
 
             <div class="what-block">
-                <h3>Guides users through conversations</h3>
-                <p>Multi-step flows with buttons let users choose their path.</p>
+                <h3>Collect leads & data</h3>
+                <p>Capture emails, phone numbers, and qualify leads automatically.</p>
+            </div>
+
+            <div class="what-block">
+                <div class="what-badge">OPTIONAL</div>
+                <h3>AI conversations</h3>
+                <p>Let AI handle multi-turn conversations for complex lead qualification.</p>
             </div>
         </div>
     </div>
@@ -250,14 +303,14 @@
             <div class="ai-content">
                 <div class="ai-badge">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
-                    <span>AI-Powered</span>
+                    <span>Optional Add-on</span>
                 </div>
 
-                <h2>Let AI handle the conversation.</h2>
+                <h2>Need smarter conversations? Add AI.</h2>
 
                 <p class="ai-desc">
-                    Your AI agent understands context, asks the right questions,
-                    and guides users naturally — just like your best salesperson, but available 24/7.
+                    For complex lead qualification, let AI handle multi-turn conversations.
+                    It asks the right questions and collects data naturally — available 24/7.
                 </p>
 
                 <div class="ai-features">
@@ -839,15 +892,59 @@
 <!-- Social Proof -->
 <section class="section proof-section">
     <div class="container">
+        <!-- Platform Stats -->
+        {% if social_proof.total_messages > 0 %}
+        <div class="platform-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ social_proof.total_comments|default:0|intcomma }}+</span>
+                <span class="stat-label">Comments Replied</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-value">{{ social_proof.total_dms|default:0|intcomma }}+</span>
+                <span class="stat-label">DMs Sent</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-value">{{ social_proof.active_automations|default:0|intcomma }}+</span>
+                <span class="stat-label">Active Automations</span>
+            </div>
+        </div>
+
+        <!-- Active Users Ticker -->
+        {% if social_proof.active_users %}
+        <div class="users-ticker-section">
+            <div class="users-ticker-label">
+                <span class="pulse-dot"></span>
+                Trusted by creators
+            </div>
+            <div class="users-ticker-wrapper">
+                <div class="users-ticker">
+                    {% for user in social_proof.active_users %}
+                    <span class="ticker-username">@{{ user.username }}</span>
+                    {% endfor %}
+                    {% for user in social_proof.active_users %}
+                    <span class="ticker-username">@{{ user.username }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Trust Badges -->
         <div class="proof-items">
             <div class="proof-item">
-                <span>Built using Instagram's official APIs</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                <span>Official Instagram APIs</span>
             </div>
             <div class="proof-item">
-                <span>Designed for account safety</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                <span>Account Safe</span>
             </div>
             <div class="proof-item">
-                <span>No password sharing, no third-party hacks</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                <span>No Password Needed</span>
             </div>
         </div>
     </div>
@@ -2616,13 +2713,119 @@
 /* ========== Proof Section ========== */
 .proof-section {
     background: var(--bg-light);
-    padding: 2.5rem 0;
+    padding: 3rem 0;
 }
 
+/* Platform Stats */
+.platform-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border);
+}
+
+/* Users Ticker */
+.users-ticker-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.users-ticker-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.users-ticker-wrapper {
+    width: 100%;
+    max-width: 600px;
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.users-ticker {
+    display: flex;
+    gap: 2rem;
+    animation: ticker 20s linear infinite;
+    width: max-content;
+}
+
+.ticker-username {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+    background: var(--bg-white);
+    border-radius: 50px;
+    border: 1px solid var(--border);
+}
+
+@keyframes ticker {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Trust Badges */
 .proof-items {
     display: flex;
     justify-content: center;
-    gap: 2rem;
+    gap: 1.5rem;
     flex-wrap: wrap;
 }
 
@@ -2630,18 +2833,17 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
     background: var(--bg-white);
-    padding: 0.75rem 1.25rem;
+    padding: 0.6rem 1rem;
     border-radius: 50px;
     border: 1px solid var(--border);
 }
 
-.proof-item::before {
-    content: "✓";
+.proof-item svg {
     color: var(--accent);
-    font-weight: 600;
+    flex-shrink: 0;
 }
 
 /* ========== CTA Section ========== */
@@ -2862,6 +3064,28 @@
     .btn-secondary {
         width: 100%;
         text-align: center;
+    }
+
+    .platform-stats {
+        gap: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+    }
+
+    .stat-divider {
+        height: 30px;
+    }
+
+    .user-avatar-wrapper {
+        width: 34px;
+        height: 34px;
+        margin-left: -10px;
     }
 
     .proof-items {

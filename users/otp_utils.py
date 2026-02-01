@@ -10,7 +10,7 @@ def send_otp_email(user):
     email_otp = EmailOTP.create_for_user(user)
 
     # Prepare email content
-    subject = 'Verify Your Maedix-Q Account'
+    subject = 'Verify Your Maedix Account'
     context = {
         'user': user,
         'otp': email_otp.otp,

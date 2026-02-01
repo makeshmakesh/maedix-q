@@ -892,46 +892,6 @@
 <!-- Social Proof -->
 <section class="section proof-section">
     <div class="container">
-        <!-- Platform Stats -->
-        {% if social_proof.total_messages > 0 %}
-        <div class="platform-stats">
-            <div class="stat-item">
-                <span class="stat-value">{{ social_proof.total_comments|default:0|intcomma }}+</span>
-                <span class="stat-label">Comments Replied</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-value">{{ social_proof.total_dms|default:0|intcomma }}+</span>
-                <span class="stat-label">DMs Sent</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-value">{{ social_proof.active_automations|default:0|intcomma }}+</span>
-                <span class="stat-label">Active Automations</span>
-            </div>
-        </div>
-
-        <!-- Active Users Ticker -->
-        {% if social_proof.active_users %}
-        <div class="users-ticker-section">
-            <div class="users-ticker-label">
-                <span class="pulse-dot"></span>
-                Trusted by creators
-            </div>
-            <div class="users-ticker-wrapper">
-                <div class="users-ticker">
-                    {% for user in social_proof.active_users %}
-                    <span class="ticker-username">@{{ user.username }}</span>
-                    {% endfor %}
-                    {% for user in social_proof.active_users %}
-                    <span class="ticker-username">@{{ user.username }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        {% endif %}
-
         <!-- Trust Badges -->
         <div class="proof-items">
             <div class="proof-item">

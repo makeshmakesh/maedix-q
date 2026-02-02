@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 from django.conf import settings
 
 
@@ -22,6 +23,10 @@ class InstagramAccount(models.Model):
     # Status
     is_active = models.BooleanField(default=True)
 
+    # Lifetime statistics (persists even when flows are deleted)
+    total_dms_sent = models.PositiveIntegerField(default=0)
+    total_comments_replied = models.PositiveIntegerField(default=0)
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -38,6 +43,18 @@ class InstagramAccount(models.Model):
         if self.token_expires_at and self.token_expires_at < timezone.now():
             return False
         return True
+
+    def increment_dms_sent(self, count=1):
+        """Increment DMs sent counter atomically"""
+        InstagramAccount.objects.filter(pk=self.pk).update(
+            total_dms_sent=F('total_dms_sent') + count
+        )
+
+    def increment_comments_replied(self, count=1):
+        """Increment comments replied counter atomically"""
+        InstagramAccount.objects.filter(pk=self.pk).update(
+            total_comments_replied=F('total_comments_replied') + count
+        )
 
     class Meta:
         verbose_name = "Instagram Account"
@@ -86,14 +103,21 @@ class APICallLog(models.Model):
 
     @classmethod
     def log_call(cls, account, call_type, endpoint, recipient_id='', success=True):
-        """Log an API call."""
-        return cls.objects.create(
+        """Log an API call and update account counters."""
+        log = cls.objects.create(
             account=account,
             call_type=call_type,
             endpoint=endpoint,
             recipient_id=recipient_id,
             success=success
         )
+        # Update account-level counters for successful calls
+        if success:
+            if call_type == 'dm':
+                account.increment_dms_sent()
+            elif call_type == 'comment_reply':
+                account.increment_comments_replied()
+        return log
 
 
 # =============================================================================
@@ -169,14 +193,12 @@ class DMFlow(models.Model):
         return self.nodes.filter(order__isnull=False).order_by('order').first()
 
     def increment_triggered(self):
-        """Increment the triggered counter"""
-        self.total_triggered += 1
-        self.save(update_fields=['total_triggered', 'updated_at'])
+        """Increment the triggered counter atomically"""
+        DMFlow.objects.filter(pk=self.pk).update(total_triggered=F('total_triggered') + 1)
 
     def increment_completed(self):
-        """Increment the completed counter"""
-        self.total_completed += 1
-        self.save(update_fields=['total_completed', 'updated_at'])
+        """Increment the completed counter atomically"""
+        DMFlow.objects.filter(pk=self.pk).update(total_completed=F('total_completed') + 1)
 
     class Meta:
         verbose_name = "DM Flow"

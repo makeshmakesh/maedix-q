@@ -53,23 +53,19 @@ def get_user_country(request):
 
     For local testing, add ?country=US to the URL to override.
     """
-    # DEBUG: Allow override via query param for testing (e.g., ?country=US)
+    # Allow override via query param for testing (e.g., ?country=US)
     override_country = request.GET.get('country')
     if override_country:
-        print(f"[DEBUG] Country override via query param: {override_country}")
         return override_country.upper()
 
     # Check if already cached in session
     country_code = request.session.get('user_country')
     if country_code:
-        print(f"[DEBUG] Country from session cache: {country_code}")
         return country_code
 
     # Get from IP
     ip = get_client_ip(request)
-    print(f"[DEBUG] Client IP: {ip}")
     country_code = get_country_from_ip(ip)
-    print(f"[DEBUG] Country from IP lookup: {country_code}")
 
     # Cache in session
     if country_code:

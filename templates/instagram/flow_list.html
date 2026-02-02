@@ -638,21 +638,49 @@
             padding: 1rem;
         }
 
+        .flow-title {
+            font-size: 0.95rem;
+        }
+
+        .flow-status {
+            font-size: 0.7rem;
+        }
+
+        .flow-trigger {
+            font-size: 0.8rem;
+        }
+
+        .flow-stats {
+            font-size: 0.8rem;
+        }
+
         .flow-actions {
             flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .flow-action-btn {
             flex: 1;
             justify-content: center;
+            font-size: 0.8rem;
         }
 
         .header-stats {
-            gap: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem 1rem;
+        }
+
+        .header-stat {
+            text-align: center;
         }
 
         .header-stat-value {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
+        }
+
+        .header-stat-label {
+            font-size: 0.65rem;
         }
     }
 
@@ -721,8 +749,12 @@
                                     <div class="header-stat-label">Triggered</div>
                                 </div>
                                 <div class="header-stat">
-                                    <div class="header-stat-value">{{ total_completed|default:0 }}</div>
-                                    <div class="header-stat-label">Completed</div>
+                                    <div class="header-stat-value">{{ instagram_account.total_dms_sent|default:0 }}</div>
+                                    <div class="header-stat-label">DMs Sent</div>
+                                </div>
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ instagram_account.total_comments_replied|default:0 }}</div>
+                                    <div class="header-stat-label">Comment Replies</div>
                                 </div>
                             </div>
 

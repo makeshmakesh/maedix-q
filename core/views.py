@@ -470,19 +470,22 @@ class PaymentWebhookView(View):
 
             logger.info(f"Received Razorpay webhook: {event}")
 
-            # Verify webhook signature
+            # Verify webhook signature (mandatory - reject if not configured)
             webhook_secret = Configuration.get_value('razorpay_webhook_secret')
-            if webhook_secret:
-                received_signature = request.headers.get('X-Razorpay-Signature', '')
-                expected_signature = hmac.new(
-                    webhook_secret.encode(),
-                    request.body,
-                    hashlib.sha256
-                ).hexdigest()
+            if not webhook_secret:
+                logger.error("Webhook secret not configured - rejecting webhook")
+                return JsonResponse({'status': 'configuration_error'}, status=500)
 
-                if received_signature != expected_signature:
-                    logger.error("Webhook signature verification failed")
-                    return JsonResponse({'status': 'invalid_signature'}, status=400)
+            received_signature = request.headers.get('X-Razorpay-Signature', '')
+            expected_signature = hmac.new(
+                webhook_secret.encode(),
+                request.body,
+                hashlib.sha256
+            ).hexdigest()
+
+            if received_signature != expected_signature:
+                logger.error("Webhook signature verification failed")
+                return JsonResponse({'status': 'invalid_signature'}, status=400)
 
             # Handle different events
             if event == 'payment.captured':

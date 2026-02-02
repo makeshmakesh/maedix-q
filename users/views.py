@@ -4,6 +4,7 @@ from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from .forms import SignupForm, LoginForm, ProfileForm, UserForm, OTPVerificationForm
 from .models import UserProfile, UserStats, EmailOTP
 from .otp_utils import send_otp_email, verify_otp
@@ -168,8 +169,11 @@ class LoginView(View):
             user = authenticate(request, email=email, password=password)
             if user is not None:
                 login(request, user)
-                next_url = request.GET.get('next', 'flow_list')
-                return redirect(next_url)
+                next_url = request.GET.get('next', '')
+                # Validate redirect URL to prevent open redirect attacks
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                    return redirect(next_url)
+                return redirect('flow_list')
             else:
                 messages.error(request, 'Invalid email or password')
         return render(request, self.template_name, {'form': form})

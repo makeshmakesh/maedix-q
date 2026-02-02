@@ -3878,6 +3878,13 @@ function saveFlow() {
         return;
     }
 
+    // Validate required fields for each node type
+    const requiredValidation = validateRequiredFields(nodes);
+    if (!requiredValidation.valid) {
+        showToast(requiredValidation.error, 'error');
+        return;
+    }
+
     // Validate no consecutive message nodes without interaction
     const msgValidation = validateConsecutiveMessages(nodes);
     if (!msgValidation.valid) {
@@ -4006,70 +4013,265 @@ function validateNodeTextLengths(nodes) {
 }
 
 /**
+ * Validate that required fields are filled for each node type.
+ * @param {Array} nodes - Array of node objects with config
+ * @returns {Object} - { valid: boolean, error: string|null }
+ */
+function validateRequiredFields(nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const config = node.config || {};
+        const nodeType = node.node_type || node.type;
+        const nodeNum = i + 1;
+
+        switch (nodeType) {
+            case 'message_text':
+                if (!config.text || !config.text.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Text Message): Message text is required.`
+                    };
+                }
+                break;
+
+            case 'message_link':
+                if (!config.text || !config.text.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Link Message): Message text is required.`
+                    };
+                }
+                if (!config.url || !config.url.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Link Message): URL is required.`
+                    };
+                }
+                break;
+
+            case 'message_button_template':
+                if (!config.text || !config.text.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Button Template): Message text is required.`
+                    };
+                }
+                if (!config.buttons || config.buttons.length === 0) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Button Template): At least one button is required.`
+                    };
+                }
+                // Validate each button has title and action
+                for (let j = 0; j < config.buttons.length; j++) {
+                    const btn = config.buttons[j];
+                    if (!btn.title || !btn.title.trim()) {
+                        return {
+                            valid: false,
+                            error: `Step ${nodeNum} (Button Template): Button ${j + 1} title is required.`
+                        };
+                    }
+                    const btnType = btn.type || 'postback';
+                    if (btnType === 'web_url' && (!btn.url || !btn.url.trim())) {
+                        return {
+                            valid: false,
+                            error: `Step ${nodeNum} (Button Template): Button ${j + 1} URL is required for URL buttons.`
+                        };
+                    }
+                }
+                break;
+
+            case 'message_quick_reply':
+                if (!config.text || !config.text.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Quick Reply): Message text is required.`
+                    };
+                }
+                // Quick replies are stored in node.quick_replies, not config
+                const quickReplies = node.quick_replies || [];
+                if (quickReplies.length === 0) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Quick Reply): At least one quick reply button is required.`
+                    };
+                }
+                // Validate each quick reply has a title
+                for (let j = 0; j < quickReplies.length; j++) {
+                    const qr = quickReplies[j];
+                    if (!qr.title || !qr.title.trim()) {
+                        return {
+                            valid: false,
+                            error: `Step ${nodeNum} (Quick Reply): Button ${j + 1} title is required.`
+                        };
+                    }
+                }
+                break;
+
+            case 'comment_reply':
+                if (!config.text || !config.text.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Comment Reply): Reply text is required.`
+                    };
+                }
+                break;
+
+            case 'collect_data':
+                if (!config.prompt_text || !config.prompt_text.trim()) {
+                    return {
+                        valid: false,
+                        error: `Step ${nodeNum} (Collect Data): Prompt text is required.`
+                    };
+                }
+                break;
+        }
+    }
+
+    return { valid: true, error: null };
+}
+
+/**
  * Validate that flow doesn't have consecutive message nodes without user interaction.
  * Instagram only allows ONE message to non-followers until they reply.
+ *
+ * RULE: Before any interaction node, only ONE message is allowed.
+ *       After an interaction node (user clicked/responded), multiple messages are allowed.
  *
  * @param {Array} nodes - Array of node objects
  * @returns {Object} - { valid: boolean, error: string|null }
  */
 function validateConsecutiveMessages(nodes) {
     // Node types that send a DM and DON'T wait for interaction
-    // After these, you CANNOT send another DM
     const fireAndForgetTypes = ['message_text', 'message_link'];
 
-    // ALL node types that send a DM (including ones that wait for interaction)
+    // ALL node types that send a DM
     const allDmTypes = ['message_text', 'message_link', 'message_quick_reply', 'message_button_template', 'collect_data'];
 
-    // Build lookup maps for nodes
-    const nodeById = {};
-    const nodeByDrawflowId = {};
-    const nodeByTempId = {};
+    // Node types that trigger user interaction (clicking button, typing response)
+    const interactionTypes = ['message_quick_reply', 'message_button_template', 'collect_data'];
 
+    // Build node lookup and reverse graph (who points to each node)
+    const nodeMap = {};  // id -> { type, node, id }
+    const reverseGraph = {};  // nodeId -> [parentNodeIds]
+
+    // Helper to get canonical ID for a node
+    function getNodeId(node) {
+        return node.id || node.temp_id || (node.drawflow_id ? `new_${node.drawflow_id}` : null);
+    }
+
+    // Build node map
     nodes.forEach(node => {
         const nodeType = node.node_type || node.type;
-        const nodeInfo = { type: nodeType, node };
-
-        if (node.id) {
-            nodeById[node.id] = nodeInfo;
+        const id = getNodeId(node);
+        if (id) {
+            nodeMap[id] = { type: nodeType, node, id };
+            reverseGraph[id] = [];
         }
+        // Also map by drawflow_id for lookups
         if (node.drawflow_id) {
-            nodeByDrawflowId[node.drawflow_id] = nodeInfo;
-            // Also map "new_X" format
-            nodeById[`new_${node.drawflow_id}`] = nodeInfo;
-        }
-        if (node.temp_id) {
-            nodeByTempId[node.temp_id] = nodeInfo;
-            nodeById[node.temp_id] = nodeInfo;
+            nodeMap[node.drawflow_id] = { type: nodeType, node, id };
+            nodeMap[`new_${node.drawflow_id}`] = { type: nodeType, node, id };
         }
     });
 
-    // Helper to get node type by ID
-    function getNextNodeType(nextNodeId) {
-        if (!nextNodeId) return null;
-        const info = nodeById[nextNodeId] || nodeByDrawflowId[nextNodeId] || nodeByTempId[nextNodeId];
-        return info ? info.type : null;
+    // Build reverse graph (parent -> child connections)
+    nodes.forEach(node => {
+        const parentId = getNodeId(node);
+
+        // next_node_id connection
+        if (node.next_node_id && nodeMap[node.next_node_id]) {
+            const childId = nodeMap[node.next_node_id].id;
+            if (childId && reverseGraph[childId]) {
+                reverseGraph[childId].push(parentId);
+            }
+        }
+
+        // Quick reply button connections
+        if (node.quick_replies) {
+            node.quick_replies.forEach(qr => {
+                if (qr.target_node_id && nodeMap[qr.target_node_id]) {
+                    const childId = nodeMap[qr.target_node_id].id;
+                    if (childId && reverseGraph[childId]) {
+                        reverseGraph[childId].push(parentId);
+                    }
+                }
+            });
+        }
+
+        // Condition node branches
+        const config = node.config || {};
+        if (config.true_node_id && nodeMap[config.true_node_id]) {
+            const childId = nodeMap[config.true_node_id].id;
+            if (childId && reverseGraph[childId]) {
+                reverseGraph[childId].push(parentId);
+            }
+        }
+        if (config.false_node_id && nodeMap[config.false_node_id]) {
+            const childId = nodeMap[config.false_node_id].id;
+            if (childId && reverseGraph[childId]) {
+                reverseGraph[childId].push(parentId);
+            }
+        }
+
+        // Button template postback connections
+        if (config.buttons) {
+            config.buttons.forEach(btn => {
+                if (btn.target_node_id && nodeMap[btn.target_node_id]) {
+                    const childId = nodeMap[btn.target_node_id].id;
+                    if (childId && reverseGraph[childId]) {
+                        reverseGraph[childId].push(parentId);
+                    }
+                }
+            });
+        }
+    });
+
+    // Check if an interaction node exists upstream of a given node
+    function hasInteractionUpstream(nodeId, visited = new Set()) {
+        if (!nodeId || visited.has(nodeId)) return false;
+        visited.add(nodeId);
+
+        const parents = reverseGraph[nodeId] || [];
+        for (const parentId of parents) {
+            const parentInfo = nodeMap[parentId];
+            if (!parentInfo) continue;
+
+            // If parent is an interaction node, return true
+            if (interactionTypes.includes(parentInfo.type)) {
+                return true;
+            }
+
+            // Recursively check parent's ancestors
+            if (hasInteractionUpstream(parentId, visited)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    // Check each node
+    // Check each fire-and-forget node
     for (const node of nodes) {
         const nodeType = node.node_type || node.type;
-
-        // Only check fire-and-forget message nodes (message_text, message_link)
-        // These don't wait for interaction, so no DM can follow them
         if (!fireAndForgetTypes.includes(nodeType)) continue;
 
-        // Check next_node_id for sequential connection
-        const nextNodeId = node.next_node_id;
-        if (nextNodeId) {
-            const nextType = getNextNodeType(nextNodeId);
-            // If next node is ANY DM-sending node, it's invalid
-            if (nextType && allDmTypes.includes(nextType)) {
-                const currentLabel = nodeType.replace(/_/g, ' ');
-                const nextLabel = nextType.replace(/_/g, ' ');
-                return {
-                    valid: false,
-                    error: `Cannot have "${currentLabel}" followed by "${nextLabel}". Instagram only allows one message to non-followers until they reply. Use Quick Reply or Button Template as your first message instead, so users can interact before receiving more messages.`
-                };
+        const nodeId = getNodeId(node);
+
+        // Check next_node_id connection
+        if (node.next_node_id) {
+            const nextInfo = nodeMap[node.next_node_id];
+            if (nextInfo && allDmTypes.includes(nextInfo.type)) {
+                // This is a fire-and-forget node pointing to another DM node
+                // Only invalid if NO interaction node is upstream of this node
+                if (!hasInteractionUpstream(nodeId)) {
+                    const currentLabel = nodeType.replace(/_/g, ' ');
+                    const nextLabel = nextInfo.type.replace(/_/g, ' ');
+                    return {
+                        valid: false,
+                        error: `Cannot have "${currentLabel}" followed by "${nextLabel}" before user interaction. Instagram only allows one message to non-followers until they reply. Use Quick Reply or Button Template as your first message instead.`
+                    };
+                }
             }
         }
     }
@@ -5162,6 +5364,13 @@ function saveFormFlow() {
     const validation = validateNodeTextLengths(nodes);
     if (!validation.valid) {
         showToast(validation.error, 'error');
+        return;
+    }
+
+    // Validate required fields for each node type
+    const requiredValidation = validateRequiredFields(nodes);
+    if (!requiredValidation.valid) {
+        showToast(requiredValidation.error, 'error');
         return;
     }
 

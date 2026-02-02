@@ -11,10 +11,10 @@ from .models import (
 
 @admin.register(InstagramAccount)
 class InstagramAccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'username', 'is_active', 'token_expires_at', 'created_at')
+    list_display = ('user', 'username', 'is_active', 'total_dms_sent', 'total_comments_replied', 'token_expires_at', 'created_at')
     list_filter = ('is_active',)
     search_fields = ('user__email', 'username')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('total_dms_sent', 'total_comments_replied', 'created_at', 'updated_at')
 
 
 @admin.register(DMFlow)

@@ -1585,7 +1585,7 @@
                     <small class="text-muted d-block mb-2 mt-3">🔘 Interactive</small>
                     <div class="palette-item" draggable="true" data-node="message_quick_reply">
                         <i class="bi bi-ui-radios-grid text-success"></i>
-                        <span>Ask a Question</span>
+                        <span>Quick Reply</span>
                     </div>
 
                     <div class="palette-item" draggable="true" data-node="message_button_template">
@@ -1595,7 +1595,7 @@
                     {% else %}
                     <div class="palette-item disabled" title="Upgrade to Pro">
                         <i class="bi bi-lock text-muted"></i>
-                        <span class="text-muted">Ask a Question</span>
+                        <span class="text-muted">Quick Reply</span>
                     </div>
                     {% endif %}
 
@@ -1947,7 +1947,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li class="dropdown-header">🔘 Interactive</li>
                                 <li><a class="dropdown-item" href="#" data-add-node="message_quick_reply">
-                                    <i class="bi bi-ui-radios-grid text-success"></i>Ask a Question
+                                    <i class="bi bi-ui-radios-grid text-success"></i>Quick Reply
                                 </a></li>
                                 <li><a class="dropdown-item" href="#" data-add-node="message_button_template">
                                     <i class="bi bi-menu-button-wide text-purple"></i>Message with Buttons
@@ -3871,6 +3871,27 @@ function saveFlow() {
         nodes.push(node);
     });
 
+    // Validate message text lengths before saving
+    const validation = validateNodeTextLengths(nodes);
+    if (!validation.valid) {
+        showToast(validation.error, 'error');
+        return;
+    }
+
+    // Validate no consecutive message nodes without interaction
+    const msgValidation = validateConsecutiveMessages(nodes);
+    if (!msgValidation.valid) {
+        showToast(msgValidation.error, 'error');
+        return;
+    }
+
+    // Validate follower check placement (requires prior interaction)
+    const followerValidation = validateFollowerCheckPlacement(nodes);
+    if (!followerValidation.valid) {
+        showToast(followerValidation.error, 'error');
+        return;
+    }
+
     // Send to server
     const saveBtn = document.getElementById('saveFlowBtn');
     saveBtn.disabled = true;
@@ -3933,6 +3954,213 @@ function showToast(message, type = 'info') {
 }
 
 // ============================================================================
+// Instagram Message Length Validation
+// ============================================================================
+
+const INSTAGRAM_MESSAGE_MAX_LENGTH = 1000;
+
+/**
+ * Validate that all text fields in nodes are within Instagram's 1000 char limit.
+ * @param {Array} nodes - Array of node objects with config
+ * @returns {Object} - { valid: boolean, error: string|null }
+ */
+function validateNodeTextLengths(nodes) {
+    const maxLen = INSTAGRAM_MESSAGE_MAX_LENGTH;
+
+    for (const node of nodes) {
+        const config = node.config || {};
+        const nodeType = node.node_type || node.type;
+        const nodeLabel = nodeType ? nodeType.replace(/_/g, ' ') : 'Unknown';
+
+        // Check main text field
+        if (config.text && config.text.length > maxLen) {
+            return {
+                valid: false,
+                error: `Message text in "${nodeLabel}" exceeds ${maxLen} characters (${config.text.length} chars). Please shorten the message.`
+            };
+        }
+
+        // Check text variations
+        if (config.variations && Array.isArray(config.variations)) {
+            for (let i = 0; i < config.variations.length; i++) {
+                const variation = config.variations[i];
+                if (variation && variation.length > maxLen) {
+                    return {
+                        valid: false,
+                        error: `Text variation ${i + 1} in "${nodeLabel}" exceeds ${maxLen} characters (${variation.length} chars). Please shorten the message.`
+                    };
+                }
+            }
+        }
+
+        // Check prompt_text for collect_data nodes
+        if (config.prompt_text && config.prompt_text.length > maxLen) {
+            return {
+                valid: false,
+                error: `Prompt text in "${nodeLabel}" exceeds ${maxLen} characters (${config.prompt_text.length} chars). Please shorten the message.`
+            };
+        }
+    }
+
+    return { valid: true, error: null };
+}
+
+/**
+ * Validate that flow doesn't have consecutive message nodes without user interaction.
+ * Instagram only allows ONE message to non-followers until they reply.
+ *
+ * @param {Array} nodes - Array of node objects
+ * @returns {Object} - { valid: boolean, error: string|null }
+ */
+function validateConsecutiveMessages(nodes) {
+    // Node types that send a DM and DON'T wait for interaction
+    // After these, you CANNOT send another DM
+    const fireAndForgetTypes = ['message_text', 'message_link'];
+
+    // ALL node types that send a DM (including ones that wait for interaction)
+    const allDmTypes = ['message_text', 'message_link', 'message_quick_reply', 'message_button_template', 'collect_data'];
+
+    // Build lookup maps for nodes
+    const nodeById = {};
+    const nodeByDrawflowId = {};
+    const nodeByTempId = {};
+
+    nodes.forEach(node => {
+        const nodeType = node.node_type || node.type;
+        const nodeInfo = { type: nodeType, node };
+
+        if (node.id) {
+            nodeById[node.id] = nodeInfo;
+        }
+        if (node.drawflow_id) {
+            nodeByDrawflowId[node.drawflow_id] = nodeInfo;
+            // Also map "new_X" format
+            nodeById[`new_${node.drawflow_id}`] = nodeInfo;
+        }
+        if (node.temp_id) {
+            nodeByTempId[node.temp_id] = nodeInfo;
+            nodeById[node.temp_id] = nodeInfo;
+        }
+    });
+
+    // Helper to get node type by ID
+    function getNextNodeType(nextNodeId) {
+        if (!nextNodeId) return null;
+        const info = nodeById[nextNodeId] || nodeByDrawflowId[nextNodeId] || nodeByTempId[nextNodeId];
+        return info ? info.type : null;
+    }
+
+    // Check each node
+    for (const node of nodes) {
+        const nodeType = node.node_type || node.type;
+
+        // Only check fire-and-forget message nodes (message_text, message_link)
+        // These don't wait for interaction, so no DM can follow them
+        if (!fireAndForgetTypes.includes(nodeType)) continue;
+
+        // Check next_node_id for sequential connection
+        const nextNodeId = node.next_node_id;
+        if (nextNodeId) {
+            const nextType = getNextNodeType(nextNodeId);
+            // If next node is ANY DM-sending node, it's invalid
+            if (nextType && allDmTypes.includes(nextType)) {
+                const currentLabel = nodeType.replace(/_/g, ' ');
+                const nextLabel = nextType.replace(/_/g, ' ');
+                return {
+                    valid: false,
+                    error: `Cannot have "${currentLabel}" followed by "${nextLabel}". Instagram only allows one message to non-followers until they reply. Use Quick Reply or Button Template as your first message instead, so users can interact before receiving more messages.`
+                };
+            }
+        }
+    }
+
+    return { valid: true, error: null };
+}
+
+/**
+ * Validate that Follower Check nodes only appear after user interaction.
+ * Instagram requires user consent (interaction) before we can check follower status.
+ *
+ * @param {Array} nodes - Array of node objects
+ * @returns {Object} - { valid: boolean, error: string|null }
+ */
+function validateFollowerCheckPlacement(nodes) {
+    // Nodes that DON'T trigger user interaction
+    const nonInteractionTypes = ['comment_reply', 'message_text', 'message_link'];
+
+    // Nodes that DO trigger user interaction (user must click/respond)
+    const interactionTypes = ['message_quick_reply', 'message_button_template', 'collect_data'];
+
+    // Build lookup maps
+    const nodeById = {};
+    nodes.forEach(node => {
+        const nodeType = node.node_type || node.type;
+        const nodeInfo = { type: nodeType, node };
+
+        if (node.id) nodeById[node.id] = nodeInfo;
+        if (node.drawflow_id) {
+            nodeById[node.drawflow_id] = nodeInfo;
+            nodeById[`new_${node.drawflow_id}`] = nodeInfo;
+        }
+        if (node.temp_id) nodeById[node.temp_id] = nodeInfo;
+    });
+
+    // Helper to get node type by ID
+    function getNodeType(nodeId) {
+        if (!nodeId) return null;
+        const info = nodeById[nodeId];
+        return info ? info.type : null;
+    }
+
+    // Check if flow has any follower check nodes
+    const hasFollowerCheck = nodes.some(n => (n.node_type || n.type) === 'condition_follower');
+    if (!hasFollowerCheck) {
+        return { valid: true, error: null };
+    }
+
+    // Check if flow has any interaction nodes
+    const hasInteractionNode = nodes.some(n => interactionTypes.includes(n.node_type || n.type));
+    if (!hasInteractionNode) {
+        return {
+            valid: false,
+            error: 'Follower Check requires a Quick Reply, Button Template, or Collect Data step first. The user must interact (click a button or respond) before we can check their follower status.'
+        };
+    }
+
+    // Check that no non-interaction node directly points to follower check
+    for (const node of nodes) {
+        const nodeType = node.node_type || node.type;
+
+        // Check non-interaction nodes' next_node_id
+        if (nonInteractionTypes.includes(nodeType)) {
+            const nextType = getNodeType(node.next_node_id);
+            if (nextType === 'condition_follower') {
+                const nodeLabel = nodeType.replace(/_/g, ' ');
+                return {
+                    valid: false,
+                    error: `Cannot have "${nodeLabel}" directly followed by Follower Check. The user must interact first (click a Quick Reply or Button) before we can check their follower status.`
+                };
+            }
+        }
+
+        // Check condition nodes' branches
+        if (nodeType === 'condition_user_interacted') {
+            const config = node.config || {};
+            const trueType = getNodeType(config.true_node_id);
+            const falseType = getNodeType(config.false_node_id);
+            if (trueType === 'condition_follower' || falseType === 'condition_follower') {
+                return {
+                    valid: false,
+                    error: 'Cannot have Returning User Check directly branch to Follower Check. The user must interact first (click a Quick Reply or Button) before we can check their follower status.'
+                };
+            }
+        }
+    }
+
+    return { valid: true, error: null };
+}
+
+// ============================================================================
 // Form Editor (Complete Rewrite - Clean Design)
 // ============================================================================
 
@@ -3956,7 +4184,7 @@ const NODE_TYPES = {
     'message_quick_reply': {
         icon: 'bi-ui-radios-grid',
         class: 'quick-reply',
-        title: 'Ask a Question',
+        title: 'Quick Reply',
         description: 'Show buttons for the user to choose from'
     },
     'message_button_template': {
@@ -4929,6 +5157,27 @@ function saveFormFlow() {
 
         return nodeData;
     });
+
+    // Validate message text lengths before saving
+    const validation = validateNodeTextLengths(nodes);
+    if (!validation.valid) {
+        showToast(validation.error, 'error');
+        return;
+    }
+
+    // Validate no consecutive message nodes without interaction
+    const msgValidation = validateConsecutiveMessages(nodes);
+    if (!msgValidation.valid) {
+        showToast(msgValidation.error, 'error');
+        return;
+    }
+
+    // Validate follower check placement (requires prior interaction)
+    const followerValidation = validateFollowerCheckPlacement(nodes);
+    if (!followerValidation.valid) {
+        showToast(followerValidation.error, 'error');
+        return;
+    }
 
     const saveBtn = document.getElementById('saveFlowBtn');
     saveBtn.disabled = true;

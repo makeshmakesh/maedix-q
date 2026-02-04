@@ -43,6 +43,9 @@ class FlowEngine:
     - Handling user responses (quick replies, text replies)
     """
 
+    # Maximum number of node executions per session to prevent infinite loops
+    MAX_NODE_EXECUTIONS = 25
+
     def __init__(self, instagram_account: InstagramAccount):
         """
         Initialize the flow engine.
@@ -148,10 +151,49 @@ class FlowEngine:
         """
         logger.info(f"Executing node {node.id} (type: {node.node_type}) for session {session.id}")
 
+        # Track node execution count to prevent infinite loops
+        execution_count = session.context_data.get('_node_execution_count', 0) + 1
+        session.context_data['_node_execution_count'] = execution_count
+
+        # Track how many times each node has been executed to detect loops
+        node_exec_key = f'_node_{node.id}_exec_count'
+        node_exec_count = session.context_data.get(node_exec_key, 0) + 1
+        session.context_data[node_exec_key] = node_exec_count
+
+        # Check for infinite loop - too many total node executions
+        if execution_count > self.MAX_NODE_EXECUTIONS:
+            logger.error(
+                f"Infinite loop detected in session {session.id}: "
+                f"exceeded {self.MAX_NODE_EXECUTIONS} node executions"
+            )
+            session.set_error(f"Flow stopped: exceeded maximum of {self.MAX_NODE_EXECUTIONS} steps (possible loop in flow configuration)")
+            self._log_action(session, 'error', node, {
+                'error': 'infinite_loop_detected',
+                'execution_count': execution_count,
+                'max_allowed': self.MAX_NODE_EXECUTIONS
+            })
+            return
+
+        # Check for same node being executed too many times (loop on specific node)
+        MAX_SAME_NODE_EXECUTIONS = 3
+        if node_exec_count > MAX_SAME_NODE_EXECUTIONS:
+            logger.error(
+                f"Loop detected in session {session.id}: "
+                f"node {node.id} executed {node_exec_count} times"
+            )
+            session.set_error(f"Flow stopped: node executed {node_exec_count} times (loop detected in flow configuration)")
+            self._log_action(session, 'error', node, {
+                'error': 'node_loop_detected',
+                'node_id': node.id,
+                'node_exec_count': node_exec_count,
+                'max_allowed': MAX_SAME_NODE_EXECUTIONS
+            })
+            return
+
         # Update session's current node
         session.current_node = node
         session.status = 'active'
-        session.save(update_fields=['current_node', 'status', 'updated_at'])
+        session.save(update_fields=['current_node', 'status', 'updated_at', 'context_data'])
 
         self._log_action(session, 'node_executed', node, {
             'node_type': node.node_type,

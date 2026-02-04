@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validating Link | Maedix</title>
+    <title>Redirecting | Maedix</title>
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Favicon -->
@@ -36,7 +36,7 @@
             padding: 20px;
         }
 
-        .validation-card {
+        .redirect-card {
             background: white;
             border-radius: 16px;
             padding: 40px;
@@ -70,10 +70,10 @@
             margin-top: 4px;
         }
 
-        .shield-icon {
+        .link-icon {
             width: 64px;
             height: 64px;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -83,43 +83,19 @@
             font-size: 28px;
         }
 
-        .shield-icon.checking {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-        }
-
-        .validation-title {
+        .redirect-title {
             font-size: 1.25rem;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 8px;
         }
 
-        .validation-status {
-            color: #6b7280;
-            font-size: 0.95rem;
-            margin-bottom: 24px;
-            min-height: 24px;
+        .redirect-subtitle {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin: 0 0 8px 0;
         }
 
-        .progress-bar-container {
-            background: #e5e7eb;
-            border-radius: 50px;
-            height: 6px;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #059669);
-            border-radius: 50px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .progress-bar.checking {
-            background: linear-gradient(90deg, #3b82f6, #2563eb);
-        }
 
         .destination-box {
             background: #f9fafb;
@@ -143,73 +119,31 @@
             word-break: break-all;
         }
 
-        .continue-btn {
+        .go-btn {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             border: none;
-            padding: 12px 32px;
+            padding: 14px 32px;
             border-radius: 8px;
             font-weight: 600;
             font-size: 0.95rem;
             cursor: pointer;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             transition: transform 0.2s, box-shadow 0.2s;
-            opacity: 0;
-            pointer-events: none;
         }
 
-        .continue-btn.ready {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .continue-btn:hover {
+        .go-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
             color: white;
         }
 
-        .check-steps {
-            display: inline-block;
-            text-align: left;
-            margin-bottom: 24px;
-        }
-
-        .check-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 0;
-            color: #9ca3af;
-            font-size: 0.9rem;
-            transition: color 0.3s;
-        }
-
-        .check-step.active {
-            color: #3b82f6;
-        }
-
-        .check-step.done {
-            color: #10b981;
-        }
-
-        .check-step i {
-            font-size: 1.1rem;
-            width: 20px;
-        }
-
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #e5e7eb;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .go-btn i {
+            font-size: 0.85rem;
         }
 
         .powered-by {
@@ -241,292 +175,61 @@
 
         .try-link {
             display: inline-block;
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 0.8rem;
-            color: var(--primary);
+            color: #6b7280;
             text-decoration: none;
-            padding: 6px 16px;
-            border: 1px solid var(--primary);
-            border-radius: 20px;
-            transition: all 0.2s;
+            transition: color 0.2s;
         }
 
         .try-link:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        /* Feature Highlights */
-        .features-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .hook-text {
-            background: linear-gradient(135deg, #eff6ff, #dbeafe);
-            color: #1e40af;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .hook-text i {
-            color: #f59e0b;
-            font-size: 1.1rem;
-        }
-
-        .use-case-text {
-            background: #f9fafb;
-            border-left: 3px solid var(--primary);
-            padding: 12px 14px;
-            font-size: 0.8rem;
-            color: #4b5563;
-            text-align: left;
-            line-height: 1.5;
-            margin-top: 16px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .use-case-text strong {
-            color: #1f2937;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            background: #f9fafb;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            color: #4b5563;
-        }
-
-        .feature-item i {
             color: var(--primary);
-            font-size: 1rem;
         }
 
-        .stat-highlight {
-            background: linear-gradient(135deg, #fdf2f8, #fce7f3);
-            border-radius: 10px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-        }
-
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-text {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-top: 2px;
+        .try-link i {
+            font-size: 0.7rem;
         }
 
         @media (max-width: 480px) {
-            .validation-card {
+            .redirect-card {
                 padding: 30px 20px;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="validation-card">
+    <div class="redirect-card">
         <div class="brand-header">
             <a href="{% url 'home' %}"><i class="bi bi-lightning-charge-fill"></i> Maedix</a>
             <div class="brand-slogan">Instagram Automation Platform</div>
         </div>
 
-        <div class="shield-icon checking" id="shieldIcon">
-            <i class="bi bi-shield-check"></i>
+        <div class="link-icon">
+            <i class="bi bi-box-arrow-up-right"></i>
         </div>
 
-        <h1 class="validation-title" id="title">Validating Link</h1>
-        <p class="validation-status" id="status">Please wait while we verify this link...</p>
-
-        <div class="progress-bar-container">
-            <div class="progress-bar checking" id="progressBar"></div>
-        </div>
-
-        <div class="check-steps">
-            <div class="check-step" id="step1">
-                <div class="spinner" id="spinner1"></div>
-                <span>Checking URL format</span>
-            </div>
-            <div class="check-step" id="step2">
-                <i class="bi bi-circle" id="icon2"></i>
-                <span>Verifying destination</span>
-            </div>
-            <div class="check-step" id="step3">
-                <i class="bi bi-circle" id="icon3"></i>
-                <span>Preparing redirect</span>
-            </div>
-        </div>
+        <h1 class="redirect-title">Link shared via Maedix</h1>
+        <p class="redirect-subtitle">Instagram DM automation tool</p>
 
         <div class="destination-box">
             <div class="destination-label">Destination</div>
             <div class="destination-url">{{ target_url|truncatechars:50 }}</div>
         </div>
 
-        <a href="{{ target_url }}" class="continue-btn" id="continueBtn">
-            Continue to Site <i class="bi bi-arrow-right"></i>
+        <a href="{{ target_url }}" class="go-btn">
+            Go to Link <i class="bi bi-arrow-right"></i>
         </a>
-
-        <!-- Feature Highlights -->
-        <div class="features-section">
-            <div class="hook-text">
-                <i class="bi bi-lightbulb-fill"></i>
-                This link was sent automatically. Want to do the same?
-            </div>
-
-            <div class="stat-highlight">
-                <div class="stat-number">10+ hrs/week</div>
-                <div class="stat-text">Average time saved with Instagram automation</div>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-item">
-                    <i class="bi bi-reply-fill"></i>
-                    <span>Auto-reply to Comments</span>
-                </div>
-                <div class="feature-item">
-                    <i class="bi bi-send-fill"></i>
-                    <span>Auto-send DMs</span>
-                </div>
-                <div class="feature-item">
-                    <i class="bi bi-bullseye"></i>
-                    <span>Keyword Triggers</span>
-                </div>
-                <div class="feature-item">
-                    <i class="bi bi-funnel-fill"></i>
-                    <span>Capture Leads</span>
-                </div>
-            </div>
-
-            <div class="use-case-text">
-                <strong>How it works:</strong> Someone comments a keyword on your post → They automatically get a DM with your link. No manual work.
-            </div>
-        </div>
 
         <div class="powered-by">
             <div class="powered-by-main">
-                Link shared via <a href="{% url 'home' %}"><i class="bi bi-lightning-charge-fill"></i> Maedix</a>
+                <a href="{% url 'home' %}"><i class="bi bi-lightning-charge-fill"></i> Maedix</a>
             </div>
             <div class="powered-by-tagline">
                 Automate your Instagram DMs & Comments
             </div>
-            <a href="{% url 'signup' %}" class="try-link">Try Free</a>
+            <a href="{% url 'home' %}" class="try-link">Try Maedix for your Instagram <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
 
-    <script>
-        const targetUrl = "{{ target_url|escapejs }}";
-        const progressBar = document.getElementById('progressBar');
-        const shieldIcon = document.getElementById('shieldIcon');
-        const title = document.getElementById('title');
-        const status = document.getElementById('status');
-        const continueBtn = document.getElementById('continueBtn');
-
-        const steps = [
-            { el: 'step1', spinner: 'spinner1', icon: 'icon1', duration: 1200 },
-            { el: 'step2', spinner: 'spinner2', icon: 'icon2', duration: 1000 },
-            { el: 'step3', spinner: 'spinner3', icon: 'icon3', duration: 800 }
-        ];
-
-        let progress = 0;
-        let currentStep = 0;
-
-        function updateStep(index, state) {
-            const step = document.getElementById(steps[index].el);
-            const iconEl = document.getElementById(steps[index].icon);
-            const spinnerEl = document.getElementById(steps[index].spinner);
-
-            if (state === 'active') {
-                step.classList.add('active');
-                step.classList.remove('done');
-                // Replace icon with spinner
-                if (iconEl) {
-                    iconEl.outerHTML = `<div class="spinner" id="spinner${index + 1}"></div>`;
-                }
-            } else if (state === 'done') {
-                step.classList.remove('active');
-                step.classList.add('done');
-                // Replace spinner with check
-                const spinner = document.getElementById(`spinner${index + 1}`);
-                if (spinner) {
-                    spinner.outerHTML = `<i class="bi bi-check-circle-fill" id="icon${index + 1}"></i>`;
-                }
-            }
-        }
-
-        function runValidation() {
-            // Step 1
-            updateStep(0, 'active');
-
-            setTimeout(() => {
-                updateStep(0, 'done');
-                progress = 33;
-                progressBar.style.width = progress + '%';
-
-                // Step 2
-                updateStep(1, 'active');
-
-                setTimeout(() => {
-                    updateStep(1, 'done');
-                    progress = 66;
-                    progressBar.style.width = progress + '%';
-
-                    // Step 3
-                    updateStep(2, 'active');
-
-                    setTimeout(() => {
-                        updateStep(2, 'done');
-                        progress = 100;
-                        progressBar.style.width = progress + '%';
-                        progressBar.classList.remove('checking');
-
-                        // Complete
-                        setTimeout(() => {
-                            shieldIcon.classList.remove('checking');
-                            title.textContent = 'Link Verified';
-                            status.textContent = 'This link is safe. Click below to continue.';
-                            continueBtn.classList.add('ready');
-                        }, 300);
-
-                    }, steps[2].duration);
-                }, steps[1].duration);
-            }, steps[0].duration);
-        }
-
-        // Start validation
-        runValidation();
-
-        // Auto-redirect after 15 seconds if user doesn't click
-        setTimeout(() => {
-            window.location.href = targetUrl;
-        }, 15000);
-    </script>
 </body>
 </html>

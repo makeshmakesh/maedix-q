@@ -26,6 +26,7 @@ from .models import (
 )
 from .flow_engine import FlowEngine, find_matching_flow, find_session_for_message, parse_quick_reply_payload
 from .instagram_api import get_api_client_for_account, InstagramAPIError
+from .url_utils import process_flow_node_urls, unwrap_flow_node_urls
 from core.models import Configuration
 from core.subscription_utils import check_feature_access, get_user_subscription
 
@@ -1095,6 +1096,9 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
             node_config = node.config or {}
 
+            # Unwrap watermarked URLs for display in editor
+            node_config = unwrap_flow_node_urls(node.node_type, node_config)
+
             # Add AI node config data if this is an AI conversation node
             if node.node_type == 'ai_conversation':
                 from django.urls import reverse
@@ -1257,6 +1261,9 @@ class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                         config['_pos_x'] = pos_x
                     if pos_y is not None:
                         config['_pos_y'] = pos_y
+
+                    # Process URLs - wrap with watermark if user doesn't have direct_links feature
+                    config = process_flow_node_urls(node_type, config, request.user)
 
                     if node_id and isinstance(node_id, int):
                         # Update existing node

@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'channels',
     'django.contrib.sitemaps',
     'django.contrib.humanize',
+    'django_ckeditor_5',
 
     # Local apps
     'core',
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'youtube',
     'roleplay',
     'games',
+    'blog',
     # 'courses',       # Phase 2
     # 'assessments',   # Phase 2
     # 'hr',            # Phase 3
@@ -199,5 +201,47 @@ CACHES = {
         'OPTIONS': {
             'MAX_ENTRIES': 1000
         }
+    }
+}
+
+
+# CKEditor 5 Configuration
+# Uses custom S3 storage that reads AWS credentials from Configuration model
+CKEDITOR_5_FILE_STORAGE = "blog.storage.BlogS3Storage"
+
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            'heading', '|',
+            'bold', 'italic', 'underline', 'strikethrough', '|',
+            'link', 'bulletedList', 'numberedList', '|',
+            'blockQuote', 'codeBlock', '|',
+            'insertTable', 'imageUpload', '|',
+            'sourceEditing', '|',
+            'undo', 'redo'
+        ],
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'},
+                {'model': 'heading4', 'view': 'h4', 'title': 'Heading 4', 'class': 'ck-heading_heading4'},
+            ]
+        },
+        'image': {
+            'toolbar': ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side']
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells']
+        },
+        'codeBlock': {
+            'languages': [
+                {'language': 'python', 'label': 'Python'},
+                {'language': 'javascript', 'label': 'JavaScript'},
+                {'language': 'html', 'label': 'HTML'},
+                {'language': 'css', 'label': 'CSS'},
+                {'language': 'bash', 'label': 'Bash'},
+            ]
+        },
     }
 }

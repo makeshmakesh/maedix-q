@@ -24,3 +24,4 @@ PyPDF2
 python-docx
 pandas
 openpyxl
+django-ckeditor-5

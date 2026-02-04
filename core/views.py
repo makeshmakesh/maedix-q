@@ -769,3 +769,35 @@ class CreditPaymentFailedView(View):
         except Exception as e:
             logger.error(f"Error logging credit payment failure: {e}")
             return JsonResponse({'status': 'error'}, status=400)
+
+
+class LinkRedirectView(View):
+    """
+    Branded redirect page for watermarked links.
+    Shows Maedix branding/ad for a few seconds before redirecting.
+    """
+    template_name = 'core/link-redirect.html'
+
+    def get(self, request):
+        import urllib.parse
+
+        target_url = request.GET.get('url', '')
+
+        if not target_url:
+            messages.error(request, 'No destination URL provided.')
+            return redirect('home')
+
+        # Decode URL if needed
+        try:
+            target_url = urllib.parse.unquote(target_url)
+        except:
+            pass
+
+        # Basic validation - ensure it looks like a URL
+        if not target_url.startswith(('http://', 'https://')):
+            target_url = 'https://' + target_url
+
+        return render(request, self.template_name, {
+            'target_url': target_url,
+            'redirect_delay': 5,  # seconds before redirect
+        })

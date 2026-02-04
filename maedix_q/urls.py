@@ -8,25 +8,22 @@ from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from core.sitemaps import (
     StaticSitemap,
-    QuizSitemap,
-    CategorySitemap,
-    TopicSitemap,
-    QuizHomeSitemap,
+    BlogPostSitemap,
+    BlogCategorySitemap,
 )
 from core.views import robots_txt
 
 sitemaps = {
     'static': StaticSitemap,
-    'quiz_home': QuizHomeSitemap,
-    'quizzes': QuizSitemap,
-    'categories': CategorySitemap,
-    'topics': TopicSitemap,
+    'blog_posts': BlogPostSitemap,
+    'blog_categories': BlogCategorySitemap,
 }
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
+    path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('', include('core.urls')),
     path('users/', include('users.urls')),
     path('quiz/', include('quiz.urls')),
@@ -34,6 +31,7 @@ urlpatterns = [
     path('youtube/', include('youtube.urls')),
     path('roleplay/', include('roleplay.urls')),
     path('games/', include('games.urls')),
+    path('blog/', include('blog.urls')),
 ]
 
 if settings.DEBUG:

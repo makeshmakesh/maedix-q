@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+{% block meta_description %}{{ post.meta_description }}{% endblock %}
+{% block keywords %}{{ post.meta_keywords|default:"instagram automation, instagram marketing" }}{% endblock %}
+
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ post.meta_description }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{% if post.featured_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% else %}https://maedix.com/static/images/og-default.png{% endif %}{% endblock %}
+{% block twitter_image %}{% if post.featured_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% else %}https://maedix.com/static/images/og-default.png{% endif %}{% endblock %}
+
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ post.get_absolute_url }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{ post.title|escapejs }}",
+    "description": "{{ post.meta_description|escapejs }}",
+    "datePublished": "{{ post.published_at|date:'c' }}",
+    "dateModified": "{{ post.updated_at|date:'c' }}",
+    "author": {
+        "@type": "Organization",
+        "name": "Maedix"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Maedix",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://maedix.com/static/images/logo.png"
+        }
+    },
+    {% if post.featured_image %}
+    "image": "{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}",
+    {% endif %}
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "{{ request.build_absolute_uri }}"
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+    }
+
+    .blog-content h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .blog-content h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .blog-content p {
+        margin-bottom: 1.25rem;
+    }
+
+    .blog-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius);
+        margin: 1.5rem 0;
+    }
+
+    .blog-content ul, .blog-content ol {
+        margin-bottom: 1.25rem;
+        padding-left: 1.5rem;
+    }
+
+    .blog-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .blog-content blockquote {
+        border-left: 4px solid var(--primary);
+        padding-left: 1.5rem;
+        margin: 1.5rem 0;
+        font-style: italic;
+        color: var(--text-muted);
+    }
+
+    .blog-content pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        overflow-x: auto;
+        margin: 1.5rem 0;
+    }
+
+    .blog-content code {
+        background: var(--bg-gray);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .blog-content pre code {
+        background: none;
+        padding: 0;
+    }
+
+    .blog-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+    }
+
+    .blog-content th, .blog-content td {
+        border: 1px solid var(--border-color);
+        padding: 0.75rem;
+        text-align: left;
+    }
+
+    .blog-content th {
+        background: var(--bg-light);
+        font-weight: 600;
+    }
+
+    .blog-content a {
+        color: var(--primary);
+        text-decoration: underline;
+    }
+
+    .blog-content a:hover {
+        color: var(--primary-dark);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<article class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'blog:post_list' %}">Blog</a></li>
+                        {% if post.category %}
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'blog:category' category_slug=post.category.slug %}">{{ post.category.name }}</a>
+                        </li>
+                        {% endif %}
+                        <li class="breadcrumb-item active" aria-current="page">{{ post.title|truncatewords:5 }}</li>
+                    </ol>
+                </nav>
+
+                <!-- Post Header -->
+                <header class="mb-4">
+                    {% if post.category %}
+                    <a href="{% url 'blog:category' category_slug=post.category.slug %}" class="text-decoration-none">
+                        <span class="badge bg-primary mb-3">{{ post.category.name }}</span>
+                    </a>
+                    {% endif %}
+
+                    <h1 class="display-5 fw-bold mb-3">{{ post.title }}</h1>
+
+                    <div class="d-flex flex-wrap gap-3 text-muted mb-4">
+                        <span>
+                            <i class="bi bi-calendar me-1"></i>
+                            {{ post.published_at|date:"F d, Y" }}
+                        </span>
+                        <span>
+                            <i class="bi bi-clock me-1"></i>
+                            {{ post.reading_time }} min read
+                        </span>
+                    </div>
+
+                    {% if not post.is_published %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-eye-slash me-2"></i>
+                        <strong>Draft:</strong> This post is not published yet. Only staff can see this preview.
+                    </div>
+                    {% endif %}
+                </header>
+
+                <!-- Featured Image -->
+                {% if post.featured_image %}
+                <figure class="mb-5">
+                    <img src="{{ post.featured_image.url }}"
+                         alt="{{ post.featured_image_alt|default:post.title }}"
+                         class="img-fluid rounded"
+                         style="width: 100%;">
+                    {% if post.featured_image_alt %}
+                    <figcaption class="text-muted text-center mt-2 small">{{ post.featured_image_alt }}</figcaption>
+                    {% endif %}
+                </figure>
+                {% endif %}
+
+                <!-- Post Content -->
+                <div class="blog-content">
+                    {{ post.content|safe }}
+                </div>
+
+                <!-- CTA -->
+                <div class="card bg-primary-soft border-0 p-4 text-center mb-5">
+                    <h3 class="h5 mb-3">Ready to automate your Instagram?</h3>
+                    <p class="text-muted mb-3">Turn comments into leads with Maedix automation</p>
+                    <a href="{% url 'signup' %}" class="btn btn-primary">
+                        Get Started Free <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+
+                <!-- Related Posts -->
+                {% if related_posts %}
+                <section class="mt-5">
+                    <h2 class="h4 mb-4">Related Articles</h2>
+                    <div class="row g-4">
+                        {% for related in related_posts %}
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                {% if related.featured_image %}
+                                <img src="{{ related.featured_image.url }}"
+                                     class="card-img-top"
+                                     alt="{{ related.featured_image_alt|default:related.title }}"
+                                     style="height: 120px; object-fit: cover;">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h3 class="card-title h6">
+                                        <a href="{{ related.get_absolute_url }}" class="text-decoration-none text-dark">
+                                            {{ related.title }}
+                                        </a>
+                                    </h3>
+                                    <small class="text-muted">{{ related.reading_time }} min read</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}

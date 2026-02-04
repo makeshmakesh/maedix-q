@@ -1,13 +1,26 @@
 User-agent: *
 Allow: /
-Disallow: /users/
+Allow: /blog/
+
+# Private/authenticated areas
 Disallow: /admin/
-Disallow: /quiz/staff/
+Disallow: /users/
+Disallow: /ckeditor5/
+
+# Instagram automation - private dashboards
+Disallow: /instagram/automation/dashboard/
+Disallow: /instagram/automation/flows/
+Disallow: /instagram/automation/settings/
 Disallow: /instagram/webhook/
-Disallow: /youtube/webhook/
+
+# Other internal features (not user-facing)
+Disallow: /quiz/
+Disallow: /youtube/
+Disallow: /roleplay/
+Disallow: /games/
+
+# Payment routes
+Disallow: /checkout/
 Disallow: /payment/
-Disallow: /quiz/my-quizzes/
-Disallow: /quiz/my-topics/
-Disallow: /quiz/video/
 
 Sitemap: https://maedix.com/sitemap.xml

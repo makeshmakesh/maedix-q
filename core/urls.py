@@ -25,4 +25,7 @@ urlpatterns = [
     path('credits/checkout/', views.CreditCheckoutView.as_view(), name='credit_checkout'),
     path('credits/success/', views.CreditPaymentSuccessView.as_view(), name='credit_success'),
     path('credits/failed/', views.CreditPaymentFailedView.as_view(), name='credit_failed'),
+
+    # Link redirect (watermark/branding page)
+    path('go/', views.LinkRedirectView.as_view(), name='link_redirect'),
 ]

@@ -144,25 +144,25 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {% for plan in plans %}
+                            {% for item in plans %}
                             <div class="col-md-4">
-                                <div class="card h-100 {% if subscription and subscription.plan.id == plan.id %}border-primary{% endif %}">
+                                <div class="card h-100 {% if subscription and subscription.plan.id == item.plan.id %}border-primary{% endif %}">
                                     <div class="card-body text-center">
-                                        {% if plan.is_popular %}
+                                        {% if item.plan.is_popular %}
                                         <span class="badge bg-primary mb-2">Popular</span>
                                         {% endif %}
-                                        <h6 class="fw-bold">{{ plan.name }}</h6>
+                                        <h6 class="fw-bold">{{ item.plan.name }}</h6>
                                         <p class="fs-4 fw-bold mb-1">
-                                            {% if plan.price_monthly > 0 %}
-                                            ₹{{ plan.price_monthly|floatformat:0 }}<small class="text-muted fs-6">/mo</small>
+                                            {% if item.price_monthly > 0 %}
+                                            {{ item.symbol }}{{ item.price_monthly|floatformat:0 }}<small class="text-muted fs-6">/mo</small>
                                             {% else %}
                                             Free
                                             {% endif %}
                                         </p>
-                                        {% if subscription and subscription.plan.id == plan.id %}
+                                        {% if subscription and subscription.plan.id == item.plan.id %}
                                         <span class="badge bg-success">Current Plan</span>
-                                        {% elif plan.plan_type != 'free' %}
-                                        <a href="{% url 'checkout' %}?plan={{ plan.slug }}" class="btn btn-sm btn-outline-primary mt-2">
+                                        {% elif item.plan.plan_type != 'free' %}
+                                        <a href="{% url 'checkout' %}?plan={{ item.plan.slug }}" class="btn btn-sm btn-outline-primary mt-2">
                                             Upgrade
                                         </a>
                                         {% endif %}

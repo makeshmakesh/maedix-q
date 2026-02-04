@@ -97,7 +97,7 @@
                                         <div class="fw-medium">{{ transaction.credits }} credits</div>
                                         <small class="text-muted">{{ transaction.created_at|date:"M d, Y" }}</small>
                                     </div>
-                                    <span class="badge bg-success">{% if transaction.currency == 'USD' %}${% else %}&#8377;{% endif %}{{ transaction.amount }}</span>
+                                    <span class="badge bg-success">{{ transaction.currency }} {{ transaction.amount }}</span>
                                 </div>
                                 {% endfor %}
                             </div>

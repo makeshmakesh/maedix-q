@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
+from django.db import transaction
 from dateutil.relativedelta import relativedelta
 from .models import Plan, ContactMessage, Configuration, Subscription, Transaction
 from roleplay.models import CreditTransaction
@@ -288,6 +289,21 @@ class PaymentSuccessView(LoginRequiredMixin, View):
         billing = request.POST.get('billing', 'monthly')
         coupon_code = request.POST.get('coupon_code', '').strip()
 
+        # Idempotency check: If this order was already processed, redirect to success
+        existing_txn = Transaction.objects.filter(
+            razorpay_order_id=razorpay_order_id,
+            user=request.user,
+            status='success'
+        ).first()
+        if existing_txn:
+            messages.info(request, 'This payment has already been processed.')
+            if existing_txn.subscription:
+                request.session['payment_success_data'] = {
+                    'transaction_id': existing_txn.id,
+                    'subscription_id': existing_txn.subscription.id,
+                }
+            return redirect('payment_success_page')
+
         try:
             plan = Plan.objects.get(slug=plan_slug, is_active=True)
         except Plan.DoesNotExist:
@@ -329,58 +345,69 @@ class PaymentSuccessView(LoginRequiredMixin, View):
                 messages.error(request, 'Payment verification failed. Please contact support.')
                 return redirect('pricing')
 
-            # Create transaction record with coupon info if applied
-            transaction_metadata = {
-                'plan_slug': plan_slug,
-                'billing': billing,
-            }
-            if applied_coupon:
-                transaction_metadata['coupon_code'] = applied_coupon['code']
-                transaction_metadata['discount_percentage'] = applied_coupon.get('discount_percentage', 0)
-                transaction_metadata['original_price'] = str(original_price)
+            # Use atomic transaction to prevent duplicate processing
+            with transaction.atomic():
+                # Double-check inside transaction (another request may have just completed)
+                if Transaction.objects.filter(
+                    razorpay_order_id=razorpay_order_id,
+                    user=request.user,
+                    status='success'
+                ).exists():
+                    messages.info(request, 'This payment has already been processed.')
+                    return redirect('payment_success_page')
 
-            transaction = Transaction.objects.create(
-                user=request.user,
-                amount=Decimal(str(price)),
-                currency=currency,
-                status='success',
-                razorpay_order_id=razorpay_order_id,
-                razorpay_payment_id=razorpay_payment_id,
-                razorpay_signature=razorpay_signature,
-                metadata=transaction_metadata
-            )
-
-            # Calculate subscription dates
-            now = timezone.now()
-            if is_yearly:
-                end_date = now + relativedelta(years=1)
-                next_reset = now + relativedelta(months=1)
-            else:
-                end_date = now + relativedelta(months=1)
-                next_reset = end_date
-
-            # Create or update subscription
-            subscription, created = Subscription.objects.update_or_create(
-                user=request.user,
-                defaults={
-                    'plan': plan,
-                    'status': 'active',
-                    'start_date': now,
-                    'end_date': end_date,
-                    'is_yearly': is_yearly,
-                    'usage_data': {},  # Reset usage on new subscription
-                    'last_reset_date': now,
-                    'next_reset_date': next_reset,
+                # Create transaction record with coupon info if applied
+                transaction_metadata = {
+                    'plan_slug': plan_slug,
+                    'billing': billing,
                 }
-            )
+                if applied_coupon:
+                    transaction_metadata['coupon_code'] = applied_coupon['code']
+                    transaction_metadata['discount_percentage'] = applied_coupon.get('discount_percentage', 0)
+                    transaction_metadata['original_price'] = str(original_price)
 
-            # Link transaction to subscription
-            transaction.subscription = subscription
-            transaction.save()
+                payment_txn = Transaction.objects.create(
+                    user=request.user,
+                    amount=Decimal(str(price)),
+                    currency=currency,
+                    status='success',
+                    razorpay_order_id=razorpay_order_id,
+                    razorpay_payment_id=razorpay_payment_id,
+                    razorpay_signature=razorpay_signature,
+                    metadata=transaction_metadata
+                )
 
-            # Store success data in session
+                # Calculate subscription dates
+                now = timezone.now()
+                if is_yearly:
+                    end_date = now + relativedelta(years=1)
+                    next_reset = now + relativedelta(months=1)
+                else:
+                    end_date = now + relativedelta(months=1)
+                    next_reset = end_date
+
+                # Create or update subscription
+                subscription, created = Subscription.objects.update_or_create(
+                    user=request.user,
+                    defaults={
+                        'plan': plan,
+                        'status': 'active',
+                        'start_date': now,
+                        'end_date': end_date,
+                        'is_yearly': is_yearly,
+                        'usage_data': {},  # Reset usage on new subscription
+                        'last_reset_date': now,
+                        'next_reset_date': next_reset,
+                    }
+                )
+
+                # Link transaction to subscription
+                payment_txn.subscription = subscription
+                payment_txn.save()
+
+            # Store success data in session (outside atomic block)
             request.session['payment_success_data'] = {
-                'transaction_id': transaction.id,
+                'transaction_id': payment_txn.id,
                 'subscription_id': subscription.id,
             }
 
@@ -697,42 +724,55 @@ class CreditPaymentSuccessView(LoginRequiredMixin, View):
         razorpay_order_id = request.POST.get('razorpay_order_id')
         razorpay_signature = request.POST.get('razorpay_signature')
 
-        try:
-            transaction = CreditTransaction.objects.get(
-                razorpay_order_id=razorpay_order_id,
-                user=request.user,
-                status='pending'
-            )
-        except CreditTransaction.DoesNotExist:
-            messages.error(request, 'Transaction not found.')
-            return redirect('purchase_credits')
+        # Check if already completed (idempotency check before locking)
+        if CreditTransaction.objects.filter(
+            razorpay_order_id=razorpay_order_id,
+            user=request.user,
+            status='completed'
+        ).exists():
+            messages.info(request, 'This payment has already been processed.')
+            return redirect('profile')
 
         try:
-            razorpay_secret = Configuration.get_value('razorpay_api_secret')
+            # Use atomic transaction with row-level lock to prevent race conditions
+            with transaction.atomic():
+                try:
+                    credit_txn = CreditTransaction.objects.select_for_update().get(
+                        razorpay_order_id=razorpay_order_id,
+                        user=request.user,
+                        status='pending'
+                    )
+                except CreditTransaction.DoesNotExist:
+                    messages.error(request, 'Transaction not found.')
+                    return redirect('purchase_credits')
 
-            sign_string = f"{razorpay_order_id}|{razorpay_payment_id}"
-            expected_signature = hmac.new(
-                razorpay_secret.encode(),
-                sign_string.encode(),
-                hashlib.sha256
-            ).hexdigest()
+                # Verify signature
+                razorpay_secret = Configuration.get_value('razorpay_api_secret')
 
-            if expected_signature != razorpay_signature:
-                logger.error(f"Credit payment signature verification failed for user {request.user.id}")
-                messages.error(request, 'Payment verification failed. Please contact support.')
-                return redirect('purchase_credits')
+                sign_string = f"{razorpay_order_id}|{razorpay_payment_id}"
+                expected_signature = hmac.new(
+                    razorpay_secret.encode(),
+                    sign_string.encode(),
+                    hashlib.sha256
+                ).hexdigest()
 
-            transaction.status = 'completed'
-            transaction.razorpay_payment_id = razorpay_payment_id
-            transaction.razorpay_signature = razorpay_signature
-            transaction.save()
+                if expected_signature != razorpay_signature:
+                    logger.error(f"Credit payment signature verification failed for user {request.user.id}")
+                    messages.error(request, 'Payment verification failed. Please contact support.')
+                    return redirect('purchase_credits')
 
-            if hasattr(request.user, 'profile'):
-                request.user.profile.add_credits(transaction.credits)
-                messages.success(request, f'Successfully added {transaction.credits} credits to your account!')
-            else:
-                messages.error(request, 'Profile not found. Please contact support.')
-                return redirect('purchase_credits')
+                # Update transaction and add credits within the same atomic block
+                credit_txn.status = 'completed'
+                credit_txn.razorpay_payment_id = razorpay_payment_id
+                credit_txn.razorpay_signature = razorpay_signature
+                credit_txn.save()
+
+                if hasattr(request.user, 'profile'):
+                    request.user.profile.add_credits(credit_txn.credits)
+                    messages.success(request, f'Successfully added {credit_txn.credits} credits to your account!')
+                else:
+                    messages.error(request, 'Profile not found. Please contact support.')
+                    return redirect('purchase_credits')
 
             return redirect('profile')
 

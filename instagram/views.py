@@ -9,6 +9,8 @@ import hmac
 import hashlib
 import uuid
 import csv
+import signal
+import threading
 from datetime import timedelta
 from django.db import models, transaction
 from django.shortcuts import render, redirect, get_object_or_404
@@ -31,6 +33,50 @@ from core.models import Configuration
 from core.subscription_utils import check_feature_access, get_user_subscription
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Flow Execution Timeout Protection
+# =============================================================================
+
+FLOW_EXECUTION_TIMEOUT = 30  # Maximum seconds for flow execution
+
+
+class FlowTimeoutError(Exception):
+    """Raised when flow execution exceeds the timeout limit"""
+    pass
+
+
+def _flow_timeout_handler(signum, frame):
+    """Signal handler for flow execution timeout"""
+    raise FlowTimeoutError("Flow execution timed out")
+
+
+class FlowExecutionTimeout:
+    """
+    Context manager for flow execution timeout protection.
+    Uses signal.alarm on Unix systems (only works in main thread).
+    Gracefully degrades if not in main thread.
+    """
+    def __init__(self, timeout_seconds=FLOW_EXECUTION_TIMEOUT):
+        self.timeout_seconds = timeout_seconds
+        self.old_handler = None
+        self.can_use_signal = False
+
+    def __enter__(self):
+        # signal.alarm only works in main thread
+        if threading.current_thread() is threading.main_thread():
+            self.can_use_signal = True
+            self.old_handler = signal.signal(signal.SIGALRM, _flow_timeout_handler)
+            signal.alarm(self.timeout_seconds)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.can_use_signal:
+            signal.alarm(0)  # Cancel the alarm
+            signal.signal(signal.SIGALRM, self.old_handler)
+        # Don't suppress exceptions
+        return False
 
 
 # =============================================================================
@@ -2206,18 +2252,21 @@ class InstagramWebhookView(View):
             logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - queued flow trigger for comment {comment_id}")
             return
 
-        # Trigger the flow
+        # Trigger the flow with timeout protection
         try:
-            engine = FlowEngine(instagram_account)
-            engine.trigger_flow_from_comment(
-                flow=flow,
-                comment_id=comment_id,
-                post_id=post_id,
-                commenter_id=commenter_id,
-                commenter_username=commenter_username,
-                comment_text=comment_text
-            )
+            with FlowExecutionTimeout():
+                engine = FlowEngine(instagram_account)
+                engine.trigger_flow_from_comment(
+                    flow=flow,
+                    comment_id=comment_id,
+                    post_id=post_id,
+                    commenter_id=commenter_id,
+                    commenter_username=commenter_username,
+                    comment_text=comment_text
+                )
             logger.info(f"Triggered flow '{flow.title}' for comment {comment_id}")
+        except FlowTimeoutError:
+            logger.error(f"Flow execution timed out for comment {comment_id} - possible infinite loop")
         except Exception as e:
             logger.error(f"Error triggering flow: {str(e)}")
 
@@ -2316,13 +2365,17 @@ class InstagramWebhookView(View):
             session.status = 'active'
             session.save(update_fields=['status', 'updated_at'])
 
+        # Execute flow with timeout protection
         try:
-            engine = FlowEngine(instagram_account)
-            # Determine if this is a quick reply (_opt_) or button postback (_btn_)
-            if '_btn_' in payload:
-                engine.handle_button_postback(session, payload, message_id)
-            else:
-                engine.handle_quick_reply_click(session, payload, message_id)
+            with FlowExecutionTimeout():
+                engine = FlowEngine(instagram_account)
+                # Determine if this is a quick reply (_opt_) or button postback (_btn_)
+                if '_btn_' in payload:
+                    engine.handle_button_postback(session, payload, message_id)
+                else:
+                    engine.handle_quick_reply_click(session, payload, message_id)
+        except FlowTimeoutError:
+            logger.error(f"Flow execution timed out for session {session_id} - possible infinite loop")
         except Exception as e:
             logger.error(f"Error handling quick reply/postback: {str(e)}")
 
@@ -2351,9 +2404,13 @@ class InstagramWebhookView(View):
                 logger.info(f"Duplicate webhook ignored - message_id {message_id} already processed")
                 return
 
+        # Execute flow with timeout protection
         try:
-            engine = FlowEngine(instagram_account)
-            engine.handle_text_reply(session, text, message_id)
+            with FlowExecutionTimeout():
+                engine = FlowEngine(instagram_account)
+                engine.handle_text_reply(session, text, message_id)
+        except FlowTimeoutError:
+            logger.error(f"Flow execution timed out for session {session.id} - possible infinite loop")
         except Exception as e:
             logger.error(f"Error handling text reply: {str(e)}")
 

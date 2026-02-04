@@ -10,6 +10,7 @@ from .models import UserProfile, UserStats, EmailOTP
 from .otp_utils import send_otp_email, verify_otp
 from core.models import Subscription, Plan, Transaction
 from core.subscription_utils import get_or_create_free_subscription
+from core.utils import get_user_country
 
 User = get_user_model()
 
@@ -309,6 +310,21 @@ class SubscriptionView(LoginRequiredMixin, View):
         # Get available plans for upgrade
         plans = Plan.objects.filter(is_active=True).order_by('order')
 
+        # Get user's country for pricing
+        user_country = get_user_country(request)
+
+        # Build plans with user-specific pricing
+        plans_with_pricing = []
+        for plan in plans:
+            pricing = plan.get_pricing_for_country(user_country)
+            plans_with_pricing.append({
+                'plan': plan,
+                'price_monthly': pricing['monthly'],
+                'price_yearly': pricing['yearly'],
+                'currency': pricing['currency'],
+                'symbol': pricing['symbol'],
+            })
+
         # Get recent transactions
         transactions = Transaction.objects.filter(
             user=request.user
@@ -330,7 +346,7 @@ class SubscriptionView(LoginRequiredMixin, View):
 
         context = {
             'subscription': subscription,
-            'plans': plans,
+            'plans': plans_with_pricing,
             'transactions': transactions,
             'automation_count': flow_count,
             'automation_limit': flow_limit,

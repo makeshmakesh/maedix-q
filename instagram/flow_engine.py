@@ -44,7 +44,7 @@ class FlowEngine:
     """
 
     # Maximum number of node executions per session to prevent infinite loops
-    MAX_NODE_EXECUTIONS = 25
+    MAX_NODE_EXECUTIONS = 30
 
     def __init__(self, instagram_account: InstagramAccount):
         """
@@ -175,7 +175,7 @@ class FlowEngine:
             return
 
         # Check for same node being executed too many times (loop on specific node)
-        MAX_SAME_NODE_EXECUTIONS = 3
+        MAX_SAME_NODE_EXECUTIONS = 5
         if node_exec_count > MAX_SAME_NODE_EXECUTIONS:
             logger.error(
                 f"Loop detected in session {session.id}: "

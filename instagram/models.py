@@ -1152,6 +1152,8 @@ class QueuedFlowTrigger(models.Model):
     trigger_context = models.JSONField()
     # For comment: {comment_id, post_id, commenter_id, commenter_username, comment_text}
 
+    auto_eligible = models.BooleanField(default=False)
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     error_message = models.TextField(blank=True)
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load subscription_tags %}
 
 {% block title %}Queue{% endblock %}
 
@@ -339,6 +340,22 @@
                     </div>
                 </div>
 
+                <!-- Smart Queue Upgrade Banner -->
+                {% if not request.user|user_has_feature:'smart_queue_processing' %}
+                <div class="info-card" style="background: linear-gradient(135deg, #fff8e1, #fff3cd); border: 1px solid #ffc107; border-radius: var(--radius);">
+                    <p class="mb-2">
+                        <i class="bi bi-lightning-charge text-warning me-1"></i>
+                        <strong>You're manually processing queued messages.</strong>
+                    </p>
+                    <p class="mb-2" style="font-size: 0.85rem;">
+                        Upgrade to unlock <strong>Smart Queue</strong> — your queued messages will be auto-processed every 5 minutes. Never miss a lead, even when your post goes viral.
+                    </p>
+                    <a href="{% url 'pricing' %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-arrow-up-circle me-1"></i>Upgrade to Enable Smart Queue
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- Info Card -->
                 {% if pending_count > 0 and max_triggerable > 0 %}
                 <div class="info-card">
@@ -502,7 +519,11 @@
                                 </div>
                                 <div class="d-flex gap-2">
                                     <div class="queue-number" style="flex-shrink: 0;">3</div>
+                                    {% if request.user|user_has_feature:'smart_queue_processing' %}
+                                    <div style="font-size: 0.85rem;"><strong>Smart Queue</strong> auto-processes them every 5 minutes</div>
+                                    {% else %}
                                     <div style="font-size: 0.85rem;">Click "Trigger Now" when slots are available</div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

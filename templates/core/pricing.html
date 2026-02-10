@@ -47,8 +47,19 @@
                                 {% if item.plan.plan_type == 'enterprise' %}
                                 <span class="h2 fw-bold">Custom</span>
                                 {% elif item.price_monthly > 0 %}
-                                <span class="h2 fw-bold">{{ item.symbol }}{% if item.currency == 'INR' %}{{ item.price_monthly|floatformat:0 }}{% else %}{{ item.price_monthly|floatformat:2 }}{% endif %}</span>
-                                <span class="text-muted">/month</span>
+                                    {% if best_coupon and item.discounted_monthly %}
+                                    <div class="mb-1">
+                                        <span class="text-muted text-decoration-line-through">{{ item.symbol }}{{ item.price_monthly|floatformat:2 }}</span>
+                                    </div>
+                                    <span class="h2 fw-bold text-success">{{ item.symbol }}{{ item.discounted_monthly|floatformat:2 }}</span>
+                                    <span class="text-muted">/month</span>
+                                    <div class="mt-2">
+                                        <span class="badge bg-success"><i class="bi bi-tag-fill me-1"></i>{{ best_coupon.code }} — {{ best_coupon.discount_percentage }}% OFF</span>
+                                    </div>
+                                    {% else %}
+                                    <span class="h2 fw-bold">{{ item.symbol }}{{ item.price_monthly|floatformat:2 }}</span>
+                                    <span class="text-muted">/month</span>
+                                    {% endif %}
                                 {% else %}
                                 <span class="h2 fw-bold">Free</span>
                                 {% endif %}
@@ -85,7 +96,7 @@
                         {% elif item.plan.plan_type == 'enterprise' %}
                         <a href="{% url 'contact' %}" class="btn btn-outline-primary w-100">Contact Sales</a>
                         {% else %}
-                        <a href="{% url 'checkout' %}?plan={{ item.plan.slug }}" class="btn {% if item.plan.is_popular %}btn-primary{% else %}btn-dark{% endif %} w-100">
+                        <a href="{% url 'checkout' %}?plan={{ item.plan.slug }}{% if best_coupon %}&coupon={{ best_coupon.code }}{% endif %}" class="btn {% if item.plan.is_popular %}btn-primary{% else %}btn-dark{% endif %} w-100">
                             Upgrade Now
                         </a>
                         {% endif %}
@@ -338,9 +349,12 @@
                         </td>
                         {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
-                            {% if item.plan|plan_has_feature:'queue_triggers' %}
+                            {% if item.plan|plan_has_feature:'smart_queue_processing' %}
                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                             <br><small class="text-success">Auto-processed</small>
+                            {% elif item.plan|plan_has_feature:'queue_triggers' %}
+                            <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                            <br><small class="text-warning">Manual trigger</small>
                             {% else %}
                             <i class="bi bi-x-circle text-muted fs-5"></i>
                             <br><small class="text-muted">Excess skipped</small>

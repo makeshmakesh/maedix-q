@@ -41,6 +41,7 @@ def fetch_pending_triggers(cursor):
         SELECT qt.id, qt.account_id, qt.flow_id, qt.created_at
         FROM instagram_queuedflowtrigger qt
         WHERE qt.status = 'pending'
+          AND qt.auto_eligible = true
           AND qt.created_at >= NOW() - INTERVAL '24 hours'
         ORDER BY qt.created_at ASC
     """)

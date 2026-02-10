@@ -3,7 +3,7 @@ import hmac
 import hashlib
 import json
 import logging
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
@@ -59,22 +59,35 @@ class PricingPage(View):
         user_country = get_user_country(request)
         currency_info = get_currency_for_user(request)
 
+        # Check for public coupons — pick best (highest discount)
+        public_coupons = get_public_coupons()
+        best_coupon = max(public_coupons, key=lambda c: c.get('discount_percentage', 0), default=None) if public_coupons else None
+
         # Build pricing data for each plan based on user's country
         plans_with_pricing = []
         for plan in plans:
             pricing = plan.get_pricing_for_country(user_country)
-            plans_with_pricing.append({
+            item = {
                 'plan': plan,
                 'price_monthly': pricing['monthly'],
                 'price_yearly': pricing['yearly'],
                 'currency': pricing['currency'],
                 'symbol': pricing['symbol'],
-            })
+            }
+            # Calculate discounted prices for paid plans
+            if best_coupon and pricing['monthly'] > 0:
+                discount_pct = Decimal(str(best_coupon.get('discount_percentage', 0)))
+                monthly = Decimal(str(pricing['monthly']))
+                yearly = Decimal(str(pricing['yearly']))
+                item['discounted_monthly'] = float((monthly - monthly * discount_pct / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_DOWN))
+                item['discounted_yearly'] = float((yearly - yearly * discount_pct / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_DOWN))
+            plans_with_pricing.append(item)
 
         return render(request, self.template_name, {
             'plans': plans,
             'plans_with_pricing': plans_with_pricing,
             'current_plan': current_plan,
+            'best_coupon': best_coupon,
             'user_country': user_country,
             'currency': currency_info['currency'],
             'currency_symbol': currency_info['symbol'],
@@ -154,6 +167,16 @@ def get_valid_coupon(code: str) -> dict | None:
     return None
 
 
+def get_public_coupons():
+    """Get active coupons marked as public (for auto-display on pricing/checkout)."""
+    coupons_json = Configuration.get_value('coupon_codes', '[]')
+    try:
+        coupons = json.loads(coupons_json)
+        return [c for c in coupons if c.get('active', True) and c.get('public', False)]
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
 class ValidateCouponView(LoginRequiredMixin, View):
     """AJAX endpoint to validate coupon code"""
     login_url = '/users/login/'
@@ -201,6 +224,14 @@ class CheckoutView(LoginRequiredMixin, View):
         if plan.plan_type == 'free':
             messages.info(request, 'Free plan does not require payment.')
             return redirect('pricing')
+
+        # Auto-apply best public coupon if coupon param is not present at all in URL
+        # (if 'coupon' key exists but is empty, user explicitly removed it — don't re-apply)
+        public_coupons = get_public_coupons()
+        if 'coupon' not in request.GET and public_coupons:
+            best = max(public_coupons, key=lambda c: c.get('discount_percentage', 0))
+            url = f"{request.path}?plan={plan_slug}&billing={billing}&coupon={best['code']}"
+            return redirect(url)
 
         # Get user's country and pricing
         user_country = get_user_country(request)
@@ -261,6 +292,7 @@ class CheckoutView(LoginRequiredMixin, View):
                 'price': price,
                 'discount_amount': discount_amount,
                 'applied_coupon': applied_coupon,
+                'public_coupons': public_coupons,
                 'billing': billing,
                 'is_yearly': is_yearly,
                 'currency': currency,

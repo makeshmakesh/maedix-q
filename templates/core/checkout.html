@@ -68,6 +68,17 @@
                                     <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ applied_coupon.discount_percentage }}% discount applied!</span>
                                     {% endif %}
                                 </div>
+                                {% if public_coupons %}
+                                <div class="mt-2 d-flex flex-wrap gap-2">
+                                    {% for pc in public_coupons %}
+                                    <button type="button" class="btn btn-sm btn-outline-success public-coupon-chip"
+                                            data-code="{{ pc.code }}"
+                                            {% if applied_coupon and applied_coupon.code == pc.code %}disabled{% endif %}>
+                                        <i class="bi bi-tag-fill me-1"></i>{{ pc.code }} — {{ pc.discount_percentage }}% OFF
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
 
                             <!-- Price Summary -->
@@ -202,10 +213,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Remove coupon button click
+    // Remove coupon button click — set empty coupon param so auto-apply doesn't re-trigger
     removeCouponBtn.addEventListener('click', function() {
         const url = new URL(window.location.href);
-        url.searchParams.delete('coupon');
+        url.searchParams.set('coupon', '');
         window.location.href = url.toString();
     });
 
@@ -215,6 +226,16 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             applyCouponBtn.click();
         }
+    });
+
+    // Public coupon chip click — reload with coupon applied
+    document.querySelectorAll('.public-coupon-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            const code = this.dataset.code;
+            const url = new URL(window.location.href);
+            url.searchParams.set('coupon', code);
+            window.location.href = url.toString();
+        });
     });
 
     const options = {

@@ -465,7 +465,9 @@ Vulnerability Analysis Results
 
 
 
-  {"code": "queue_triggers", "description": "Queue missed messages when rate limited"}
+  {"code": "queue_triggers", "description": "Queue messages when rate-limited — manually trigger when slots are available"}
+
+  {"code": "smart_queue_processing", "description": "Auto-process queued messages every 5 minutes when rate-limited"}
 
   {"code": "ig_rate_limit", "limit": 500, "description": "500 API calls per hour"}
 

@@ -2330,6 +2330,7 @@ class InstagramWebhookView(View):
             # Only queue if user has the queue_triggers feature
             subscription = get_user_subscription(user)
             if subscription and subscription.plan.has_feature('queue_triggers'):
+                has_auto = subscription.plan.has_feature('smart_queue_processing')
                 QueuedFlowTrigger.objects.get_or_create(
                     account=instagram_account,
                     instagram_event_id=comment_id,
@@ -2342,7 +2343,8 @@ class InstagramWebhookView(View):
                             'commenter_id': commenter_id,
                             'commenter_username': commenter_username,
                             'comment_text': comment_text,
-                        }
+                        },
+                        'auto_eligible': has_auto,
                     }
                 )
                 logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - queued flow trigger for comment {comment_id}")

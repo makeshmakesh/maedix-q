@@ -184,7 +184,7 @@ def handler(event, context):
 
         # Group by account_id
         accounts = {}
-        for row in triggers[0:5]:
+        for row in triggers:
             account_id = row['account_id']
             if account_id not in accounts:
                 accounts[account_id] = []
@@ -202,7 +202,7 @@ def handler(event, context):
 
             calls_last_hour = get_calls_last_hour(cursor, account_id)
             rate_limit = get_rate_limit(cursor, account_id)
-            safety_buffer = 50
+            safety_buffer = 30
             available = rate_limit - calls_last_hour - safety_buffer
             max_triggers = max(0, available // 10)
 

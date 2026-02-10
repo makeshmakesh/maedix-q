@@ -427,3 +427,123 @@ sudo journalctl -u maedix-q -f
 
 python manage.py fake_api_calls --email techveins01@gmail.com --count 180 --clear
 python manage.py fake_api_calls --email techveins01@gmail.com --count 210
+
+
+
+
+
+Vulnerability Analysis Results
+
+  🔴 CRITICAL - Can Crash Server
+  ┌─────────────────────────────────┬─────────────────────────┬──────────────────────────────────────────────────────┐
+  │              Issue              │        Location         │                       Problem                        │
+  ├─────────────────────────────────┼─────────────────────────┼──────────────────────────────────────────────────────┤
+  │ Blocking sleep in video polling │ views.py:568-590        │ time.sleep(10) in loop, up to 300s block per request │
+  ├─────────────────────────────────┼─────────────────────────┼──────────────────────────────────────────────────────┤
+  │ Blocking DM rate limit delay    │ instagram_api.py:88-112 │ time.sleep(2-8s) before every DM blocks worker       │
+  ├─────────────────────────────────┼─────────────────────────┼──────────────────────────────────────────────────────┤
+  │ Synchronous webhook processing  │ views.py:2212           │ Flow execution in webhook handler blocks thread      │
+  └─────────────────────────────────┴─────────────────────────┴──────────────────────────────────────────────────────┘
+  🟠 HIGH - Performance/Resource Issues
+  ┌─────────────────────────────┬──────────────────────────┬─────────────────────────────────────┐
+  │            Issue            │         Location         │               Problem               │
+  ├─────────────────────────────┼──────────────────────────┼─────────────────────────────────────┤
+  │ N+1 queries in branch check │ flow_engine.py:1188-1212 │ DB query per node in loop           │
+  ├─────────────────────────────┼──────────────────────────┼─────────────────────────────────────┤
+  │ Unbounded knowledge chunks  │ ai_engine.py:142-163     │ No limit on chunks loaded to memory │
+  ├─────────────────────────────┼──────────────────────────┼─────────────────────────────────────┤
+  │ Nested webhook loops        │ views.py:2121-2132       │ Large payloads process sequentially │
+  └─────────────────────────────┴──────────────────────────┴─────────────────────────────────────┘
+  🟡 MEDIUM - Should Fix
+  ┌────────────────────────┬──────────────────────┬──────────────────────────────────────────┐
+  │         Issue          │       Location       │                 Problem                  │
+  ├────────────────────────┼──────────────────────┼──────────────────────────────────────────┤
+  │ CSV/PDF without limits │ knowledge_service.py │ Large files loaded entirely to memory    │
+  ├────────────────────────┼──────────────────────┼──────────────────────────────────────────┤
+  │ Unbounded AI history   │ ai_engine.py:529-534 │ Configurable limit could be set too high
+
+
+
+
+  {"code": "queue_triggers", "description": "Queue missed messages when rate limited"}
+
+  {"code": "ig_rate_limit", "limit": 500, "description": "500 API calls per hour"}
+
+    1. Create ECR repo (one-time)                                                                                                                                                              
+                                                                                                                                                                                             
+  aws ecr create-repository --repository-name maedix-queue-processor --region us-east-1                                                                                                      
+                                                                                                                                                                                             
+  2. Build & push the Docker image                                                                                                                                                           
+                                                                                                                                                                                             
+  # Login to ECR                                                                                                                                                                             
+  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 061051221530.dkr.ecr.us-east-1.amazonaws.com                                               
+
+  # Build
+  cd lambda/queue_processor
+  docker build -t maedix-queue-processor .
+
+  # Tag & push
+  docker tag maedix-queue-processor:latest 061051221530.dkr.ecr.us-east-1.amazonaws.com/maedix-queue-processor:latest
+  docker push 061051221530.dkr.ecr.us-east-1.amazonaws.com/maedix-queue-processor:latest
+
+  3. Create the Lambda function
+
+  aws lambda create-function \
+    --function-name maedix-queue-processor \
+    --package-type Image \
+    --code ImageUri=061051221530.dkr.ecr.us-east-1.amazonaws.com/maedix-queue-processor:latest \
+    --role arn:aws:iam::061051221530:role/maedix-video-gen-VideoGeneratorFunctionRole-oytOGubbP7jb \
+    --timeout 120 \
+    --memory-size 256 \
+    --environment 'Variables={CONFIG="{\"db_host\":\"...\",\"db_name\":\"...\",\"db_user\":\"...\",\"db_password\":\"...\",\"db_port\":5432,\"app_url\":\"https://maedix.com\",\"INTERNAL_API
+  _KEY\":\"...\"}"}' \
+    --region us-east-1
+
+  4. Add the 5-minute schedule (EventBridge)
+
+  # Create rule
+  aws events put-rule \
+    --name maedix-queue-processor-schedule \
+    --schedule-expression "rate(5 minutes)" \
+    --region us-east-1
+
+  # Grant EventBridge permission to invoke Lambda
+  aws lambda add-permission \
+    --function-name maedix-queue-processor \
+    --statement-id eventbridge-invoke \
+    --action lambda:InvokeFunction \
+    --principal events.amazonaws.com \
+    --source-arn arn:aws:events:us-east-1:061051221530:rule/maedix-queue-processor-schedule
+
+  # Add Lambda as target
+  aws events put-targets \
+    --rule maedix-queue-processor-schedule \
+    --targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:061051221530:function:maedix-queue-processor"
+
+  5. Set INTERNAL_API_KEY in Django
+
+  Add the key to your core_configuration table (same value as in the Lambda CONFIG):
+
+  INSERT INTO core_configuration (key, value, created_at, updated_at)
+  VALUES ('INTERNAL_API_KEY', 'your-secret-key-here', NOW(), NOW());
+
+  6. To update after code changes
+
+  cd lambda/queue_processor
+  docker build -t maedix-queue-processor .
+  docker tag maedix-queue-processor:latest 061051221530.dkr.ecr.us-east-1.amazonaws.com/maedix-queue-processor:latest
+  docker push 061051221530.dkr.ecr.us-east-1.amazonaws.com/maedix-queue-processor:latest
+  aws lambda update-function-code \
+    --function-name maedix-queue-processor \
+    --image-uri 061051221530.dkr.ecr.us-east-1.amazonaws.com/maedix-queue-processor:latest
+
+  Test it manually
+
+  aws lambda invoke \
+    --function-name maedix-queue-processor \
+    --payload '{}' \
+    --cli-binary-format raw-in-base64-out \
+    output.json && cat output.json
+
+  Note: The Lambda needs network access to both your PostgreSQL DB and your Django app (maedix.com). If your DB is in a VPC, you'll need to put the Lambda in the same VPC and add a NAT
+  gateway for outbound internet access to reach the Django endpoint.

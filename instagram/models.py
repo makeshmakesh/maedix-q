@@ -1171,8 +1171,16 @@ class QueuedFlowTrigger(models.Model):
         return f"Queued: {self.flow.title} - {self.instagram_event_id[:20]}"
 
     @classmethod
-    def get_rate_limit(cls):
-        """Get configured rate limit from Configuration, default 200"""
+    def get_rate_limit(cls, user=None):
+        """Get rate limit - checks user's subscription plan first, falls back to global config."""
+        if user:
+            from core.subscription_utils import get_user_subscription
+            subscription = get_user_subscription(user)
+            if subscription:
+                plan_limit = subscription.plan.get_feature_limit('ig_rate_limit', 0)
+                if plan_limit:
+                    return plan_limit
+
         from core.models import Configuration
         try:
             return int(Configuration.get_value('INSTAGRAM_RATE_LIMIT', '200'))

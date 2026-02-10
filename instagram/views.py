@@ -780,7 +780,7 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         # Get queued flow count and API usage
         queued_count = 0
         calls_last_hour = 0
-        rate_limit = QueuedFlowTrigger.get_rate_limit()
+        rate_limit = QueuedFlowTrigger.get_rate_limit(request.user)
         if instagram_account:
             queued_count = QueuedFlowTrigger.objects.filter(
                 account=instagram_account,
@@ -2005,7 +2005,7 @@ class QueuedFlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
         # Get rate limit info
         calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
-        rate_limit = QueuedFlowTrigger.get_rate_limit()
+        rate_limit = QueuedFlowTrigger.get_rate_limit(request.user)
         available_slots = max(0, rate_limit - calls_last_hour)
 
         # Calculate how many flows can be triggered (assume ~10 API calls per flow)
@@ -2056,7 +2056,7 @@ class QueuedFlowTriggerView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View)
 
         # Check rate limit - need at least 20 slots free (buffer for flow to complete)
         calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
-        rate_limit = QueuedFlowTrigger.get_rate_limit()
+        rate_limit = QueuedFlowTrigger.get_rate_limit(request.user)
         TRIGGER_THRESHOLD = rate_limit - 20  # Need 20 slots buffer
 
         if calls_last_hour > TRIGGER_THRESHOLD:
@@ -2109,6 +2109,88 @@ class QueuedFlowTriggerView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View)
             messages.error(request, f'Failed to trigger flow: {str(e)}')
 
         return redirect('queued_flows')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ProcessQueuedTriggerAPIView(View):
+    """Internal API endpoint for Lambda to process queued flow triggers.
+    Authenticated via X-Internal-API-Key header."""
+
+    def post(self, request, pk):
+        # Validate API key
+        from core.models import Configuration
+        api_key = request.headers.get('X-Internal-API-Key', '')
+        expected_key = Configuration.get_value('INTERNAL_API_KEY', '')
+        if not api_key or not expected_key or api_key != expected_key:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+        # Get the queued trigger
+        try:
+            queued = QueuedFlowTrigger.objects.select_related('account', 'flow').get(pk=pk)
+        except QueuedFlowTrigger.DoesNotExist:
+            return JsonResponse({'error': 'Trigger not found'}, status=404)
+
+        if queued.status != 'pending':
+            return JsonResponse({
+                'status': 'skipped',
+                'message': f'Trigger is already {queued.status}',
+            })
+
+        # Check rate limit
+        instagram_account = queued.account
+        calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
+        rate_limit = QueuedFlowTrigger.get_rate_limit(instagram_account.user)
+        if calls_last_hour > rate_limit - 20:
+            return JsonResponse({
+                'status': 'skipped',
+                'message': 'Rate limit too close, not enough budget',
+                'calls_last_hour': calls_last_hour,
+                'rate_limit': rate_limit,
+            })
+
+        # Dedup check
+        ctx = queued.trigger_context
+        comment_id = ctx.get('comment_id', '')
+        if comment_id and FlowSession.objects.filter(trigger_comment_id=comment_id).exists():
+            queued.status = 'completed'
+            queued.processed_at = timezone.now()
+            queued.save()
+            return JsonResponse({'status': 'skipped', 'message': 'Already processed (dedup)'})
+
+        # Trigger the flow
+        try:
+            queued.status = 'processing'
+            queued.save()
+
+            engine = FlowEngine(instagram_account)
+
+            if queued.trigger_type == 'comment':
+                logger.info(
+                    f"[Internal API] Triggering queued flow {pk}: "
+                    f"comment_id={ctx['comment_id']}, commenter={ctx['commenter_username']}"
+                )
+                engine.trigger_flow_from_comment(
+                    flow=queued.flow,
+                    comment_id=ctx['comment_id'],
+                    post_id=ctx['post_id'],
+                    commenter_id=ctx['commenter_id'],
+                    commenter_username=ctx['commenter_username'],
+                    comment_text=ctx['comment_text'],
+                )
+
+            queued.status = 'completed'
+            queued.processed_at = timezone.now()
+            queued.save()
+
+            return JsonResponse({'status': 'success', 'message': f'Flow "{queued.flow.title}" triggered'})
+
+        except Exception as e:
+            logger.error(f"[Internal API] Error triggering queued flow {pk}: {str(e)}")
+            queued.status = 'failed'
+            queued.error_message = str(e)
+            queued.processed_at = timezone.now()
+            queued.save()
+            return JsonResponse({'status': 'failed', 'error': str(e)}, status=500)
 
 
 class QueuedFlowDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
@@ -2230,26 +2312,30 @@ class InstagramWebhookView(View):
 
         # Check rate limit before triggering
         calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
-        rate_limit = QueuedFlowTrigger.get_rate_limit()
+        rate_limit = QueuedFlowTrigger.get_rate_limit(user)
 
         if calls_last_hour >= rate_limit:
-            # Queue the flow trigger for later
-            QueuedFlowTrigger.objects.get_or_create(
-                account=instagram_account,
-                instagram_event_id=comment_id,
-                defaults={
-                    'flow': flow,
-                    'trigger_type': 'comment',
-                    'trigger_context': {
-                        'comment_id': comment_id,
-                        'post_id': post_id,
-                        'commenter_id': commenter_id,
-                        'commenter_username': commenter_username,
-                        'comment_text': comment_text,
+            # Only queue if user has the queue_triggers feature
+            subscription = get_user_subscription(user)
+            if subscription and subscription.plan.has_feature('queue_triggers'):
+                QueuedFlowTrigger.objects.get_or_create(
+                    account=instagram_account,
+                    instagram_event_id=comment_id,
+                    defaults={
+                        'flow': flow,
+                        'trigger_type': 'comment',
+                        'trigger_context': {
+                            'comment_id': comment_id,
+                            'post_id': post_id,
+                            'commenter_id': commenter_id,
+                            'commenter_username': commenter_username,
+                            'comment_text': comment_text,
+                        }
                     }
-                }
-            )
-            logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - queued flow trigger for comment {comment_id}")
+                )
+                logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - queued flow trigger for comment {comment_id}")
+            else:
+                logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - skipping comment {comment_id} (no queue feature)")
             return
 
         # Trigger the flow with timeout protection

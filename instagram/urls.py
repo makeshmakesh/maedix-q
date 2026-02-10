@@ -49,6 +49,9 @@ urlpatterns = [
     path('queue/<int:pk>/trigger/', views.QueuedFlowTriggerView.as_view(), name='queued_flow_trigger'),
     path('queue/<int:pk>/delete/', views.QueuedFlowDeleteView.as_view(), name='queued_flow_delete'),
 
+    # Internal API (Lambda → Django)
+    path('api/internal/process-trigger/<int:pk>/', views.ProcessQueuedTriggerAPIView.as_view(), name='internal_process_trigger'),
+
     # Webhook
     path('webhook/', views.InstagramWebhookView.as_view(), name='instagram_webhook'),
 

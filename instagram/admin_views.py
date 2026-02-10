@@ -311,3 +311,83 @@ class AdminDashboardView(StaffRequiredMixin, View):
             'recent_transactions': recent_transactions,
             'pending_transactions': pending_transactions,
         }
+
+
+class AdminQueuedFlowsView(StaffRequiredMixin, View):
+    """Admin view to see all queued flows across all users"""
+    template_name = 'staff/admin/queued_flows.html'
+
+    def get(self, request):
+        status_filter = request.GET.get('status', 'pending')
+        account_filter = request.GET.get('account', '')
+        user_search = request.GET.get('user', '').strip()
+
+        # Get all queued triggers
+        qs = QueuedFlowTrigger.objects.select_related('account', 'account__user', 'flow')
+
+        if status_filter and status_filter != 'all':
+            qs = qs.filter(status=status_filter)
+
+        if account_filter:
+            qs = qs.filter(account_id=account_filter)
+
+        if user_search:
+            qs = qs.filter(
+                Q(account__username__icontains=user_search) |
+                Q(account__user__email__icontains=user_search)
+            )
+
+        if status_filter == 'pending':
+            qs = qs.order_by('created_at')
+        else:
+            qs = qs.order_by('-created_at')
+
+        queued_flows = qs[:200]
+
+        # Summary stats
+        total_pending = QueuedFlowTrigger.objects.filter(status='pending').count()
+        total_processing = QueuedFlowTrigger.objects.filter(status='processing').count()
+        total_completed_24h = QueuedFlowTrigger.objects.filter(
+            status='completed',
+            processed_at__gte=timezone.now() - timedelta(hours=24)
+        ).count()
+        total_failed_24h = QueuedFlowTrigger.objects.filter(
+            status='failed',
+            processed_at__gte=timezone.now() - timedelta(hours=24)
+        ).count()
+
+        # Per-account breakdown for pending
+        account_stats = []
+        accounts_with_pending = QueuedFlowTrigger.objects.filter(
+            status='pending'
+        ).values('account_id', 'account__user__email', 'account__username').annotate(
+            pending_count=Count('id')
+        ).order_by('-pending_count')
+
+        for acc in accounts_with_pending:
+            account = InstagramAccount.objects.get(id=acc['account_id'])
+            calls_last_hour = APICallLog.get_calls_last_hour(account)
+            rate_limit = QueuedFlowTrigger.get_rate_limit(account.user)
+            available = max(0, rate_limit - calls_last_hour)
+            account_stats.append({
+                'account_id': acc['account_id'],
+                'username': acc['account__username'] or acc['account__user__email'],
+                'pending_count': acc['pending_count'],
+                'calls_last_hour': calls_last_hour,
+                'rate_limit': rate_limit,
+                'available': available,
+                'usage_percent': round(calls_last_hour / rate_limit * 100) if rate_limit else 0,
+            })
+
+        context = {
+            'queued_flows': queued_flows,
+            'status_filter': status_filter,
+            'account_filter': account_filter,
+            'user_search': user_search,
+            'total_pending': total_pending,
+            'total_processing': total_processing,
+            'total_completed_24h': total_completed_24h,
+            'total_failed_24h': total_failed_24h,
+            'account_stats': account_stats,
+        }
+        return render(request, self.template_name, context)

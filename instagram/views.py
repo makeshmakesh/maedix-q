@@ -2148,7 +2148,7 @@ class ProcessQueuedTriggerAPIView(View):
         calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
         rate_limit = QueuedFlowTrigger.get_rate_limit(instagram_account.user)
         print(f"[QueueProcessor] Trigger {pk}: calls_last_hour={calls_last_hour}, rate_limit={rate_limit}", flush=True)
-        if calls_last_hour > rate_limit - 20:
+        if calls_last_hour > rate_limit - 50:
             print(f"[QueueProcessor] Trigger {pk} skipped — rate limit too close ({calls_last_hour}/{rate_limit})", flush=True)
             return JsonResponse({
                 'status': 'skipped',
@@ -2177,7 +2177,7 @@ class ProcessQueuedTriggerAPIView(View):
 
             if queued.trigger_type == 'comment':
                 print(f"[QueueProcessor] Trigger {pk}: triggering flow '{queued.flow.title}' — comment_id={ctx['comment_id']}, commenter={ctx['commenter_username']}", flush=True)
-                engine.trigger_flow_from_comment(
+                session = engine.trigger_flow_from_comment(
                     flow=queued.flow,
                     comment_id=ctx['comment_id'],
                     post_id=ctx['post_id'],
@@ -2185,6 +2185,9 @@ class ProcessQueuedTriggerAPIView(View):
                     commenter_username=ctx['commenter_username'],
                     comment_text=ctx['comment_text'],
                 )
+                # Tag session as triggered via Smart Queue
+                if session:
+                    session.update_context('triggered_via', 'smart_queue')
 
             queued.status = 'completed'
             queued.processed_at = timezone.now()

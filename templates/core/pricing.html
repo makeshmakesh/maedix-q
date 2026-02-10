@@ -308,6 +308,47 @@
                         {% endfor %}
                     </tr>
 
+                    <!-- Rate Limit -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-speedometer2 text-info me-2"></i>
+                            <strong>Conversations per Hour</strong>
+                            <br><small class="text-muted">Messages your automations can handle per hour</small>
+                        </td>
+                        {% for item in plans_with_pricing %}
+                        <td class="py-3 text-center align-middle">
+                            {% for f in item.plan.features %}
+                                {% if f.code == 'ig_rate_limit' %}
+                                    <strong class="fs-5">{{ f.limit }}</strong>
+                                {% endif %}
+                            {% endfor %}
+                            {% if not item.plan|plan_has_feature:'ig_rate_limit' %}
+                            <strong class="fs-5">200</strong>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
+                    <!-- Smart Queue -->
+                    <tr class="table-light">
+                        <td class="py-3">
+                            <i class="bi bi-lightning-charge text-warning me-2"></i>
+                            <strong>Smart Queue</strong>
+                            <br><small class="text-muted">Viral post protection — never miss a follower when your post blows up</small>
+                        </td>
+                        {% for item in plans_with_pricing %}
+                        <td class="py-3 text-center align-middle">
+                            {% if item.plan|plan_has_feature:'queue_triggers' %}
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <br><small class="text-success">Auto-processed</small>
+                            {% else %}
+                            <i class="bi bi-x-circle text-muted fs-5"></i>
+                            <br><small class="text-muted">Excess skipped</small>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
                     <!-- AI Social Agents -->
                     <tr>
                         <td class="py-3">
@@ -326,16 +367,16 @@
                         {% endfor %}
                     </tr>
 
-                    <!-- Lead Collection (Coming Soon) -->
+                    <!-- Lead Collection -->
                     <tr class="table-light">
                         <td class="py-3">
-                            <i class="bi bi-person-plus text-muted me-2"></i>
+                            <i class="bi bi-person-plus text-success me-2"></i>
                             Lead Collection
                             <br><small class="text-muted">Collect name, email, phone</small>
                         </td>
                         {% for item in plans_with_pricing %}
                         <td class="py-3 text-center align-middle">
-                            <span class="badge bg-secondary">Coming Soon</span>
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
                         </td>
                         {% endfor %}
                     </tr>
@@ -457,6 +498,21 @@
                                 Follower Check lets you create different paths based on whether someone follows you or not.
                                 <br><br>
                                 <em>Example: If they're a follower → Send exclusive discount. If not → Ask them to follow first, then send the regular offer.</em>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqQueue">
+                                What is "Smart Queue"?
+                            </button>
+                        </h2>
+                        <div id="faqQueue" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <strong>Smart Queue is your viral post safety net.</strong> Instagram limits how many messages can be sent per hour. When your post goes viral and hundreds of comments pour in, a free plan simply can't respond to the overflow — those messages are lost.
+                                <br><br>
+                                With Smart Queue (Pro & Creator plans), overflow messages are automatically saved and processed as soon as capacity frees up. You never miss a single follower, lead, or sale — even during your biggest viral moments.
                             </div>
                         </div>
                     </div>

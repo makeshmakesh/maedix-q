@@ -1,0 +1,215 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Smart Queue - Admin{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-hourglass-split me-2"></i>Smart Queue</h4>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-clock text-warning fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ total_pending }}</h3>
+            <small class="text-muted">Pending</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-arrow-repeat text-info fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ total_processing }}</h3>
+            <small class="text-muted">Processing</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-check-circle text-success fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ total_completed_24h }}</h3>
+            <small class="text-muted">Completed (24h)</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-x-circle text-danger fs-4"></i>
+            <h3 class="fw-bold mb-0 mt-2">{{ total_failed_24h }}</h3>
+            <small class="text-muted">Failed (24h)</small>
+        </div>
+    </div>
+</div>
+
+<!-- Per-Account Rate Limit Breakdown -->
+{% if account_stats %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0">Accounts with Pending Triggers</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th>Pending</th>
+                    <th>API Usage (1h)</th>
+                    <th>Rate Limit</th>
+                    <th>Available</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in account_stats %}
+                <tr>
+                    <td>
+                        <strong>@{{ acc.username }}</strong>
+                        <small class="text-muted d-block">ID: {{ acc.account_id }}</small>
+                    </td>
+                    <td><span class="badge bg-warning text-dark">{{ acc.pending_count }}</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
+                                <div class="progress-bar {% if acc.usage_percent > 90 %}bg-danger{% elif acc.usage_percent > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                     style="width: {{ acc.usage_percent }}%"></div>
+                            </div>
+                            <small>{{ acc.calls_last_hour }}</small>
+                        </div>
+                    </td>
+                    <td>{{ acc.rate_limit }}</td>
+                    <td>
+                        {% if acc.available > 50 %}
+                        <span class="text-success fw-bold">{{ acc.available }}</span>
+                        {% elif acc.available > 20 %}
+                        <span class="text-warning fw-bold">{{ acc.available }}</span>
+                        {% else %}
+                        <span class="text-danger fw-bold">{{ acc.available }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="?status=pending&account={{ acc.account_id }}" class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Search + Status Filter -->
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+            <h6 class="fw-bold mb-0">
+                Queue Items
+                {% if account_filter %}
+                <small class="text-muted">(Account #{{ account_filter }})</small>
+                {% endif %}
+                {% if user_search %}
+                <small class="text-muted">matching "{{ user_search }}"</small>
+                {% endif %}
+            </h6>
+            <div class="d-flex gap-2 align-items-center">
+                <form method="get" class="d-flex gap-1">
+                    <input type="hidden" name="status" value="{{ status_filter }}">
+                    {% if account_filter %}<input type="hidden" name="account" value="{{ account_filter }}">{% endif %}
+                    <input type="text" name="user" value="{{ user_search }}" class="form-control form-control-sm"
+                           placeholder="Search username or email..." style="min-width: 200px;">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
+                    {% if user_search %}
+                    <a href="?status={{ status_filter }}{% if account_filter %}&account={{ account_filter }}{% endif %}"
+                       class="btn btn-sm btn-outline-danger" title="Clear search"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        <div class="mt-2">
+        <div class="btn-group btn-group-sm">
+            <a href="?status=pending{% if account_filter %}&account={{ account_filter }}{% endif %}{% if user_search %}&user={{ user_search }}{% endif %}"
+               class="btn {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Pending
+            </a>
+            <a href="?status=processing{% if account_filter %}&account={{ account_filter }}{% endif %}{% if user_search %}&user={{ user_search }}{% endif %}"
+               class="btn {% if status_filter == 'processing' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Processing
+            </a>
+            <a href="?status=completed{% if account_filter %}&account={{ account_filter }}{% endif %}{% if user_search %}&user={{ user_search }}{% endif %}"
+               class="btn {% if status_filter == 'completed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Completed
+            </a>
+            <a href="?status=failed{% if account_filter %}&account={{ account_filter }}{% endif %}{% if user_search %}&user={{ user_search }}{% endif %}"
+               class="btn {% if status_filter == 'failed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Failed
+            </a>
+            <a href="?status=all{% if account_filter %}&account={{ account_filter }}{% endif %}{% if user_search %}&user={{ user_search }}{% endif %}"
+               class="btn {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                All
+            </a>
+        </div>
+        </div>
+    </div>
+
+    {% if queued_flows %}
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Account</th>
+                    <th>Flow</th>
+                    <th>Commenter</th>
+                    <th>Comment</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Processed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in queued_flows %}
+                <tr>
+                    <td><small class="text-muted">{{ q.id }}</small></td>
+                    <td>
+                        <a href="?status={{ status_filter }}&account={{ q.account_id }}">
+                            @{{ q.account.username|default:q.account.user.email }}
+                        </a>
+                    </td>
+                    <td>{{ q.flow.title|truncatechars:30 }}</td>
+                    <td>
+                        <small>@{{ q.trigger_context.commenter_username|default:"-" }}</small>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ q.trigger_context.comment_text|default:"-"|truncatechars:40 }}</small>
+                    </td>
+                    <td>
+                        {% if q.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif q.status == 'processing' %}
+                        <span class="badge bg-info">Processing</span>
+                        {% elif q.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                        {% elif q.status == 'failed' %}
+                        <span class="badge bg-danger" title="{{ q.error_message }}">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ q.created_at|timesince }} ago</small></td>
+                    <td>
+                        {% if q.processed_at %}
+                        <small>{{ q.processed_at|timesince }} ago</small>
+                        {% else %}
+                        <small class="text-muted">-</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 2.5rem;"></i>
+        <p class="text-muted mt-2 mb-0">No queued triggers found for this filter.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

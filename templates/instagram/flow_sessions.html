@@ -237,6 +237,9 @@
                                     <tr>
                                         <td>
                                             <strong>@{{ session.instagram_username|default:"unknown" }}</strong>
+                                            {% if session.context_data.triggered_via == 'smart_queue' %}
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Smart Queue</span>
+                                            {% endif %}
                                             {% if session.trigger_comment_text %}
                                             <small class="d-block text-muted">{{ session.trigger_comment_text|truncatechars:30 }}</small>
                                             {% endif %}
@@ -290,7 +293,12 @@
                             <div class="session-card">
                                 <div class="session-card-header">
                                     <div>
-                                        <div class="session-card-user">@{{ session.instagram_username|default:"unknown" }}</div>
+                                        <div class="session-card-user">
+                                            @{{ session.instagram_username|default:"unknown" }}
+                                            {% if session.context_data.triggered_via == 'smart_queue' %}
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Smart Queue</span>
+                                            {% endif %}
+                                        </div>
                                         {% if session.trigger_comment_text %}
                                         <div class="session-card-comment">{{ session.trigger_comment_text|truncatechars:40 }}</div>
                                         {% endif %}

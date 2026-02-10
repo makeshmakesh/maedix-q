@@ -6,6 +6,7 @@ from . import admin_views
 urlpatterns = [
     # Admin Dashboard
     path('admin/dashboard/', admin_views.AdminDashboardView.as_view(), name='instagram_admin_dashboard'),
+    path('admin/queue/', admin_views.AdminQueuedFlowsView.as_view(), name='instagram_admin_queue'),
 
     # Connection management
     path('connect/', views.InstagramConnectView.as_view(), name='instagram_connect'),

@@ -201,7 +201,7 @@ def handler(event, context):
 
             calls_last_hour = get_calls_last_hour(cursor, account_id)
             rate_limit = get_rate_limit(cursor, account_id)
-            safety_buffer = 20
+            safety_buffer = 50
             available = rate_limit - calls_last_hour - safety_buffer
             max_triggers = max(0, available // 10)
 

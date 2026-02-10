@@ -2117,20 +2117,27 @@ class ProcessQueuedTriggerAPIView(View):
     Authenticated via X-Internal-API-Key header."""
 
     def post(self, request, pk):
+        print(f"[QueueProcessor] Received request for trigger {pk}", flush=True)
+
         # Validate API key
         from core.models import Configuration
         api_key = request.headers.get('X-Internal-API-Key', '')
         expected_key = Configuration.get_value('INTERNAL_API_KEY', '')
         if not api_key or not expected_key or api_key != expected_key:
+            print(f"[QueueProcessor] Unauthorized request for trigger {pk}", flush=True)
             return JsonResponse({'error': 'Unauthorized'}, status=401)
 
         # Get the queued trigger
         try:
             queued = QueuedFlowTrigger.objects.select_related('account', 'flow').get(pk=pk)
         except QueuedFlowTrigger.DoesNotExist:
+            print(f"[QueueProcessor] Trigger {pk} not found", flush=True)
             return JsonResponse({'error': 'Trigger not found'}, status=404)
 
+        print(f"[QueueProcessor] Trigger {pk}: flow={queued.flow.title}, account={queued.account_id}, status={queued.status}", flush=True)
+
         if queued.status != 'pending':
+            print(f"[QueueProcessor] Trigger {pk} skipped — already {queued.status}", flush=True)
             return JsonResponse({
                 'status': 'skipped',
                 'message': f'Trigger is already {queued.status}',
@@ -2140,7 +2147,9 @@ class ProcessQueuedTriggerAPIView(View):
         instagram_account = queued.account
         calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
         rate_limit = QueuedFlowTrigger.get_rate_limit(instagram_account.user)
+        print(f"[QueueProcessor] Trigger {pk}: calls_last_hour={calls_last_hour}, rate_limit={rate_limit}", flush=True)
         if calls_last_hour > rate_limit - 20:
+            print(f"[QueueProcessor] Trigger {pk} skipped — rate limit too close ({calls_last_hour}/{rate_limit})", flush=True)
             return JsonResponse({
                 'status': 'skipped',
                 'message': 'Rate limit too close, not enough budget',
@@ -2155,20 +2164,19 @@ class ProcessQueuedTriggerAPIView(View):
             queued.status = 'completed'
             queued.processed_at = timezone.now()
             queued.save()
+            print(f"[QueueProcessor] Trigger {pk} skipped — dedup (comment {comment_id} already processed)", flush=True)
             return JsonResponse({'status': 'skipped', 'message': 'Already processed (dedup)'})
 
         # Trigger the flow
         try:
             queued.status = 'processing'
             queued.save()
+            print(f"[QueueProcessor] Trigger {pk}: status set to processing", flush=True)
 
             engine = FlowEngine(instagram_account)
 
             if queued.trigger_type == 'comment':
-                logger.info(
-                    f"[Internal API] Triggering queued flow {pk}: "
-                    f"comment_id={ctx['comment_id']}, commenter={ctx['commenter_username']}"
-                )
+                print(f"[QueueProcessor] Trigger {pk}: triggering flow '{queued.flow.title}' — comment_id={ctx['comment_id']}, commenter={ctx['commenter_username']}", flush=True)
                 engine.trigger_flow_from_comment(
                     flow=queued.flow,
                     comment_id=ctx['comment_id'],
@@ -2182,10 +2190,11 @@ class ProcessQueuedTriggerAPIView(View):
             queued.processed_at = timezone.now()
             queued.save()
 
+            print(f"[QueueProcessor] Trigger {pk}: SUCCESS — flow '{queued.flow.title}' triggered", flush=True)
             return JsonResponse({'status': 'success', 'message': f'Flow "{queued.flow.title}" triggered'})
 
         except Exception as e:
-            logger.error(f"[Internal API] Error triggering queued flow {pk}: {str(e)}")
+            print(f"[QueueProcessor] Trigger {pk}: FAILED — {str(e)}", flush=True)
             queued.status = 'failed'
             queued.error_message = str(e)
             queued.processed_at = timezone.now()

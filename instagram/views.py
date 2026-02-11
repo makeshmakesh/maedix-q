@@ -792,12 +792,6 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     if flow_limit:
                         can_create_more = flow_count < flow_limit
 
-        # Get recent sessions for activity feed
-        recent_sessions = FlowSession.objects.filter(
-            flow__user=request.user
-        ).select_related('flow').order_by('-created_at')[:20]
-
-
         # Get active flow templates
         flow_templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
 
@@ -832,7 +826,6 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'flow_count': flow_count,
             'flow_limit': flow_limit,
             'can_create_more': can_create_more,
-            'recent_sessions': recent_sessions,
             'total_triggered': stats['total_triggered'] or 0,
             'total_completed': stats['total_completed'] or 0,
             'flow_templates': flow_templates,

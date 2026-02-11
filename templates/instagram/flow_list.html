@@ -480,90 +480,6 @@
         box-shadow: 0 4px 12px rgba(225, 48, 108, 0.4);
     }
 
-    /* Activity feed */
-    .activity-item {
-        padding: 0.875rem 1.25rem;
-        border-bottom: 1px solid #f5f5f5;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .activity-item:last-child {
-        border-bottom: none;
-    }
-
-    .activity-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--gradient);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 0.8rem;
-        font-weight: 600;
-        flex-shrink: 0;
-    }
-
-    .activity-content {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .activity-user {
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: #212529;
-    }
-
-    .activity-flow {
-        font-size: 0.8rem;
-        color: #6c757d;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .activity-meta {
-        text-align: right;
-        flex-shrink: 0;
-    }
-
-    .activity-status {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 2rem;
-        font-weight: 500;
-    }
-
-    .activity-status.completed {
-        background: rgba(40, 167, 69, 0.1);
-        color: #28a745;
-    }
-
-    .activity-status.waiting {
-        background: rgba(255, 193, 7, 0.15);
-        color: #856404;
-    }
-
-    .activity-status.error {
-        background: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-    }
-
-    .activity-status.active {
-        background: rgba(0, 123, 255, 0.1);
-        color: #007bff;
-    }
-
-    .activity-time {
-        font-size: 0.7rem;
-        color: #adb5bd;
-        margin-top: 0.25rem;
-    }
-
     /* Quick links */
     .quick-link {
         display: flex;
@@ -659,36 +575,48 @@
         flex-wrap: wrap;
     }
 
-    .flow-filter-bar .form-control,
+    .flow-filter-bar .form-control {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.375rem;
+        flex: 1;
+        min-width: 0;
+    }
+
     .flow-filter-bar .form-select {
         font-size: 0.8rem;
         padding: 0.3rem 0.5rem;
         border-radius: 0.375rem;
-        max-width: 160px;
+        width: auto;
+        flex: 0 0 auto;
     }
 
     .flow-filter-bar .btn {
         font-size: 0.75rem;
         padding: 0.3rem 0.6rem;
+        flex-shrink: 0;
     }
 
     @media (max-width: 767.98px) {
         .flow-filter-bar {
             padding: 0.375rem 0.5rem;
-            gap: 0.375rem;
+            gap: 0.25rem;
+            flex-wrap: nowrap;
         }
 
-        .flow-filter-bar .form-control,
+        .flow-filter-bar .form-control {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.4rem;
+        }
+
         .flow-filter-bar .form-select {
             font-size: 0.7rem;
-            padding: 0.25rem 0.4rem;
-            max-width: 120px;
-            flex: 1;
+            padding: 0.25rem 0.3rem;
         }
 
         .flow-filter-bar .btn {
             font-size: 0.65rem;
-            padding: 0.25rem 0.5rem;
+            padding: 0.25rem 0.4rem;
         }
     }
 
@@ -778,21 +706,26 @@
         .header-stats {
             display: flex;
             justify-content: space-between;
-            gap: 0.25rem;
+            gap: 0.125rem;
         }
 
         .header-stat {
             text-align: center;
             flex: 1;
             min-width: 0;
+            overflow: hidden;
         }
 
         .header-stat-value {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
+            line-height: 1.2;
         }
 
         .header-stat-label {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .btn-template,
@@ -834,8 +767,8 @@
 
                 <!-- Page Header -->
                 <div class="page-header">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
-                        <div>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 w-100">
+                        <div class="flex-grow-1 w-100">
                             <h1><i class="bi bi-robot me-2"></i>My Automations</h1>
                             <p class="mb-0 d-none d-md-block">Automate your Instagram DM conversations</p>
 
@@ -1076,48 +1009,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4 order-2 order-lg-2 mb-3 mb-lg-0">
-                        <!-- Recent Activity -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h2 class="section-title">
-                                    <i class="bi bi-activity text-success"></i>
-                                    Recent Activity
-                                </h2>
-                            </div>
-
-                            {% if recent_sessions %}
-                            {% for session in recent_sessions|slice:":6" %}
-                            <div class="activity-item">
-                                <div class="activity-avatar">
-                                    {{ session.instagram_username|default:"U"|slice:":1"|upper }}
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-user">@{{ session.instagram_username|default:"user"|truncatechars:12 }}</div>
-                                    <div class="activity-flow">{{ session.flow.title|truncatechars:20 }}</div>
-                                </div>
-                                <div class="activity-meta">
-                                    {% if session.status == 'completed' %}
-                                    <span class="activity-status completed">Completed</span>
-                                    {% elif session.status == 'waiting_reply' %}
-                                    <span class="activity-status waiting">Waiting</span>
-                                    {% elif session.status == 'error' %}
-                                    <span class="activity-status error">Error</span>
-                                    {% else %}
-                                    <span class="activity-status active">Active</span>
-                                    {% endif %}
-                                    <div class="activity-time">{{ session.created_at|timesince|truncatewords:2 }}</div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            {% else %}
-                            <div class="text-center py-4">
-                                <i class="bi bi-chat-dots text-muted" style="font-size: 2rem;"></i>
-                                <p class="text-muted small mt-2 mb-0">No activity yet</p>
-                                <p class="text-muted small">Activity will appear here when your automations run</p>
-                            </div>
-                            {% endif %}
-                        </div>
-
                         <!-- How it Works (Desktop) -->
                         <div class="section-card d-none d-lg-block">
                             <div class="section-header">
@@ -1148,7 +1039,7 @@
 
                         <!-- Quick Links -->
                         <div class="section-card">
-                            <a href="{% url 'leads_list' %}" class="quick-link" style="border-bottom: 1px solid #f0f0f0;">
+                            <a href="{% url 'leads_list' %}" class="quick-link">
                                 <div class="quick-link-content">
                                     <div class="quick-link-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
                                         <i class="bi bi-people"></i>
@@ -1156,18 +1047,6 @@
                                     <div class="quick-link-text">
                                         <h6>Collected Leads</h6>
                                         <p>View & export leads</p>
-                                    </div>
-                                </div>
-                                <i class="bi bi-chevron-right quick-link-arrow"></i>
-                            </a>
-                            <a href="{% url 'instagram_connect' %}" class="quick-link">
-                                <div class="quick-link-content">
-                                    <div class="quick-link-icon" style="background: linear-gradient(135deg, #E1306C 0%, #F56040 100%); color: white;">
-                                        <i class="bi bi-instagram"></i>
-                                    </div>
-                                    <div class="quick-link-text">
-                                        <h6>@{{ instagram_account.username|default:"Connected" }}</h6>
-                                        <p>Instagram Account</p>
                                     </div>
                                 </div>
                                 <i class="bi bi-chevron-right quick-link-arrow"></i>

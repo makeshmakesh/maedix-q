@@ -520,7 +520,7 @@
                                 <div class="d-flex gap-2">
                                     <div class="queue-number" style="flex-shrink: 0;">3</div>
                                     {% if request.user|user_has_feature:'smart_queue_processing' %}
-                                    <div style="font-size: 0.85rem;"><strong>Smart Queue</strong> auto-processes them every 5 minutes</div>
+                                    <div style="font-size: 0.85rem;"><strong>Smart Queue</strong> auto-processes them based on available API slots</div>
                                     {% else %}
                                     <div style="font-size: 0.85rem;">Click "Trigger Now" when slots are available</div>
                                     {% endif %}

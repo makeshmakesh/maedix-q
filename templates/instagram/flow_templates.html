@@ -8,7 +8,7 @@
     .page-header {
         background: var(--gradient);
         color: white;
-        padding: 1.25rem;
+        padding: 1rem;
         border-radius: 0 0 var(--radius) var(--radius);
         margin: -1rem -12px 1.5rem -12px;
     }
@@ -22,7 +22,7 @@
     }
 
     .page-header h1 {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 700;
         margin: 0;
     }
@@ -100,6 +100,24 @@
     .btn-back:hover {
         background: rgba(255,255,255,0.25);
         color: white;
+    }
+
+    @media (max-width: 767.98px) {
+        .btn-create-scratch,
+        .btn-back {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+
+        .btn-create-scratch {
+            flex: none;
+        }
+
+        .header-actions {
+            margin-top: 0.5rem;
+        }
     }
 
     /* Category Navigation - Horizontal Scroll on Mobile */
@@ -342,7 +360,7 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2">
                         <div>
                             <h1><i class="bi bi-plus-circle me-2"></i>Choose Template</h1>
-                            <p>Choose a template or start from scratch</p>
+                            <p class="d-none d-md-block">Choose a template or start from scratch</p>
                         </div>
                         <div class="header-actions">
                             <a href="{% url 'flow_create' %}" class="btn-create-scratch">

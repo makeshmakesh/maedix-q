@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
     FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate,
-    APICallLog, QueuedFlowTrigger,
+    APICallLog, QueuedFlowTrigger, DroppedMessage,
     # AI Models
     SocialAgent, KnowledgeBase, KnowledgeItem, KnowledgeChunk,
     AINodeConfig, AIConversationMessage, AIUsageLog, AICollectedData
@@ -101,6 +101,17 @@ class APICallLogAdmin(admin.ModelAdmin):
     raw_id_fields = ('account',)
     date_hierarchy = 'sent_at'
     ordering = ('-sent_at',)
+
+
+@admin.register(DroppedMessage)
+class DroppedMessageAdmin(admin.ModelAdmin):
+    list_display = ('account', 'commenter_username', 'comment_text', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('account__username', 'commenter_username', 'comment_text')
+    readonly_fields = ('created_at',)
+    raw_id_fields = ('account',)
+    date_hierarchy = 'created_at'
+    ordering = ('-created_at',)
 
 
 @admin.register(QueuedFlowTrigger)

@@ -4,6 +4,37 @@
 
 {% block extra_css %}
 <style>
+    .stats-bar .stat-item {
+        flex: 1;
+    }
+
+    .stats-bar .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .stats-bar .stat-label {
+        font-size: 0.65rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    @media (max-width: 767px) {
+        .stats-bar .stat-value {
+            font-size: 1rem;
+        }
+
+        .stats-bar .stat-label {
+            font-size: 0.55rem;
+        }
+
+        .stats-bar .card-body {
+            padding: 0.5rem 0.75rem !important;
+        }
+    }
+
     .filter-bar {
         background: #f8f9fa;
         border-radius: 0.5rem;
@@ -27,10 +58,11 @@
 
         .session-card {
             background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
+            border: 1px solid #e0e0e0;
+            border-left: 3px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 0.625rem 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .session-card:last-child {
@@ -41,50 +73,81 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.375rem;
         }
 
         .session-card-user {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.85rem;
         }
 
         .session-card-comment {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: #6c757d;
-            margin-top: 0.25rem;
+            margin-top: 0.125rem;
         }
 
         .session-card-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            font-size: 0.8rem;
+            gap: 0.375rem;
+            font-size: 0.7rem;
             color: #6c757d;
         }
 
         .session-card-meta-item {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.2rem;
         }
 
         .session-card-actions {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
+            margin-top: 0.375rem;
+            padding-top: 0.375rem;
             border-top: 1px solid #f0f0f0;
         }
 
-        .stat-card .card-body {
+        .session-card-actions .btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .session-card .badge {
+            font-size: 0.6rem;
+        }
+
+        .session-card-mobile {
             padding: 0.75rem !important;
         }
 
-        .stat-card h4 {
-            font-size: 1.25rem;
+        /* Sessions list card header */
+        .card-header h6 {
+            font-size: 0.8rem;
+        }
+
+        .filter-bar {
+            padding: 0.625rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-bar .form-label {
+            font-size: 0.7rem;
+            margin-bottom: 0.125rem;
+        }
+
+        .filter-bar .form-control,
+        .filter-bar .form-select {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.5rem;
+        }
+
+        .filter-bar .btn {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
         }
 
         .filter-bar .row {
-            gap: 0.5rem;
+            gap: 0.375rem;
         }
 
         .filter-bar .col-md-4,
@@ -94,8 +157,8 @@
         }
 
         .page-header {
-            padding: 1rem;
-            margin: -1rem -12px 1rem -12px;
+            padding: 0.75rem 1rem;
+            margin: -1rem -12px 0.75rem -12px;
             background: var(--gradient);
             color: white;
             border-radius: 0 0 1rem 1rem;
@@ -103,16 +166,17 @@
 
         .page-header a {
             color: rgba(255,255,255,0.8);
+            font-size: 0.75rem;
         }
 
         .page-header h3 {
             color: white;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
+            margin-top: 0.25rem !important;
         }
 
         .page-header p {
-            color: rgba(255,255,255,0.8);
-            font-size: 0.85rem;
+            display: none;
         }
 
         .page-header .bi-list-check {
@@ -123,7 +187,7 @@
 {% endblock %}
 
 {% block content %}
-<section class="py-4 py-md-5">
+<section class="py-3 py-md-5">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -138,42 +202,20 @@
                     <p class="text-muted mb-0">View users who have gone through this automation</p>
                 </div>
 
-                <!-- Stats (Overall Flow Stats - not affected by filters) -->
-                <div class="row mb-4 g-2 g-md-3">
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card text-center">
-                            <div class="card-body py-3">
-                                <h4 class="mb-0">{{ flow.total_triggered }}</h4>
-                                <small class="text-muted">Total Triggered</small>
-                            </div>
+                <!-- Stats -->
+                <div class="card mb-2 mb-md-4 stats-bar">
+                    <div class="card-body py-2 px-3 d-flex justify-content-between text-center">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ flow.total_triggered }}</div>
+                            <div class="stat-label">Triggered</div>
                         </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card text-center">
-                            <div class="card-body py-3">
-                                <h4 class="mb-0">{{ flow.total_completed }}</h4>
-                                <small class="text-muted">Total Completed</small>
-                            </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ flow.total_completed }}</div>
+                            <div class="stat-label">Completed</div>
                         </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card text-center">
-                            <div class="card-body py-3">
-                                <h4 class="mb-0">{{ flow.sessions.count }}</h4>
-                                <small class="text-muted">Total Sessions</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card text-center">
-                            <div class="card-body py-3">
-                                {% if flow.total_triggered > 0 %}
-                                <h4 class="mb-0">{% widthratio flow.total_completed flow.total_triggered 100 %}%</h4>
-                                {% else %}
-                                <h4 class="mb-0">0%</h4>
-                                {% endif %}
-                                <small class="text-muted">Completion Rate</small>
-                            </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{% if flow.total_triggered > 0 %}{% widthratio flow.total_completed flow.total_triggered 100 %}%{% else %}0%{% endif %}</div>
+                            <div class="stat-label">Rate</div>
                         </div>
                     </div>
                 </div>

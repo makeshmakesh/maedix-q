@@ -1121,6 +1121,26 @@ class AIUsageLog(models.Model):
         ]
 
 
+class DroppedMessage(models.Model):
+    """Logs messages dropped due to rate limits for free users without queue feature."""
+    account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        related_name='dropped_messages'
+    )
+    commenter_username = models.CharField(max_length=255, blank=True)
+    comment_text = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Dropped Message"
+        verbose_name_plural = "Dropped Messages"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Dropped: @{self.commenter_username} at {self.created_at}"
+
+
 class QueuedFlowTrigger(models.Model):
     """Stores flow triggers that were rate-limited and need to be processed later."""
     TRIGGER_TYPE_CHOICES = [

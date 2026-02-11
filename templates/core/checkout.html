@@ -9,7 +9,7 @@
             <div class="col-lg-10">
                 <div class="row g-4">
                     <!-- Order Summary -->
-                    <div class="col-md-7">
+                    <div class="col-md-7 order-2 order-md-1">
                         <div class="card p-4">
                             <h4 class="fw-bold mb-4">Order Summary</h4>
 
@@ -46,6 +46,20 @@
                                 </ul>
                             </div>
                             {% endif %}
+
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'pricing' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i> Back to Plans
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Payment Section -->
+                    <div class="col-md-5 order-1 order-md-2">
+                        <div class="card p-4">
+                            <h5 class="fw-bold mb-4">Payment</h5>
 
                             <!-- Coupon Code Section -->
                             <div class="mb-4 pb-3 border-bottom">
@@ -93,23 +107,10 @@
                             </div>
                             {% endif %}
 
-                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                 <span class="fs-5 fw-bold">Total Amount</span>
                                 <span class="fs-4 fw-bold text-primary" id="total-price">{{ currency_symbol }}{{ price }}</span>
                             </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <a href="{% url 'pricing' %}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i> Back to Plans
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Payment Section -->
-                    <div class="col-md-5">
-                        <div class="card p-4">
-                            <h5 class="fw-bold mb-4">Payment</h5>
 
                             <button id="rzp-button" class="btn btn-primary btn-lg w-100 mb-3">
                                 <span class="btn-text">

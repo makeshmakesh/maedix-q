@@ -8,9 +8,9 @@
 .page-header {
     background: var(--gradient);
     color: white;
-    padding: 1.25rem 1.5rem;
+    padding: 0.75rem 1rem;
     border-radius: 0 0 var(--radius) var(--radius);
-    margin: -1rem -12px 1rem -12px;
+    margin: -1rem -12px 0.75rem -12px;
     box-shadow: var(--shadow-md);
 }
 
@@ -23,19 +23,33 @@
 }
 
 .page-header h1 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 700;
     margin: 0;
+}
+
+@media (min-width: 768px) {
+    .page-header h1 {
+        font-size: 1.25rem;
+    }
 }
 
 .page-header .back-link {
     color: rgba(255,255,255,0.85);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    margin-bottom: 0.5rem;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+@media (min-width: 768px) {
+    .page-header .back-link {
+        font-size: 0.85rem;
+        gap: 0.375rem;
+        margin-bottom: 0.5rem;
+    }
 }
 
 .page-header .back-link:hover {
@@ -43,12 +57,18 @@
 }
 
 .page-header .flow-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-    opacity: 0.9;
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .page-header .flow-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
 }
 
 .page-header .flow-meta span {
@@ -59,21 +79,34 @@
 
 .header-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.375rem;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+}
+
+@media (min-width: 768px) {
+    .header-actions {
+        gap: 0.5rem;
+    }
 }
 
 .btn-mode-toggle {
     background: rgba(255,255,255,0.15);
     border: 1px solid rgba(255,255,255,0.25);
     color: white;
-    padding: 0.5rem 0.75rem;
+    padding: 0.35rem 0.5rem;
     border-radius: var(--radius-sm);
     font-weight: 500;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     transition: all 0.2s ease;
     cursor: pointer;
+}
+
+@media (min-width: 768px) {
+    .btn-mode-toggle {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
 }
 
 .btn-mode-toggle:hover {
@@ -90,15 +123,23 @@
     background: white;
     color: var(--primary);
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.6rem;
     border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: 0.25rem;
     transition: all 0.2s ease;
     cursor: pointer;
+}
+
+@media (min-width: 768px) {
+    .btn-save-flow {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        gap: 0.375rem;
+    }
 }
 
 .btn-save-flow:hover {
@@ -943,105 +984,180 @@
 @media (max-width: 767px) {
     /* Form editor container */
     #formEditor .col-lg-8 {
-        padding-left: 8px;
-        padding-right: 8px;
+        padding-left: 12px;
+        padding-right: 12px;
     }
 
     /* Flow settings card - compact */
     #formEditor .card {
         border-radius: 8px;
+        margin-bottom: 0.5rem !important;
     }
 
     #formEditor .card-header {
-        padding: 10px 12px;
+        padding: 6px 10px;
+    }
+
+    #formEditor .card-header .fw-bold.small {
+        font-size: 11px;
     }
 
     #formEditor .card-body {
-        padding: 12px;
+        padding: 8px 10px;
+    }
+
+    #formEditor .card-body .form-control,
+    #formEditor .card-body .form-select {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    #formEditor .card-body .form-check-label {
+        font-size: 12px;
+    }
+
+    #formEditor .card-body .btn-sm {
+        font-size: 12px;
+        padding: 4px 8px;
     }
 
     #formEditor .card-footer {
-        padding: 8px 12px;
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    /* Flow settings card - make tappable */
+    .flow-settings-card {
+        border: 1px solid var(--primary);
+        border-left: 3px solid var(--primary);
+    }
+
+    .flow-settings-card .card-header {
+        background: rgba(var(--primary-rgb), 0.04);
+    }
+
+    /* Trigger indicator card */
+    #formEditor .card.border-warning .card-body {
+        padding: 6px 10px;
+    }
+
+    #formEditor .card.border-warning .small.fw-bold {
         font-size: 11px;
+    }
+
+    #formEditor .card.border-warning .text-muted {
+        font-size: 10px;
     }
 
     /* Node cards */
     .form-node-card {
         border-radius: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-left: 3px solid #adb5bd;
     }
 
+    .form-node-card:has(.node-icon.comment-reply) { border-left-color: #0dcaf0; }
+    .form-node-card:has(.node-icon.text-message) { border-left-color: #0d6efd; }
+    .form-node-card:has(.node-icon.quick-reply) { border-left-color: #198754; }
+    .form-node-card:has(.node-icon.button-template) { border-left-color: var(--primary-dark); }
+    .form-node-card:has(.node-icon.link-message) { border-left-color: #ffc107; }
+    .form-node-card:has(.node-icon.follower-check) { border-left-color: #dc3545; }
+    .form-node-card:has(.node-icon.user-interacted) { border-left-color: #5a2d82; }
+    .form-node-card:has(.node-icon.ai-conversation) { border-left-color: #667eea; }
+    .form-node-card:has(.node-icon.collect-data) { border-left-color: #d63384; }
+
     .form-node-header {
-        padding: 10px 12px;
+        padding: 8px 10px;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
     }
 
     .form-node-header .node-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+        border-radius: 6px;
         flex-shrink: 0;
     }
 
     .form-node-header .node-title {
-        font-size: 13px;
+        font-size: 12px;
         flex: 1;
-        min-width: 100px;
+        min-width: 80px;
     }
 
     .form-node-header .node-number {
-        font-size: 11px;
-        padding: 2px 6px;
+        font-size: 10px;
+        padding: 1px 5px;
     }
 
-    /* Action buttons - better touch targets */
+    /* Action buttons - compact but tappable */
     .form-node-header .node-actions {
-        gap: 6px;
+        gap: 4px;
     }
 
     .form-node-header .node-actions button {
-        width: 38px;
-        height: 38px;
-        font-size: 15px;
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
     }
 
     /* Node body */
     .form-node-body {
-        padding: 12px;
+        padding: 8px 10px;
     }
 
     .form-node-body .form-label {
-        font-size: 12px;
-        margin-bottom: 4px;
+        font-size: 11px;
+        margin-bottom: 3px;
     }
 
     .form-node-body .form-control,
     .form-node-body .form-select {
-        font-size: 14px;
-        padding: 8px 10px;
+        font-size: 13px;
+        padding: 6px 8px;
     }
 
     .form-node-body textarea.form-control {
-        min-height: 80px;
+        min-height: 60px;
     }
 
-    .form-node-body .form-text {
-        font-size: 11px;
+    .form-node-body .form-text,
+    .form-node-body small,
+    .form-node-body .alert.small,
+    .form-node-body .text-muted {
+        font-size: 10px !important;
+    }
+
+    .form-node-body .mb-3 {
+        margin-bottom: 0.5rem !important;
     }
 
     /* Connection dropdowns */
     .form-node-connection {
-        padding: 10px;
-        margin-top: 10px;
+        padding: 8px;
+        margin-top: 8px;
     }
 
     .form-node-connection .connection-label {
-        font-size: 11px;
+        font-size: 10px;
+        margin-bottom: 4px;
     }
 
     .form-node-connection .form-select {
-        font-size: 13px;
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    /* Flow arrow between nodes */
+    .flow-arrow {
+        padding: 4px 0;
+    }
+
+    .flow-arrow i {
+        font-size: 16px;
     }
 
     /* Variations section */
@@ -1119,62 +1235,64 @@
     /* Quick reply and button template options */
     .form-node-body .quick-reply-option,
     .form-node-body .button-option {
-        padding: 10px;
-        margin-bottom: 8px;
+        padding: 6px 8px;
+        margin-bottom: 6px;
     }
 
     .form-node-body .quick-reply-option input,
     .form-node-body .button-option input,
     .form-node-body .button-option select {
-        font-size: 13px;
+        font-size: 12px;
+        padding: 4px 8px;
     }
 
     /* Button template row - mobile layout */
     .btn-row-flex {
-        gap: 6px;
+        gap: 4px;
     }
 
     .btn-row-flex .btn-type {
-        flex: 0 0 85px;
-        min-width: 70px;
-        font-size: 12px;
-        padding: 6px 8px;
+        flex: 0 0 75px;
+        min-width: 65px;
+        font-size: 11px;
+        padding: 4px 6px;
     }
 
     .btn-row-flex .btn-title {
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .btn-row-flex .remove-btn {
-        padding: 6px 8px;
+        padding: 4px 6px;
+        font-size: 11px;
     }
 
     /* Quick reply buttons - better layout */
     .qr-container .qr-title {
-        font-size: 13px;
+        font-size: 12px;
     }
 
     /* Follower check branches */
     .form-node-connection.follower,
     .form-node-connection.not-follower {
-        padding: 8px 10px;
+        padding: 6px 8px;
     }
 
     /* Add node section */
     .add-node-section {
-        padding: 16px 12px;
-        margin-top: 12px;
+        padding: 12px 10px;
+        margin-top: 8px;
         border-radius: 8px;
     }
 
     .add-node-section p {
-        font-size: 13px;
-        margin-bottom: 10px;
+        font-size: 12px;
+        margin-bottom: 8px;
     }
 
     .add-node-dropdown .btn {
-        padding: 10px 20px;
-        font-size: 14px;
+        padding: 8px 16px;
+        font-size: 13px;
     }
 
     .add-node-dropdown .dropdown-menu {
@@ -1183,17 +1301,8 @@
     }
 
     .add-node-dropdown .dropdown-item {
-        padding: 12px 16px;
-        font-size: 14px;
-    }
-
-    /* Header buttons */
-    #editorModeToggle .btn {
-        padding: 6px 10px;
-    }
-
-    #saveFlowBtn {
-        padding: 6px 12px;
+        padding: 10px 14px;
+        font-size: 13px;
     }
 
     #resetViewBtn {
@@ -1201,44 +1310,37 @@
     }
 
     /* Page header */
-    section.py-4 {
-        padding-top: 12px !important;
-        padding-bottom: 12px !important;
+    section.py-3 {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
     }
 
-    section.py-4 > .container-fluid {
+    section.py-3 > .container-fluid {
         padding-left: 12px;
         padding-right: 12px;
     }
 
-    section.py-4 h4 {
-        font-size: 16px;
-    }
-
-    section.py-4 .small {
-        font-size: 11px;
-    }
-
     /* Compact form rows */
     #formEditor .row.g-2 {
-        --bs-gutter-x: 0.5rem;
-        --bs-gutter-y: 0.5rem;
+        --bs-gutter-x: 0.375rem;
+        --bs-gutter-y: 0.375rem;
     }
 
     /* Input groups */
     #formEditor .input-group .btn {
-        padding: 6px 10px;
+        padding: 4px 8px;
+        font-size: 12px;
     }
 
     /* Connection badges in header */
     .node-connections {
         flex-basis: 100%;
-        margin-top: 4px;
+        margin-top: 3px;
     }
 
     .node-connections .badge {
-        font-size: 10px;
-        padding: 3px 6px;
+        font-size: 9px;
+        padding: 2px 5px;
     }
 
     /* Form flow settings card */
@@ -1248,67 +1350,52 @@
     }
 
     #formFlowSettings .form-check-label {
-        font-size: 13px;
+        font-size: 12px;
     }
 
     #formFlowSettings .btn {
-        font-size: 13px;
+        font-size: 12px;
     }
 }
 
 /* Extra small devices */
 @media (max-width: 400px) {
     #formEditor .col-lg-8 {
-        padding-left: 4px;
-        padding-right: 4px;
+        padding-left: 8px;
+        padding-right: 8px;
     }
 
-    section.py-4 > .container-fluid {
+    section.py-3 > .container-fluid {
         padding-left: 8px;
         padding-right: 8px;
     }
 
     .form-node-header {
-        padding: 8px 10px;
+        padding: 6px 8px;
     }
 
     .form-node-header .node-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
     }
 
     .form-node-header .node-title {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .form-node-header .node-actions button {
-        width: 34px;
-        height: 34px;
-        font-size: 13px;
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
     }
 
     .form-node-body {
-        padding: 10px;
+        padding: 8px;
     }
 
     .add-node-section {
-        padding: 12px 10px;
-    }
-
-    /* Smaller page header on very small screens */
-    section.py-4 h4 {
-        font-size: 14px;
-    }
-
-    #editorModeToggle .btn {
-        padding: 4px 8px;
-        font-size: 12px;
-    }
-
-    #saveFlowBtn {
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 10px 8px;
     }
 
     /* Button template - stack on very small screens */
@@ -1359,8 +1446,8 @@
         right: 0;
         z-index: 1050;
         margin: 0;
-        padding: 14px 16px;
-        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+        padding: 10px 12px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
         background: white;
         border-top: 1px solid #e5e5e5;
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
@@ -1378,8 +1465,8 @@
 
     .form-editor-active .add-node-dropdown .btn {
         width: 100%;
-        padding: 14px 20px;
-        font-size: 15px;
+        padding: 10px 16px;
+        font-size: 14px;
         font-weight: 600;
         border-radius: 12px;
         background: var(--primary);
@@ -1425,11 +1512,11 @@
     }
 
     .form-editor-active .add-node-dropdown .dropdown-item {
-        padding: 14px 16px;
-        font-size: 15px;
+        padding: 10px 14px;
+        font-size: 13px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
     }
 
     .form-editor-active .add-node-dropdown .dropdown-item:active {
@@ -1438,8 +1525,8 @@
     }
 
     .form-editor-active .add-node-dropdown .dropdown-item i {
-        width: 24px;
-        font-size: 18px;
+        width: 20px;
+        font-size: 15px;
         text-align: center;
     }
 
@@ -1450,17 +1537,17 @@
 
     /* Add padding to bottom of form container */
     .form-editor-active #formNodesContainer {
-        padding-bottom: 120px;
+        padding-bottom: 90px;
     }
 }
 
 /* Mobile save button class - will be added via JS */
 .mobile-bottom-save {
     width: 100%;
-    padding: 14px 20px !important;
-    font-size: 15px !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     background: var(--primary) !important;
     color: white !important;
     border: none !important;
@@ -1821,11 +1908,11 @@
             <div class="row">
                 <div class="col-12 col-md-10 col-lg-8 mx-auto">
                     <!-- Flow Settings Card -->
-                    <div class="card mb-3">
+                    <div class="card mb-3 flow-settings-card">
                         <div class="card-header py-2 d-flex justify-content-between align-items-center"
                              data-bs-toggle="collapse" data-bs-target="#formFlowSettings" style="cursor: pointer;">
                             <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-lightning-charge text-warning"></i>
+                                <i class="bi bi-gear text-primary"></i>
                                 <span class="fw-bold small">{{ flow.title }}</span>
                                 {% if flow.is_active %}
                                 <span class="badge bg-success" style="font-size: 10px;">Active</span>
@@ -1833,7 +1920,9 @@
                                 <span class="badge bg-secondary" style="font-size: 10px;">Inactive</span>
                                 {% endif %}
                             </div>
-                            <i class="bi bi-chevron-down small"></i>
+                            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size: 10px;">
+                                <i class="bi bi-pencil me-1"></i>Edit Settings <i class="bi bi-chevron-down ms-1"></i>
+                            </span>
                         </div>
                         <div class="collapse" id="formFlowSettings">
                             <div class="card-body py-2">
@@ -2730,7 +2819,7 @@ function renderConfigFields(nodeType, data, dbId = null) {
                         <option value="7d" ${data.time_period === '7d' ? 'selected' : ''}>Last 7 days</option>
                         <option value="30d" ${data.time_period === '30d' ? 'selected' : ''}>Last 30 days</option>
                     </select>
-                    <small class="text-muted">How far back to check for completed sessions</small>
+                    <small class="text-muted">Lookback period</small>
                 </div>
                 <div class="mb-3">
                     <strong>Outputs:</strong>
@@ -4571,7 +4660,6 @@ if (isMobileDevice()) {
     // Small delay to ensure everything is loaded
     setTimeout(() => {
         switchEditorMode('form');
-        showToast('Switched to Form editor (recommended for mobile)', 'info');
     }, 500);
 }
 
@@ -4747,7 +4835,7 @@ function buildNodeFields(node, index) {
                 <div class="mb-3">
                     <label class="form-label">What to reply</label>
                     <textarea class="form-control node-field" data-field="text" rows="2" placeholder="e.g., Thanks for commenting! Check your DMs 📩">${escapeHtml(node.config.text || '')}</textarea>
-                    <small class="text-muted">This reply will be posted publicly under the user's comment</small>
+                    <small class="text-muted">Public reply on their comment</small>
                 </div>
                 ${buildVariationsSection(node, index)}
                 <div class="form-node-connection next-node">
@@ -4785,7 +4873,7 @@ function buildNodeFields(node, index) {
                 <div class="mb-3">
                     <label class="form-label">Link URL</label>
                     <input type="url" class="form-control node-field" data-field="url" value="${escapeHtml(node.config.url || '')}" placeholder="https://your-link.com">
-                    <small class="text-muted">The link user will receive</small>
+                    <small class="text-muted">Link sent to user</small>
                 </div>
                 <div class="form-node-connection next-node">
                     <div class="connection-label"><i class="bi bi-arrow-right-circle text-primary me-1"></i>What happens next?</div>
@@ -4821,7 +4909,7 @@ function buildNodeFields(node, index) {
                 </div>
                 ${buildVariationsSection(node, index)}
                 <label class="form-label">Answer buttons</label>
-                <small class="text-muted d-block mb-2">User taps a button to continue</small>
+                <small class="text-muted d-block mb-2">User taps to continue</small>
                 <div class="qr-container">${qrHtml}</div>
                 <button type="button" class="btn btn-outline-primary btn-sm add-qr mt-2"><i class="bi bi-plus me-1"></i>Add Answer Button</button>
             `;
@@ -4862,7 +4950,7 @@ function buildNodeFields(node, index) {
                 </div>
                 ${buildVariationsSection(node, index)}
                 <label class="form-label">Buttons</label>
-                <small class="text-muted d-block mb-2">Action = continues flow, Open Link = opens a website</small>
+                <small class="text-muted d-block mb-2">Action = next step, Link = opens URL</small>
                 <div class="btn-container">${btnHtml}</div>
                 <button type="button" class="btn btn-outline-primary btn-sm add-btn mt-2"><i class="bi bi-plus me-1"></i>Add Button</button>
             `;
@@ -4870,9 +4958,9 @@ function buildNodeFields(node, index) {
 
         case 'condition_follower':
             html = `
-                <div class="alert alert-light small mb-3 border">
+                <div class="alert alert-light small mb-2 border py-1 px-2">
                     <i class="bi bi-lightbulb me-1 text-warning"></i>
-                    <strong>How it works:</strong> Checks if the user follows your account, then sends them to different steps based on the result.
+                    Routes based on follow status
                 </div>
                 <div class="form-node-connection follower mb-2">
                     <div class="connection-label"><i class="bi bi-check-circle text-success me-1"></i>If they <strong>follow</strong> you:</div>
@@ -4893,9 +4981,9 @@ function buildNodeFields(node, index) {
             const timePeriodLabels = { 'ever': 'Ever', '24h': 'Last 24 hours', '7d': 'Last 7 days', '30d': 'Last 30 days' };
             const currentTimePeriod = node.config.time_period || 'ever';
             html = `
-                <div class="alert alert-light small mb-3 border">
+                <div class="alert alert-light small mb-2 border py-1 px-2">
                     <i class="bi bi-lightbulb me-1 text-warning"></i>
-                    <strong>How it works:</strong> Checks if the user has already been through this flow, so you can send different messages to new vs returning users.
+                    Routes new vs returning users
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Check within</label>
@@ -4929,9 +5017,9 @@ function buildNodeFields(node, index) {
                 : `collected_${sidebarFieldType}`;
             const sidebarFieldLabel = node.config.field_label || '';
             html = `
-                <div class="alert alert-light small mb-3 border">
+                <div class="alert alert-light small mb-2 border py-1 px-2">
                     <i class="bi bi-lightbulb me-1 text-warning"></i>
-                    <strong>How it works:</strong> Asks the user a question and saves their response. You can view collected data in the Leads section.
+                    Asks a question, saves response to Leads
                 </div>
                 <div class="mb-3">
                     <label class="form-label">What info do you want to collect?</label>
@@ -4945,7 +5033,7 @@ function buildNodeFields(node, index) {
                 <div class="mb-3 collect-label-group ${sidebarIsCustom ? '' : 'd-none'}" data-node-index="${index}">
                     <label class="form-label">Label for this field</label>
                     <input type="text" class="form-control node-field" data-field="field_label" value="${escapeHtml(sidebarFieldLabel)}" placeholder="e.g., Company Name, Budget, etc.">
-                    <small class="text-muted">This label appears in your Leads list</small>
+                    <small class="text-muted">Shown in Leads</small>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Your question to the user</label>
@@ -4968,9 +5056,9 @@ function buildNodeFields(node, index) {
                 const agentName = node.config.agent_name || 'Not set up yet';
                 const goal = node.config.goal || 'Not configured';
                 html = `
-                    <div class="alert alert-light small mb-3 border">
+                    <div class="alert alert-light small mb-2 border py-1 px-2">
                         <i class="bi bi-lightbulb me-1 text-warning"></i>
-                        <strong>How it works:</strong> AI takes over and chats naturally with the user until the goal is reached.
+                        AI chats with user until goal is reached
                     </div>
                     <div class="mb-2">
                         <label class="form-label small text-muted mb-1">AI Agent</label>
@@ -4993,13 +5081,10 @@ function buildNodeFields(node, index) {
             } else {
                 // Node not saved yet
                 html = `
-                    <div class="alert alert-warning small mb-3">
+                    <div class="alert alert-warning small mb-2 py-1 px-2">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong>Save flow first</strong>
+                        Save flow first, then set up AI agent
                     </div>
-                    <p class="small text-muted mb-2">
-                        Click "Save" below, then you can set up the AI agent.
-                    </p>
                     <button type="button" class="btn btn-secondary btn-sm w-100 mb-3" disabled>
                         <i class="bi bi-gear me-1"></i>Set Up AI Agent
                     </button>
@@ -5034,7 +5119,7 @@ function buildVariationsSection(node, index) {
                 <button type="button" class="btn btn-sm ${hasVariations ? 'btn-outline-secondary' : 'btn-outline-primary'} toggle-variations" data-node-index="${index}">
                     <i class="bi bi-shuffle me-1"></i>Variations ${hasVariations ? `(${variations.length})` : ''}
                 </button>
-                <small class="text-muted">Randomly picks one message to send</small>
+                <small class="text-muted">Sends one at random</small>
             </div>
             <div class="variations-container ${hasVariations ? '' : 'd-none'}">
                 <div class="variations-list">${variationsHtml}</div>
@@ -5626,26 +5711,6 @@ function loadPostsForSettings() {
 loadExistingFlow();
 updateFollowerCheckPaletteState();
 
-// Auto-detect mobile and suggest form mode
-if (window.innerWidth < 768) {
-    setTimeout(() => {
-        const toast = document.createElement('div');
-        toast.className = 'alert alert-info position-fixed d-flex align-items-center gap-2';
-        toast.style.cssText = 'bottom: 20px; left: 20px; right: 20px; z-index: 9999;';
-        toast.innerHTML = `
-            <i class="bi bi-phone me-1"></i>
-            <span class="flex-grow-1">Mobile detected. Form editor works better on small screens.</span>
-            <button class="btn btn-sm btn-primary" id="switchToFormBtn">Switch</button>
-            <button class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(toast);
-        document.getElementById('switchToFormBtn').addEventListener('click', () => {
-            document.querySelector('#editorModeToggle button[data-mode="form"]').click();
-            toast.remove();
-        });
-        setTimeout(() => toast.remove(), 8000);
-    }, 500);
-}
 
 // ============================================================================
 // Collapsible Left Panel Controls

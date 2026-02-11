@@ -24,7 +24,7 @@ from django.http import JsonResponse, HttpResponse
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
     FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate,
-    APICallLog, QueuedFlowTrigger
+    APICallLog, QueuedFlowTrigger, DroppedMessage
 )
 from .flow_engine import FlowEngine, find_matching_flow, find_session_for_message, parse_quick_reply_payload
 from .instagram_api import get_api_client_for_account, InstagramAPIError
@@ -747,7 +747,37 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             flows = DMFlow.objects.all().select_related('user').prefetch_related('nodes')
         else:
             flows = DMFlow.objects.filter(user=request.user).prefetch_related('nodes')
+
+        # Total count and stats before filters
         flow_count = flows.count()
+        from django.db.models import Sum
+        stats = flows.aggregate(
+            total_triggered=Sum('total_triggered'),
+            total_completed=Sum('total_completed')
+        )
+
+        # Apply filters
+        status_filter = request.GET.get('status', '')
+        search_filter = request.GET.get('q', '').strip()
+
+        if status_filter == 'active':
+            flows = flows.filter(is_active=True)
+        elif status_filter == 'paused':
+            flows = flows.filter(is_active=False)
+
+        if search_filter:
+            flows = flows.filter(title__icontains=search_filter)
+
+        # Pagination
+        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+        paginator = Paginator(flows, 10)
+        page = request.GET.get('page')
+        try:
+            flows_page = paginator.page(page)
+        except PageNotAnInteger:
+            flows_page = paginator.page(1)
+        except EmptyPage:
+            flows_page = paginator.page(paginator.num_pages)
 
         # Get flow limit from subscription
         flow_limit = None
@@ -767,12 +797,6 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             flow__user=request.user
         ).select_related('flow').order_by('-created_at')[:20]
 
-        # Aggregate stats for mobile view
-        from django.db.models import Sum
-        stats = flows.aggregate(
-            total_triggered=Sum('total_triggered'),
-            total_completed=Sum('total_completed')
-        )
 
         # Get active flow templates
         flow_templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
@@ -788,10 +812,23 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             ).count()
             calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
 
+        # Count dropped messages in last 24h for upgrade CTA
+        dropped_message_count = 0
+        if instagram_account:
+            subscription = get_user_subscription(request.user)
+            has_queue = subscription and subscription.plan.has_feature('queue_triggers')
+            if has_queue:
+                from datetime import timedelta
+                since = timezone.now() - timedelta(hours=24)
+                dropped_message_count = DroppedMessage.objects.filter(
+                    account=instagram_account,
+                    created_at__gte=since,
+                ).count()
+
         context = {
             'instagram_connected': instagram_connected,
             'instagram_account': instagram_account,
-            'flows': flows,
+            'flows': flows_page,
             'flow_count': flow_count,
             'flow_limit': flow_limit,
             'can_create_more': can_create_more,
@@ -802,6 +839,9 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'queued_count': queued_count,
             'calls_last_hour': calls_last_hour,
             'rate_limit': rate_limit,
+            'dropped_message_count': dropped_message_count,
+            'status_filter': status_filter,
+            'search_filter': search_filter,
         }
         return render(request, self.template_name, context)
 
@@ -2349,6 +2389,11 @@ class InstagramWebhookView(View):
                 )
                 logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - queued flow trigger for comment {comment_id}")
             else:
+                DroppedMessage.objects.create(
+                    account=instagram_account,
+                    commenter_username=commenter_username,
+                    comment_text=comment_text[:300],
+                )
                 logger.info(f"Rate limited ({calls_last_hour}/{rate_limit}) - skipping comment {comment_id} (no queue feature)")
             return
 

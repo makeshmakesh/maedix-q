@@ -159,6 +159,11 @@ class DMFlow(models.Model):
 
     # Status
     is_active = models.BooleanField(default=True)
+    deactivated_by = models.CharField(
+        max_length=10,
+        choices=[('user', 'User'), ('system', 'System')],
+        null=True, blank=True, default=None,
+    )
 
     # Statistics
     total_triggered = models.PositiveIntegerField(default=0)

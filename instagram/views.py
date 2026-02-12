@@ -1555,7 +1555,8 @@ class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 }, status=400)
 
         flow.is_active = is_active
-        flow.save(update_fields=['is_active'])
+        flow.deactivated_by = 'user' if not is_active else None
+        flow.save(update_fields=['is_active', 'deactivated_by'])
 
         return JsonResponse({
             'success': True,

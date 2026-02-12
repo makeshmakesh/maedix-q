@@ -437,6 +437,26 @@ class PaymentSuccessView(LoginRequiredMixin, View):
                 payment_txn.subscription = subscription
                 payment_txn.save()
 
+                # Reactivate system-deactivated flows up to new plan limit
+                from instagram.models import DMFlow
+                new_limit = plan.get_feature_limit('ig_flow_builder', 0)
+                active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
+                if new_limit is None or new_limit == 0:
+                    budget = float('inf')
+                else:
+                    budget = max(0, new_limit - active_count)
+                if budget > 0:
+                    system_deactivated = DMFlow.objects.filter(
+                        user=request.user, is_active=False, deactivated_by='system'
+                    ).order_by('created_at')
+                    if budget != float('inf'):
+                        system_deactivated = system_deactivated[:int(budget)]
+                    reactivate_ids = list(system_deactivated.values_list('id', flat=True))
+                    if reactivate_ids:
+                        DMFlow.objects.filter(id__in=reactivate_ids).update(
+                            is_active=True, deactivated_by=None
+                        )
+
             # Store success data in session (outside atomic block)
             request.session['payment_success_data'] = {
                 'transaction_id': payment_txn.id,

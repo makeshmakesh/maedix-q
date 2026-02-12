@@ -118,6 +118,40 @@ def check_subscription_active(user):
     return True, subscription
 
 
+def _auto_downgrade_to_free(subscription):
+    """
+    Auto-downgrade an expired subscription to the free plan.
+    Deactivates excess flows (marked as system-deactivated).
+    Returns the updated subscription.
+    """
+    from django.db import transaction
+    from instagram.models import DMFlow
+
+    free_plan = Plan.objects.filter(plan_type='free', is_active=True).first()
+    if not free_plan:
+        return subscription
+
+    with transaction.atomic():
+        subscription.plan = free_plan
+        subscription.status = 'active'
+        subscription.end_date = None
+        subscription.usage_data = {}
+        subscription.save()
+
+        # Deactivate excess flows beyond free plan limit
+        free_limit = free_plan.get_feature_limit('ig_flow_builder', 1)
+        active_flows = DMFlow.objects.filter(
+            user=subscription.user, is_active=True
+        ).order_by('created_at')
+        excess_ids = list(active_flows[free_limit:].values_list('id', flat=True))
+        if excess_ids:
+            DMFlow.objects.filter(id__in=excess_ids).update(
+                is_active=False, deactivated_by='system'
+            )
+
+    return subscription
+
+
 def check_feature_access(user, feature_code):
     """
     Check if user can access a specific feature.
@@ -137,11 +171,15 @@ def check_feature_access(user, feature_code):
         )
 
     if not subscription.is_active():
-        return (
-            False,
-            "Your subscription has expired. Please renew to continue.",
-            subscription,
-        )
+        # Auto-downgrade to free plan and deactivate excess flows
+        subscription = _auto_downgrade_to_free(subscription)
+        # Re-check access with the now-free subscription
+        if not subscription.plan.has_feature(feature_code):
+            return (
+                False,
+                f"Your plan doesn't include this feature. Please upgrade.",
+                subscription,
+            )
 
     if not subscription.plan.has_feature(feature_code):
         return (

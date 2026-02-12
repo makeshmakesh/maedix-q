@@ -1544,8 +1544,8 @@ class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             else:
                 subscription = get_user_subscription(request.user)
                 if subscription and subscription.plan:
-                    # Pro users can have unlimited active flows
-                    max_active = float('inf')
+                    plan_limit = subscription.plan.get_feature_limit('ig_flow_builder', 1)
+                    max_active = float('inf') if not plan_limit else plan_limit
 
             active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
             if active_count >= max_active:

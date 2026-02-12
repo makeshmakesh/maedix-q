@@ -3,118 +3,58 @@ from .models import (
     Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer,
     VideoTemplate, Topic, TopicCard, TopicProgress, TopicCarouselExport
 )
+
+
 @admin.register(VideoTemplate)
 class VideoTemplateAdmin(admin.ModelAdmin):
     pass
-class OptionInline(admin.TabularInline):
-    model = Option
-    extra = 4
-
-
-class QuestionInline(admin.TabularInline):
-    model = Question
-    extra = 1
-    show_change_link = True
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'parent', 'quiz_count', 'order', 'is_active']
-    list_filter = ['is_active', 'parent']
-    search_fields = ['name', 'description']
-    prepopulated_fields = {'slug': ('name',)}
-    ordering = ['order', 'name']
+    pass
 
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'difficulty', 'question_count', 'time_limit', 'is_published', 'is_featured']
-    list_filter = ['category', 'difficulty', 'is_published', 'is_featured']
-    search_fields = ['title', 'description']
-    prepopulated_fields = {'slug': ('title',)}
-    inlines = [QuestionInline]
-    raw_id_fields = ['created_by']
+    pass
 
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ['quiz', 'text_preview', 'question_type', 'order', 'points']
-    list_filter = ['quiz', 'question_type']
-    search_fields = ['text', 'quiz__title']
-    inlines = [OptionInline]
-    ordering = ['quiz', 'order']
-
-    def text_preview(self, obj):
-        return obj.text[:50] + '...' if len(obj.text) > 50 else obj.text
-    text_preview.short_description = 'Question'
+    pass
 
 
 @admin.register(Option)
 class OptionAdmin(admin.ModelAdmin):
-    list_display = ['question', 'text_preview', 'is_correct', 'order']
-    list_filter = ['is_correct', 'question__quiz']
-    search_fields = ['text', 'question__text']
-
-    def text_preview(self, obj):
-        return obj.text[:50] + '...' if len(obj.text) > 50 else obj.text
-    text_preview.short_description = 'Option'
+    pass
 
 
 @admin.register(QuizAttempt)
 class QuizAttemptAdmin(admin.ModelAdmin):
-    list_display = ['user', 'quiz', 'status', 'score', 'percentage', 'passed', 'xp_earned', 'started_at']
-    list_filter = ['status', 'passed', 'quiz']
-    search_fields = ['user__email', 'quiz__title']
-    readonly_fields = ['started_at', 'completed_at']
+    pass
 
 
 @admin.register(QuestionAnswer)
 class QuestionAnswerAdmin(admin.ModelAdmin):
-    list_display = ['attempt', 'question', 'is_correct', 'points_earned', 'answered_at']
-    list_filter = ['is_correct', 'attempt__quiz']
-    search_fields = ['attempt__user__email']
-
-
-class TopicCardInline(admin.TabularInline):
-    model = TopicCard
-    extra = 1
-    ordering = ['order']
+    pass
 
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'card_count', 'status', 'is_featured', 'created_by', 'created_at']
-    list_filter = ['status', 'category', 'is_featured']
-    search_fields = ['title', 'description']
-    prepopulated_fields = {'slug': ('title',)}
-    inlines = [TopicCardInline]
-    raw_id_fields = ['created_by', 'linked_quiz', 'mini_quiz']
-    ordering = ['category', 'order', 'title']
+    pass
 
 
 @admin.register(TopicCard)
 class TopicCardAdmin(admin.ModelAdmin):
-    list_display = ['topic', 'title', 'card_type', 'order', 'content_preview']
-    list_filter = ['card_type', 'topic']
-    search_fields = ['title', 'content', 'topic__title']
-    ordering = ['topic', 'order']
-
-    def content_preview(self, obj):
-        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
-    content_preview.short_description = 'Content'
+    pass
 
 
 @admin.register(TopicProgress)
 class TopicProgressAdmin(admin.ModelAdmin):
-    list_display = ['user', 'topic', 'current_card_index', 'is_completed', 'completed_at']
-    list_filter = ['is_completed', 'topic']
-    search_fields = ['user__email', 'topic__title']
-    readonly_fields = ['created_at', 'updated_at']
+    pass
 
 
 @admin.register(TopicCarouselExport)
 class TopicCarouselExportAdmin(admin.ModelAdmin):
-    list_display = ['topic', 'user', 'cards_count', 'created_at']
-    list_filter = ['topic']
-    search_fields = ['user__email', 'topic__title']
-    readonly_fields = ['created_at']
+    pass

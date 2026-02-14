@@ -120,6 +120,47 @@
         }
     }
 
+    /* Locked scratch button on mobile */
+    .btn-scratch-locked {
+        opacity: 0.65;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .btn-scratch-locked i.bi-lock {
+        font-size: 0.65rem;
+    }
+
+    /* Desktop-only toast */
+    .desktop-only-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        animation: toastSlideUp 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .desktop-only-toast i {
+        color: #fbbf24;
+    }
+
+    @keyframes toastSlideUp {
+        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
     /* Category Navigation - Horizontal Scroll on Mobile */
     .category-nav {
         display: flex;
@@ -361,12 +402,17 @@
                         <div>
                             <h1><i class="bi bi-plus-circle me-2"></i>Choose Template</h1>
                             <p class="d-none d-md-block">Choose a template or start from scratch</p>
+                            <p class="d-md-none">Choose a template to get started</p>
                         </div>
                         <div class="header-actions">
-                            <a href="{% url 'flow_create' %}" class="btn-create-scratch">
+                            <a href="{% url 'flow_create' %}" class="btn-create-scratch d-none d-md-inline-flex">
                                 <i class="bi bi-file-earmark-plus"></i>
                                 <span>Start from Scratch</span>
                             </a>
+                            <button class="btn-create-scratch btn-scratch-locked d-md-none" onclick="showDesktopOnlyToast(this)">
+                                <i class="bi bi-lock me-1"></i>
+                                <span>From Scratch</span>
+                            </button>
                             <a href="{% url 'flow_list' %}" class="btn-back">
                                 <i class="bi bi-arrow-left"></i>
                                 <span class="d-none d-sm-inline">Back</span>
@@ -436,9 +482,12 @@
                     <i class="bi bi-inbox d-block"></i>
                     <h5>No Templates Available</h5>
                     <p>Templates will appear here once they are created.</p>
-                    <a href="{% url 'flow_create' %}" class="btn btn-primary">
+                    <a href="{% url 'flow_create' %}" class="btn btn-primary d-none d-md-inline-flex">
                         <i class="bi bi-plus-lg me-1"></i>Create from Scratch
                     </a>
+                    <button class="btn btn-outline-secondary d-md-none" onclick="showDesktopOnlyToast(this)" style="opacity:0.7;">
+                        <i class="bi bi-lock me-1"></i>Create from Scratch
+                    </button>
                 </div>
                 {% endif %}
 
@@ -446,4 +495,30 @@
         </div>
     </div>
 </section>
+
+<script>
+function showDesktopOnlyToast(btn) {
+    // Quick shake animation on the button
+    btn.style.animation = 'none';
+    btn.offsetHeight; // trigger reflow
+    btn.style.animation = 'shake 0.4s ease';
+
+    // Show toast
+    document.querySelectorAll('.desktop-only-toast').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = 'desktop-only-toast';
+    toast.innerHTML = '<i class="bi bi-display"></i> Start from scratch is available on desktop';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+<style>
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+}
+</style>
 {% endblock %}

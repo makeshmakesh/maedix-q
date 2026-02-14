@@ -1032,7 +1032,15 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             else:
                 messages.warning(request, f'Flow "{title}" created as inactive. You can only have {int(max_active)} active flow(s) on your plan. Deactivate another flow to activate this one.')
 
+        # Redirect mobile users to wizard, desktop to full editor
+        if self._is_mobile(request) and template:
+            return redirect('flow_edit_wizard', pk=flow.pk)
         return redirect('flow_edit', pk=flow.pk)
+
+    def _is_mobile(self, request):
+        """Simple mobile detection from User-Agent"""
+        ua = request.META.get('HTTP_USER_AGENT', '').lower()
+        return any(kw in ua for kw in ['iphone', 'android', 'mobile', 'webos', 'ipod'])
 
     def _get_user_features(self, user):
         """Get available flow features based on user's subscription"""
@@ -1277,6 +1285,89 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
             'ai_social_agent': subscription.plan.has_feature('ai_social_agent'),
         }
+
+
+class FlowEditWizardView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Mobile-friendly wizard editor for DM flows"""
+    template_name = 'instagram/flow_edit_wizard.html'
+
+    def get(self, request, pk):
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        nodes = flow.nodes.all().order_by('order').prefetch_related('quick_reply_options')
+
+        nodes_json = []
+        for node in nodes:
+            quick_replies = []
+            for qr in node.quick_reply_options.all().order_by('order'):
+                quick_replies.append({
+                    'id': qr.id,
+                    'title': qr.title,
+                    'payload': qr.payload,
+                    'target_node_id': qr.target_node_id
+                })
+
+            node_config = node.config or {}
+            node_config = unwrap_flow_node_urls(node.node_type, node_config)
+
+            if node.node_type == 'ai_conversation':
+                from django.urls import reverse
+                node_config['config_url'] = reverse('ai_node_config', kwargs={'node_id': node.id})
+                try:
+                    ai_config = node.ai_config
+                    node_config['agent_name'] = ai_config.agent.name if ai_config.agent else 'No agent selected'
+                    node_config['goal'] = ai_config.goal or 'No goal configured'
+                except Exception:
+                    node_config['agent_name'] = 'Not configured'
+                    node_config['goal'] = 'Click Configure to set up'
+
+            nodes_json.append({
+                'id': node.id,
+                'order': node.order,
+                'node_type': node.node_type,
+                'name': node.name or node.get_node_type_display(),
+                'config': node_config,
+                'quick_replies': quick_replies,
+                'next_node_id': node.next_node_id
+            })
+
+        context = {
+            'flow': flow,
+            'nodes_json': json.dumps(nodes_json),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        """Save flow settings via AJAX"""
+        if request.user.is_staff:
+            flow = get_object_or_404(DMFlow, pk=pk)
+        else:
+            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        title = (data.get('title') or '').strip()
+        if not title:
+            return JsonResponse({'error': 'Title is required.'}, status=400)
+        if len(title) > 100:
+            return JsonResponse({'error': 'Title must be 100 characters or less.'}, status=400)
+
+        trigger_type = data.get('trigger_type', flow.trigger_type)
+        if trigger_type not in ('comment_keyword', 'comment_any'):
+            trigger_type = flow.trigger_type
+
+        flow.title = title
+        flow.trigger_type = trigger_type
+        flow.keywords = (data.get('keywords') or '').strip()
+        flow.is_active = bool(data.get('is_active'))
+        flow.save()
+
+        return JsonResponse({'success': True})
 
 
 class FlowSaveVisualView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):

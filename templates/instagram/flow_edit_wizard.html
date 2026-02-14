@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit: {{ flow.title }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/flow_edit_wizard.css' %}">
+
+<section class="wizard-page">
+    <div class="container">
+        <!-- Wizard Header -->
+        <div class="wizard-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2 min-width-0">
+                    <a href="{% url 'flow_list' %}" class="wizard-back-btn" title="Back to flows">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div class="min-width-0">
+                        <h1 class="text-truncate" id="wizardFlowTitle">{{ flow.title }}</h1>
+                        <div class="wizard-meta">
+                            {% if flow.is_active %}
+                            <span class="badge bg-success" id="wizardActiveBadge">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary" id="wizardActiveBadge">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <button class="wizard-mode-btn" id="fullEditorBtn" title="Change editor">
+                    <i class="bi bi-sliders me-1"></i>Change Editor
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="wizard-progress">
+                <div class="wizard-progress-bar" id="wizardProgressBar" style="width: 0%"></div>
+            </div>
+            <div class="wizard-step-counter" id="wizardStepCounter">Step 1 of 1</div>
+        </div>
+
+        <!-- Step Container -->
+        <div class="wizard-step-container" id="wizardStepContainer">
+            <!-- Steps rendered by JS -->
+        </div>
+
+        <!-- Navigation -->
+        <div class="wizard-nav">
+            <button class="wizard-nav-btn wizard-nav-prev" id="wizardPrevBtn" disabled>
+                <i class="bi bi-chevron-left me-1"></i>Back
+            </button>
+            <button class="wizard-nav-btn wizard-nav-next" id="wizardNextBtn">
+                Next<i class="bi bi-chevron-right ms-1"></i>
+            </button>
+            <button class="wizard-nav-btn wizard-nav-save" id="wizardSaveBtn" style="display:none">
+                <i class="bi bi-check-lg me-1"></i>Save Flow
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Editor Choice Modal -->
+<div class="wizard-modal-overlay" id="editorChoiceOverlay">
+    <div class="wizard-modal" id="editorChoiceModal">
+        <div class="wizard-modal-header">
+            <h3>Choose Editor</h3>
+            <button class="wizard-modal-close" id="editorChoiceClose">&times;</button>
+        </div>
+
+        <!-- Initial choice view -->
+        <div id="editorChoiceView">
+            <p class="wizard-modal-desc">We have two advanced editors for full control:</p>
+
+            <div class="wizard-modal-options">
+                <button class="wizard-modal-option" id="chooseFormEditor">
+                    <div class="wizard-modal-option-icon" style="background:#0d6efd;">
+                        <i class="bi bi-list-ul"></i>
+                    </div>
+                    <div class="wizard-modal-option-info">
+                        <div class="wizard-modal-option-title">Form Editor</div>
+                        <div class="wizard-modal-option-desc">Edit all fields, connections, add/remove steps</div>
+                    </div>
+                    <i class="bi bi-chevron-right" style="color:#9ca3af;"></i>
+                </button>
+
+                <button class="wizard-modal-option" id="chooseVisualEditor">
+                    <div class="wizard-modal-option-icon" style="background:#7c3aed;">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div class="wizard-modal-option-info">
+                        <div class="wizard-modal-option-title">Visual Editor</div>
+                        <div class="wizard-modal-option-desc">Drag-and-drop flow builder with canvas</div>
+                    </div>
+                    <i class="bi bi-chevron-right" style="color:#9ca3af;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Visual editor desktop-only view -->
+        <div id="visualEditorNotice" style="display:none;">
+            <div class="wizard-modal-visual-notice">
+                <div class="visual-demo-container">
+                    <div class="visual-demo-canvas">
+                        <div class="demo-node demo-node-1">
+                            <div class="demo-node-dot"></div>
+                            <i class="bi bi-chat-dots"></i>
+                            <span>Reply</span>
+                        </div>
+                        <svg class="demo-line" viewBox="0 0 80 40"><path d="M0,0 C40,0 40,40 80,40" stroke="#7c3aed" stroke-width="2" fill="none" opacity="0.5"/></svg>
+                        <div class="demo-node demo-node-2">
+                            <div class="demo-node-dot"></div>
+                            <i class="bi bi-link"></i>
+                            <span>Link</span>
+                        </div>
+                        <svg class="demo-line demo-line-2" viewBox="0 0 80 40"><path d="M0,0 C40,0 40,40 80,40" stroke="#7c3aed" stroke-width="2" fill="none" opacity="0.5"/></svg>
+                        <div class="demo-node demo-node-3">
+                            <div class="demo-node-dot"></div>
+                            <i class="bi bi-person-check"></i>
+                            <span>Check</span>
+                        </div>
+                    </div>
+                    <div class="demo-cursor">
+                        <i class="bi bi-cursor-fill"></i>
+                    </div>
+                </div>
+
+                <div class="visual-notice-text">
+                    <i class="bi bi-display" style="font-size:24px; color:#7c3aed;"></i>
+                    <h4>Desktop Only</h4>
+                    <p>The visual drag-and-drop editor needs a larger screen to work properly. Open this flow on your computer to use it.</p>
+                </div>
+
+                <div class="visual-fallback-btns">
+                    <button class="wizard-modal-fallback-btn wizard-btn" id="visualFallbackWizardBtn">
+                        <i class="bi bi-magic me-1"></i>Stay in Easy Editor
+                    </button>
+                    <button class="wizard-modal-fallback-btn form-btn" id="visualFallbackFormBtn">
+                        <i class="bi bi-list-ul me-1"></i>Use Form Editor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const flowId = {{ flow.id }};
+const csrfToken = '{{ csrf_token }}';
+const existingNodes = {{ nodes_json|safe }};
+const fullEditorUrl = '{% url "flow_edit" flow.pk %}';
+const formEditorUrl = fullEditorUrl + '?mode=form';
+const flowSettings = {
+    title: "{{ flow.title|escapejs }}",
+    triggerType: "{{ flow.trigger_type|escapejs }}",
+    keywords: "{{ flow.keywords|escapejs }}",
+    isActive: {{ flow.is_active|yesno:"true,false" }}
+};
+</script>
+<script src="{% static 'js/flow_edit_wizard.js' %}"></script>
+{% endblock %}

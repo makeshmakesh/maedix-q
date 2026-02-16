@@ -360,12 +360,15 @@ class InstagramCallbackView(LoginRequiredMixin, View):
 
         except requests.RequestException as e:
             messages.error(request, f"Network error connecting to Instagram: {str(e)}")
+            return redirect("instagram_connect")
         except ValueError as e:
             messages.error(request, f"Instagram API error: {str(e)}")
+            return redirect("instagram_connect")
         except Exception as e:
             messages.error(request, f"Unexpected error: {str(e)}")
+            return redirect("instagram_connect")
 
-        return redirect("instagram_connect")
+        return redirect("dashboard")
 
 
 class InstagramDisconnectView(LoginRequiredMixin, View):

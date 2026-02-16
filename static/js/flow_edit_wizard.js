@@ -124,13 +124,18 @@
         progressBar.style.width = '100%';
         stepCounter.textContent = `${wizardSteps.length} step${wizardSteps.length !== 1 ? 's' : ''} in this flow`;
 
-        // Hide prev/next, show save
+        // Hide prev/next, show edit button in nav
         document.getElementById('wizardPrevBtn').style.display = 'none';
         document.getElementById('wizardNextBtn').style.display = 'none';
         const saveBtn = document.getElementById('wizardSaveBtn');
         saveBtn.style.display = 'flex';
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Flow';
+        saveBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i>Edit Steps';
+        saveBtn.onclick = function() {
+            wizardCurrentStep = 0;
+            renderCurrentView();
+            window.scrollTo(0, 0);
+        };
 
         if (wizardSteps.length === 0) {
             container.innerHTML = `
@@ -168,20 +173,9 @@
                 <div class="wizard-summary-list">
                     ${stepsHtml}
                 </div>
-                <div style="padding: 12px 16px;">
-                    <button class="wizard-edit-all-btn" id="wizardEditAllBtn">
-                        <i class="bi bi-pencil-square me-2"></i>Edit Steps
-                    </button>
-                </div>
             </div>`;
 
         attachSettingsHandlers();
-
-        document.getElementById('wizardEditAllBtn').addEventListener('click', () => {
-            wizardCurrentStep = 0;
-            renderCurrentView();
-            window.scrollTo(0, 0);
-        });
     }
 
     // =========================================================================
@@ -449,6 +443,8 @@
         const isLast = wizardCurrentStep === total - 1;
         nextBtn.style.display = isLast ? 'none' : 'flex';
         saveBtn.style.display = isLast ? 'flex' : 'none';
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Changes';
+        saveBtn.onclick = function() { saveWizardFlow(); };
 
         if (!step) return;
 
@@ -746,9 +742,7 @@
             }
         });
 
-        document.getElementById('wizardSaveBtn').addEventListener('click', () => {
-            saveWizardFlow();
-        });
+        // Save button onclick is set dynamically in renderSummary/renderWizardStep
     }
 
     // =========================================================================

@@ -392,37 +392,73 @@
 
     /* Empty state */
     .empty-state {
-        padding: 3rem 1.5rem;
+        padding: 0.75rem 1rem;
         text-align: center;
     }
 
+    @media (min-width: 768px) {
+        .empty-state {
+            padding: 3rem 1.5rem;
+        }
+    }
+
     .empty-state-icon {
-        width: 80px;
-        height: 80px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--primary-rgb), 0.1) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 1.5rem;
+        margin: 0 auto 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+        }
     }
 
     .empty-state-icon i {
-        font-size: 2rem;
+        font-size: 1.5rem;
         background: var(--gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
+    @media (min-width: 768px) {
+        .empty-state-icon i {
+            font-size: 2rem;
+        }
+    }
+
     .empty-state h3 {
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
     }
 
     .empty-state p {
         color: #6c757d;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    @media (min-width: 768px) {
+        .empty-state p {
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
     }
 
     .btn-create-first {
@@ -670,6 +706,36 @@
         color: white;
     }
 
+    /* Desktop-only toast */
+    .desktop-only-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        animation: toastSlideUp 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .desktop-only-toast i {
+        color: #fbbf24;
+    }
+
+    @keyframes toastSlideUp {
+        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
     /* Responsive adjustments */
     @media (max-width: 767.98px) {
         .flow-card {
@@ -841,8 +907,8 @@
                 <div class="row">
                     <!-- Main Column: Flows -->
                     <div class="col-lg-8 order-1 order-lg-1">
-                        <!-- Filter Bar -->
-                        <form method="get" class="flow-filter-bar">
+                        <!-- Filter Bar (hide on mobile when no flows) -->
+                        <form method="get" class="flow-filter-bar {% if not flows %}d-none d-md-flex{% endif %}">
                             <input type="text" name="q" class="form-control" placeholder="Search..." value="{{ search_filter }}">
                             <select name="status" class="form-select">
                                 <option value="">All</option>
@@ -855,8 +921,8 @@
                             {% endif %}
                         </form>
 
-                        <div class="section-card">
-                            <div class="section-header">
+                        <div class="section-card {% if not flows %}border-0 shadow-none{% endif %}">
+                            <div class="section-header {% if not flows %}d-none d-md-flex{% endif %}">
                                 <h2 class="section-title">
                                     <i class="bi bi-collection text-primary"></i>
                                     Your Automations
@@ -993,10 +1059,14 @@
                                         Browse Templates
                                     </a>
                                     {% endif %}
-                                    <a href="{% url 'flow_create' %}" class="btn-create-first">
+                                    <a href="{% url 'flow_create' %}" class="btn-create-first d-none d-md-inline-flex">
                                         <i class="bi bi-plus-lg"></i>
                                         Create from Scratch
                                     </a>
+                                    <button class="btn-create-first d-md-none" onclick="showDesktopOnlyToast()" style="opacity:0.7;">
+                                        <i class="bi bi-lock me-1"></i>
+                                        Create from Scratch
+                                    </button>
                                 </div>
                                 {% else %}
                                 <a href="{% url 'pricing' %}" class="btn-upgrade">
@@ -1068,6 +1138,15 @@
 
 {% block extra_js %}
 <script>
+function showDesktopOnlyToast() {
+    document.querySelectorAll('.desktop-only-toast').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = 'desktop-only-toast';
+    toast.innerHTML = '<i class="bi bi-display"></i> Use desktop to create automations';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Render keywords from data attribute
     document.querySelectorAll('.flow-keywords').forEach(container => {

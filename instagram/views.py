@@ -368,7 +368,7 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             messages.error(request, f"Unexpected error: {str(e)}")
             return redirect("instagram_connect")
 
-        return redirect("dashboard")
+        return redirect("flow_list")
 
 
 class InstagramDisconnectView(LoginRequiredMixin, View):

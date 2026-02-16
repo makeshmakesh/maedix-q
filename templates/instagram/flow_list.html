@@ -1142,7 +1142,7 @@ function showDesktopOnlyToast() {
     document.querySelectorAll('.desktop-only-toast').forEach(t => t.remove());
     const toast = document.createElement('div');
     toast.className = 'desktop-only-toast';
-    toast.innerHTML = '<i class="bi bi-display"></i> Use desktop to create automations';
+    toast.innerHTML = '<i class="bi bi-display"></i> Use desktop to create automations from scratch or use templates';
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }

@@ -34,9 +34,12 @@
                     <i class="bi bi-instagram text-danger" style="font-size: 3rem;"></i>
                     <h4 class="mt-3">Connect Instagram First</h4>
                     <p class="text-muted">You need to connect your Instagram account to use comment automation.</p>
-                    <a href="{% url 'instagram_connect' %}" class="btn btn-primary">
-                        <i class="bi bi-link-45deg me-1"></i>Connect Instagram
-                    </a>
+                    <form method="post" action="{% url 'instagram_oauth' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-link-45deg me-1"></i>Connect Instagram
+                        </button>
+                    </form>
                 </div>
                 {% else %}
 

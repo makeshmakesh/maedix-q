@@ -1,0 +1,152 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Data Deletion - Admin{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-trash3 me-2"></i>User Data Deletion</h4>
+        <p class="text-muted mb-0 small">Process Meta/Instagram data deletion requests (GDPR compliance)</p>
+    </div>
+    <a href="{% url 'instagram_admin_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+</div>
+
+{% if messages %}
+<div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show py-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if results %}
+<!-- Results -->
+<div class="row g-3 mb-4">
+    <div class="col-4">
+        <div class="card p-3 text-center">
+            <h3 class="fw-bold mb-0">{{ total }}</h3>
+            <small class="text-muted">Total IDs</small>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card p-3 text-center">
+            <h3 class="fw-bold mb-0 text-success">{{ deleted }}</h3>
+            <small class="text-muted">Data Found & Deleted</small>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card p-3 text-center">
+            <h3 class="fw-bold mb-0 text-secondary">{{ not_found }}</h3>
+            <small class="text-muted">No Data Found</small>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header py-2">
+        <h6 class="mb-0"><i class="bi bi-list-check me-1"></i>Deletion Results</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Scoped ID</th>
+                    <th>Status</th>
+                    <th>Deleted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in results %}
+                <tr>
+                    <td><code class="small">{{ r.scoped_id }}</code></td>
+                    <td>
+                        {% if r.deleted.instagram_account %}
+                        <span class="badge bg-danger">Account Deleted</span>
+                        {% elif r.found %}
+                        <span class="badge bg-success">Data Deleted</span>
+                        {% else %}
+                        <span class="badge bg-secondary">No data</span>
+                        {% endif %}
+                    </td>
+                    <td class="small">
+                        {% if r.found %}
+                            {% for key, val in r.deleted.items %}
+                                <span class="me-2">{{ key }}: <strong>{{ val }}</strong></span>
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{% url 'instagram_admin_data_deletion' %}" class="btn btn-outline-primary">
+    <i class="bi bi-arrow-repeat me-1"></i>Process More
+</a>
+
+{% else %}
+<!-- Input Form -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="alert alert-warning py-2 mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>This action is irreversible.</strong> All sessions, leads, and queued triggers for the provided IDs will be permanently deleted.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Instagram Scoped User IDs</label>
+                        <textarea class="form-control font-monospace" name="user_ids" rows="10"
+                                  placeholder="Paste user IDs here (one per line or comma-separated)
+
+Example:
+7264918273649182
+8192736491827364
+6391827364918273" required></textarea>
+                        <small class="text-muted">
+                            These are the app-scoped IDs from Meta's data deletion request file.
+                            They match the <code>instagram_scoped_id</code> field stored in flow sessions and leads.
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100"
+                            onclick="return confirm('Are you sure? This will permanently delete all data for the provided user IDs.')">
+                        <i class="bi bi-trash3 me-1"></i>Delete User Data
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- What gets deleted -->
+        <div class="card mt-3">
+            <div class="card-header py-2">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-1"></i>What gets deleted</h6>
+            </div>
+            <div class="card-body py-2">
+                <p class="small fw-bold mb-1">If ID matches a business account (InstagramAccount):</p>
+                <ul class="small mb-2">
+                    <li><strong>Instagram Account</strong> - tokens, username, connection data</li>
+                </ul>
+                <p class="small fw-bold mb-1">If ID matches an end user (commenter/DM recipient):</p>
+                <ul class="small mb-0">
+                    <li><strong>Collected Leads</strong> - name, email, phone, custom fields</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

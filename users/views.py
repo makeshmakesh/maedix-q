@@ -407,6 +407,36 @@ class SettingsView(LoginRequiredMixin, View):
         return render(request, self.template_name)
 
 
+class DeleteAccountView(LoginRequiredMixin, View):
+    """Permanently delete user account and all associated data"""
+
+    def post(self, request):
+        user = request.user
+
+        if user.has_usable_password():
+            # Password-based account: verify password
+            password = request.POST.get('password', '')
+            if not user.check_password(password):
+                messages.error(request, 'Incorrect password.')
+                return redirect('settings')
+        else:
+            # Google OAuth account: verify email
+            confirm_email = request.POST.get('confirm_email', '').strip().lower()
+            if confirm_email != user.email.lower():
+                messages.error(request, 'Email does not match.')
+                return redirect('settings')
+
+        email = user.email
+        logger.info(f"Account deletion requested by {email}")
+
+        logout(request)
+        User.objects.filter(email=email).delete()
+
+        logger.info(f"Account deleted: {email}")
+        messages.success(request, 'Your account has been permanently deleted.')
+        return redirect('login')
+
+
 class SubscriptionView(LoginRequiredMixin, View):
     """User subscription management page"""
     template_name = 'users/subscription.html'

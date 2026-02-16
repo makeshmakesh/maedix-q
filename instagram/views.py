@@ -1159,6 +1159,10 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     template_name = 'instagram/flow_edit.html'
 
     def get(self, request, pk):
+        # Mobile users go straight to wizard editor (skip loading heavy visual editor)
+        if self._is_mobile(request) and request.GET.get('mode') != 'form':
+            return redirect('flow_edit_wizard', pk=pk)
+
         # Admin can access any flow, regular users only their own
         if request.user.is_staff:
             flow = get_object_or_404(DMFlow, pk=pk)
@@ -1262,6 +1266,11 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
         messages.success(request, f'Flow "{title}" updated!')
         return redirect('flow_edit', pk=pk)
+
+    def _is_mobile(self, request):
+        """Simple mobile detection from User-Agent"""
+        ua = request.META.get('HTTP_USER_AGENT', '').lower()
+        return any(kw in ua for kw in ['iphone', 'android', 'mobile', 'webos', 'ipod'])
 
     def _get_user_features(self, user):
         """Get available flow features based on user's subscription"""

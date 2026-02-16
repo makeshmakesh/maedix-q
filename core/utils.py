@@ -56,7 +56,9 @@ def get_user_country(request):
     # Allow override via query param for testing (e.g., ?country=US)
     override_country = request.GET.get('country')
     if override_country:
-        return override_country.upper()
+        override_country = override_country.upper()
+        request.session['user_country'] = override_country
+        return override_country
 
     # Check if already cached in session
     country_code = request.session.get('user_country')

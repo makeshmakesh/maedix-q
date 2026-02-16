@@ -756,10 +756,13 @@
                         </div>
                         <h3>Connect Your Instagram</h3>
                         <p>Connect your Instagram Business or Creator account to start automating your DMs.</p>
-                        <a href="{% url 'instagram_connect' %}" class="btn-connect">
-                            <i class="bi bi-link-45deg"></i>
-                            Connect Instagram
-                        </a>
+                        <form method="post" action="{% url 'instagram_oauth' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-connect">
+                                <i class="bi bi-link-45deg"></i>
+                                Connect Instagram
+                            </button>
+                        </form>
                     </div>
                 </div>
 

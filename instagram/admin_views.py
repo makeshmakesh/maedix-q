@@ -1,7 +1,11 @@
+import logging
+
 from django.views import View
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib import messages
 from django.db.models import Count, Sum, Q
+from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
@@ -9,9 +13,12 @@ from decimal import Decimal
 from users.models import CustomUser
 from core.models import Plan, Subscription, Transaction
 from .models import (
-    InstagramAccount, APICallLog, DMFlow, FlowSession,
-    CollectedLead, QueuedFlowTrigger, SocialAgent, AIUsageLog
+    InstagramAccount, APICallLog, DMFlow, FlowSession, FlowExecutionLog,
+    CollectedLead, QueuedFlowTrigger, SocialAgent, AIUsageLog,
+    DroppedMessage, AIConversationMessage, AICollectedData
 )
+
+logger = logging.getLogger(__name__)
 
 
 class StaffRequiredMixin(UserPassesTestMixin):
@@ -391,3 +398,82 @@ class AdminQueuedFlowsView(StaffRequiredMixin, View):
             'account_stats': account_stats,
         }
         return render(request, self.template_name, context)
+
+
+class AdminDataDeletionView(StaffRequiredMixin, View):
+    """Admin panel to process Meta/Instagram user data deletion requests"""
+    template_name = 'staff/admin/data_deletion.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
+
+    def post(self, request):
+        raw_ids = request.POST.get('user_ids', '').strip()
+        if not raw_ids:
+            messages.error(request, 'No user IDs provided.')
+            return redirect('instagram_admin_data_deletion')
+
+        # Parse IDs (one per line, or comma-separated)
+        user_ids = [
+            uid.strip() for uid in raw_ids.replace(',', '\n').split('\n')
+            if uid.strip()
+        ]
+
+        if not user_ids:
+            messages.error(request, 'No valid user IDs found.')
+            return redirect('instagram_admin_data_deletion')
+
+        results = []
+        for uid in user_ids:
+            result = self._delete_user_data(uid)
+            results.append(result)
+
+        context = {
+            'results': results,
+            'total': len(results),
+            'deleted': sum(1 for r in results if r['found']),
+            'not_found': sum(1 for r in results if not r['found']),
+        }
+        return render(request, self.template_name, context)
+
+    def _delete_user_data(self, scoped_id):
+        """Delete all data for an Instagram scoped user ID.
+
+        Checks both:
+        - End users (commenters/DM users) tracked by instagram_scoped_id
+        - Business accounts matched by instagram_user_id on InstagramAccount
+        """
+        result = {
+            'scoped_id': scoped_id,
+            'found': False,
+            'deleted': {},
+        }
+
+        # 1. Check if this is a business account (InstagramAccount owner)
+        ig_account = InstagramAccount.objects.filter(
+            instagram_user_id=scoped_id
+        ).select_related('user').first()
+
+        if ig_account:
+            result['found'] = True
+            ig_account.delete()
+            result['deleted']['instagram_account'] = 1
+
+            logger.info(f"Data deletion (business account) for user_id={scoped_id}")
+            return result
+
+        # 2. End user (commenter/DM recipient) — tracked by instagram_scoped_id
+        # Delete collected leads (personal data: name, email, phone)
+        leads = CollectedLead.objects.filter(instagram_scoped_id=scoped_id)
+        lead_count = leads.count()
+        if lead_count:
+            leads.delete()
+            result['found'] = True
+            result['deleted']['leads'] = lead_count
+
+        if result['found']:
+            logger.info(f"Data deletion (end user) for scoped_id={scoped_id}: {result['deleted']}")
+        else:
+            logger.info(f"Data deletion: no data found for scoped_id={scoped_id}")
+
+        return result

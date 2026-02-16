@@ -73,7 +73,8 @@ class APICallLog(models.Model):
 
     account = models.ForeignKey(
         InstagramAccount,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='api_call_logs'
     )
     call_type = models.CharField(max_length=20, choices=CALL_TYPE_CHOICES)
@@ -1058,7 +1059,8 @@ class AIUsageLog(models.Model):
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='ai_usage_logs'
     )
     session = models.ForeignKey(

@@ -1,23 +1,34 @@
 # Maedix-Q
 
-A Django-based quiz platform with video export functionality for social media (Instagram Reels format).
+An Instagram automation platform built with Django — automate DMs, build conversation flows, collect leads, and engage your audience at scale.
 
 ## Features
 
-- User authentication (login, register, password reset)
+### Instagram Automation
+- **DM Flow Builder** — Visual workflow editor for automated Direct Messages
+- **Trigger Types** — Respond to comment keywords or any comments on posts/reels
+- **Flow Nodes** — Conditional logic, delays, AI-powered responses, quick replies
+- **Lead Collection** — Automatically capture and store user information from conversations
+- **Session Tracking** — Track conversation state and user progression through flows
+- **Rate Limit Handling** — Respects Instagram API limits (500 calls/hour) with automatic queuing
+- **Queue Processing** — Messages are queued when rate-limited and auto-processed when slots open
+
+### Beta Features
 - Quiz creation and management
-- Quiz attempts with scoring
 - Video export (9:16 vertical format for Instagram Reels)
-- Subscription plans with usage limits
-- Razorpay payment integration
+- Voice roleplay with AI
+- Interactive games
+
+---
 
 ## Tech Stack
 
-- **Backend:** Django 6.0, Django REST Framework
-- **Database:** PostgreSQL
-- **Video Generation:** MoviePy, FFmpeg, Pillow
+- **Backend:** Django 6.0, Django REST Framework, Channels
+- **Database:** PostgreSQL, pgvector
+- **AI:** OpenAI API (for AI-powered flow responses)
 - **Payments:** Razorpay
-- **Deployment:** AWS EC2, Nginx, Gunicorn
+- **Cloud:** AWS EC2, Lambda, S3, DynamoDB
+- **Deployment:** Nginx, Gunicorn, AWS SAM
 
 ---
 
@@ -65,8 +76,8 @@ python manage.py runserver
 
 | Usage | Instance Type | RAM |
 |-------|---------------|-----|
-| Without video gen | t3.micro | 1GB |
-| With video gen | t3.small+ | 2GB+ |
+| Standard | t3.micro | 1GB |
+| With video gen (beta) | t3.small+ | 2GB+ |
 
 ### Step-by-Step Deployment
 
@@ -210,6 +221,27 @@ sudo ufw enable
 
 ---
 
+## Lambda Functions
+
+Two Lambda functions handle background processing:
+
+- **Queue Processor** — Processes queued Instagram DM messages when rate limits allow
+- **Subscription Enforcer** — Enforces subscription limits and auto-downgrades
+
+Deploy using AWS SAM:
+
+```bash
+cd aws
+sam build
+sam deploy --guided
+```
+
+See each Lambda's own README for details:
+- `lambda/queue_processor/README.md`
+- `lambda/subscription_enforcer/README.md`
+
+---
+
 ## Common Commands
 
 ### Restart Services
@@ -272,78 +304,58 @@ RAZORPAY_KEY_SECRET=your-secret
 
 ---
 
-## Subscription Features
+## Subscription Plans
 
-### Usage-based Features (with limits)
+### Usage-based Features
 
-| Feature Code | Description | Used In |
-|--------------|-------------|---------|
-| `quiz_attempt` | Quiz attempts per month | quiz/views.py:122, 128 |
-| `video_gen` | Video generation from quiz | quiz/views.py:808, 834, 839 |
-| `quiz_create` | Create custom quizzes | quiz/views.py:968, 986, 994 |
+| Feature | Free | Pro |
+|---------|------|-----|
+| Instagram API calls/hour | 500 | 500 |
+| Quiz attempts/month | 50 | 500 |
+| Video generation/month | 3 | 50 |
+| Custom quiz creation/month | 5 | 100 |
 
-### Boolean Features (no limits)
+### Pro-only Features
 
-| Feature Code | Description |
-|--------------|-------------|
-| `custom_handle_name_in_video_export` | Custom handle name in video export |
-| `analytics` | Advanced analytics |
-| `certificates` | Completion certificates |
+- Custom handle name in video export
+- Advanced analytics
+- Completion certificates
+- Queue triggers (manually trigger queued messages)
+- Smart queue processing (auto-process every 5 min)
 
 ### Feature JSON Structure
 
 ```json
-// With limit (usage-based)
+// Usage-based
 {"code": "video_gen", "limit": 5, "description": "Video generation from quiz"}
 
-// Without limit (boolean feature)
-{"code": "custom_handle_name_in_video_export", "description": "Custom handle name"}
-```
-
-### Free Plan Features
-
-```json
-[
-    {"code": "quiz_attempt", "description": "Quiz attempts per month", "limit": 50},
-    {"code": "video_gen", "description": "Video generation from quiz", "limit": 3},
-    {"code": "quiz_create", "description": "Create custom quizzes", "limit": 5}
-]
-```
-
-### Pro Plan Features
-
-```json
-[
-    {"code": "quiz_attempt", "description": "Quiz attempts per month", "limit": 500},
-    {"code": "video_gen", "description": "Video generation from quiz", "limit": 50},
-    {"code": "quiz_create", "description": "Create custom quizzes", "limit": 100},
-    {"code": "custom_handle_name_in_video_export", "description": "Custom handle name in video export"},
-    {"code": "analytics", "description": "Advanced analytics"},
-    {"code": "certificates", "description": "Completion certificates"}
-]
+// Boolean
+{"code": "analytics", "description": "Advanced analytics"}
 ```
 
 ---
 
-## Razorpay Test Cards
+## Project Structure
 
-### Indian Payments
-
-| Card Network | Card Number |
-|--------------|-------------|
-| Mastercard | 2305 3242 5784 8228 |
-| Visa | 4386 2894 0766 0153 |
-
-### International Payments
-
-| Card Network | Card Number |
-|--------------|-------------|
-| Mastercard | 5421 1393 0609 0628 |
-| Mastercard | 5105 1051 0510 5100 |
-| Visa | 4012 8888 8888 1881 |
-| Visa | 5104 0600 0000 0008 |
-
-**Test Card Details:** Any future expiry date, any 3-digit CVV
+```
+maedix-q/
+├── maedix_q/           # Django project settings
+├── core/               # Subscriptions, plans, config
+├── users/              # Authentication & profiles
+├── instagram/          # Instagram automation & DM flows
+├── quiz/               # Quiz system (beta)
+├── roleplay/           # Voice roleplay (beta)
+├── games/              # Interactive games (beta)
+├── youtube/            # YouTube integration (beta)
+├── blog/               # Blog & content
+├── templates/          # HTML templates
+├── static/             # CSS, JS, images
+├── lambda/             # AWS Lambda functions
+├── aws/                # SAM deployment configs
+├── deploy/             # Deployment scripts
+├── requirements.txt
+└── manage.py
+```
 
 ---
 
@@ -352,24 +364,16 @@ RAZORPAY_KEY_SECRET=your-secret
 ### 502 Bad Gateway
 
 ```bash
-# Check if Gunicorn is running
 sudo systemctl status maedix-q
-
-# Check logs
 sudo journalctl -u maedix-q -n 50
-
-# Check socket exists
 ls -la ~/maedix-q/maedix-q.sock
-
-# Fix permissions
 sudo chmod 755 /home/ubuntu
 sudo systemctl restart maedix-q
 ```
 
-### Video Generation Stuck
+### Video Generation Stuck (Beta)
 
-- **Cause:** Low memory (needs 2GB+ RAM for video encoding)
-- **Solution:** Upgrade to t3.small or add swap:
+Needs 2GB+ RAM. Add swap if needed:
 
 ```bash
 sudo fallocate -l 2G /swapfile
@@ -381,8 +385,7 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
 ### Task Not Found Error
 
-- **Cause:** Cache not shared between workers
-- **Solution:** File-based cache is configured in settings.py. Ensure cache directory exists:
+Ensure cache directory exists:
 
 ```bash
 mkdir -p ~/maedix-q/cache
@@ -392,85 +395,6 @@ sudo systemctl restart maedix-q
 
 ---
 
-## Project Structure
-
-```
-maedix-q/
-├── maedix_q/           # Django project settings
-├── core/               # Core app (plans, subscriptions)
-├── users/              # User authentication
-├── quiz/               # Quiz app (main functionality)
-├── templates/          # HTML templates
-├── static/             # Static files (CSS, JS)
-├── deploy/             # Deployment configurations
-├── requirements.txt    # Python dependencies
-└── manage.py
-```
-
----
-
 ## License
 
 Private - All rights reserved
-
-
-sudo systemctl daemon-reload
-sudo systemctl restart maedix-q
-sudo systemctl restart nginx
-
-sudo systemctl reload maedix-q
-
-live log
-
-sudo journalctl -u maedix-q -f
-
-
-python manage.py fake_api_calls --email techveins01@gmail.com --count 180 --clear
-python manage.py fake_api_calls --email techveins01@gmail.com --count 210
-
-
-
-
-
-Vulnerability Analysis Results
-
-  🔴 CRITICAL - Can Crash Server
-  ┌─────────────────────────────────┬─────────────────────────┬──────────────────────────────────────────────────────┐
-  │              Issue              │        Location         │                       Problem                        │
-  ├─────────────────────────────────┼─────────────────────────┼──────────────────────────────────────────────────────┤
-  │ Blocking sleep in video polling │ views.py:568-590        │ time.sleep(10) in loop, up to 300s block per request │
-  ├─────────────────────────────────┼─────────────────────────┼──────────────────────────────────────────────────────┤
-  │ Blocking DM rate limit delay    │ instagram_api.py:88-112 │ time.sleep(2-8s) before every DM blocks worker       │
-  ├─────────────────────────────────┼─────────────────────────┼──────────────────────────────────────────────────────┤
-  │ Synchronous webhook processing  │ views.py:2212           │ Flow execution in webhook handler blocks thread      │
-  └─────────────────────────────────┴─────────────────────────┴──────────────────────────────────────────────────────┘
-  🟠 HIGH - Performance/Resource Issues
-  ┌─────────────────────────────┬──────────────────────────┬─────────────────────────────────────┐
-  │            Issue            │         Location         │               Problem               │
-  ├─────────────────────────────┼──────────────────────────┼─────────────────────────────────────┤
-  │ N+1 queries in branch check │ flow_engine.py:1188-1212 │ DB query per node in loop           │
-  ├─────────────────────────────┼──────────────────────────┼─────────────────────────────────────┤
-  │ Unbounded knowledge chunks  │ ai_engine.py:142-163     │ No limit on chunks loaded to memory │
-  ├─────────────────────────────┼──────────────────────────┼─────────────────────────────────────┤
-  │ Nested webhook loops        │ views.py:2121-2132       │ Large payloads process sequentially │
-  └─────────────────────────────┴──────────────────────────┴─────────────────────────────────────┘
-  🟡 MEDIUM - Should Fix
-  ┌────────────────────────┬──────────────────────┬──────────────────────────────────────────┐
-  │         Issue          │       Location       │                 Problem                  │
-  ├────────────────────────┼──────────────────────┼──────────────────────────────────────────┤
-  │ CSV/PDF without limits │ knowledge_service.py │ Large files loaded entirely to memory    │
-  ├────────────────────────┼──────────────────────┼──────────────────────────────────────────┤
-  │ Unbounded AI history   │ ai_engine.py:529-534 │ Configurable limit could be set too high
-
-
-
-
-  {"code": "queue_triggers", "description": "Queue messages when rate-limited — manually trigger when slots are available"}
-
-  {"code": "smart_queue_processing", "description": "Auto-process queued messages every 5 minutes when rate-limited"}
-
-  {"code": "ig_rate_limit", "limit": 500, "description": "500 API calls per hour"}
-
-  Lambda deployment docs are in each lambda's own README:
-  - `lambda/queue_processor/README.md`
-  - `lambda/subscription_enforcer/README.md`

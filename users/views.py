@@ -429,6 +429,17 @@ class DeleteAccountView(LoginRequiredMixin, View):
         email = user.email
         logger.info(f"Account deletion requested by {email}")
 
+        # Unsubscribe from Instagram webhooks before deleting
+        if hasattr(user, 'instagram_account'):
+            ig = user.instagram_account
+            if ig.instagram_user_id and ig.access_token:
+                try:
+                    import requests as http_requests
+                    url = f"https://graph.instagram.com/v21.0/{ig.instagram_user_id}/subscribed_apps"
+                    http_requests.delete(url, params={"access_token": ig.access_token}, timeout=10)
+                except Exception as e:
+                    logger.warning(f"Failed to unsubscribe webhooks on account deletion: {e}")
+
         logout(request)
         User.objects.filter(email=email).delete()
 

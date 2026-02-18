@@ -3656,6 +3656,38 @@ if (formClearPostBtn) {
     });
 }
 
+// Validate post selection on form submit if account_level_automation is not available
+if (typeof hasAccountLevelAutomation !== 'undefined' && !hasAccountLevelAutomation) {
+    // Settings form (sidebar)
+    const settingsForm = document.getElementById('flowSettingsForm');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function(e) {
+            if (!settingsPostId || !settingsPostId.value.trim()) {
+                e.preventDefault();
+                settingsPostId.classList.add('is-invalid');
+                setTimeout(() => settingsPostId.classList.remove('is-invalid'), 3000);
+                alert('Please select a post for this automation.');
+            }
+        });
+    }
+
+    // Form editor (mobile/compact)
+    document.querySelectorAll('form[method="post"]').forEach(form => {
+        if (form.id === 'flowSettingsForm' || form.id === 'nodeEditForm') return;
+        const postInput = form.querySelector('input[name="instagram_post_id"]');
+        if (postInput) {
+            form.addEventListener('submit', function(e) {
+                if (!postInput.value.trim()) {
+                    e.preventDefault();
+                    postInput.classList.add('is-invalid');
+                    setTimeout(() => postInput.classList.remove('is-invalid'), 3000);
+                    alert('Please select a post for this automation.');
+                }
+            });
+        }
+    });
+}
+
 // Load posts for form editor modal
 function loadPostsForForm() {
     const loading = document.getElementById('postsLoading');

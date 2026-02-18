@@ -219,10 +219,10 @@
 
                                 <!-- Post Selection -->
                                 <div class="mb-2">
-                                    <label class="form-label small mb-1">Specific Post</label>
+                                    <label class="form-label small mb-1">Specific Post{% if not features.account_level_automation %} <span class="text-danger">*</span>{% endif %}</label>
                                     <div class="input-group input-group-sm">
                                         <input type="text" class="form-control" name="instagram_post_id" id="settingsPostId"
-                                               value="{{ flow.instagram_post_id }}" placeholder="All posts">
+                                               value="{{ flow.instagram_post_id }}" placeholder="{% if features.account_level_automation %}All posts{% else %}Select a post (required){% endif %}" readonly>
                                         <button type="button" class="btn btn-outline-secondary" id="settingsBrowsePostsBtn">
                                             <i class="bi bi-image"></i>
                                         </button>
@@ -231,7 +231,11 @@
                                             <i class="bi bi-x"></i>
                                         </button>
                                     </div>
+                                    {% if features.account_level_automation %}
                                     <small class="text-muted" style="font-size: 11px;">Leave empty for all posts</small>
+                                    {% else %}
+                                    <small class="text-danger" style="font-size: 11px;">Post required — <a href="{% url 'pricing' %}">upgrade</a> to apply on all posts</small>
+                                    {% endif %}
                                 </div>
 
                                 <!-- Description -->
@@ -399,7 +403,7 @@
                                         <div class="col-12">
                                             <div class="input-group input-group-sm">
                                                 <input type="text" class="form-control" name="instagram_post_id" id="formPostId"
-                                                       value="{{ flow.instagram_post_id }}" placeholder="All posts (no specific post)">
+                                                       value="{{ flow.instagram_post_id }}" placeholder="{% if features.account_level_automation %}All posts (no specific post){% else %}Select a post (required){% endif %}" readonly>
                                                 <button type="button" class="btn btn-outline-secondary" id="formBrowsePostsBtn">
                                                     <i class="bi bi-image"></i>
                                                 </button>
@@ -408,6 +412,9 @@
                                                     <i class="bi bi-x"></i>
                                                 </button>
                                             </div>
+                                            {% if not features.account_level_automation %}
+                                            <small class="text-danger" style="font-size: 11px;">Post required — <a href="{% url 'pricing' %}">upgrade</a> to apply on all posts</small>
+                                            {% endif %}
                                         </div>
 
                                         <div class="col-12">
@@ -522,6 +529,7 @@ const csrfToken = '{{ csrf_token }}';
 const existingNodes = {{ nodes_json|safe }};
 const postsApiUrl = '{% url "instagram_api_posts" %}';
 const wizardUrl = '{% url "flow_edit_wizard" flow.pk %}';
+const hasAccountLevelAutomation = {{ features.account_level_automation|yesno:"true,false,false" }};
 </script>
 <script src="{% static 'js/flow_edit.js' %}?v=3"></script>
 

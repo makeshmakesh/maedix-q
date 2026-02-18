@@ -73,7 +73,7 @@ def get_user_country(request):
     if country_code:
         request.session['user_country'] = country_code
 
-    return country_code or 'IN'  # Default to India
+    return country_code or 'USD'  # Default to USD for international users
 
 
 def is_indian_user(request):

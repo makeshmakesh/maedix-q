@@ -725,6 +725,14 @@
         box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         animation: toastSlideUp 0.3s ease;
         white-space: nowrap;
+        max-width: calc(100vw - 32px);
+    }
+
+    @media (max-width: 767.98px) {
+        .desktop-only-toast {
+            white-space: normal;
+            text-align: center;
+        }
     }
 
     .desktop-only-toast i {
@@ -1063,10 +1071,10 @@
                                         <i class="bi bi-plus-lg"></i>
                                         Create from Scratch
                                     </a>
-                                    <button class="btn-create-first d-md-none" onclick="showDesktopOnlyToast()" style="opacity:0.7;">
-                                        <i class="bi bi-lock me-1"></i>
+                                    <a href="#" class="btn-create-first d-md-none" onclick="event.preventDefault(); showDesktopOnlyToast();">
+                                        <i class="bi bi-plus-lg me-1"></i>
                                         Create from Scratch
-                                    </button>
+                                    </a>
                                 </div>
                                 {% else %}
                                 <a href="{% url 'pricing' %}" class="btn-upgrade">

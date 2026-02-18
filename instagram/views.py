@@ -952,11 +952,17 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         instagram_post_id = request.POST.get('instagram_post_id', '').strip()
         keywords = request.POST.get('keywords', '').strip()
 
+        features = self._get_user_features(request.user)
+
         errors = []
         if not title:
             errors.append('Title is required.')
         if len(title) > 100:
             errors.append('Title must be 100 characters or less.')
+
+        # Require post selection if user doesn't have account_level_automation
+        if not instagram_post_id and not features.get('account_level_automation'):
+            errors.append('Please select a post for this automation.')
 
         # Check if post is already used by another active flow
         if instagram_post_id:
@@ -980,7 +986,7 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     'instagram_post_id': instagram_post_id,
                     'keywords': keywords,
                 },
-                'features': self._get_user_features(request.user),
+                'features': features,
             })
 
         # Check if user can have this flow active
@@ -1054,6 +1060,7 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'data_collection': True,
                 'advanced_branching': True,
                 'ai_social_agent': True,
+                'account_level_automation': True,
             }
 
         subscription = get_user_subscription(user)
@@ -1066,6 +1073,7 @@ class FlowCreateView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'data_collection': subscription.plan.has_feature('ig_data_collection'),
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
             'ai_social_agent': subscription.plan.has_feature('ai_social_agent'),
+            'account_level_automation': subscription.plan.has_feature('account_level_automation'),
         }
 
     def _create_nodes_from_template(self, flow, template):
@@ -1238,11 +1246,17 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         keywords = request.POST.get('keywords', '').strip()
         is_active = request.POST.get('is_active') == 'on'
 
+        features = self._get_user_features(request.user)
+
         errors = []
         if not title:
             errors.append('Title is required.')
         if len(title) > 100:
             errors.append('Title must be 100 characters or less.')
+
+        # Require post selection if user doesn't have account_level_automation
+        if not instagram_post_id and not features.get('account_level_automation'):
+            errors.append('Please select a post for this automation.')
 
         # Check if post is already used by another active flow (exclude current flow)
         if instagram_post_id:
@@ -1284,6 +1298,7 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 'data_collection': True,
                 'advanced_branching': True,
                 'ai_social_agent': True,
+                'account_level_automation': True,
             }
 
         subscription = get_user_subscription(user)
@@ -1296,6 +1311,7 @@ class FlowEditView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'data_collection': subscription.plan.has_feature('ig_data_collection'),
             'advanced_branching': subscription.plan.has_feature('ig_advanced_branching'),
             'ai_social_agent': subscription.plan.has_feature('ai_social_agent'),
+            'account_level_automation': subscription.plan.has_feature('account_level_automation'),
         }
 
 

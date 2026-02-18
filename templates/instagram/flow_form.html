@@ -821,7 +821,7 @@
                         Post Selection
                     </div>
 
-                    <label class="form-label">Which post should trigger this automation?</label>
+                    <label class="form-label">Which post should trigger this automation?{% if not features.account_level_automation %} <span class="text-danger">*</span>{% endif %}</label>
 
                     <input type="hidden" id="instagram_post_id" name="instagram_post_id"
                            value="{{ flow.instagram_post_id|default:'' }}">
@@ -829,8 +829,8 @@
                     <button type="button" class="post-select-btn" id="browsePostsBtn">
                         <i class="bi bi-grid-3x3-gap fs-4"></i>
                         <div>
-                            <div class="fw-semibold">Select a Post</div>
-                            <small>Or leave empty for all posts</small>
+                            <div class="fw-semibold">Select a Post{% if not features.account_level_automation %} <span class="text-danger">*</span>{% endif %}</div>
+                            <small>{% if features.account_level_automation %}Or leave empty for all posts{% else %}Required — <a href="{% url 'pricing' %}">upgrade</a> to apply on all posts{% endif %}</small>
                         </div>
                     </button>
 
@@ -846,9 +846,13 @@
                     </div>
 
                     <div class="form-text mt-2">
+                        {% if features.account_level_automation %}
                         <span class="all-posts-badge" id="allPostsBadge">
                             <i class="bi bi-infinity"></i> Applies to all posts
                         </span>
+                        {% else %}
+                        <span class="all-posts-badge" id="allPostsBadge" style="display: none;"></span>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -910,6 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearPostBtn = document.getElementById('clearPostBtn');
     const allPostsBadge = document.getElementById('allPostsBadge');
     const modal = new bootstrap.Modal(document.getElementById('postSelectModal'));
+    const hasAccountLevelAutomation = {{ features.account_level_automation|yesno:"true,false,false" }};
 
     let postsCache = null;
     let keywords = [];
@@ -1068,17 +1073,28 @@ document.addEventListener('DOMContentLoaded', function() {
             browseBtn.innerHTML = `
                 <i class="bi bi-grid-3x3-gap fs-4"></i>
                 <div>
-                    <div class="fw-semibold">Select a Post</div>
-                    <small>Or leave empty for all posts</small>
+                    <div class="fw-semibold">Select a Post${!hasAccountLevelAutomation ? ' <span class="text-danger">*</span>' : ''}</div>
+                    <small>${hasAccountLevelAutomation ? 'Or leave empty for all posts' : 'Required — <a href="{% url "pricing" %}">upgrade</a> to apply on all posts'}</small>
                 </div>
             `;
             selectedPreview.classList.remove('visible');
-            allPostsBadge.style.display = 'inline-flex';
+            allPostsBadge.style.display = hasAccountLevelAutomation ? 'inline-flex' : 'none';
         }
     }
 
     // Initialize UI
     updatePostUI();
+
+    // Form submit validation
+    document.getElementById('flowForm').addEventListener('submit', function(e) {
+        if (!hasAccountLevelAutomation && !postInput.value.trim()) {
+            e.preventDefault();
+            browseBtn.style.border = '2px solid #dc3545';
+            browseBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => { browseBtn.style.border = ''; }, 3000);
+            alert('Please select a post for this automation.');
+        }
+    });
 
     // Clear post selection
     clearPostBtn.addEventListener('click', function() {

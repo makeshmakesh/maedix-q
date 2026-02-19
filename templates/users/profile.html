@@ -10,7 +10,7 @@
                 <div class="card p-4 text-center">
                     <i class="bi bi-person-circle text-muted mx-auto mb-3" style="font-size: 6rem;"></i>
                     <h4>{{ user.get_full_name }}</h4>
-                    <p class="text-muted">{{ user.email }}</p>
+                    <p class="text-muted">@{{ user.username }}</p>
                     {% if profile.bio %}
                         <p class="text-muted small">{{ profile.bio }}</p>
                     {% endif %}
@@ -82,6 +82,22 @@
                     <div class="d-grid gap-2">
                         <a href="{% url 'purchase_credits' %}" class="btn btn-primary btn-sm">
                             <i class="bi bi-plus-circle me-1"></i> Buy Credits
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Public Profile Links -->
+                <div class="card p-4 mt-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-link-45deg me-2"></i>Public Profile
+                    </h6>
+                    <p class="text-muted small mb-3">Share your Linktree-style page with the world.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'profile_links_manage' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i> Manage Links
+                        </a>
+                        <a href="{% url 'public_profile' user.username %}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> View @{{ user.username }}
                         </a>
                     </div>
                 </div>

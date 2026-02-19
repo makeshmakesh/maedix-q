@@ -12,6 +12,7 @@ from core.sitemaps import (
     BlogCategorySitemap,
 )
 from core.views import robots_txt
+from users.views import PublicProfileView, ProfileLinkClickView
 
 sitemaps = {
     'static': StaticSitemap,
@@ -32,6 +33,10 @@ urlpatterns = [
     path('roleplay/', include('roleplay.urls')),
     path('games/', include('games.urls')),
     path('blog/', include('blog.urls')),
+
+    # Public profile routes (must be LAST to avoid collisions)
+    path('@<str:username>/', PublicProfileView.as_view(), name='public_profile'),
+    path('@<str:username>/go/<int:link_id>/', ProfileLinkClickView.as_view(), name='profile_link_click'),
 ]
 
 if settings.DEBUG:

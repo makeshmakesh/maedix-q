@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if editing %}Edit Link{% else %}Add Link{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        border-radius: var(--radius) var(--radius) 0 0;
+        padding: 1.5rem 1.5rem 1.25rem;
+        color: #fff;
+        position: relative;
+    }
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -5%;
+        width: 160px;
+        height: 160px;
+        background: rgba(255,255,255,0.07);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .form-header h5 { position: relative; z-index: 1; }
+    .form-header .back-link {
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        font-size: 0.8rem;
+        position: relative;
+        z-index: 1;
+    }
+    .form-header .back-link:hover { color: #fff; }
+
+    .form-body {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 var(--radius) var(--radius);
+        padding: 1.5rem;
+    }
+
+    .live-preview {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+    }
+    .live-preview-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--bg-white);
+        border: 2px solid var(--border-color);
+        border-radius: 14px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        min-width: 200px;
+        transition: all 0.2s;
+    }
+    .live-preview-btn i { font-size: 1.1rem; color: var(--primary); }
+
+    .field-group {
+        background: var(--bg-light);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .field-group label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+
+    .icon-section {
+        background: var(--bg-light);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+    }
+    .icon-preview-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--primary-light), #fce4ec);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--primary);
+        flex-shrink: 0;
+        border: 2px solid var(--border-color);
+        transition: all 0.2s;
+    }
+    .icon-preview-box.empty {
+        background: var(--bg-gray);
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    .icon-preview-box.has-icon {
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.15);
+    }
+
+    .icon-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--bg-white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+    }
+    .icon-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-light);
+        transform: translateY(-1px);
+    }
+    .icon-btn.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+        transform: translateY(-1px);
+    }
+    .icon-btn .icon-label {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text-dark);
+        color: #fff;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+    .icon-btn:hover .icon-label { display: block; }
+
+    .clear-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--border-color);
+        background: var(--bg-white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+    .clear-btn:hover { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #E1306C, #bc1888);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.65rem 1.75rem;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.35);
+        color: #fff;
+    }
+
+    @media (max-width: 575.98px) {
+        .form-header { padding: 1.1rem 1rem 1rem; }
+        .form-body { padding: 1rem; }
+        .field-group, .icon-section { padding: 0.75rem; }
+        .icon-btn { width: 36px; height: 36px; font-size: 0.95rem; border-radius: 8px; }
+        .icon-grid { gap: 0.3rem; }
+        .icon-preview-box { width: 44px; height: 44px; font-size: 1.25rem; border-radius: 12px; }
+        .live-preview-btn { min-width: 160px; padding: 0.6rem 1rem; font-size: 0.85rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-3 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+
+                <!-- Header -->
+                <div class="form-header">
+                    <a href="{% url 'profile_links_manage' %}" class="back-link d-inline-block mb-2">
+                        <i class="bi bi-arrow-left me-1"></i>Back to links
+                    </a>
+                    <h5 class="fw-bold mb-0">
+                        {% if editing %}
+                            <i class="bi bi-pencil-square me-1"></i>Edit Link
+                        {% else %}
+                            <i class="bi bi-plus-circle me-1"></i>Add New Link
+                        {% endif %}
+                    </h5>
+                </div>
+
+                <!-- Form Body -->
+                <div class="form-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Live Preview -->
+                        <div class="live-preview mb-4">
+                            <div class="text-muted small mb-2">Preview</div>
+                            <div class="live-preview-btn" id="livePreview">
+                                <i class="bi" id="previewBtnIcon" style="display:none;"></i>
+                                <span id="previewBtnTitle">Your Link Title</span>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="field-group">
+                            <label class="form-label">Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- URL -->
+                        <div class="field-group">
+                            <label class="form-label">URL</label>
+                            {{ form.url }}
+                            {% if form.url.errors %}
+                                <div class="text-danger small mt-1">{{ form.url.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Icon -->
+                        <div class="icon-section mb-4">
+                            <label class="form-label d-block" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:600;">Icon</label>
+
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="icon-preview-box empty" id="iconPreview">
+                                    <span class="preview-icon"></span>
+                                    <span class="preview-empty">None</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    {{ form.icon }}
+                                </div>
+                                <button type="button" class="clear-btn" id="clearIcon" title="Clear icon">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+
+                            <div class="icon-grid" id="iconGrid">
+                                <button type="button" class="icon-btn" data-icon="bi-globe" title="Website"><i class="bi bi-globe"></i><span class="icon-label">Website</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-link-45deg" title="Link"><i class="bi bi-link-45deg"></i><span class="icon-label">Link</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-instagram" title="Instagram"><i class="bi bi-instagram"></i><span class="icon-label">Instagram</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-youtube" title="YouTube"><i class="bi bi-youtube"></i><span class="icon-label">YouTube</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-twitter-x" title="X / Twitter"><i class="bi bi-twitter-x"></i><span class="icon-label">X</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-tiktok" title="TikTok"><i class="bi bi-tiktok"></i><span class="icon-label">TikTok</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-github" title="GitHub"><i class="bi bi-github"></i><span class="icon-label">GitHub</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-linkedin" title="LinkedIn"><i class="bi bi-linkedin"></i><span class="icon-label">LinkedIn</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-facebook" title="Facebook"><i class="bi bi-facebook"></i><span class="icon-label">Facebook</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-threads" title="Threads"><i class="bi bi-threads"></i><span class="icon-label">Threads</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-discord" title="Discord"><i class="bi bi-discord"></i><span class="icon-label">Discord</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-telegram" title="Telegram"><i class="bi bi-telegram"></i><span class="icon-label">Telegram</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-whatsapp" title="WhatsApp"><i class="bi bi-whatsapp"></i><span class="icon-label">WhatsApp</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-spotify" title="Spotify"><i class="bi bi-spotify"></i><span class="icon-label">Spotify</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-envelope" title="Email"><i class="bi bi-envelope"></i><span class="icon-label">Email</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-telephone" title="Phone"><i class="bi bi-telephone"></i><span class="icon-label">Phone</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-shop" title="Shop"><i class="bi bi-shop"></i><span class="icon-label">Shop</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-cart" title="Store"><i class="bi bi-cart"></i><span class="icon-label">Store</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-calendar-event" title="Calendar"><i class="bi bi-calendar-event"></i><span class="icon-label">Calendar</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-file-earmark-text" title="Document"><i class="bi bi-file-earmark-text"></i><span class="icon-label">Docs</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-play-circle" title="Video"><i class="bi bi-play-circle"></i><span class="icon-label">Video</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-music-note-beamed" title="Music"><i class="bi bi-music-note-beamed"></i><span class="icon-label">Music</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-camera" title="Photos"><i class="bi bi-camera"></i><span class="icon-label">Photos</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-book" title="Blog"><i class="bi bi-book"></i><span class="icon-label">Blog</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-gift" title="Gift"><i class="bi bi-gift"></i><span class="icon-label">Gift</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-cup-hot" title="Coffee"><i class="bi bi-cup-hot"></i><span class="icon-label">Coffee</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-geo-alt" title="Location"><i class="bi bi-geo-alt"></i><span class="icon-label">Location</span></button>
+                                <button type="button" class="icon-btn" data-icon="bi-star" title="Featured"><i class="bi bi-star"></i><span class="icon-label">Featured</span></button>
+                            </div>
+
+                            {% if form.icon.errors %}
+                                <div class="text-danger small mt-1">{{ form.icon.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="submit-btn flex-grow-1">
+                                {% if editing %}
+                                    <i class="bi bi-check-lg me-1"></i>Save Changes
+                                {% else %}
+                                    <i class="bi bi-plus-lg me-1"></i>Add Link
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'profile_links_manage' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const input = document.getElementById('{{ form.icon.id_for_label }}');
+    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    const preview = document.getElementById('iconPreview');
+    const grid = document.getElementById('iconGrid');
+    const clearBtn = document.getElementById('clearIcon');
+    const previewBtn = document.getElementById('livePreview');
+    const previewBtnIcon = document.getElementById('previewBtnIcon');
+    const previewBtnTitle = document.getElementById('previewBtnTitle');
+
+    function updatePreview(iconValue) {
+        const iconEl = preview.querySelector('.preview-icon');
+        const emptyEl = preview.querySelector('.preview-empty');
+        if (iconValue) {
+            iconEl.className = 'preview-icon bi ' + iconValue;
+            iconEl.style.display = '';
+            emptyEl.style.display = 'none';
+            preview.classList.remove('empty');
+            preview.classList.add('has-icon');
+            previewBtnIcon.className = 'bi ' + iconValue;
+            previewBtnIcon.style.display = '';
+        } else {
+            iconEl.className = 'preview-icon';
+            iconEl.style.display = 'none';
+            emptyEl.style.display = '';
+            preview.classList.add('empty');
+            preview.classList.remove('has-icon');
+            previewBtnIcon.style.display = 'none';
+        }
+        grid.querySelectorAll('.icon-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.icon === iconValue);
+        });
+    }
+
+    function updateTitle() {
+        const val = titleInput.value.trim();
+        previewBtnTitle.textContent = val || 'Your Link Title';
+    }
+
+    grid.addEventListener('click', e => {
+        const btn = e.target.closest('.icon-btn');
+        if (!btn) return;
+        const icon = btn.dataset.icon;
+        input.value = input.value === icon ? '' : icon;
+        updatePreview(input.value);
+    });
+
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        updatePreview('');
+    });
+
+    input.addEventListener('input', () => updatePreview(input.value.trim()));
+    titleInput.addEventListener('input', updateTitle);
+
+    // Init
+    updatePreview(input.value.trim());
+    updateTitle();
+})();
+</script>
+{% endblock %}

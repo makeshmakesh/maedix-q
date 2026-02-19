@@ -46,6 +46,11 @@
                         <i class="bi bi-robot d-lg-none"></i> IG Automation
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'profile_links_manage' %}">
+                        <i class="bi bi-link-45deg d-lg-none"></i> Link in Bio
+                    </a>
+                </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -79,10 +84,6 @@
                             <i class="bi bi-person-circle"></i> {{ user.get_short_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'flow_list' %}"><i class="bi bi-robot me-2"></i>Automation Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{% url 'ai_agent_list' %}"><i class="bi bi-cpu me-2"></i>AI Agents</a></li>
-                            <li><a class="dropdown-item" href="{% url 'ai_usage_stats' %}"><i class="bi bi-graph-up me-2"></i>AI Usage</a></li>
-                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
                             <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>Subscription</a></li>
                             <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>

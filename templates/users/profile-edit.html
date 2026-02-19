@@ -18,15 +18,28 @@
                             <div class="col-md-6">
                                 <label class="form-label">First Name</label>
                                 {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="text-danger small mt-1">{{ user_form.first_name.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Last Name</label>
                                 {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="text-danger small mt-1">{{ user_form.last_name.errors.0 }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Username</label>
-                            {{ user_form.username }}
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                {{ user_form.username }}
+                            </div>
+                            <div class="form-text">Letters, numbers, and underscores only. This is your public profile URL.</div>
+                            {% if user_form.username.errors %}
+                                <div class="text-danger small mt-1">{{ user_form.username.errors.0 }}</div>
+                            {% endif %}
                         </div>
 
                         <hr class="my-4">
@@ -35,15 +48,24 @@
                         <div class="mb-3">
                             <label class="form-label">Bio</label>
                             {{ profile_form.bio }}
+                            {% if profile_form.bio.errors %}
+                                <div class="text-danger small mt-1">{{ profile_form.bio.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Location</label>
                                 {{ profile_form.location }}
+                                {% if profile_form.location.errors %}
+                                    <div class="text-danger small mt-1">{{ profile_form.location.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Website</label>
                                 {{ profile_form.website }}
+                                {% if profile_form.website.errors %}
+                                    <div class="text-danger small mt-1">{{ profile_form.website.errors.0 }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -53,14 +75,23 @@
                         <div class="mb-3">
                             <label class="form-label"><i class="bi bi-github"></i> GitHub Username</label>
                             {{ profile_form.github_username }}
+                            {% if profile_form.github_username.errors %}
+                                <div class="text-danger small mt-1">{{ profile_form.github_username.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="form-label"><i class="bi bi-linkedin"></i> LinkedIn URL</label>
                             {{ profile_form.linkedin_url }}
+                            {% if profile_form.linkedin_url.errors %}
+                                <div class="text-danger small mt-1">{{ profile_form.linkedin_url.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="form-label"><i class="bi bi-twitter-x"></i> Twitter Handle</label>
                             {{ profile_form.twitter_handle }}
+                            {% if profile_form.twitter_handle.errors %}
+                                <div class="text-danger small mt-1">{{ profile_form.twitter_handle.errors.0 }}</div>
+                            {% endif %}
                         </div>
 
                         <div class="d-flex gap-2">

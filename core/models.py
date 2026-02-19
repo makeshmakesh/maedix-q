@@ -238,13 +238,23 @@ class Banner(models.Model):
         ('promo', 'Promotional'),
     ]
 
+    DISPLAY_MODE_CHOICES = [
+        ('banner', 'Top Banner'),
+        ('popup', 'Popup Modal'),
+        ('both', 'Both'),
+    ]
+
     title = models.CharField(max_length=200)
     message = models.TextField()
     banner_type = models.CharField(max_length=20, choices=BANNER_TYPES, default='info')
+    display_mode = models.CharField(max_length=10, choices=DISPLAY_MODE_CHOICES, default='banner', help_text="Where to display this banner")
     link_url = models.URLField(blank=True, help_text="Optional link for CTA button")
     link_text = models.CharField(max_length=50, blank=True, help_text="Button text (e.g., 'Learn More')")
+    image_url = models.URLField(blank=True, help_text="Image URL (uploaded via admin)")
+    image_s3_key = models.CharField(max_length=500, blank=True, help_text="S3 key for cleanup")
     display_seconds = models.PositiveIntegerField(default=5, help_text="Seconds to display before switching to next banner")
     is_active = models.BooleanField(default=True)
+    requires_auth = models.BooleanField(default=False, help_text="Only show to logged-in users")
     is_dismissible = models.BooleanField(default=True, help_text="Allow users to close the banner")
     order = models.IntegerField(default=0, help_text="Lower numbers appear first")
     created_at = models.DateTimeField(auto_now_add=True)

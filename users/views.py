@@ -1,6 +1,6 @@
 import json
 import logging
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from urllib.request import urlopen, Request
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,15 +9,20 @@ from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db import IntegrityError
+from django.db.models import Sum, Count
+from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from .forms import SignupForm, LoginForm, ProfileForm, UserForm, OTPVerificationForm
-from .models import UserProfile, UserStats, EmailOTP
+from .forms import SignupForm, LoginForm, ProfileForm, UserForm, OTPVerificationForm, ProfileLinkForm
+from .models import (
+    UserProfile, UserStats, EmailOTP, ProfileLink, ProfilePageView,
+    ProfileLinkClick, generate_unique_username, hash_ip,
+)
 from .otp_utils import send_otp_email, verify_otp
 from core.models import Configuration, Subscription, Plan, Transaction
-from core.subscription_utils import get_or_create_free_subscription
+from core.subscription_utils import get_or_create_free_subscription, get_user_subscription
 from core.utils import get_user_country
 
 User = get_user_model()
@@ -273,6 +278,7 @@ class GoogleAuthView(View):
             try:
                 user = User(
                     email=email,
+                    username=generate_unique_username(email),
                     first_name=idinfo.get('given_name', ''),
                     last_name=idinfo.get('family_name', ''),
                     is_active=True,
@@ -508,3 +514,321 @@ class SubscriptionView(LoginRequiredMixin, View):
         }
         return render(request, self.template_name, context)
 
+
+# ─── Public Profile Views ───────────────────────────────────────────────────
+
+
+class PublicProfileView(View):
+    """Public profile page at /@username/"""
+
+    def get(self, request, username):
+        profile_user = get_object_or_404(User, username__iexact=username, is_active=True)
+        profile, _ = UserProfile.objects.get_or_create(user=profile_user)
+        links = ProfileLink.objects.filter(user=profile_user, is_active=True)
+
+        # Log page view
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+        if ',' in ip:
+            ip = ip.split(',')[0].strip()
+        referrer = request.META.get('HTTP_REFERER', '')
+        # Validate referrer is a proper URL before storing
+        if referrer:
+            try:
+                parsed = urlparse(referrer)
+                if not parsed.scheme or not parsed.netloc:
+                    referrer = ''
+            except Exception:
+                referrer = ''
+
+        ProfilePageView.objects.create(
+            user=profile_user,
+            ip_hash=hash_ip(ip),
+            referrer=referrer,
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:300],
+        )
+
+        return render(request, 'users/public-profile.html', {
+            'profile_user': profile_user,
+            'profile': profile,
+            'links': links,
+        })
+
+
+class ProfileLinkClickView(View):
+    """Track link click and redirect."""
+
+    def get(self, request, username, link_id):
+        link = get_object_or_404(
+            ProfileLink,
+            pk=link_id,
+            user__username__iexact=username,
+            is_active=True,
+        )
+        # Atomic click increment
+        link.increment_clicks()
+
+        # Record detailed click analytics
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+        if ',' in ip:
+            ip = ip.split(',')[0].strip()
+        referrer = request.META.get('HTTP_REFERER', '')
+        if referrer:
+            try:
+                parsed = urlparse(referrer)
+                if not parsed.scheme or not parsed.netloc:
+                    referrer = ''
+            except Exception:
+                referrer = ''
+
+        ProfileLinkClick.objects.create(
+            link=link,
+            ip_hash=hash_ip(ip),
+            referrer=referrer,
+        )
+
+        return redirect(link.url)
+
+
+# ─── Profile Link Management Views ──────────────────────────────────────────
+
+
+class ProfileLinksManageView(LoginRequiredMixin, View):
+    """Manage profile links — list, usage bar, analytics summary."""
+    template_name = 'users/profile-links.html'
+
+    def get(self, request):
+        links = ProfileLink.objects.filter(user=request.user)
+        link_count = links.count()
+
+        # Feature limit check
+        subscription = get_user_subscription(request.user)
+        link_limit = 3  # default
+        if request.user.is_staff:
+            link_limit = 999
+        elif subscription and subscription.plan:
+            link_limit = subscription.plan.get_feature_limit('profile_links', 3)
+
+        link_percentage = min(100, int((link_count / link_limit) * 100)) if link_limit else 0
+
+        # Analytics summary
+        total_views = ProfilePageView.objects.filter(user=request.user).count()
+        unique_views = ProfilePageView.objects.filter(user=request.user).values('ip_hash').distinct().count()
+        total_clicks = links.aggregate(total=Sum('click_count'))['total'] or 0
+        unique_clicks = ProfileLinkClick.objects.filter(link__user=request.user).values('ip_hash').distinct().count()
+        ctr = round((total_clicks / total_views * 100), 1) if total_views > 0 else 0
+
+        # Per-link unique clicks
+        links_with_stats = []
+        for link in links:
+            uc = ProfileLinkClick.objects.filter(link=link).values('ip_hash').distinct().count()
+            links_with_stats.append({'link': link, 'unique_clicks': uc})
+
+        # Check for downgrade — excess links
+        excess_links = max(0, link_count - link_limit) if link_limit else 0
+
+        return render(request, self.template_name, {
+            'links_with_stats': links_with_stats,
+            'link_count': link_count,
+            'link_limit': link_limit,
+            'link_percentage': link_percentage,
+            'total_views': total_views,
+            'unique_views': unique_views,
+            'total_clicks': total_clicks,
+            'unique_clicks': unique_clicks,
+            'ctr': ctr,
+            'excess_links': excess_links,
+        })
+
+
+class ProfileLinkAddView(LoginRequiredMixin, View):
+    """Add a new profile link."""
+    template_name = 'users/profile-link-form.html'
+
+    def _check_link_limit(self, request):
+        if request.user.is_staff:
+            return False, None
+        current_count = ProfileLink.objects.filter(user=request.user).count()
+        subscription = get_user_subscription(request.user)
+        if subscription and subscription.plan:
+            feature = subscription.plan.get_feature('profile_links')
+            if feature:
+                limit = feature.get('limit')
+                if limit and current_count >= limit:
+                    return True, limit
+        # Fallback default limit
+        if current_count >= 3:
+            return True, 3
+        return False, None
+
+    def get(self, request):
+        limit_reached, limit = self._check_link_limit(request)
+        if limit_reached:
+            messages.error(request, f'You have reached your limit of {limit} links. Please upgrade your plan.')
+            return redirect('profile_links_manage')
+        form = ProfileLinkForm()
+        return render(request, self.template_name, {'form': form, 'editing': False})
+
+    def post(self, request):
+        limit_reached, limit = self._check_link_limit(request)
+        if limit_reached:
+            messages.error(request, f'You have reached your limit of {limit} links. Please upgrade your plan.')
+            return redirect('profile_links_manage')
+
+        form = ProfileLinkForm(request.POST)
+        if form.is_valid():
+            link = form.save(commit=False)
+            link.user = request.user
+            # Set order to be last
+            last_order = ProfileLink.objects.filter(user=request.user).count()
+            link.order = last_order
+            link.save()
+            messages.success(request, 'Link added successfully!')
+            return redirect('profile_links_manage')
+
+        return render(request, self.template_name, {'form': form, 'editing': False})
+
+
+class ProfileLinkEditView(LoginRequiredMixin, View):
+    """Edit an existing profile link."""
+    template_name = 'users/profile-link-form.html'
+
+    def get(self, request, pk):
+        link = get_object_or_404(ProfileLink, pk=pk, user=request.user)
+        form = ProfileLinkForm(instance=link)
+        return render(request, self.template_name, {'form': form, 'editing': True, 'link': link})
+
+    def post(self, request, pk):
+        link = get_object_or_404(ProfileLink, pk=pk, user=request.user)
+        form = ProfileLinkForm(request.POST, instance=link)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Link updated successfully!')
+            return redirect('profile_links_manage')
+        return render(request, self.template_name, {'form': form, 'editing': True, 'link': link})
+
+
+class ProfileLinkDeleteView(LoginRequiredMixin, View):
+    """Delete a profile link."""
+
+    def post(self, request, pk):
+        link = get_object_or_404(ProfileLink, pk=pk, user=request.user)
+        link.delete()
+        messages.success(request, 'Link deleted.')
+        return redirect('profile_links_manage')
+
+
+class ProfileLinkToggleView(LoginRequiredMixin, View):
+    """Toggle a profile link's active state."""
+
+    def post(self, request, pk):
+        link = get_object_or_404(ProfileLink, pk=pk, user=request.user)
+        link.is_active = not link.is_active
+        link.save(update_fields=['is_active', 'updated_at'])
+        state = 'enabled' if link.is_active else 'disabled'
+        messages.success(request, f'Link {state}.')
+        return redirect('profile_links_manage')
+
+
+class ProfileLinksReorderView(LoginRequiredMixin, View):
+    """AJAX endpoint to reorder profile links."""
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            order_ids = data.get('order', [])
+        except (json.JSONDecodeError, AttributeError):
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        # Validate all IDs belong to this user
+        user_link_ids = set(
+            ProfileLink.objects.filter(user=request.user).values_list('id', flat=True)
+        )
+        for idx, link_id in enumerate(order_ids):
+            if int(link_id) in user_link_ids:
+                ProfileLink.objects.filter(pk=link_id, user=request.user).update(order=idx)
+
+        return JsonResponse({'status': 'ok'})
+
+
+class ProfileAnalyticsView(LoginRequiredMixin, View):
+    """Analytics dashboard for profile views & clicks."""
+    template_name = 'users/profile-analytics.html'
+
+    def get(self, request):
+        period = request.GET.get('period', '30d')
+        now = timezone.now()
+
+        if period == 'today':
+            since = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif period == '7d':
+            since = now - timezone.timedelta(days=7)
+        elif period == 'all':
+            since = None
+        else:  # 30d default
+            period = '30d'
+            since = now - timezone.timedelta(days=30)
+
+        # Page views
+        views_qs = ProfilePageView.objects.filter(user=request.user)
+        if since:
+            views_qs = views_qs.filter(viewed_at__gte=since)
+        total_views = views_qs.count()
+        unique_views = views_qs.values('ip_hash').distinct().count()
+
+        # Links and clicks
+        links = ProfileLink.objects.filter(user=request.user)
+        total_clicks = links.aggregate(total=Sum('click_count'))['total'] or 0
+        avg_ctr = round((total_clicks / total_views * 100), 1) if total_views > 0 else 0
+
+        # Per-link stats
+        link_stats = []
+        for link in links:
+            clicks_qs = ProfileLinkClick.objects.filter(link=link)
+            if since:
+                clicks_qs = clicks_qs.filter(clicked_at__gte=since)
+            clicks = clicks_qs.count()
+            unique_clicks = clicks_qs.values('ip_hash').distinct().count()
+            ctr = round((clicks / total_views * 100), 1) if total_views > 0 else 0
+            link_stats.append({
+                'link': link,
+                'clicks': clicks,
+                'unique_clicks': unique_clicks,
+                'ctr': ctr,
+            })
+
+        # Top referrers
+        referrer_qs = views_qs.exclude(referrer='').values('referrer')
+        referrer_counts = {}
+        for entry in referrer_qs:
+            try:
+                domain = urlparse(entry['referrer']).netloc
+            except Exception:
+                domain = entry['referrer']
+            if domain:
+                referrer_counts[domain] = referrer_counts.get(domain, 0) + 1
+        top_referrers = sorted(referrer_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        # Daily views for chart (last 30 days max)
+        chart_since = now - timezone.timedelta(days=30)
+        daily_views = (
+            ProfilePageView.objects.filter(user=request.user, viewed_at__gte=chart_since)
+            .extra({'date': "date(viewed_at)"})
+            .values('date')
+            .annotate(count=Count('id'))
+            .order_by('date')
+        )
+        chart_data = json.dumps([
+            {'date': str(d['date']), 'count': d['count']}
+            for d in daily_views
+        ])
+
+        return render(request, self.template_name, {
+            'period': period,
+            'total_views': total_views,
+            'unique_views': unique_views,
+            'total_clicks': total_clicks,
+            'avg_ctr': avg_ctr,
+            'link_stats': link_stats,
+            'top_referrers': top_referrers,
+            'chart_data': chart_data,
+        })

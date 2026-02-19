@@ -15,6 +15,7 @@ def user_features(request):
     features = {
         'ai_social_agent': False,
         'ig_flow_builder': False,
+        'profile_links': False,
     }
     if not request.user.is_authenticated:
         return {'user_features': features}
@@ -30,6 +31,7 @@ def user_features(request):
         if subscription and subscription.plan:
             features['ai_social_agent'] = subscription.plan.has_feature('ai_social_agent')
             features['ig_flow_builder'] = subscription.plan.has_feature('ig_flow_builder')
+            features['profile_links'] = subscription.plan.has_feature('profile_links')
     except Exception:
         pass
 
@@ -37,11 +39,20 @@ def user_features(request):
 
 
 def banners(request):
-    """Add active banners to template context"""
-    active_banners = list(Banner.get_active_banners().values(
-        'id', 'title', 'message', 'banner_type', 'link_url',
-        'link_text', 'display_seconds', 'is_dismissible'
-    ))
+    """Add active banners and popup banners to template context"""
+    fields = (
+        'id', 'title', 'message', 'banner_type', 'display_mode',
+        'link_url', 'link_text', 'image_url', 'display_seconds',
+        'is_dismissible', 'requires_auth',
+    )
+    is_authed = request.user.is_authenticated
+    all_banners = [
+        b for b in Banner.get_active_banners().values(*fields)
+        if not b['requires_auth'] or is_authed
+    ]
+
+    top_banners = [b for b in all_banners if b['display_mode'] in ('banner', 'both')]
+    popup_banners = [b for b in all_banners if b['display_mode'] in ('popup', 'both')]
 
     # Add subscription expiry warning for non-staff, non-free active subscriptions
     if request.user.is_authenticated and not request.user.is_staff:
@@ -55,7 +66,7 @@ def banners(request):
                 days_left = (subscription.end_date - timezone.now()).days
                 if 0 <= days_left <= 5:
                     s = '' if days_left == 1 else 's'
-                    active_banners.insert(0, {
+                    top_banners.insert(0, {
                         'id': f'sub_expiry_{days_left}',
                         'title': 'Subscription Expiring',
                         'message': f'Your subscription ends in {days_left} day{s}. Renew now to avoid losing access.',
@@ -68,4 +79,4 @@ def banners(request):
         except Exception:
             pass
 
-    return {'banners': active_banners}
+    return {'banners': top_banners, 'popup_banners': popup_banners}

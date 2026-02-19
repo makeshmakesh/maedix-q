@@ -1,15 +1,60 @@
+import re
 import random
+import hashlib
 from django.db import models
+from django.db.models import F
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.validators import RegexValidator
 from django.utils import timezone
 from datetime import timedelta
 from .managers import CustomUserManager
 
 
+username_validator = RegexValidator(
+    regex=r'^[a-zA-Z0-9_]+$',
+    message='Username may only contain letters, numbers, and underscores.',
+)
+
+
+def generate_unique_username(email):
+    """Generate a unique username from an email address."""
+    prefix = email.split('@')[0]
+    # Strip non-alphanumeric chars (keep underscores), lowercase
+    username = re.sub(r'[^a-zA-Z0-9_]', '', prefix).lower()
+    # Ensure minimum length
+    if len(username) < 3:
+        username = username + '_user'
+    # Truncate to fit max_length with room for suffix
+    username = username[:24]
+
+    if not CustomUser.objects.filter(username__iexact=username).exists():
+        return username
+
+    # Append random digits until unique
+    for _ in range(100):
+        suffix = random.randint(100, 9999)
+        candidate = f"{username}_{suffix}"
+        if not CustomUser.objects.filter(username__iexact=candidate).exists():
+            return candidate
+
+    # Fallback: use timestamp
+    return f"{username}_{int(timezone.now().timestamp())}"
+
+
+def hash_ip(ip_address):
+    """SHA256 hash an IP address for privacy-safe storage."""
+    return hashlib.sha256(ip_address.encode()).hexdigest()
+
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """Custom user model with email as the primary identifier"""
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=50, blank=True)
+    username = models.CharField(
+        max_length=30,
+        unique=True,
+        validators=[username_validator],
+        help_text='Letters, numbers, and underscores only. 3-30 characters.',
+    )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
     is_active = models.BooleanField(default=True)
@@ -160,3 +205,63 @@ class EmailOTP(models.Model):
         verbose_name = 'Email OTP'
         verbose_name_plural = 'Email OTPs'
         ordering = ['-created_at']
+
+
+class ProfileLink(models.Model):
+    """A link on a user's public profile page (Linktree-style)."""
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='profile_links'
+    )
+    title = models.CharField(max_length=100)
+    url = models.URLField(max_length=500)
+    icon = models.CharField(max_length=50, blank=True, help_text='Bootstrap icon class, e.g. bi-globe')
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    click_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.user.username})"
+
+    def increment_clicks(self, count=1):
+        """Increment click counter atomically."""
+        ProfileLink.objects.filter(pk=self.pk).update(
+            click_count=F('click_count') + count
+        )
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+
+class ProfilePageView(models.Model):
+    """Tracks visits to a user's public profile page."""
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='profile_page_views'
+    )
+    ip_hash = models.CharField(max_length=64)
+    referrer = models.URLField(blank=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"View: {self.user.username} at {self.viewed_at}"
+
+
+class ProfileLinkClick(models.Model):
+    """Tracks clicks on individual profile links."""
+    link = models.ForeignKey(
+        ProfileLink,
+        on_delete=models.CASCADE,
+        related_name='clicks'
+    )
+    ip_hash = models.CharField(max_length=64)
+    referrer = models.URLField(blank=True)
+    clicked_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Click: {self.link.title} at {self.clicked_at}"

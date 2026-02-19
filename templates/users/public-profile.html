@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.get_full_name }} (@{{ profile_user.username }}) | Maedix</title>
+    <meta name="description" content="{{ profile.bio|default:'Check out my links on Maedix' }}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ profile_user.get_full_name }} (@{{ profile_user.username }})">
+    <meta property="og:description" content="{{ profile.bio|default:'Check out my links on Maedix' }}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Maedix">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ profile_user.get_full_name }} (@{{ profile_user.username }})">
+    <meta name="twitter:description" content="{{ profile.bio|default:'Check out my links on Maedix' }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+        .profile-card {
+            width: 100%;
+            max-width: 480px;
+            background: #fff;
+            border-radius: 24px;
+            padding: 2.5rem 2rem 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+        .avatar-circle {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .display-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        .username-text {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        .bio {
+            color: #4b5563;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+            max-width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .location {
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        .location i { margin-right: 4px; }
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .social-icons a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4b5563;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .social-icons a:hover {
+            background: linear-gradient(135deg, #f09433, #dc2743, #bc1888);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .links-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .link-btn:hover {
+            border-color: #dc2743;
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(220,39,67,0.12);
+        }
+        .link-btn i {
+            font-size: 1.1rem;
+        }
+        .powered-by {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .powered-by a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .powered-by a:hover {
+            color: #fff;
+        }
+        .no-links {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            padding: 1rem 0;
+        }
+        @media (max-width: 480px) {
+            body { padding: 1.25rem 0.75rem; }
+            .profile-card { padding: 2rem 1.25rem 1.5rem; border-radius: 20px; }
+            .avatar-circle { width: 80px; height: 80px; font-size: 2rem; }
+            .display-name { font-size: 1.25rem; }
+            .link-btn { padding: 0.875rem 1.25rem; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-card">
+        <div class="avatar-circle">
+            {{ profile_user.get_short_name|make_list|first|upper }}
+        </div>
+        <div class="display-name">{{ profile_user.get_full_name }}</div>
+        <div class="username-text">@{{ profile_user.username }}</div>
+
+        {% if profile.bio %}
+            <div class="bio">{{ profile.bio }}</div>
+        {% endif %}
+
+        {% if profile.location %}
+            <div class="location"><i class="bi bi-geo-alt-fill"></i> {{ profile.location }}</div>
+        {% endif %}
+
+        {% if profile.github_username or profile.linkedin_url or profile.twitter_handle or profile.website %}
+        <div class="social-icons">
+            {% if profile.website %}
+                <a href="{{ profile.website }}" target="_blank" rel="noopener" title="Website"><i class="bi bi-globe"></i></a>
+            {% endif %}
+            {% if profile.github_username %}
+                <a href="https://github.com/{{ profile.github_username }}" target="_blank" rel="noopener" title="GitHub"><i class="bi bi-github"></i></a>
+            {% endif %}
+            {% if profile.linkedin_url %}
+                <a href="{{ profile.linkedin_url }}" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            {% endif %}
+            {% if profile.twitter_handle %}
+                <a href="https://x.com/{{ profile.twitter_handle }}" target="_blank" rel="noopener" title="X / Twitter"><i class="bi bi-twitter-x"></i></a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="links-list">
+            {% for link in links %}
+                <a href="{% url 'profile_link_click' profile_user.username link.id %}" class="link-btn" rel="noopener">
+                    {% if link.icon %}<i class="bi {{ link.icon }}"></i>{% endif %}
+                    {{ link.title }}
+                </a>
+            {% empty %}
+                <div class="no-links">No links yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="powered-by">
+        <a href="/">Powered by Maedix</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        border-radius: var(--radius);
+        padding: 1.25rem 1.5rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .analytics-header::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .analytics-header a { position: relative; z-index: 1; }
+    .analytics-header .btn-back {
+        border: 1px solid rgba(255,255,255,0.4);
+        color: #fff;
+        background: transparent;
+        text-decoration: none;
+    }
+    .analytics-header .btn-back:hover { background: rgba(255,255,255,0.2); border-color: #fff; color: #fff; }
+
+    .period-bar {
+        display: flex;
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        padding: 3px;
+        gap: 2px;
+    }
+    .period-btn {
+        flex: 1;
+        text-align: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+        white-space: nowrap;
+    }
+    .period-btn:hover { color: var(--text-dark); background: var(--bg-gray); }
+    .period-btn.active {
+        background: linear-gradient(135deg, #e6683c, #cc2366);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(204, 35, 102, 0.25);
+    }
+    .period-btn.active:hover { color: #fff; }
+
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+    }
+    .overview-card {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    .overview-card:hover { border-color: rgba(var(--primary-rgb), 0.3); box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.06); }
+    .overview-card .ov-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .overview-card .ov-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .overview-card .ov-label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .chart-card {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+    }
+    .chart-card .section-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    #chartContainer {
+        height: 140px;
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+    }
+    .chart-bar {
+        flex: 1;
+        min-width: 3px;
+        border-radius: 3px 3px 0 0;
+        transition: height 0.3s, opacity 0.15s;
+        cursor: pointer;
+    }
+    .chart-bar:hover { opacity: 0.8; }
+
+    .data-card {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+    .data-card .section-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        padding: 1rem 1.25rem 0.75rem;
+    }
+    .data-card .data-row {
+        display: flex;
+        align-items: center;
+        padding: 0.65rem 1.25rem;
+        border-top: 1px solid var(--border-color);
+        transition: background 0.15s;
+        gap: 0.75rem;
+    }
+    .data-card .data-row:hover { background: var(--bg-gray); }
+    .data-card .link-icon-box {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--primary-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+    .data-card .link-name {
+        flex: 1;
+        min-width: 0;
+        font-weight: 600;
+        font-size: 0.85rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .data-card .metric {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .metric-label {
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        display: block;
+    }
+
+    .referrer-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--bg-gray);
+        overflow: hidden;
+        margin-top: 0.3rem;
+    }
+    .referrer-bar-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #e6683c, #cc2366);
+    }
+
+    .empty-data {
+        padding: 2rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    .empty-data i {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        opacity: 0.4;
+    }
+
+    @media (max-width: 575.98px) {
+        .analytics-header { padding: 1rem; border-radius: var(--radius-sm); }
+        .analytics-header h4 { font-size: 1.1rem; }
+        .overview-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+        .overview-card { padding: 0.75rem 0.5rem; }
+        .overview-card .ov-icon { width: 30px; height: 30px; font-size: 0.85rem; margin-bottom: 0.35rem; }
+        .overview-card .ov-value { font-size: 1.15rem; }
+        .overview-card .ov-label { font-size: 0.65rem; }
+        .period-btn { padding: 0.3rem 0.5rem; font-size: 0.72rem; }
+        .chart-card { padding: 1rem; }
+        #chartContainer { height: 110px; }
+        .data-card .data-row { padding: 0.55rem 1rem; }
+        .data-card .section-title { padding: 0.75rem 1rem 0.5rem; }
+        .data-card .link-name { font-size: 0.8rem; }
+        .data-card .metric { font-size: 0.72rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-3 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <!-- Gradient Header -->
+                <div class="analytics-header mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-1"></i> Analytics</h4>
+                        <a href="{% url 'profile_links_manage' %}" class="btn btn-back btn-sm px-3 py-1">
+                            <i class="bi bi-arrow-left me-1"></i>Links
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Period Filter -->
+                <div class="period-bar mb-3">
+                    <a href="?period=today" class="period-btn {% if period == 'today' %}active{% endif %}">Today</a>
+                    <a href="?period=7d" class="period-btn {% if period == '7d' %}active{% endif %}">7 Days</a>
+                    <a href="?period=30d" class="period-btn {% if period == '30d' %}active{% endif %}">30 Days</a>
+                    <a href="?period=all" class="period-btn {% if period == 'all' %}active{% endif %}">All Time</a>
+                </div>
+
+                <!-- Overview Cards -->
+                <div class="overview-grid mb-3">
+                    <div class="overview-card">
+                        <div class="ov-icon" style="background: rgba(99,102,241,0.1); color: #6366f1;">
+                            <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="ov-value">{{ total_views }}</div>
+                        <div class="ov-label">Views</div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="ov-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="ov-value">{{ unique_views }}</div>
+                        <div class="ov-label">Unique</div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="ov-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                            <i class="bi bi-cursor"></i>
+                        </div>
+                        <div class="ov-value">{{ total_clicks }}</div>
+                        <div class="ov-label">Clicks</div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="ov-icon" style="background: rgba(236,72,153,0.1); color: #ec4899;">
+                            <i class="bi bi-percent"></i>
+                        </div>
+                        <div class="ov-value">{{ avg_ctr }}%</div>
+                        <div class="ov-label">CTR</div>
+                    </div>
+                </div>
+
+                <!-- Daily Views Chart -->
+                <div class="chart-card mb-3">
+                    <div class="section-title"><i class="bi bi-graph-up me-1"></i> Views (Last 30 Days)</div>
+                    <div id="chartContainer"></div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <!-- Per-Link Performance -->
+                    <div class="col-12 col-md-7">
+                        <div class="data-card">
+                            <div class="section-title"><i class="bi bi-link-45deg me-1"></i> Link Performance</div>
+                            {% if link_stats %}
+                                {% for stat in link_stats %}
+                                <div class="data-row">
+                                    <div class="link-icon-box">
+                                        <i class="bi {{ stat.link.icon|default:'bi-link-45deg' }}"></i>
+                                    </div>
+                                    <div class="link-name">{{ stat.link.title }}</div>
+                                    <div class="metric" style="color: var(--text-dark);">
+                                        {{ stat.clicks }}
+                                        <span class="opacity-50">/</span>
+                                        <span style="color: var(--text-muted);">{{ stat.unique_clicks }}</span>
+                                        <metric-label>Total / Unique</metric-label>
+                                    </div>
+                                    <div class="metric" style="min-width: 42px;">
+                                        <span style="color: #ec4899;">{{ stat.ctr }}%</span>
+                                        <metric-label>CTR</metric-label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-data">
+                                    <i class="bi bi-link-45deg"></i>
+                                    No links yet
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Top Referrers -->
+                    <div class="col-12 col-md-5">
+                        <div class="data-card">
+                            <div class="section-title"><i class="bi bi-globe me-1"></i> Top Referrers</div>
+                            {% if top_referrers %}
+                                {% for domain, count in top_referrers %}
+                                <div class="data-row" style="flex-wrap: wrap;">
+                                    <div class="d-flex align-items-center gap-2 flex-grow-1 min-width-0">
+                                        <i class="bi bi-globe2" style="color: var(--text-muted); font-size: 0.85rem;"></i>
+                                        <span class="link-name">{{ domain }}</span>
+                                    </div>
+                                    <div class="metric" style="color: var(--text-dark);">{{ count }}</div>
+                                    <div class="referrer-bar w-100">
+                                        <div class="referrer-bar-fill" style="width: {{ count }}00%;max-width:100%;" data-count="{{ count }}"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-data">
+                                    <i class="bi bi-globe"></i>
+                                    No referrer data yet
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const data = {{ chart_data|safe }};
+    const container = document.getElementById('chartContainer');
+    if (!data.length || !container) {
+        container.innerHTML = '<div class="empty-data" style="width:100%;padding:2rem 0;"><i class="bi bi-graph-up"></i>No view data yet</div>';
+        return;
+    }
+    const maxCount = Math.max(...data.map(d => d.count), 1);
+    data.forEach(d => {
+        const bar = document.createElement('div');
+        const pct = (d.count / maxCount) * 100;
+        bar.className = 'chart-bar';
+        bar.style.height = Math.max(pct, 3) + '%';
+        bar.style.background = 'linear-gradient(180deg, #e6683c, #cc2366)';
+        bar.title = d.date + ': ' + d.count + ' view' + (d.count !== 1 ? 's' : '');
+        container.appendChild(bar);
+    });
+
+    // Scale referrer bars relative to max
+    const bars = document.querySelectorAll('.referrer-bar-fill');
+    if (bars.length) {
+        let maxRef = 0;
+        bars.forEach(b => { const c = parseInt(b.dataset.count) || 0; if (c > maxRef) maxRef = c; });
+        bars.forEach(b => {
+            const c = parseInt(b.dataset.count) || 0;
+            b.style.width = (maxRef > 0 ? Math.round(c / maxRef * 100) : 0) + '%';
+        });
+    }
+})();
+</script>
+{% endblock %}

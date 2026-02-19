@@ -57,82 +57,84 @@
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero">
+
+<!-- ==================== 1. HERO ==================== -->
+<section class="lp-hero">
+    <div class="lp-hero__glow"></div>
+    <div class="lp-hero__noise"></div>
     <div class="container">
-        <div class="hero-grid">
-            <div class="hero-content">
-                <div class="meta-badge">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
-                    <span>Verified Meta Tech Provider</span>
-                </div>
-
-                <h1 class="hero-headline">
-                    Auto-reply to Instagram comments<br>
-                    and <span class="text-gradient">send DMs instantly</span>.
-                </h1>
-
-                <p class="hero-desc">
-                    Someone comments on your post? Maedix automatically replies<br>
-                    and sends them a DM with your link, offer, or message — in seconds.
-                </p>
-
-                <div class="hero-actions">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'flow_list' %}" class="btn-primary">
-                        Go to Dashboard
-                    </a>
-                    {% else %}
-                    <a href="{% url 'signup' %}" class="btn-primary">
-                        Start free
-                    </a>
-                    {% endif %}
-                    <a href="#how-it-works" class="btn-secondary">
-                        See how it works
-                    </a>
-                </div>
+        <div class="lp-hero__inner">
+            <div class="lp-hero__badge">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                <span>Verified Meta Tech Provider</span>
             </div>
 
-            <div class="hero-visual">
-                <div class="hero-demo">
-                    <!-- Comment triggers flow -->
-                    <div class="demo-comment">
-                        <div class="demo-avatar">S</div>
-                        <div class="demo-comment-content">
-                            <span class="demo-username">@sarah_creates</span>
-                            <span class="demo-text">Send me the link!</span>
-                        </div>
-                    </div>
+            <h1 class="lp-hero__headline">
+                Auto-reply to Instagram comments<br>
+                and <span class="lp-gradient-text">send DMs instantly</span>.
+            </h1>
 
-                    <div class="demo-arrow">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-                    </div>
+            <p class="lp-hero__desc">
+                Someone comments on your post? Maedix automatically replies<br>
+                and sends them a DM with your link, offer, or message — in seconds.
+            </p>
 
-                    <!-- Auto actions -->
-                    <div class="demo-actions">
-                        <div class="demo-action">
-                            <div class="action-icon blue">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            </div>
-                            <div class="action-content">
-                                <span class="action-label">Comment Reply</span>
-                                <span class="action-text">"Check your DM!"</span>
+            <div class="lp-hero__actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'flow_list' %}" class="lp-btn">Go to Dashboard</a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="lp-btn">Start free</a>
+                {% endif %}
+                <a href="#how-it-works" class="lp-btn lp-btn--ghost">See how it works</a>
+            </div>
+
+            <!-- Browser chrome demo -->
+            <div class="lp-hero__browser">
+                <div class="lp-browser__bar">
+                    <span class="lp-browser__dot"></span>
+                    <span class="lp-browser__dot"></span>
+                    <span class="lp-browser__dot"></span>
+                    <span class="lp-browser__url">maedix.com/dashboard</span>
+                </div>
+                <div class="lp-browser__body">
+                    <div class="lp-demo">
+                        <div class="lp-demo__comment">
+                            <div class="lp-demo__avatar">S</div>
+                            <div class="lp-demo__comment-body">
+                                <span class="lp-demo__user">@sarah_creates</span>
+                                <span class="lp-demo__text">Send me the link!</span>
                             </div>
                         </div>
-                        <div class="demo-action">
-                            <div class="action-icon indigo">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+
+                        <div class="lp-demo__arrow">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                        </div>
+
+                        <div class="lp-demo__actions">
+                            <div class="lp-demo__action">
+                                <div class="lp-demo__action-icon lp-demo__action-icon--blue">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                </div>
+                                <div>
+                                    <span class="lp-demo__action-label">Comment Reply</span>
+                                    <span class="lp-demo__action-text">"Check your DM!"</span>
+                                </div>
                             </div>
-                            <div class="action-content">
-                                <span class="action-label">DM Sent</span>
-                                <span class="action-text">"Hey Sarah! Here's your link..."</span>
+                            <div class="lp-demo__action">
+                                <div class="lp-demo__action-icon lp-demo__action-icon--indigo">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                </div>
+                                <div>
+                                    <span class="lp-demo__action-label">DM Sent</span>
+                                    <span class="lp-demo__action-text">"Hey Sarah! Here's your link..."</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="demo-badge">
-                        <span class="badge-dot"></span>
-                        Happens instantly
+                        <div class="lp-demo__badge">
+                            <span class="lp-demo__dot"></span>
+                            Happens instantly
+                        </div>
                     </div>
                 </div>
             </div>
@@ -140,155 +142,136 @@
     </div>
 </section>
 
-<!-- Problem Section -->
-<section class="section problem-section">
+<!-- ==================== 2. TRUST BAR ==================== -->
+<section class="lp-trust">
     <div class="container">
-        <div class="problem-grid">
-            <div class="problem-content">
-                <h2>Comments are interest.<br>Silence kills it.</h2>
+        <div class="lp-trust__inner">
+            <div class="lp-trust__item">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                Verified Meta Tech Provider
+            </div>
+            <div class="lp-trust__item">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                Official Instagram APIs
+            </div>
+            <div class="lp-trust__item">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                Account Safe
+            </div>
+            <div class="lp-trust__item">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
+                No Password Needed
+            </div>
+        </div>
+    </div>
+</section>
 
-                <div class="problem-text">
-                    <p>
-                        Creators lose leads every day — not because content is bad,<br>
-                        but because replies are slow, inconsistent, or forgotten.
-                    </p>
-                    <p>
-                        By the time a DM is sent,<br>
-                        the moment is already gone.
-                    </p>
+<!-- ==================== 3. PROBLEM + REFRAME ==================== -->
+<section class="lp-section lp-problem" data-animate>
+    <div class="container">
+        <div class="lp-problem__top">
+            <h2 class="lp-section__title">Comments are interest.<br>Silence kills it.</h2>
+            <p class="lp-problem__sub">Creators lose leads every day — not because content is bad, but because replies are slow, inconsistent, or forgotten. By the time a DM is sent, the moment is already gone.</p>
+        </div>
+
+        <div class="lp-problem__visual">
+            <div class="lp-missed">
+                <div class="lp-missed__item">
+                    <div class="lp-missed__avatar">J</div>
+                    <div class="lp-missed__body">
+                        <span class="lp-missed__user">@john_d</span>
+                        <span class="lp-missed__text">How much is this?</span>
+                    </div>
+                    <span class="lp-missed__time">3h ago</span>
+                </div>
+                <div class="lp-missed__item">
+                    <div class="lp-missed__avatar">M</div>
+                    <div class="lp-missed__body">
+                        <span class="lp-missed__user">@maria_lee</span>
+                        <span class="lp-missed__text">Send me the link please!</span>
+                    </div>
+                    <span class="lp-missed__time">5h ago</span>
+                </div>
+                <div class="lp-missed__item">
+                    <div class="lp-missed__avatar">A</div>
+                    <div class="lp-missed__body">
+                        <span class="lp-missed__user">@alex_fit</span>
+                        <span class="lp-missed__text">Interested! How do I sign up?</span>
+                    </div>
+                    <span class="lp-missed__time">8h ago</span>
+                </div>
+                <div class="lp-missed__label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    Unanswered comments = lost opportunities
                 </div>
             </div>
+        </div>
 
-            <div class="problem-visual">
-                <div class="missed-comments">
-                    <div class="missed-comment">
-                        <div class="missed-avatar">J</div>
-                        <div class="missed-content">
-                            <span class="missed-user">@john_d</span>
-                            <span class="missed-text">How much is this?</span>
-                        </div>
-                        <span class="missed-time">3h ago</span>
+        <div class="lp-reframe" data-animate>
+            <h3 class="lp-reframe__title">Instagram rewards conversations, not posts.</h3>
+            <div class="lp-reframe__points">
+                <div class="lp-reframe__point"><span class="lp-reframe__dot"></span>Early replies create momentum</div>
+                <div class="lp-reframe__point"><span class="lp-reframe__dot"></span>Public comments signal intent</div>
+                <div class="lp-reframe__point"><span class="lp-reframe__dot"></span>Private DMs continue trust</div>
+            </div>
+            <p class="lp-reframe__key">The problem isn't effort. It's scale.</p>
+
+            <div class="lp-flow">
+                <div class="lp-flow__step">
+                    <div class="lp-flow__icon lp-flow__icon--post">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </div>
-                    <div class="missed-comment">
-                        <div class="missed-avatar">M</div>
-                        <div class="missed-content">
-                            <span class="missed-user">@maria_lee</span>
-                            <span class="missed-text">Send me the link please!</span>
-                        </div>
-                        <span class="missed-time">5h ago</span>
+                    <span>Post</span>
+                </div>
+                <div class="lp-flow__line"></div>
+                <div class="lp-flow__step">
+                    <div class="lp-flow__icon lp-flow__icon--comment">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     </div>
-                    <div class="missed-comment">
-                        <div class="missed-avatar">A</div>
-                        <div class="missed-content">
-                            <span class="missed-user">@alex_fit</span>
-                            <span class="missed-text">Interested! How do I sign up?</span>
-                        </div>
-                        <span class="missed-time">8h ago</span>
+                    <span>Comment</span>
+                </div>
+                <div class="lp-flow__line"></div>
+                <div class="lp-flow__step">
+                    <div class="lp-flow__icon lp-flow__icon--reply">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>
                     </div>
-                    <div class="missed-label">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        Unanswered comments = lost opportunities
+                    <span>Reply</span>
+                </div>
+                <div class="lp-flow__line"></div>
+                <div class="lp-flow__step lp-flow__step--highlight">
+                    <div class="lp-flow__icon lp-flow__icon--dm">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                     </div>
+                    <span>DM</span>
+                </div>
+                <div class="lp-flow__line"></div>
+                <div class="lp-flow__step lp-flow__step--highlight">
+                    <div class="lp-flow__icon lp-flow__icon--convert">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <span>Convert</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Reframe Section -->
-<section class="section reframe-section">
+<!-- ==================== 4. WHAT MAEDIX DOES (bento) ==================== -->
+<section class="lp-section lp-what" id="features" data-animate>
     <div class="container">
-        <div class="reframe-grid">
-            <div class="reframe-content">
-                <h2>Instagram rewards conversations, not posts.</h2>
+        <h2 class="lp-section__title">Maedix handles the conversation flow for you.</h2>
 
-                <div class="reframe-points">
-                    <div class="reframe-point">
-                        <span class="point-marker"></span>
-                        <span>Early replies create momentum</span>
-                    </div>
-                    <div class="reframe-point">
-                        <span class="point-marker"></span>
-                        <span>Public comments signal intent</span>
-                    </div>
-                    <div class="reframe-point">
-                        <span class="point-marker"></span>
-                        <span>Private DMs continue trust</span>
-                    </div>
-                </div>
-
-                <p class="reframe-key">
-                    The problem isn't effort.<br>
-                    It's scale.
-                </p>
+        <div class="lp-bento">
+            <div class="lp-bento__card lp-bento__card--primary">
+                <h3>Automatically replies to comments & sends DMs</h3>
+                <p>When someone comments on your post, they get a public reply instantly — and a DM with your link, offer, or message lands in their inbox. 24/7, zero delay.</p>
             </div>
-
-            <div class="reframe-visual">
-                <div class="conversation-flow">
-                    <div class="flow-step">
-                        <div class="flow-icon post">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        </div>
-                        <span>Post</span>
-                    </div>
-                    <div class="flow-connector-line"></div>
-                    <div class="flow-step">
-                        <div class="flow-icon comment">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        </div>
-                        <span>Comment</span>
-                    </div>
-                    <div class="flow-connector-line"></div>
-                    <div class="flow-step">
-                        <div class="flow-icon reply">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>
-                        </div>
-                        <span>Reply</span>
-                    </div>
-                    <div class="flow-connector-line"></div>
-                    <div class="flow-step highlight">
-                        <div class="flow-icon dm">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        </div>
-                        <span>DM</span>
-                    </div>
-                    <div class="flow-connector-line"></div>
-                    <div class="flow-step highlight">
-                        <div class="flow-icon convert">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        </div>
-                        <span>Convert</span>
-                    </div>
-                </div>
-                <div class="flow-label">The engagement journey</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- What Maedix Does -->
-<section class="section what-section" id="features">
-    <div class="container">
-        <h2>Maedix handles the conversation flow for you.</h2>
-
-        <div class="what-grid">
-            <div class="what-block highlight">
-                <h3>Automatically replies to comments</h3>
-                <p>When someone comments on your post, they get a response — instantly, 24/7.</p>
-            </div>
-
-            <div class="what-block">
-                <h3>Sends DMs instantly</h3>
-                <p>Automatically send your link, offer, or message to their inbox in seconds.</p>
-            </div>
-
-            <div class="what-block">
+            <div class="lp-bento__card">
                 <h3>Collect leads & data</h3>
-                <p>Capture emails, phone numbers, and qualify leads automatically.</p>
+                <p>Capture emails, phone numbers, and qualify leads automatically through conversation flows.</p>
             </div>
-
-            <div class="what-block">
-                <div class="what-badge">OPTIONAL</div>
+            <div class="lp-bento__card lp-bento__card--ai">
+                <div class="lp-bento__badge">OPTIONAL</div>
                 <h3>AI conversations</h3>
                 <p>Let AI handle multi-turn conversations for complex lead qualification.</p>
             </div>
@@ -296,727 +279,693 @@
     </div>
 </section>
 
-<!-- AI Conversations Section -->
-<section class="section ai-section" id="ai-conversations">
+<!-- ==================== 5. VISUAL BUILDER + FEATURES (tabs) ==================== -->
+<section class="lp-section lp-builder" id="features-detail" data-animate>
     <div class="container">
-        <div class="ai-grid">
-            <div class="ai-content">
-                <div class="ai-badge">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
-                    <span>Optional Add-on</span>
-                </div>
-
-                <h2>Need smarter conversations? Add AI.</h2>
-
-                <p class="ai-desc">
-                    For complex lead qualification, let AI handle multi-turn conversations.
-                    It asks the right questions and collects data naturally — available 24/7.
-                </p>
-
-                <div class="ai-features">
-                    <div class="ai-feature">
-                        <span class="ai-check">✓</span>
-                        <span>Natural, human-like conversations</span>
-                    </div>
-                    <div class="ai-feature">
-                        <span class="ai-check">✓</span>
-                        <span>Qualifies leads automatically</span>
-                    </div>
-                    <div class="ai-feature">
-                        <span class="ai-check">✓</span>
-                        <span>Collects emails, phones, preferences</span>
-                    </div>
-                    <div class="ai-feature">
-                        <span class="ai-check">✓</span>
-                        <span>Uses your knowledge base</span>
-                    </div>
-                    <div class="ai-feature">
-                        <span class="ai-check">✓</span>
-                        <span>Matches your brand personality</span>
-                    </div>
-                </div>
-
-                {% if user.is_authenticated %}
-                <a href="{% url 'ai_agent_list' %}" class="btn-primary">
-                    Create AI Agent
-                </a>
-                {% else %}
-                <a href="{% url 'signup' %}" class="btn-primary">
-                    Try AI Agents Free
-                </a>
-                {% endif %}
-            </div>
-
-            <div class="ai-visual">
-                <div class="ai-chat-demo">
-                    <div class="chat-header">
-                        <div class="chat-header-avatar">
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
-                        </div>
-                        <div>
-                            <span class="chat-header-name">AI Agent</span>
-                            <span class="chat-header-status"><span class="status-dot"></span>Online 24/7</span>
-                        </div>
-                    </div>
-
-                    <div class="chat-messages">
-                        <div class="chat-msg incoming">
-                            Hi! I'm interested in your coaching program
-                        </div>
-                        <div class="chat-msg outgoing ai">
-                            <span class="ai-indicator">AI</span>
-                            Hey! Great to hear that. To help you find the right fit, what's your main goal - weight loss, muscle building, or overall fitness?
-                        </div>
-                        <div class="chat-msg incoming">
-                            Weight loss mainly, I want to lose about 10kg
-                        </div>
-                        <div class="chat-msg outgoing ai">
-                            <span class="ai-indicator">AI</span>
-                            Perfect! Our 12-week transformation program is ideal for that. What's your budget range? We have options starting from ₹5K/month.
-                        </div>
-                        <div class="chat-msg incoming">
-                            Around 8-10K works for me
-                        </div>
-                        <div class="chat-msg outgoing ai">
-                            <span class="ai-indicator">AI</span>
-                            Great fit! Can I get your email to send you the program details and a special discount code? 🎁
-                        </div>
-                        <div class="chat-msg incoming">
-                            Sure, john@email.com
-                        </div>
-                        <div class="chat-msg outgoing ai">
-                            <span class="ai-indicator">AI</span>
-                            Awesome John! ✅ Check your inbox in 2 mins. Our team will also reach out for a free consultation call!
-                        </div>
-                    </div>
-
-                    <div class="chat-footer">
-                        <div class="data-collected">
-                            <span class="data-label">Data Collected:</span>
-                            <span class="data-tag">Goal: Weight Loss</span>
-                            <span class="data-tag">Budget: 8-10K</span>
-                            <span class="data-tag">Email: john@...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- How It Works -->
-<section class="section how-section" id="how-it-works">
-    <div class="container">
-        <h2>How it works</h2>
-
-        <div class="steps">
-            <div class="step">
-                <span class="step-number">1</span>
-                <h3>Connect your Instagram account</h3>
-                <p>Business or Creator account. Takes 30 seconds.</p>
-            </div>
-
-            <div class="step">
-                <span class="step-number">2</span>
-                <h3>Create a conversation flow</h3>
-                <p>Set triggers, write messages, add buttons if you want.</p>
-            </div>
-
-            <div class="step">
-                <span class="step-number">3</span>
-                <h3>A comment triggers replies + DMs</h3>
-                <p>When someone comments your keyword, the flow runs.</p>
-            </div>
-
-            <div class="step">
-                <span class="step-number">4</span>
-                <h3>Every interaction is logged</h3>
-                <p>See full session history — what was sent, what they replied.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Visual Automation Builder Demo -->
-<section class="section builder-demo-section">
-    <div class="container">
-        <div class="builder-demo-header">
-            <h2>Build automations visually. No code needed.</h2>
+        <div class="lp-builder__header">
+            <h2 class="lp-section__title">Build automations visually. No code needed.</h2>
             <p>Drag and drop steps to create powerful automations in minutes.</p>
         </div>
 
-        <div class="builder-demo-wrapper">
-            <div class="builder-canvas">
-                <!-- Grid Background -->
-                <div class="canvas-grid"></div>
-
-                <!-- Animated Flow Nodes -->
-                <div class="flow-builder-demo">
-                    <!-- Trigger Node -->
-                    <div class="builder-node trigger-node animate-node delay-1">
-                        <div class="node-header orange">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                            <span>Trigger</span>
-                        </div>
-                        <div class="node-body">
-                            <div class="node-label">When someone comments</div>
-                            <div class="node-value">"FREE" on any post</div>
-                        </div>
+        <!-- Builder demo -->
+        <div class="lp-builder__canvas">
+            <div class="lp-canvas__grid"></div>
+            <div class="lp-canvas__flow">
+                <!-- Trigger -->
+                <div class="lp-node lp-node--trigger animate-node delay-1">
+                    <div class="lp-node__header lp-node__header--orange">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        Trigger
                     </div>
-
-                    <!-- Connection Line 1 -->
-                    <svg class="connector-svg connector-1 animate-connector delay-2" width="2" height="40">
-                        <line x1="1" y1="0" x2="1" y2="40" stroke="#6366f1" stroke-width="2" stroke-dasharray="4"/>
-                    </svg>
-
-                    <!-- Follower Check Node -->
-                    <div class="builder-node condition-node animate-node delay-3">
-                        <div class="node-header green">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                            <span>Follow Gate</span>
-                        </div>
-                        <div class="node-body">
-                            <div class="node-label">Check if user</div>
-                            <div class="node-value">follows you</div>
-                        </div>
-                    </div>
-
-                    <!-- Branch Lines -->
-                    <div class="branch-container animate-branch delay-4">
-                        <div class="branch-line-left"></div>
-                        <div class="branch-line-right"></div>
-                        <span class="branch-label-yes">Yes</span>
-                        <span class="branch-label-no">No</span>
-                    </div>
-
-                    <!-- Branch Nodes -->
-                    <div class="branch-nodes">
-                        <!-- Follower Path -->
-                        <div class="builder-node message-node follower-path animate-node delay-5">
-                            <div class="node-header blue">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                <span>Send DM</span>
-                            </div>
-                            <div class="node-body">
-                                <div class="node-label">Send exclusive link</div>
-                                <div class="node-preview">"Thanks for following! Here's your free guide: [link]"</div>
-                            </div>
-                        </div>
-
-                        <!-- Non-Follower Path -->
-                        <div class="builder-node message-node nonfollower-path animate-node delay-6">
-                            <div class="node-header purple">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                <span>Send DM</span>
-                            </div>
-                            <div class="node-body">
-                                <div class="node-label">Ask to follow</div>
-                                <div class="node-preview">"Follow me first to get the free guide!"</div>
-                            </div>
-                        </div>
+                    <div class="lp-node__body">
+                        <div class="lp-node__label">When someone comments</div>
+                        <div class="lp-node__value">"FREE" on any post</div>
                     </div>
                 </div>
 
-                <!-- Floating cursor animation -->
-                <div class="drag-cursor animate-cursor">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 4L10 20L12.5 13.5L19 11L4 4Z" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/></svg>
-                </div>
-            </div>
+                <svg class="lp-connector animate-connector delay-2" width="2" height="40"><line x1="1" y1="0" x2="1" y2="40" stroke="#6366f1" stroke-width="2" stroke-dasharray="4"/></svg>
 
-            <!-- Side Info -->
-            <div class="builder-demo-info">
-                <h3>Follow-Gated DM Automation</h3>
-                <p>Reward your followers with exclusive content. Non-followers get a friendly nudge to follow first.</p>
-
-                <div class="demo-features">
-                    <div class="demo-feature">
-                        <span class="feature-check">✓</span>
-                        <span>Drag & drop interface</span>
+                <!-- Follower Check -->
+                <div class="lp-node lp-node--condition animate-node delay-3">
+                    <div class="lp-node__header lp-node__header--green">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                        Follow Gate
                     </div>
-                    <div class="demo-feature">
-                        <span class="feature-check">✓</span>
-                        <span>Conditional branching</span>
-                    </div>
-                    <div class="demo-feature">
-                        <span class="feature-check">✓</span>
-                        <span>Unlimited message steps</span>
-                    </div>
-                    <div class="demo-feature">
-                        <span class="feature-check">✓</span>
-                        <span>Works on Reels, Posts & Stories</span>
+                    <div class="lp-node__body">
+                        <div class="lp-node__label">Check if user</div>
+                        <div class="lp-node__value">follows you</div>
                     </div>
                 </div>
 
-                {% if user.is_authenticated %}
-                <a href="{% url 'flow_list' %}" class="btn-primary">
-                    Try Automation Builder
-                </a>
-                {% else %}
-                <a href="{% url 'signup' %}" class="btn-primary">
-                    Try Automation Builder Free
-                </a>
-                {% endif %}
+                <!-- Branch -->
+                <div class="lp-branch animate-branch delay-4">
+                    <div class="lp-branch__line-left"></div>
+                    <div class="lp-branch__line-right"></div>
+                    <span class="lp-branch__label lp-branch__label--yes">Yes</span>
+                    <span class="lp-branch__label lp-branch__label--no">No</span>
+                </div>
+
+                <div class="lp-branch__nodes">
+                    <div class="lp-node lp-node--message animate-node delay-5">
+                        <div class="lp-node__header lp-node__header--blue">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            Send DM
+                        </div>
+                        <div class="lp-node__body">
+                            <div class="lp-node__label">Send exclusive link</div>
+                            <div class="lp-node__preview">"Thanks for following! Here's your free guide: [link]"</div>
+                        </div>
+                    </div>
+                    <div class="lp-node lp-node--message animate-node delay-6">
+                        <div class="lp-node__header lp-node__header--purple">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            Send DM
+                        </div>
+                        <div class="lp-node__body">
+                            <div class="lp-node__label">Ask to follow</div>
+                            <div class="lp-node__preview">"Follow me first to get the free guide!"</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- Features Section -->
-<section class="section features-section" id="features-detail">
-    <div class="container">
-        <div class="features-header">
-            <h2>Visual Automation Builder</h2>
-            <p>Build multi-step conversations with a drag-and-drop interface. No coding required.</p>
-        </div>
+        <!-- Feature Tabs -->
+        <div class="lp-tabs" data-animate>
+            <input type="radio" name="feature-tab" id="tab-messages" class="lp-tabs__radio" checked>
+            <input type="radio" name="feature-tab" id="tab-interactive" class="lp-tabs__radio">
+            <input type="radio" name="feature-tab" id="tab-logic" class="lp-tabs__radio">
+            <input type="radio" name="feature-tab" id="tab-tracking" class="lp-tabs__radio">
 
-        <div class="features-list">
-            <!-- Comment Reply -->
-            <div class="feature-row">
-                <div class="feature-info">
-                    <div class="feature-icon blue">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    </div>
-                    <div>
-                        <h3>Comment Reply</h3>
-                        <p>Automatically reply to comments on your posts. Acknowledge users publicly and drive them to DMs.</p>
-                        <span class="feature-tag">Public</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-comment-box">
-                        <div class="preview-post-header">
-                            <div class="preview-avatar">Y</div>
-                            <span class="preview-username">your_brand</span>
-                        </div>
-                        <div class="preview-comments">
-                            <div class="preview-comment">
-                                <span class="comment-user">@sarah_k</span>
-                                <span class="comment-text">Send me the link!</span>
-                            </div>
-                            <div class="preview-comment reply">
-                                <span class="comment-user">@your_brand</span>
-                                <span class="comment-text">Check your DM! Just sent it over</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="lp-tabs__nav" role="tablist">
+                <label for="tab-messages" class="lp-tabs__tab" role="tab">Messages</label>
+                <label for="tab-interactive" class="lp-tabs__tab" role="tab">Interactive</label>
+                <label for="tab-logic" class="lp-tabs__tab" role="tab">Smart Logic</label>
+                <label for="tab-tracking" class="lp-tabs__tab" role="tab">Tracking + AI</label>
             </div>
 
-            <!-- Text Message -->
-            <div class="feature-row reverse">
-                <div class="feature-info">
-                    <div class="feature-icon indigo">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                    </div>
-                    <div>
-                        <h3>Text Message</h3>
-                        <p>Send personalized DMs to users. Deliver information, links, or continue the conversation privately.</p>
-                        <span class="feature-tag">DM</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-dm-box">
-                        <div class="dm-header">
-                            <div class="preview-avatar small">Y</div>
-                            <span>your_brand</span>
+            <div class="lp-tabs__panels">
+                <!-- Messages Panel -->
+                <div class="lp-tabs__panel" id="panel-messages">
+                    <div class="lp-tabs__grid">
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--blue">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            </div>
+                            <h4>Comment Reply</h4>
+                            <p>Automatically reply to comments on your posts. Acknowledge users publicly and drive them to DMs.</p>
+                            <span class="lp-tabs__tag">Public</span>
                         </div>
-                        <div class="dm-messages">
-                            <div class="dm-bubble sent">
-                                Hey Sarah! Here's the free guide you requested. Let me know if you have any questions!
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--indigo">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            </div>
+                            <h4>Text Message</h4>
+                            <p>Send personalized DMs to users. Deliver information, links, or continue the conversation privately.</p>
+                            <span class="lp-tabs__tag">DM</span>
+                        </div>
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--teal">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            </div>
+                            <h4>Link Message</h4>
+                            <p>Send URLs directly via DM. Perfect for sharing resources, sign-up pages, or downloads.</p>
+                            <span class="lp-tabs__tag">DM</span>
+                        </div>
+                    </div>
+                    <div class="lp-tabs__preview">
+                        <div class="lp-preview-dm">
+                            <div class="lp-preview-dm__header">
+                                <div class="lp-preview-dm__avatar">Y</div>
+                                <span>your_brand</span>
+                            </div>
+                            <div class="lp-preview-dm__body">
+                                <div class="lp-preview-dm__post-header">
+                                    <div class="lp-preview-dm__avatar lp-preview-dm__avatar--sm">Y</div>
+                                    <span class="lp-preview-dm__username">your_brand</span>
+                                </div>
+                                <div class="lp-preview-dm__comment">
+                                    <span class="lp-preview-dm__comment-user">@sarah_k</span>
+                                    <span>Send me the link!</span>
+                                </div>
+                                <div class="lp-preview-dm__reply">
+                                    <span class="lp-preview-dm__comment-user">@your_brand</span>
+                                    <span>Check your DM! Just sent it over</span>
+                                </div>
+                                <div class="lp-preview-dm__bubble">Hey Sarah! Here's the free guide you requested. Let me know if you have any questions!</div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Quick Reply Buttons -->
-            <div class="feature-row">
-                <div class="feature-info">
-                    <div class="feature-icon purple">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                    </div>
-                    <div>
-                        <h3>Quick Reply Buttons</h3>
-                        <p>Add tappable buttons to DMs. Let users choose options and branch the conversation based on their selection.</p>
-                        <span class="feature-tag">Interactive</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-dm-box">
-                        <div class="dm-header">
-                            <div class="preview-avatar small">Y</div>
-                            <span>your_brand</span>
+                <!-- Interactive Panel -->
+                <div class="lp-tabs__panel" id="panel-interactive">
+                    <div class="lp-tabs__grid">
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--purple">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                            </div>
+                            <h4>Quick Reply Buttons</h4>
+                            <p>Add tappable buttons to DMs. Let users choose options and branch the conversation based on their selection.</p>
+                            <span class="lp-tabs__tag">Interactive</span>
                         </div>
-                        <div class="dm-messages">
-                            <div class="dm-bubble sent">
-                                What would you like to know more about?
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--pink">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                             </div>
-                            <div class="dm-quick-replies">
-                                <span class="qr-button">Pricing</span>
-                                <span class="qr-button">Features</span>
-                                <span class="qr-button">Book a Demo</span>
-                            </div>
+                            <h4>Button Templates</h4>
+                            <p>Rich messages with action buttons. Link to your website, booking page, or product directly.</p>
+                            <span class="lp-tabs__tag">Links</span>
                         </div>
                     </div>
+                    <div class="lp-tabs__preview">
+                        <div class="lp-preview-dm">
+                            <div class="lp-preview-dm__header">
+                                <div class="lp-preview-dm__avatar">Y</div>
+                                <span>your_brand</span>
+                            </div>
+                            <div class="lp-preview-dm__body">
+                                <div class="lp-preview-dm__bubble">What would you like to know more about?</div>
+                                <div class="lp-preview-dm__qr">
+                                    <span class="lp-qr-btn">Pricing</span>
+                                    <span class="lp-qr-btn">Features</span>
+                                    <span class="lp-qr-btn">Book a Demo</span>
+                                </div>
+                                <div class="lp-preview-dm__buttons">
+                                    <a class="lp-template-btn">View Pricing</a>
+                                    <a class="lp-template-btn">Book a Call</a>
+                                    <a class="lp-template-btn">Visit Website</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Button Templates -->
-            <div class="feature-row reverse">
-                <div class="feature-info">
-                    <div class="feature-icon pink">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                    </div>
-                    <div>
-                        <h3>Button Templates</h3>
-                        <p>Rich messages with action buttons. Link to your website, booking page, or product directly.</p>
-                        <span class="feature-tag">Links</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-dm-box">
-                        <div class="dm-header">
-                            <div class="preview-avatar small">Y</div>
-                            <span>your_brand</span>
+                <!-- Smart Logic Panel -->
+                <div class="lp-tabs__panel" id="panel-logic">
+                    <div class="lp-tabs__grid">
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--green">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                            </div>
+                            <h4>Follower Check</h4>
+                            <p>Branch your flow based on follower status. Offer exclusive content to followers or encourage others to follow first.</p>
+                            <span class="lp-tabs__tag">Condition</span>
                         </div>
-                        <div class="dm-messages">
-                            <div class="dm-bubble sent">
-                                Ready to get started? Choose an option below:
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--orange">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             </div>
-                            <div class="dm-button-template">
-                                <a class="template-button">View Pricing</a>
-                                <a class="template-button">Book a Call</a>
-                                <a class="template-button">Visit Website</a>
-                            </div>
+                            <h4>Returning User Check</h4>
+                            <p>Detect if someone has interacted before. Send different messages to new vs returning users.</p>
+                            <span class="lp-tabs__tag">Condition</span>
                         </div>
                     </div>
+                    <div class="lp-tabs__preview">
+                        <div class="lp-preview-condition">
+                            <div class="lp-preview-condition__node">Is Follower?</div>
+                            <div class="lp-preview-condition__branches">
+                                <div class="lp-preview-condition__branch lp-preview-condition__branch--yes">
+                                    <span class="lp-preview-condition__label">Yes</span>
+                                    <div class="lp-preview-condition__result">Send exclusive discount code</div>
+                                </div>
+                                <div class="lp-preview-condition__branch lp-preview-condition__branch--no">
+                                    <span class="lp-preview-condition__label">No</span>
+                                    <div class="lp-preview-condition__result">Ask to follow for access</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Link Message -->
-            <div class="feature-row">
-                <div class="feature-info">
-                    <div class="feature-icon teal">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                    </div>
-                    <div>
-                        <h3>Link Message</h3>
-                        <p>Send URLs directly via DM. Perfect for sharing resources, sign-up pages, or downloads.</p>
-                        <span class="feature-tag">DM</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-dm-box">
-                        <div class="dm-header">
-                            <div class="preview-avatar small">Y</div>
-                            <span>your_brand</span>
-                        </div>
-                        <div class="dm-messages">
-                            <div class="dm-bubble sent">
-                                Here's your free download link:
+                <!-- Tracking + AI Panel -->
+                <div class="lp-tabs__panel" id="panel-tracking">
+                    <div class="lp-tabs__grid">
+                        <div class="lp-tabs__card">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--gray">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                             </div>
-                            <div class="dm-link-preview">
-                                <div class="link-preview-content">
-                                    <span class="link-domain">yourbrand.com</span>
-                                    <span class="link-title">Free Marketing Guide 2024</span>
+                            <h4>Session Logs</h4>
+                            <p>Track every message sent and received. See the complete conversation history for each user.</p>
+                            <span class="lp-tabs__tag">Analytics</span>
+                        </div>
+                        <div class="lp-tabs__card lp-tabs__card--ai">
+                            <div class="lp-tabs__card-icon lp-tabs__card-icon--ai">
+                                <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                            </div>
+                            <h4>AI Conversation <span class="lp-badge-new">NEW</span></h4>
+                            <p>Hand off to an AI agent for natural, multi-turn conversations. Perfect for qualifying leads and answering FAQs.</p>
+                            <span class="lp-tabs__tag">AI-Powered</span>
+                        </div>
+                    </div>
+                    <div class="lp-tabs__preview">
+                        <div class="lp-preview-logs">
+                            <div class="lp-preview-logs__header">Session #1842 - @sarah_k</div>
+                            <div class="lp-preview-logs__entries">
+                                <div class="lp-preview-logs__entry">
+                                    <span class="lp-preview-logs__time">2:34 PM</span>
+                                    <span class="lp-preview-logs__action">Comment received</span>
+                                    <span class="lp-preview-logs__detail">"Send me the link!"</span>
+                                </div>
+                                <div class="lp-preview-logs__entry">
+                                    <span class="lp-preview-logs__time">2:34 PM</span>
+                                    <span class="lp-preview-logs__action">Comment reply sent</span>
+                                </div>
+                                <div class="lp-preview-logs__entry">
+                                    <span class="lp-preview-logs__time">2:34 PM</span>
+                                    <span class="lp-preview-logs__action">DM sent</span>
+                                    <span class="lp-preview-logs__detail">"Hey Sarah! Here's..."</span>
+                                </div>
+                                <div class="lp-preview-logs__entry">
+                                    <span class="lp-preview-logs__time">2:35 PM</span>
+                                    <span class="lp-preview-logs__action">User replied</span>
+                                    <span class="lp-preview-logs__detail">"Pricing"</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Follower Check -->
-            <div class="feature-row reverse">
-                <div class="feature-info">
-                    <div class="feature-icon green">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                    </div>
-                    <div>
-                        <h3>Follower Check</h3>
-                        <p>Branch your flow based on follower status. Offer exclusive content to followers or encourage others to follow first.</p>
-                        <span class="feature-tag">Condition</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-condition-box">
-                        <div class="condition-node">
-                            <span class="condition-label">Is Follower?</span>
-                        </div>
-                        <div class="condition-branches">
-                            <div class="condition-branch yes">
-                                <span class="branch-label">Yes</span>
-                                <div class="branch-result">Send exclusive discount code</div>
-                            </div>
-                            <div class="condition-branch no">
-                                <span class="branch-label">No</span>
-                                <div class="branch-result">Ask to follow for access</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Returning User Check -->
-            <div class="feature-row">
-                <div class="feature-info">
-                    <div class="feature-icon orange">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    </div>
-                    <div>
-                        <h3>Returning User Check</h3>
-                        <p>Detect if someone has interacted before. Send different messages to new vs returning users.</p>
-                        <span class="feature-tag">Condition</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-condition-box">
-                        <div class="condition-node">
-                            <span class="condition-label">Interacted before?</span>
-                        </div>
-                        <div class="condition-branches">
-                            <div class="condition-branch yes">
-                                <span class="branch-label">Yes</span>
-                                <div class="branch-result">Welcome back! Here's what's new</div>
-                            </div>
-                            <div class="condition-branch no">
-                                <span class="branch-label">No</span>
-                                <div class="branch-result">Welcome! Let me introduce...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Session Logs -->
-            <div class="feature-row reverse">
-                <div class="feature-info">
-                    <div class="feature-icon gray">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                    </div>
-                    <div>
-                        <h3>Session Logs</h3>
-                        <p>Track every message sent and received. See the complete conversation history for each user.</p>
-                        <span class="feature-tag">Analytics</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-logs-box">
-                        <div class="log-header">Session #1842 - @sarah_k</div>
-                        <div class="log-entries">
-                            <div class="log-entry">
-                                <span class="log-time">2:34 PM</span>
-                                <span class="log-action">Comment received</span>
-                                <span class="log-detail">"Send me the link!"</span>
-                            </div>
-                            <div class="log-entry">
-                                <span class="log-time">2:34 PM</span>
-                                <span class="log-action">Comment reply sent</span>
-                            </div>
-                            <div class="log-entry">
-                                <span class="log-time">2:34 PM</span>
-                                <span class="log-action">DM sent</span>
-                                <span class="log-detail">"Hey Sarah! Here's..."</span>
-                            </div>
-                            <div class="log-entry">
-                                <span class="log-time">2:35 PM</span>
-                                <span class="log-action">User replied</span>
-                                <span class="log-detail">"Pricing"</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Conversation -->
-            <div class="feature-row ai-feature-row">
-                <div class="feature-info">
-                    <div class="feature-icon ai-icon">
-                        <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
-                    </div>
-                    <div>
-                        <h3>AI Conversation <span class="new-badge">NEW</span></h3>
-                        <p>Hand off to an AI agent for natural, multi-turn conversations. Perfect for qualifying leads, answering FAQs, and collecting information.</p>
-                        <span class="feature-tag">AI-Powered</span>
-                    </div>
-                </div>
-                <div class="feature-preview">
-                    <div class="preview-ai-box">
-                        <div class="ai-preview-header">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
-                            <span>AI Agent Active</span>
-                        </div>
-                        <div class="ai-preview-msgs">
-                            <div class="ai-preview-msg user">What's your price?</div>
-                            <div class="ai-preview-msg bot">Our plans start at ₹999/mo. What's your budget range?</div>
-                            <div class="ai-preview-msg user">Around 2-3K</div>
-                            <div class="ai-preview-msg bot">Perfect! Our Pro plan at ₹2,499 includes...</div>
-                        </div>
-                        <div class="ai-preview-footer">
-                            <span class="ai-preview-collected">✓ Budget collected</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="lp-builder__cta">
+            {% if user.is_authenticated %}
+            <a href="{% url 'flow_list' %}" class="lp-btn">Try Automation Builder</a>
+            {% else %}
+            <a href="{% url 'signup' %}" class="lp-btn">Try Automation Builder Free</a>
+            {% endif %}
         </div>
     </div>
 </section>
 
-<!-- Who It's For -->
-<section class="section audience-section">
+<!-- ==================== 6. AI CONVERSATIONS ==================== -->
+<section class="lp-section lp-ai" id="ai-conversations" data-animate>
+    <div class="lp-ai__noise"></div>
+    <div class="lp-ai__glow"></div>
     <div class="container">
-        <h2>Built for creators who take engagement seriously.</h2>
+        <div class="lp-ai__grid">
+            <div class="lp-ai__content">
+                <div class="lp-ai__badge">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.155Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                    <span>Optional Add-on</span>
+                </div>
 
-        <div class="audience-grid">
-            <div class="audience-block good">
-                <h3>Good fit</h3>
-                <ul>
-                    <li>Creators and businesses getting comments</li>
-                    <li>Anyone manually replying to DMs</li>
-                    <li>Anyone selling, booking, or capturing leads</li>
-                </ul>
-            </div>
+                <h2>Need smarter conversations? Add AI.</h2>
 
-            <div class="audience-block not">
-                <h3>Not for</h3>
-                <ul>
-                    <li>Spammy mass DMs</li>
-                    <li>Fake engagement</li>
-                    <li>Growth hacks</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
+                <p class="lp-ai__desc">
+                    For complex lead qualification, let AI handle multi-turn conversations.
+                    It asks the right questions and collects data naturally — available 24/7.
+                </p>
 
-<!-- Social Proof -->
-<section class="section proof-section">
-    <div class="container">
-        <!-- Trust Badges -->
-        <div class="proof-items">
-            <div class="proof-item">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
-                <span>Official Instagram APIs</span>
-            </div>
-            <div class="proof-item">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
-                <span>Account Safe</span>
-            </div>
-            <div class="proof-item">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 6.5l-4 4a.5.5 0 0 1-.7 0l-2-2a.5.5 0 1 1 .7-.7L7 9.3l3.6-3.6a.5.5 0 1 1 .7.7z"/></svg>
-                <span>No Password Needed</span>
-            </div>
-        </div>
-    </div>
-</section>
+                <div class="lp-ai__features">
+                    <div class="lp-ai__feature"><span class="lp-ai__check">&#10003;</span>Natural, human-like conversations</div>
+                    <div class="lp-ai__feature"><span class="lp-ai__check">&#10003;</span>Qualifies leads automatically</div>
+                    <div class="lp-ai__feature"><span class="lp-ai__check">&#10003;</span>Collects emails, phones, preferences</div>
+                    <div class="lp-ai__feature"><span class="lp-ai__check">&#10003;</span>Uses your knowledge base</div>
+                    <div class="lp-ai__feature"><span class="lp-ai__check">&#10003;</span>Matches your brand personality</div>
+                </div>
 
-<!-- Final CTA -->
-<section class="section cta-section">
-    <div class="container">
-        <div class="cta-content">
-            <h2>Stop losing conversations you already earned.</h2>
-
-            <div class="cta-actions">
                 {% if user.is_authenticated %}
-                <a href="{% url 'flow_list' %}" class="btn-primary">
-                    Go to Dashboard
-                </a>
+                <a href="{% url 'ai_agent_list' %}" class="lp-btn">Create AI Agent</a>
                 {% else %}
-                <a href="{% url 'signup' %}" class="btn-primary">
-                    Start free
-                </a>
+                <a href="{% url 'signup' %}" class="lp-btn">Try AI Agents Free</a>
                 {% endif %}
             </div>
 
-            <p class="cta-note">No credit card. Cancel anytime.</p>
+            <div class="lp-ai__visual">
+                <div class="lp-ai__chat">
+                    <div class="lp-ai__chat-header">
+                        <div class="lp-ai__chat-avatar">
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Z"/><path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2V1.866ZM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5Z"/></svg>
+                        </div>
+                        <div>
+                            <span class="lp-ai__chat-name">AI Agent</span>
+                            <span class="lp-ai__chat-status"><span class="lp-ai__status-dot"></span>Online 24/7</span>
+                        </div>
+                    </div>
+
+                    <div class="lp-ai__chat-msgs">
+                        <div class="lp-ai__msg lp-ai__msg--in">Hi! I'm interested in your coaching program</div>
+                        <div class="lp-ai__msg lp-ai__msg--out"><span class="lp-ai__indicator">AI</span>Hey! Great to hear that. What's your main goal - weight loss, muscle building, or overall fitness?</div>
+                        <div class="lp-ai__msg lp-ai__msg--in">Weight loss mainly, I want to lose about 10kg</div>
+                        <div class="lp-ai__msg lp-ai__msg--out"><span class="lp-ai__indicator">AI</span>Perfect! Our 12-week transformation program is ideal. What's your budget range?</div>
+                        <div class="lp-ai__msg lp-ai__msg--in">Around 8-10K works for me</div>
+                        <div class="lp-ai__msg lp-ai__msg--out"><span class="lp-ai__indicator">AI</span>Great fit! Can I get your email to send you the program details?</div>
+                    </div>
+
+                    <div class="lp-ai__chat-footer">
+                        <span class="lp-ai__data-label">Data Collected:</span>
+                        <span class="lp-ai__data-tag">Goal: Weight Loss</span>
+                        <span class="lp-ai__data-tag">Budget: 8-10K</span>
+                        <span class="lp-ai__data-tag">Email: john@...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
+<!-- ==================== 7. HOW IT WORKS + LINK IN BIO + WHO IT'S FOR ==================== -->
+<section class="lp-section lp-combo" id="how-it-works" data-animate>
+    <div class="container">
+        <!-- How It Works -->
+        <h2 class="lp-section__title" style="text-align:center">How it works</h2>
+        <div class="lp-steps">
+            <div class="lp-steps__item">
+                <span class="lp-steps__num">1</span>
+                <div>
+                    <strong>Connect your Instagram</strong>
+                    <span>Business or Creator account. 30 seconds.</span>
+                </div>
+            </div>
+            <div class="lp-steps__item">
+                <span class="lp-steps__num">2</span>
+                <div>
+                    <strong>Create a conversation flow</strong>
+                    <span>Set triggers, write messages, add buttons.</span>
+                </div>
+            </div>
+            <div class="lp-steps__item">
+                <span class="lp-steps__num">3</span>
+                <div>
+                    <strong>Comments trigger replies + DMs</strong>
+                    <span>When someone comments your keyword, the flow runs.</span>
+                </div>
+            </div>
+            <div class="lp-steps__item">
+                <span class="lp-steps__num">4</span>
+                <div>
+                    <strong>Every interaction is logged</strong>
+                    <span>Full session history of what was sent and replied.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Link in Bio -->
+        <div class="lp-linkbio" data-animate>
+            <div class="lp-linkbio__content">
+                <div class="lp-linkbio__badge">
+                    <i class="bi bi-link-45deg"></i>
+                    <span>Free Feature</span>
+                </div>
+                <h3>Link in Bio — your own mini landing page.</h3>
+                <p>Create a beautiful, shareable profile page at <strong>maedix.com/@yourname</strong>. Add all your important links in one place.</p>
+                <ul class="lp-linkbio__features">
+                    <li><span class="lp-check">&#10003;</span> Custom public profile page</li>
+                    <li><span class="lp-check">&#10003;</span> Track views and clicks</li>
+                    <li><span class="lp-check">&#10003;</span> Drag & drop reordering</li>
+                    <li><span class="lp-check">&#10003;</span> Works with any Instagram account</li>
+                </ul>
+                {% if user.is_authenticated %}
+                <a href="{% url 'profile_links_manage' %}" class="lp-btn">Set Up Your Link in Bio</a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="lp-btn">Create Your Page Free</a>
+                {% endif %}
+            </div>
+            <div class="lp-linkbio__phone">
+                <div class="lp-phone">
+                    <div class="lp-phone__notch"></div>
+                    <div class="lp-phone__screen">
+                        <div class="lp-phone__avatar">M</div>
+                        <div class="lp-phone__name">Your Name</div>
+                        <div class="lp-phone__handle">@yourname</div>
+                        <div class="lp-phone__link"><i class="bi bi-globe me-1"></i> My Website</div>
+                        <div class="lp-phone__link"><i class="bi bi-youtube me-1"></i> YouTube Channel</div>
+                        <div class="lp-phone__link"><i class="bi bi-cart me-1"></i> Shop Now</div>
+                        <div class="lp-phone__link"><i class="bi bi-file-earmark-text me-1"></i> Free Guide</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Who It's For -->
+        <div class="lp-audience" data-animate>
+            <h3 class="lp-audience__title">Built for creators who take engagement seriously.</h3>
+            <div class="lp-audience__cols">
+                <div class="lp-audience__col lp-audience__col--good">
+                    <h4>Good fit</h4>
+                    <ul>
+                        <li>Creators and businesses getting comments</li>
+                        <li>Anyone manually replying to DMs</li>
+                        <li>Anyone selling, booking, or capturing leads</li>
+                    </ul>
+                </div>
+                <div class="lp-audience__col lp-audience__col--not">
+                    <h4>Not for</h4>
+                    <ul>
+                        <li>Spammy mass DMs</li>
+                        <li>Fake engagement</li>
+                        <li>Growth hacks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== 8. FINAL CTA ==================== -->
+<section class="lp-cta" data-animate>
+    <div class="lp-cta__orb lp-cta__orb--1"></div>
+    <div class="lp-cta__orb lp-cta__orb--2"></div>
+    <div class="lp-cta__orb lp-cta__orb--3"></div>
+    <div class="container">
+        <div class="lp-cta__inner">
+            <h2>Stop losing conversations you already earned.</h2>
+            <div class="lp-cta__actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'flow_list' %}" class="lp-btn lp-btn--white">Go to Dashboard</a>
+                {% else %}
+                <a href="{% url 'signup' %}" class="lp-btn lp-btn--white">Start free</a>
+                {% endif %}
+            </div>
+            <p class="lp-cta__note">No credit card. Cancel anytime.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== STYLES ==================== -->
 <style>
-/* ========== Base ========== */
+/* ========== Design System ========== */
 :root {
-    --text-primary: #1a1a2e;
-    --text-secondary: #4a4a68;
-    --text-muted: #7a7a8c;
-    --bg-white: #fff;
-    --bg-light: #f8f9fc;
-    --bg-soft: #f0f2f8;
-    --bg-dark: #1a1a2e;
-    --accent: #6366f1;
-    --accent-light: #818cf8;
-    --accent-soft: #eef2ff;
-    --border: #e5e7eb;
-    --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    --lp-dark: #09090b;
+    --lp-dark-soft: #18181b;
+    --lp-text: #fafafa;
+    --lp-text-secondary: #a1a1aa;
+    --lp-accent: #6366f1;
+    --lp-accent-light: #818cf8;
+    --lp-border: rgba(0,0,0,0.06);
+    --lp-border-dark: rgba(255,255,255,0.08);
+    --lp-bg: #ffffff;
+    --lp-bg-soft: #f9fafb;
+    --lp-text-dark: #09090b;
+    --lp-text-dark-secondary: #52525b;
 }
 
-.text-gradient {
-    background: var(--gradient);
+/* ========== Typography ========== */
+.lp-gradient-text {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-/* ========== Hero ========== */
-.hero {
-    padding: 8rem 0 6rem;
-    background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg-white) 100%);
-    position: relative;
+.lp-section__title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
 }
 
-.hero::before {
-    content: '';
+/* ========== Buttons ========== */
+.lp-btn {
+    display: inline-block;
+    background: var(--lp-accent);
+    color: #fff;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+}
+
+.lp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+    color: #fff;
+}
+
+.lp-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--lp-border-dark);
+    color: var(--lp-text-secondary);
+    box-shadow: none;
+}
+
+.lp-btn--ghost:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.15);
+    color: #fff;
+    box-shadow: none;
+}
+
+.lp-btn--white {
+    background: #fff;
+    color: var(--lp-dark);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+
+.lp-btn--white:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    color: var(--lp-dark);
+}
+
+/* ========== Scroll Fade-in ========== */
+[data-animate] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+[data-animate].is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ========== 1. HERO ========== */
+.lp-hero {
+    background: var(--lp-dark);
+    padding: 7rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.lp-hero__glow {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 50%;
-    height: 100%;
-    background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%);
     pointer-events: none;
 }
 
-.hero-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
+.lp-hero__noise {
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
 }
 
-.hero-content {
-    max-width: 600px;
+.lp-hero__inner {
     position: relative;
     z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
-/* Hero Visual */
-.hero-visual {
+.lp-hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(99,102,241,0.15);
+    color: var(--lp-accent-light);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+}
+
+.lp-hero__headline {
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--lp-text);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.03em;
+}
+
+.lp-hero__desc {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    line-height: 1.7;
+    color: var(--lp-text-secondary);
+    margin-bottom: 2.5rem;
+}
+
+.lp-hero__actions {
     display: flex;
+    gap: 1rem;
     justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3.5rem;
 }
 
-.hero-demo {
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    border-radius: 20px;
+/* Browser chrome */
+.lp-hero__browser {
+    background: var(--lp-dark-soft);
+    border: 1px solid var(--lp-border-dark);
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 520px;
+    margin: 0 auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.lp-browser__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--lp-border-dark);
+}
+
+.lp-browser__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+}
+
+.lp-browser__dot:first-child { background: #ef4444; }
+.lp-browser__dot:nth-child(2) { background: #eab308; }
+.lp-browser__dot:nth-child(3) { background: #22c55e; }
+
+.lp-browser__url {
+    flex: 1;
+    text-align: center;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.04);
+    padding: 0.3rem 1rem;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+}
+
+.lp-browser__body {
     padding: 1.5rem;
-    width: 100%;
-    max-width: 340px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
-.demo-comment {
+/* Demo inside browser */
+.lp-demo__comment {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: var(--bg-light);
-    padding: 1rem;
+    background: rgba(255,255,255,0.05);
+    padding: 0.875rem;
     border-radius: 12px;
     margin-bottom: 1rem;
 }
 
-.demo-avatar {
-    width: 40px;
-    height: 40px;
+.lp-demo__avatar {
+    width: 38px;
+    height: 38px;
     background: linear-gradient(135deg, #f59e0b, #ea580c);
     border-radius: 50%;
     display: flex;
@@ -1024,53 +973,54 @@
     justify-content: center;
     color: white;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
     flex-shrink: 0;
 }
 
-.demo-comment-content {
+.lp-demo__comment-body {
     display: flex;
     flex-direction: column;
+    text-align: left;
 }
 
-.demo-username {
+.lp-demo__user {
     font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--lp-text);
+}
+
+.lp-demo__text {
     font-size: 0.85rem;
-    color: var(--text-primary);
+    color: var(--lp-text-secondary);
 }
 
-.demo-text {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.demo-arrow {
+.lp-demo__arrow {
     display: flex;
     justify-content: center;
-    color: var(--accent);
+    color: var(--lp-accent-light);
     margin-bottom: 1rem;
 }
 
-.demo-actions {
+.lp-demo__actions {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.625rem;
     margin-bottom: 1rem;
 }
 
-.demo-action {
+.lp-demo__action {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: var(--bg-light);
-    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.04);
+    padding: 0.625rem 0.875rem;
     border-radius: 10px;
-    border-left: 3px solid var(--accent);
+    border-left: 3px solid var(--lp-accent);
 }
 
-.demo-action .action-icon {
-    width: 32px;
-    height: 32px;
+.lp-demo__action-icon {
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -1078,747 +1028,393 @@
     flex-shrink: 0;
 }
 
-.demo-action .action-icon.blue {
-    background: #dbeafe;
-    color: #2563eb;
-}
+.lp-demo__action-icon--blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.lp-demo__action-icon--indigo { background: rgba(99,102,241,0.15); color: #a5b4fc; }
 
-.demo-action .action-icon.indigo {
-    background: #e0e7ff;
-    color: #4f46e5;
-}
-
-.action-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.action-label {
-    font-size: 0.75rem;
+.lp-demo__action-label {
+    display: block;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--lp-text);
 }
 
-.action-text {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+.lp-demo__action-text {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--lp-text-secondary);
 }
 
-.demo-badge {
+.lp-demo__badge {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     font-size: 0.8rem;
-    color: var(--accent);
+    color: var(--lp-accent-light);
     font-weight: 500;
 }
 
-.badge-dot {
+.lp-demo__dot {
     width: 8px;
     height: 8px;
     background: #22c55e;
     border-radius: 50%;
 }
 
-.meta-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 0.85rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    margin-bottom: 1.5rem;
+/* ========== 2. TRUST BAR ========== */
+.lp-trust {
+    background: var(--lp-bg-soft);
+    border-bottom: 1px solid var(--lp-border);
+    padding: 0.75rem 0;
 }
 
-.meta-badge svg {
-    color: var(--accent);
-}
-
-.hero-headline {
-    font-size: 3rem;
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.02em;
-}
-
-.hero-desc {
-    font-size: 1.25rem;
-    line-height: 1.7;
-    color: var(--text-secondary);
-    margin-bottom: 2.5rem;
-}
-
-.hero-actions {
+.lp-trust__inner {
     display: flex;
-    gap: 1rem;
+    justify-content: center;
+    gap: 2rem;
     flex-wrap: wrap;
 }
 
-.btn-primary {
-    display: inline-block;
-    background: var(--gradient);
-    color: var(--bg-white);
-    padding: 1rem 2rem;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1rem;
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
-    color: var(--bg-white);
-}
-
-.btn-secondary {
-    display: inline-block;
-    background: var(--bg-white);
-    color: var(--text-primary);
-    padding: 1rem 2rem;
-    border-radius: 10px;
-    font-weight: 500;
-    font-size: 1rem;
-    text-decoration: none;
-    border: 1px solid var(--border);
-    transition: background 0.2s, border-color 0.2s;
-}
-
-.btn-secondary:hover {
-    background: var(--bg-light);
-    border-color: #d1d5db;
-    color: var(--text-primary);
-}
-
-/* ========== Sections ========== */
-.section {
-    padding: 5rem 0;
-}
-
-.section h2 {
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 2rem;
-    letter-spacing: -0.02em;
-}
-
-/* ========== Problem Section ========== */
-.problem-section {
-    background: var(--bg-white);
-    border-top: 1px solid var(--border);
-}
-
-.problem-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+.lp-trust__item {
+    display: flex;
     align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--lp-text-dark-secondary);
 }
 
-.problem-content {
-    max-width: 500px;
+.lp-trust__item svg {
+    color: var(--lp-accent);
+    flex-shrink: 0;
 }
 
-.problem-content h2 {
-    color: var(--text-primary);
-    background: linear-gradient(135deg, var(--text-primary) 0%, #4a4a68 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+/* ========== 3. PROBLEM + REFRAME ========== */
+.lp-problem {
+    background: var(--lp-bg);
+    padding-top: 5rem;
+    padding-bottom: 5rem;
 }
 
-.problem-text p {
-    font-size: 1.15rem;
-    line-height: 1.8;
-    color: var(--text-secondary);
-    margin-bottom: 1.5rem;
+.lp-problem__top {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 3rem;
 }
 
-/* Problem Visual */
-.problem-visual {
+.lp-problem__top .lp-section__title {
+    color: var(--lp-text-dark);
+}
+
+.lp-problem__sub {
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    line-height: 1.7;
+    color: var(--lp-text-dark-secondary);
+}
+
+.lp-problem__visual {
     display: flex;
     justify-content: center;
+    margin-bottom: 4rem;
 }
 
-.missed-comments {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
+.lp-missed {
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
     border-radius: 16px;
     padding: 1.25rem;
     width: 100%;
-    max-width: 360px;
+    max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
 }
 
-.missed-comment {
+.lp-missed__item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: var(--bg-white);
+    background: #fff;
     border-radius: 10px;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.625rem;
     opacity: 0.7;
     border-left: 3px solid #fca5a5;
 }
 
-.missed-avatar {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-light);
-    border: 1px solid var(--border);
+.lp-missed__avatar {
+    width: 34px;
+    height: 34px;
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
+    color: var(--lp-text-dark-secondary);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     flex-shrink: 0;
 }
 
-.missed-content {
-    flex: 1;
-    min-width: 0;
-}
+.lp-missed__body { flex: 1; min-width: 0; }
 
-.missed-user {
+.lp-missed__user {
     display: block;
     font-weight: 600;
-    font-size: 0.8rem;
-    color: var(--text-primary);
+    font-size: 0.78rem;
+    color: var(--lp-text-dark);
 }
 
-.missed-text {
+.lp-missed__text {
     display: block;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    font-size: 0.82rem;
+    color: var(--lp-text-dark-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.missed-time {
-    font-size: 0.75rem;
+.lp-missed__time {
+    font-size: 0.72rem;
     color: #ef4444;
     font-weight: 500;
     flex-shrink: 0;
 }
 
-.missed-label {
+.lp-missed__label {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: #ef4444;
     font-weight: 500;
     padding-top: 0.5rem;
 }
 
-/* ========== Reframe Section ========== */
-.reframe-section {
-    background: var(--bg-light);
+/* Reframe */
+.lp-reframe {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
 }
 
-.reframe-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
+.lp-reframe__title {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    font-weight: 700;
+    color: var(--lp-accent);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
 }
 
-.reframe-content {
-    max-width: 500px;
+.lp-reframe__points {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
 }
 
-.reframe-content h2 {
-    color: var(--accent);
-}
-
-.reframe-points {
-    margin-bottom: 2.5rem;
-}
-
-.reframe-point {
+.lp-reframe__point {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 0;
-    font-size: 1.1rem;
-    color: var(--text-secondary);
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: var(--lp-text-dark-secondary);
 }
 
-.point-marker {
+.lp-reframe__dot {
     width: 8px;
     height: 8px;
-    background: var(--accent);
+    background: var(--lp-accent);
     border-radius: 50%;
     flex-shrink: 0;
 }
 
-.reframe-key {
-    font-size: 1.25rem;
+.lp-reframe__key {
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--text-primary);
-    line-height: 1.6;
+    color: var(--lp-text-dark);
+    margin-bottom: 2.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--lp-border);
 }
 
-/* Reframe Visual */
-.reframe-visual {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.conversation-flow {
+/* Flow */
+.lp-flow {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    background: var(--bg-white);
-    padding: 1.5rem 2rem;
+    background: var(--lp-bg-soft);
+    padding: 1.25rem 2rem;
     border-radius: 16px;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid var(--lp-border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    flex-wrap: wrap;
 }
 
-.flow-step {
+.lp-flow__step {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
-.flow-step span {
-    font-size: 0.75rem;
+.lp-flow__step span {
+    font-size: 0.72rem;
     font-weight: 500;
-    color: var(--text-muted);
+    color: var(--lp-text-dark-secondary);
 }
 
-.flow-step.highlight span {
-    color: var(--accent);
+.lp-flow__step--highlight span {
+    color: var(--lp-accent);
     font-weight: 600;
 }
 
-.flow-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+.lp-flow__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.flow-icon.post {
-    background: #fef3c7;
-    color: #d97706;
-}
+.lp-flow__icon--post { background: #fef3c7; color: #d97706; }
+.lp-flow__icon--comment { background: #e0e7ff; color: #4f46e5; }
+.lp-flow__icon--reply { background: #dbeafe; color: #2563eb; }
+.lp-flow__icon--dm { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #6366f1; }
+.lp-flow__icon--convert { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #16a34a; }
 
-.flow-icon.comment {
-    background: #e0e7ff;
-    color: #4f46e5;
-}
-
-.flow-icon.reply {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.flow-icon.dm {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    color: #6366f1;
-}
-
-.flow-icon.convert {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-    color: #16a34a;
-}
-
-.flow-connector-line {
+.lp-flow__line {
     width: 24px;
     height: 2px;
-    background: var(--border);
+    background: rgba(0,0,0,0.1);
 }
 
-.flow-label {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
+/* ========== 4. BENTO ========== */
+.lp-what {
+    background: var(--lp-bg-soft);
+    padding: 5rem 0;
 }
 
-/* ========== What Section ========== */
-.what-section {
-    background: var(--bg-white);
+.lp-what .lp-section__title {
+    color: var(--lp-text-dark);
 }
 
-.what-grid {
+.lp-bento {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1.25rem;
     margin-top: 2rem;
 }
 
-.what-block {
-    background: var(--bg-light);
+.lp-bento__card {
+    background: #fff;
     padding: 2rem;
     border-radius: 16px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--lp-border);
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.what-block:hover {
-    border-color: rgba(99, 102, 241, 0.3);
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);
+.lp-bento__card:hover {
+    border-color: rgba(99,102,241,0.2);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.06);
 }
 
-.what-block h3 {
-    font-size: 1.05rem;
+.lp-bento__card h3 {
+    font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--lp-text-dark);
     margin-bottom: 0.5rem;
 }
 
-.what-block p {
+.lp-bento__card p {
     font-size: 0.95rem;
-    color: var(--text-secondary);
+    color: var(--lp-text-dark-secondary);
     line-height: 1.6;
     margin: 0;
 }
 
-.what-block.highlight {
-    background: linear-gradient(135deg, var(--accent-soft) 0%, #f5f3ff 100%);
-    border-color: rgba(99, 102, 241, 0.3);
+.lp-bento__card--primary {
+    grid-row: 1 / 3;
+    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+    border-color: rgba(99,102,241,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.lp-bento__card--primary h3 {
+    font-size: 1.35rem;
+}
+
+.lp-bento__card--primary p {
+    font-size: 1.05rem;
+}
+
+.lp-bento__card--ai {
     position: relative;
 }
 
-.what-badge {
+.lp-bento__badge {
     position: absolute;
     top: -8px;
     right: 16px;
-    background: var(--gradient);
+    background: var(--lp-accent);
     color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.25rem 0.6rem;
-    border-radius: 4px;
-    letter-spacing: 0.05em;
-}
-
-/* ========== AI Section ========== */
-.ai-section {
-    background: var(--bg-dark);
-    position: relative;
-    overflow: hidden;
-}
-
-.ai-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 60%;
-    height: 100%;
-    background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.ai-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 4rem;
-    align-items: center;
-}
-
-.ai-content {
-    position: relative;
-    z-index: 1;
-}
-
-.ai-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(99, 102, 241, 0.2);
-    color: var(--accent-light);
-    font-size: 0.85rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    margin-bottom: 1.5rem;
-}
-
-.ai-section h2 {
-    color: var(--bg-white);
-    font-size: 2.25rem;
-}
-
-.ai-desc {
-    font-size: 1.15rem;
-    line-height: 1.8;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 2rem;
-}
-
-.ai-features {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-}
-
-.ai-feature {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.ai-check {
-    color: #22c55e;
-    font-weight: 600;
-}
-
-/* AI Chat Demo */
-.ai-visual {
-    position: relative;
-    z-index: 1;
-}
-
-.ai-chat-demo {
-    background: var(--bg-white);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 400px;
-    margin-left: auto;
-}
-
-.chat-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    background: var(--gradient);
-    color: white;
-}
-
-.chat-header-avatar {
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-header-name {
-    display: block;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-.chat-header-status {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.75rem;
-    opacity: 0.9;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    background: #22c55e;
-    border-radius: 50%;
-}
-
-.chat-messages {
-    padding: 1rem;
-    max-height: 380px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-}
-
-.chat-msg {
-    padding: 0.7rem 1rem;
-    border-radius: 16px;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    max-width: 85%;
-}
-
-.chat-msg.incoming {
-    background: var(--bg-light);
-    color: var(--text-primary);
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-}
-
-.chat-msg.outgoing {
-    background: var(--gradient);
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-    position: relative;
-}
-
-.chat-msg.outgoing.ai {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-}
-
-.ai-indicator {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.25);
     font-size: 0.6rem;
     font-weight: 700;
-    padding: 0.15rem 0.4rem;
-    border-radius: 3px;
-    margin-right: 0.4rem;
-    vertical-align: middle;
-}
-
-.chat-footer {
-    padding: 0.75rem 1rem;
-    background: #f0fdf4;
-    border-top: 1px solid #bbf7d0;
-}
-
-.data-collected {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.data-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #16a34a;
-    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
     letter-spacing: 0.05em;
 }
 
-.data-tag {
-    font-size: 0.7rem;
-    background: white;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+/* ========== 5. BUILDER + TABS ========== */
+.lp-builder {
+    background: var(--lp-bg);
+    padding: 5rem 0;
 }
 
-/* ========== How Section ========== */
-.how-section {
-    background: var(--bg-light);
+.lp-builder .lp-section__title {
+    color: var(--lp-text-dark);
 }
 
-.steps {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.step {
-    position: relative;
-    background: var(--bg-white);
-    padding: 1.5rem;
-    border-radius: 16px;
-    border: 1px solid var(--border);
-}
-
-.step-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: var(--gradient);
-    color: var(--bg-white);
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-
-.step h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.step p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    margin: 0;
-}
-
-/* ========== Builder Demo Section ========== */
-.builder-demo-section {
-    background: var(--bg-white);
-    overflow: hidden;
-}
-
-.builder-demo-header {
+.lp-builder__header {
     text-align: center;
     max-width: 600px;
     margin: 0 auto 3rem;
 }
 
-.builder-demo-header h2 {
-    margin-bottom: 0.75rem;
-}
-
-.builder-demo-header p {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
+.lp-builder__header p {
+    font-size: 1.05rem;
+    color: var(--lp-text-dark-secondary);
     margin: 0;
 }
 
-.builder-demo-wrapper {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    align-items: center;
-}
-
-.builder-canvas {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
+.lp-builder__canvas {
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
     border-radius: 20px;
     padding: 2rem;
     position: relative;
-    min-height: 480px;
+    min-height: 440px;
     overflow: hidden;
+    margin-bottom: 3rem;
 }
 
-.canvas-grid {
+.lp-canvas__grid {
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
     background-size: 20px 20px;
     pointer-events: none;
 }
 
-.flow-builder-demo {
+.lp-canvas__flow {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1826,170 +1422,108 @@
     z-index: 1;
 }
 
-/* Builder Nodes */
-.builder-node {
-    background: var(--bg-white);
-    border: 1px solid var(--border);
+/* Nodes */
+.lp-node {
+    background: #fff;
+    border: 1px solid var(--lp-border);
     border-radius: 12px;
     width: 240px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
     overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.builder-node:hover {
+.lp-node:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
-.builder-node .node-header {
+.lp-node__header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    font-size: 0.75rem;
+    padding: 0.55rem 0.875rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: white;
 }
 
-.builder-node .node-header.orange {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-}
+.lp-node__header--orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.lp-node__header--green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.lp-node__header--blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.lp-node__header--purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
-.builder-node .node-header.green {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-}
-
-.builder-node .node-header.blue {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-}
-
-.builder-node .node-header.purple {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-}
-
-.builder-node .node-body {
-    padding: 0.75rem 1rem;
-}
-
-.builder-node .node-label {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-}
-
-.builder-node .node-value {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.builder-node .node-preview {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
+.lp-node__body { padding: 0.625rem 0.875rem; }
+.lp-node__label { font-size: 0.68rem; color: var(--lp-text-dark-secondary); margin-bottom: 0.2rem; }
+.lp-node__value { font-size: 0.82rem; font-weight: 600; color: var(--lp-text-dark); }
+.lp-node__preview {
+    font-size: 0.72rem;
+    color: var(--lp-text-dark-secondary);
     line-height: 1.4;
-    padding: 0.5rem;
-    background: var(--bg-light);
+    padding: 0.4rem;
+    background: var(--lp-bg-soft);
     border-radius: 6px;
-    margin-top: 0.5rem;
+    margin-top: 0.4rem;
 }
 
-/* Connector */
-.connector-svg {
-    margin: 0.5rem 0;
-}
+.lp-connector { margin: 0.5rem 0; }
 
-/* Branch Container */
-.branch-container {
+/* Branch */
+.lp-branch {
     position: relative;
     width: 280px;
     height: 50px;
     margin: 0.5rem 0;
 }
 
-.branch-line-left,
-.branch-line-right {
+.lp-branch__line-left,
+.lp-branch__line-right {
     position: absolute;
     top: 0;
     width: 50%;
     height: 100%;
-    border: 2px dashed var(--accent);
+    border: 2px dashed var(--lp-accent);
     border-top: none;
 }
 
-.branch-line-left {
-    left: 0;
-    border-right: none;
-    border-radius: 0 0 0 16px;
-}
+.lp-branch__line-left { left: 0; border-right: none; border-radius: 0 0 0 16px; }
+.lp-branch__line-right { right: 0; border-left: none; border-radius: 0 0 16px 0; }
 
-.branch-line-right {
-    right: 0;
-    border-left: none;
-    border-radius: 0 0 16px 0;
-}
-
-.branch-label-yes,
-.branch-label-no {
+.lp-branch__label {
     position: absolute;
     bottom: 0;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    padding: 0.2rem 0.5rem;
+    padding: 0.15rem 0.45rem;
     border-radius: 4px;
 }
 
-.branch-label-yes {
-    left: 15%;
-    background: #dcfce7;
-    color: #16a34a;
-}
+.lp-branch__label--yes { left: 15%; background: #dcfce7; color: #16a34a; }
+.lp-branch__label--no { right: 15%; background: #fee2e2; color: #dc2626; }
 
-.branch-label-no {
-    right: 15%;
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-/* Branch Nodes */
-.branch-nodes {
+.lp-branch__nodes {
     display: flex;
     gap: 2rem;
     margin-top: 0.5rem;
 }
 
-.branch-nodes .builder-node {
-    width: 200px;
-}
+.lp-branch__nodes .lp-node { width: 200px; }
 
-/* Drag Cursor Animation */
-.drag-cursor {
-    position: absolute;
-    top: 30%;
-    right: 15%;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Animations */
+/* Node animations */
 .animate-node {
     opacity: 0;
     transform: translateY(20px);
-    animation: nodeAppear 0.5s ease forwards;
+    animation: lpNodeAppear 0.5s ease forwards;
 }
 
 .animate-connector {
     opacity: 0;
-    animation: connectorDraw 0.4s ease forwards;
+    animation: lpFade 0.4s ease forwards;
 }
 
 .animate-branch {
     opacity: 0;
-    animation: branchAppear 0.5s ease forwards;
-}
-
-.animate-cursor {
-    animation: cursorMove 4s ease-in-out infinite;
+    animation: lpFade 0.5s ease forwards;
 }
 
 .delay-1 { animation-delay: 0.2s; }
@@ -1999,1121 +1533,1056 @@
 .delay-5 { animation-delay: 1.8s; }
 .delay-6 { animation-delay: 2s; }
 
-@keyframes nodeAppear {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes lpNodeAppear {
+    to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes connectorDraw {
-    to {
-        opacity: 1;
-    }
+@keyframes lpFade {
+    to { opacity: 1; }
 }
 
-@keyframes branchAppear {
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes cursorMove {
-    0%, 100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-    10% {
-        opacity: 0.8;
-    }
-    30% {
-        opacity: 0.8;
-        transform: translate(-60px, 40px);
-    }
-    50% {
-        opacity: 0.8;
-        transform: translate(-100px, 100px);
-    }
-    70% {
-        opacity: 0.8;
-        transform: translate(-40px, 160px);
-    }
-    90% {
-        opacity: 0;
-        transform: translate(-80px, 200px);
-    }
-}
-
-/* Builder Demo Info */
-.builder-demo-info h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-}
-
-.builder-demo-info > p {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-}
-
-.demo-features {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+/* Tabs */
+.lp-tabs {
     margin-bottom: 2rem;
 }
 
-.demo-feature {
+.lp-tabs__nav {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
+    gap: 0;
+    background: var(--lp-bg-soft);
+    border-radius: 12px;
+    padding: 0.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--lp-border);
+    overflow-x: auto;
 }
 
-.feature-check {
-    color: #22c55e;
-    font-weight: 600;
+.lp-tabs__radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* ========== Features Section ========== */
-.features-section {
-    background: var(--bg-light);
-}
-
-.features-header {
+.lp-tabs__tab {
+    flex: 1;
     text-align: center;
-    max-width: 600px;
-    margin: 0 auto 3rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--lp-text-dark-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
-.features-header h2 {
-    margin-bottom: 0.75rem;
+/* Active tab highlight via labels */
+#tab-messages:checked ~ .lp-tabs__nav label[for="tab-messages"],
+#tab-interactive:checked ~ .lp-tabs__nav label[for="tab-interactive"],
+#tab-logic:checked ~ .lp-tabs__nav label[for="tab-logic"],
+#tab-tracking:checked ~ .lp-tabs__nav label[for="tab-tracking"] {
+    background: #fff;
+    color: var(--lp-text-dark);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.features-header p {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    margin: 0;
+.lp-tabs__panels { position: relative; }
+
+.lp-tabs__panel {
+    display: none;
+    gap: 1.5rem;
 }
 
-.features-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.feature-row {
+/* CSS-only tab switching */
+#tab-messages:checked ~ .lp-tabs__panels #panel-messages,
+#tab-interactive:checked ~ .lp-tabs__panels #panel-interactive,
+#tab-logic:checked ~ .lp-tabs__panels #panel-logic,
+#tab-tracking:checked ~ .lp-tabs__panels #panel-tracking {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: center;
-    background: var(--bg-white);
-    border-radius: 20px;
-    padding: 2.5rem;
-    border: 1px solid var(--border);
 }
 
-.feature-row.reverse {
-    direction: rtl;
-}
-
-.feature-row.reverse > * {
-    direction: ltr;
-}
-
-.feature-info {
+.lp-tabs__grid {
     display: flex;
-    gap: 1.25rem;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.feature-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+.lp-tabs__card {
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.lp-tabs__card h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--lp-text-dark);
+    margin-bottom: 0.4rem;
+}
+
+.lp-tabs__card p {
+    font-size: 0.88rem;
+    color: var(--lp-text-dark-secondary);
+    line-height: 1.55;
+    margin: 0 0 0.6rem;
+}
+
+.lp-tabs__card--ai {
+    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+    border-color: rgba(99,102,241,0.2);
+}
+
+.lp-tabs__card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-bottom: 0.75rem;
     flex-shrink: 0;
 }
 
-.feature-icon.blue {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #2563eb;
-}
+.lp-tabs__card-icon--blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+.lp-tabs__card-icon--indigo { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #4f46e5; }
+.lp-tabs__card-icon--teal { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
+.lp-tabs__card-icon--purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #7c3aed; }
+.lp-tabs__card-icon--pink { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #db2777; }
+.lp-tabs__card-icon--green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #16a34a; }
+.lp-tabs__card-icon--orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #ea580c; }
+.lp-tabs__card-icon--gray { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); color: #4b5563; }
+.lp-tabs__card-icon--ai { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
 
-.feature-icon.indigo {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    color: #4f46e5;
-}
-
-.feature-icon.purple {
-    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-    color: #7c3aed;
-}
-
-.feature-icon.pink {
-    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-    color: #db2777;
-}
-
-.feature-icon.teal {
-    background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-    color: #0d9488;
-}
-
-.feature-icon.green {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-    color: #16a34a;
-}
-
-.feature-icon.orange {
-    background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
-    color: #ea580c;
-}
-
-.feature-icon.gray {
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-    color: #4b5563;
-}
-
-.feature-info h3 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.feature-info p {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin: 0 0 0.75rem;
-}
-
-.feature-tag {
+.lp-tabs__tag {
     display: inline-block;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-muted);
-    background: var(--bg-light);
-    padding: 0.3rem 0.6rem;
+    color: var(--lp-text-dark-secondary);
+    background: rgba(0,0,0,0.04);
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
 }
 
-/* Feature Previews */
-.feature-preview {
+.lp-badge-new {
+    display: inline-block;
+    background: var(--lp-accent);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+}
+
+/* Tab previews */
+.lp-tabs__preview {
     display: flex;
+    align-items: flex-start;
     justify-content: center;
 }
 
-/* Comment Preview */
-.preview-comment-box {
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+.lp-preview-dm {
+    background: #fff;
+    border: 1px solid var(--lp-border);
+    border-radius: 14px;
     width: 100%;
     max-width: 320px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
-.preview-post-header {
+.lp-preview-dm__header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--lp-border);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--lp-text-dark);
 }
 
-.preview-avatar {
-    width: 32px;
-    height: 32px;
-    background: var(--gradient);
+.lp-preview-dm__avatar {
+    width: 30px;
+    height: 30px;
+    background: var(--lp-accent);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #fff;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
-.preview-avatar.small {
-    width: 28px;
-    height: 28px;
-    font-size: 0.7rem;
-}
+.lp-preview-dm__avatar--sm { width: 26px; height: 26px; font-size: 0.65rem; }
 
-.preview-username {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-primary);
-}
+.lp-preview-dm__body { padding: 1rem; }
 
-.preview-comments {
-    padding: 1rem;
-}
-
-.preview-comment {
-    margin-bottom: 0.75rem;
-}
-
-.preview-comment:last-child {
-    margin-bottom: 0;
-}
-
-.preview-comment .comment-user {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    margin-right: 0.5rem;
-}
-
-.preview-comment .comment-text {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.preview-comment.reply {
-    padding-left: 1rem;
-    border-left: 2px solid var(--accent);
-    background: var(--accent-soft);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0 8px 8px 0;
-    margin-top: 0.5rem;
-}
-
-/* DM Preview */
-.preview-dm-box {
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 300px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-}
-
-.dm-header {
+.lp-preview-dm__post-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+}
+
+.lp-preview-dm__username {
     font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-primary);
+    font-size: 0.8rem;
+    color: var(--lp-text-dark);
 }
 
-.dm-messages {
-    padding: 1rem;
+.lp-preview-dm__comment,
+.lp-preview-dm__reply {
+    font-size: 0.82rem;
+    margin-bottom: 0.5rem;
+    color: var(--lp-text-dark-secondary);
 }
 
-.dm-bubble {
-    padding: 0.75rem 1rem;
-    border-radius: 18px;
-    font-size: 0.85rem;
+.lp-preview-dm__comment-user {
+    font-weight: 600;
+    color: var(--lp-text-dark);
+    margin-right: 0.4rem;
+    font-size: 0.78rem;
+}
+
+.lp-preview-dm__reply {
+    padding: 0.4rem 0.65rem;
+    background: #eef2ff;
+    border-left: 2px solid var(--lp-accent);
+    border-radius: 0 8px 8px 0;
+}
+
+.lp-preview-dm__bubble {
+    background: var(--lp-bg-soft);
+    padding: 0.65rem 0.875rem;
+    border-radius: 14px;
+    font-size: 0.82rem;
     line-height: 1.5;
-    max-width: 90%;
-}
-
-.dm-bubble.sent {
-    background: var(--bg-light);
-    color: var(--text-primary);
+    color: var(--lp-text-dark);
+    margin-top: 0.75rem;
     border-bottom-left-radius: 4px;
 }
 
-.dm-quick-replies {
+.lp-preview-dm__qr {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
 }
 
-.qr-button {
-    background: var(--bg-white);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 0.5rem 1rem;
+.lp-qr-btn {
+    background: #fff;
+    border: 1px solid var(--lp-accent);
+    color: var(--lp-accent);
+    padding: 0.4rem 0.8rem;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    cursor: pointer;
 }
 
-.dm-button-template {
+.lp-preview-dm__buttons {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
     margin-top: 0.75rem;
 }
 
-.template-button {
+.lp-template-btn {
     display: block;
     text-align: center;
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    color: var(--accent);
-    padding: 0.6rem 1rem;
+    background: #fff;
+    border: 1px solid var(--lp-border);
+    color: var(--lp-accent);
+    padding: 0.5rem 0.8rem;
     border-radius: 8px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 500;
     text-decoration: none;
 }
 
-.dm-link-preview {
-    margin-top: 0.75rem;
-    background: var(--bg-light);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.link-preview-content {
-    padding: 0.75rem;
-}
-
-.link-domain {
-    display: block;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.25rem;
-}
-
-.link-title {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-/* Condition Preview */
-.preview-condition-box {
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+/* Condition preview */
+.lp-preview-condition {
+    background: #fff;
+    border: 1px solid var(--lp-border);
+    border-radius: 14px;
     padding: 1.5rem;
     width: 100%;
     max-width: 320px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
-.condition-node {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
+.lp-preview-condition__node {
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
     border-radius: 8px;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 1rem;
     text-align: center;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--lp-text-dark);
     margin-bottom: 1rem;
 }
 
-.condition-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.condition-branches {
+.lp-preview-condition__branches {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
+    gap: 0.65rem;
 }
 
-.condition-branch {
-    text-align: center;
-}
+.lp-preview-condition__branch { text-align: center; }
 
-.branch-label {
+.lp-preview-condition__label {
     display: inline-block;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
     text-transform: uppercase;
-    padding: 0.25rem 0.5rem;
+    padding: 0.2rem 0.45rem;
     border-radius: 4px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
-.condition-branch.yes .branch-label {
-    background: #dcfce7;
-    color: #16a34a;
-}
+.lp-preview-condition__branch--yes .lp-preview-condition__label { background: #dcfce7; color: #16a34a; }
+.lp-preview-condition__branch--no .lp-preview-condition__label { background: #fee2e2; color: #dc2626; }
 
-.condition-branch.no .branch-label {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.branch-result {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
+.lp-preview-condition__result {
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
     border-radius: 8px;
-    padding: 0.6rem;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
+    padding: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--lp-text-dark-secondary);
     line-height: 1.4;
 }
 
-/* Logs Preview */
-.preview-logs-box {
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+/* Logs preview */
+.lp-preview-logs {
+    background: #fff;
+    border: 1px solid var(--lp-border);
+    border-radius: 14px;
     width: 100%;
     max-width: 340px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
-.log-header {
-    padding: 0.75rem 1rem;
-    background: var(--bg-light);
-    border-bottom: 1px solid var(--border);
-    font-size: 0.8rem;
+.lp-preview-logs__header {
+    padding: 0.65rem 1rem;
+    background: var(--lp-bg-soft);
+    border-bottom: 1px solid var(--lp-border);
+    font-size: 0.78rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--lp-text-dark);
 }
 
-.log-entries {
-    padding: 0.75rem;
-}
+.lp-preview-logs__entries { padding: 0.65rem; }
 
-.log-entry {
+.lp-preview-logs__entry {
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
-    padding: 0.4rem 0.5rem;
+    padding: 0.35rem 0.45rem;
     border-radius: 4px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
 }
 
-.log-entry:nth-child(odd) {
-    background: var(--bg-light);
+.lp-preview-logs__entry:nth-child(odd) { background: var(--lp-bg-soft); }
+
+.lp-preview-logs__time { color: var(--lp-text-dark-secondary); font-size: 0.68rem; flex-shrink: 0; }
+.lp-preview-logs__action { color: var(--lp-text-dark); font-weight: 500; }
+.lp-preview-logs__detail { color: var(--lp-text-dark-secondary); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.lp-builder__cta {
+    text-align: center;
 }
 
-.log-time {
-    color: var(--text-muted);
-    font-size: 0.7rem;
-    flex-shrink: 0;
-}
-
-.log-action {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.log-detail {
-    color: var(--text-muted);
-    font-style: italic;
-    white-space: nowrap;
+/* ========== 6. AI SECTION ========== */
+.lp-ai {
+    background: var(--lp-dark);
+    position: relative;
     overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 5rem 0;
 }
 
-/* AI Feature Row */
-.ai-feature-row {
-    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
-    border-color: rgba(99, 102, 241, 0.3);
+.lp-ai__noise {
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
 }
 
-.feature-icon.ai-icon {
-    background: var(--gradient);
-    color: white;
+.lp-ai__glow {
+    position: absolute;
+    top: 30%;
+    right: 10%;
+    width: 500px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, transparent 70%);
+    pointer-events: none;
 }
 
-.new-badge {
-    display: inline-block;
-    background: var(--gradient);
-    color: white;
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    margin-left: 0.5rem;
-    vertical-align: middle;
+.lp-ai__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
-/* AI Preview Box */
-.preview-ai-box {
-    background: var(--bg-white);
-    border: 2px solid rgba(99, 102, 241, 0.3);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 300px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
-}
-
-.ai-preview-header {
-    display: flex;
+.lp-ai__badge {
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: var(--gradient);
-    color: white;
-    font-size: 0.8rem;
-    font-weight: 600;
+    background: rgba(99,102,241,0.2);
+    color: var(--lp-accent-light);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.45rem 0.875rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
 }
 
-.ai-preview-msgs {
-    padding: 0.75rem;
+.lp-ai h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.lp-ai__desc {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 2rem;
+}
+
+.lp-ai__features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 2rem;
+}
+
+.lp-ai__feature {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8);
+}
+
+.lp-ai__check { color: #22c55e; font-weight: 600; }
+
+/* AI chat demo */
+.lp-ai__chat {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(139,92,246,0.15);
+    max-width: 400px;
+    margin-left: auto;
+    border: 1px solid rgba(139,92,246,0.2);
+}
+
+.lp-ai__chat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.875rem 1.25rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+}
+
+.lp-ai__chat-avatar {
+    width: 38px;
+    height: 38px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lp-ai__chat-name { display: block; font-weight: 600; font-size: 0.92rem; }
+
+.lp-ai__chat-status {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    opacity: 0.9;
+}
+
+.lp-ai__status-dot {
+    width: 7px;
+    height: 7px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+.lp-ai__chat-msgs {
+    padding: 0.875rem;
+    max-height: 340px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.ai-preview-msg {
-    padding: 0.5rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    line-height: 1.4;
+.lp-ai__msg {
+    padding: 0.6rem 0.875rem;
+    border-radius: 16px;
+    font-size: 0.82rem;
+    line-height: 1.5;
     max-width: 85%;
 }
 
-.ai-preview-msg.user {
-    background: var(--bg-light);
-    color: var(--text-primary);
+.lp-ai__msg--in {
+    background: #f4f4f5;
+    color: var(--lp-text-dark);
     align-self: flex-start;
+    border-bottom-left-radius: 4px;
 }
 
-.ai-preview-msg.bot {
-    background: var(--accent-soft);
-    color: var(--accent);
+.lp-ai__msg--out {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
     align-self: flex-end;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-bottom-right-radius: 4px;
 }
 
-.ai-preview-footer {
-    padding: 0.5rem 1rem;
+.lp-ai__indicator {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 0.12rem 0.35rem;
+    border-radius: 3px;
+    margin-right: 0.35rem;
+    vertical-align: middle;
+}
+
+.lp-ai__chat-footer {
+    padding: 0.65rem 1rem;
     background: #f0fdf4;
     border-top: 1px solid #bbf7d0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
 }
 
-.ai-preview-collected {
-    font-size: 0.7rem;
+.lp-ai__data-label {
+    font-size: 0.68rem;
+    font-weight: 600;
     color: #16a34a;
-    font-weight: 600;
-}
-
-/* ========== Audience Section ========== */
-.audience-section {
-    background: var(--bg-white);
-}
-
-.audience-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-.audience-block {
-    padding: 2rem;
-    border-radius: 16px;
-}
-
-.audience-block.good {
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-    border: 1px solid #bbf7d0;
-}
-
-.audience-block.not {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
-}
-
-.audience-block h3 {
-    font-size: 0.85rem;
-    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+.lp-ai__data-tag {
+    font-size: 0.68rem;
+    background: #fff;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+}
+
+/* ========== 7. COMBO SECTION ========== */
+.lp-combo {
+    background: var(--lp-bg-soft);
+    padding: 5rem 0;
+}
+
+.lp-combo .lp-section__title {
+    color: var(--lp-text-dark);
+}
+
+/* Steps strip */
+.lp-steps {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0 4rem;
+    overflow-x: auto;
+}
+
+.lp-steps__item {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--lp-border);
+}
+
+.lp-steps__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--lp-accent);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.lp-steps__item strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--lp-text-dark);
+    margin-bottom: 0.2rem;
+}
+
+.lp-steps__item span {
+    font-size: 0.82rem;
+    color: var(--lp-text-dark-secondary);
+    line-height: 1.4;
+}
+
+/* Link in Bio */
+.lp-linkbio {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+    align-items: center;
+    background: #fff;
+    border-radius: 20px;
+    padding: 3rem;
+    border: 1px solid var(--lp-border);
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+}
+
+.lp-linkbio__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    color: #fff;
+    padding: 0.3rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.78rem;
+    font-weight: 600;
     margin-bottom: 1rem;
 }
 
-.audience-block.good h3 {
-    color: #16a34a;
+.lp-linkbio__content h3 {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 700;
+    color: var(--lp-text-dark);
+    margin-bottom: 0.75rem;
 }
 
-.audience-block.not h3 {
-    color: var(--text-muted);
+.lp-linkbio__content p {
+    font-size: 1rem;
+    color: var(--lp-text-dark-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
 }
 
-.audience-block ul {
+.lp-linkbio__features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.lp-linkbio__features li {
+    font-size: 0.88rem;
+    color: var(--lp-text-dark-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.lp-check { color: #10b981; font-weight: 700; }
+
+/* Phone mockup */
+.lp-phone {
+    width: 230px;
+    background: var(--lp-dark);
+    border-radius: 28px;
+    padding: 10px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+}
+
+.lp-phone__notch {
+    width: 70px;
+    height: 5px;
+    background: #333;
+    border-radius: 3px;
+    margin: 0 auto 12px;
+}
+
+.lp-phone__screen {
+    background: linear-gradient(180deg, #f09433 0%, #e6683c 30%, #dc2743 60%, #cc2366 100%);
+    border-radius: 20px;
+    padding: 1.5rem 1rem 1.25rem;
+    text-align: center;
+}
+
+.lp-phone__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.35rem;
+}
+
+.lp-phone__name { color: #fff; font-weight: 700; font-size: 0.92rem; }
+.lp-phone__handle { color: rgba(255,255,255,0.7); font-size: 0.75rem; margin-bottom: 1rem; }
+
+.lp-phone__link {
+    background: rgba(255,255,255,0.95);
+    color: var(--lp-dark);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+/* Audience */
+.lp-audience {
+    text-align: center;
+}
+
+.lp-audience__title {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 700;
+    color: var(--lp-text-dark);
+    margin-bottom: 1.5rem;
+}
+
+.lp-audience__cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.lp-audience__col {
+    padding: 1.5rem;
+    border-radius: 14px;
+}
+
+.lp-audience__col--good {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 1px solid #bbf7d0;
+}
+
+.lp-audience__col--not {
+    background: var(--lp-bg-soft);
+    border: 1px solid var(--lp-border);
+}
+
+.lp-audience__col h4 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.lp-audience__col--good h4 { color: #16a34a; }
+.lp-audience__col--not h4 { color: var(--lp-text-dark-secondary); }
+
+.lp-audience__col ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.audience-block li {
-    padding: 0.5rem 0;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.audience-block.good li::before {
-    content: "✓";
-    color: #16a34a;
-    font-weight: 600;
-}
-
-.audience-block.not li::before {
-    content: "✗";
-    color: var(--text-muted);
-}
-
-/* ========== Proof Section ========== */
-.proof-section {
-    background: var(--bg-light);
-    padding: 3rem 0;
-}
-
-/* Platform Stats */
-.platform-stats {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-}
-
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.stat-value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1;
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.stat-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-top: 0.25rem;
-}
-
-.stat-divider {
-    width: 1px;
-    height: 40px;
-    background: var(--border);
-}
-
-/* Users Ticker */
-.users-ticker-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-}
-
-.users-ticker-label {
+.lp-audience__col li {
+    padding: 0.35rem 0;
+    font-size: 0.88rem;
+    color: var(--lp-text-dark-secondary);
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
 }
 
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: #22c55e;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
+.lp-audience__col--good li::before { content: "\2713"; color: #16a34a; font-weight: 600; }
+.lp-audience__col--not li::before { content: "\2717"; color: var(--lp-text-dark-secondary); }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.2); }
-}
-
-.users-ticker-wrapper {
-    width: 100%;
-    max-width: 600px;
-    overflow: hidden;
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-}
-
-.users-ticker {
-    display: flex;
-    gap: 2rem;
-    animation: ticker 20s linear infinite;
-    width: max-content;
-}
-
-.ticker-username {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    white-space: nowrap;
-    padding: 0.5rem 1rem;
-    background: var(--bg-white);
-    border-radius: 50px;
-    border: 1px solid var(--border);
-}
-
-@keyframes ticker {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
-}
-
-/* Trust Badges */
-.proof-items {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.proof-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    background: var(--bg-white);
-    padding: 0.6rem 1rem;
-    border-radius: 50px;
-    border: 1px solid var(--border);
-}
-
-.proof-item svg {
-    color: var(--accent);
-    flex-shrink: 0;
-}
-
-/* ========== CTA Section ========== */
-.cta-section {
-    background: var(--bg-dark);
+/* ========== 8. CTA ========== */
+.lp-cta {
+    background: var(--lp-dark);
     text-align: center;
+    padding: 5rem 0;
     position: relative;
     overflow: hidden;
 }
 
-.cta-section::before {
-    content: '';
+.lp-cta__orb {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+    border-radius: 50%;
+    filter: blur(80px);
     pointer-events: none;
+    animation: lpOrb 8s ease-in-out infinite alternate;
 }
 
-.cta-content {
-    max-width: 500px;
-    margin: 0 auto;
+.lp-cta__orb--1 {
+    width: 300px;
+    height: 300px;
+    background: rgba(99,102,241,0.15);
+    top: -100px;
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.lp-cta__orb--2 {
+    width: 250px;
+    height: 250px;
+    background: rgba(139,92,246,0.12);
+    bottom: -80px;
+    right: 15%;
+    animation-delay: -3s;
+}
+
+.lp-cta__orb--3 {
+    width: 200px;
+    height: 200px;
+    background: rgba(168,85,247,0.1);
+    top: 40%;
+    left: 60%;
+    animation-delay: -5s;
+}
+
+@keyframes lpOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -20px) scale(1.1); }
+    100% { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+.lp-cta__inner {
     position: relative;
     z-index: 1;
+    max-width: 560px;
+    margin: 0 auto;
 }
 
-.cta-content h2 {
-    color: var(--bg-white);
+.lp-cta h2 {
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 700;
+    color: #fff;
     margin-bottom: 2rem;
+    letter-spacing: -0.02em;
 }
 
-.cta-actions {
-    margin-bottom: 1rem;
+.lp-cta__actions { margin-bottom: 1rem; }
+
+.lp-cta__note {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.5);
 }
 
-.cta-section .btn-primary {
-    background: var(--bg-white);
-    color: var(--text-primary);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-}
-
-.cta-section .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    color: var(--text-primary);
-}
-
-.cta-note {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-/* ========== Responsive ========== */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
-    .hero-grid,
-    .problem-grid,
-    .reframe-grid,
-    .ai-grid {
+    .lp-ai__grid {
         grid-template-columns: 1fr;
         gap: 2.5rem;
     }
 
-    .ai-chat-demo {
+    .lp-ai__chat {
         margin: 0 auto;
     }
 
-    /* Hero: content first, then visual */
-    .hero-content {
-        order: 1;
-    }
-    .hero-visual {
-        order: 2;
+    .lp-builder__canvas {
+        min-height: auto;
+        padding: 1.5rem;
     }
 
-    /* Other sections: visual first */
-    .problem-visual,
-    .reframe-visual {
-        order: -1;
-    }
-
-    .steps {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .feature-row {
+    .lp-linkbio {
+        grid-template-columns: 1fr;
         gap: 2rem;
         padding: 2rem;
     }
 
-    .conversation-flow {
-        flex-wrap: wrap;
+    .lp-linkbio__phone {
+        display: flex;
         justify-content: center;
     }
 
-    /* Builder Demo */
-    .builder-demo-wrapper {
+    #tab-messages:checked ~ .lp-tabs__panels #panel-messages,
+    #tab-interactive:checked ~ .lp-tabs__panels #panel-interactive,
+    #tab-logic:checked ~ .lp-tabs__panels #panel-logic,
+    #tab-tracking:checked ~ .lp-tabs__panels #panel-tracking {
         grid-template-columns: 1fr;
-        gap: 2rem;
     }
 
-    .builder-canvas {
-        min-height: 420px;
-        padding: 1.5rem;
-    }
-
-    .builder-demo-info {
-        text-align: center;
-    }
-
-    .demo-features {
-        align-items: center;
+    .lp-tabs__preview {
+        margin-top: 1rem;
     }
 }
 
 @media (max-width: 768px) {
-    .hero {
-        padding: 5rem 0 4rem;
+    .lp-hero {
+        padding: 5rem 0 3rem;
     }
 
-    .hero::before {
-        width: 100%;
-    }
-
-    .hero-headline {
-        font-size: 2rem;
-    }
-
-    .hero-desc {
-        font-size: 1.1rem;
-    }
-
-    .hero-desc br,
-    .problem-text br,
-    .reframe-key br,
-    .ai-desc br {
+    .lp-hero__desc br,
+    .lp-problem__sub br,
+    .lp-ai__desc br {
         display: none;
     }
 
-    .ai-section h2 {
-        font-size: 1.5rem;
-    }
-
-    .ai-chat-demo {
-        max-width: 100%;
-    }
-
-    .chat-messages {
-        max-height: 320px;
-    }
-
-    .section {
-        padding: 3rem 0;
-    }
-
-    .section h2 {
-        font-size: 1.5rem;
-    }
-
-    .hero-grid,
-    .problem-grid,
-    .reframe-grid {
-        gap: 2rem;
-    }
-
-    .hero-demo,
-    .missed-comments {
-        max-width: 100%;
-    }
-
-    .what-grid,
-    .steps,
-    .audience-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .feature-row {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        padding: 1.5rem;
-    }
-
-    .feature-row.reverse {
-        direction: ltr;
-    }
-
-    .feature-info {
+    .lp-hero__actions {
         flex-direction: column;
-        gap: 1rem;
+        align-items: center;
     }
 
-    .feature-preview {
-        order: -1;
-    }
-
-    .preview-dm-box,
-    .preview-comment-box,
-    .preview-condition-box,
-    .preview-logs-box {
-        max-width: 100%;
-    }
-
-    .features-header {
-        margin-bottom: 2rem;
-    }
-
-    .features-header p {
-        font-size: 1rem;
-    }
-
-    .hero-actions {
-        flex-direction: column;
-    }
-
-    .btn-primary,
-    .btn-secondary {
+    .lp-btn {
         width: 100%;
         text-align: center;
+        max-width: 320px;
     }
 
-    .platform-stats {
-        gap: 1rem;
+    .lp-hero__browser {
+        max-width: 100%;
     }
 
-    .stat-value {
-        font-size: 1.75rem;
+    .lp-trust__inner {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .stat-label {
-        font-size: 0.75rem;
+    .lp-problem { padding: 3rem 0; }
+
+    .lp-bento {
+        grid-template-columns: 1fr;
     }
 
-    .stat-divider {
-        height: 30px;
+    .lp-bento__card--primary {
+        grid-row: auto;
     }
 
-    .user-avatar-wrapper {
+    .lp-section__title {
+        font-size: clamp(1.5rem, 5vw, 2rem);
+    }
+
+    .lp-flow {
+        gap: 0.25rem;
+        padding: 1rem;
+    }
+
+    .lp-flow__icon {
         width: 34px;
         height: 34px;
-        margin-left: -10px;
     }
 
-    .proof-items {
+    .lp-flow__line { width: 12px; }
+    .lp-flow__step span { font-size: 0.65rem; }
+
+    .lp-reframe__points {
         flex-direction: column;
         align-items: center;
         gap: 0.75rem;
     }
 
-    .proof-item {
-        width: 100%;
-        justify-content: center;
+    /* Builder nodes mobile */
+    .lp-node { width: 180px; }
+    .lp-branch__nodes .lp-node { width: 150px; }
+    .lp-branch__nodes { gap: 1rem; }
+    .lp-branch { width: 220px; }
+    .lp-node__preview { font-size: 0.65rem; }
+
+    .lp-tabs__nav {
+        gap: 0;
     }
 
-    .cta-section {
-        padding: 4rem 0;
+    .lp-tabs__tab {
+        font-size: 0.75rem;
+        padding: 0.6rem 0.5rem;
     }
 
-    .conversation-flow {
-        padding: 1rem;
-        gap: 0.25rem;
+    /* Steps mobile */
+    .lp-steps {
+        flex-direction: column;
     }
 
-    .flow-icon {
-        width: 36px;
-        height: 36px;
+    .lp-steps__item {
+        min-width: auto;
     }
 
-    .flow-connector-line {
-        width: 12px;
+    /* Audience mobile */
+    .lp-audience__cols {
+        grid-template-columns: 1fr;
     }
 
-    .flow-step span {
-        font-size: 0.65rem;
+    /* AI section mobile */
+    .lp-ai h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+
+    .lp-ai__chat {
+        max-width: 100%;
     }
 
-    /* Builder Demo Mobile */
-    .builder-canvas {
-        min-height: auto;
-        padding: 1rem;
+    .lp-ai__chat-msgs {
+        max-height: 300px;
     }
 
-    .builder-node {
-        width: 180px;
-    }
-
-    .branch-nodes .builder-node {
-        width: 150px;
-    }
-
-    .branch-nodes {
-        gap: 1rem;
-    }
-
-    .branch-container {
-        width: 220px;
-    }
-
-    .builder-node .node-preview {
-        font-size: 0.65rem;
-    }
-
-    .drag-cursor {
-        display: none;
-    }
-
-    .builder-demo-info h3 {
-        font-size: 1.25rem;
+    .lp-linkbio__features {
+        grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 480px) {
+    .lp-builder__canvas {
+        padding: 1rem 0.5rem;
+    }
+
+    .lp-node { width: 160px; }
+    .lp-branch__nodes .lp-node { width: 130px; }
+    .lp-branch { width: 180px; }
+    .lp-branch__nodes { gap: 0.5rem; }
+    .lp-node__header { font-size: 0.65rem; padding: 0.4rem 0.6rem; }
+    .lp-node__body { padding: 0.4rem 0.6rem; }
+}
 </style>
+
+<!-- ==================== JS: IntersectionObserver ==================== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var els = document.querySelectorAll('[data-animate]');
+    if (!els.length) return;
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    els.forEach(function(el) { observer.observe(el); });
+});
+</script>
+
 {% endblock %}

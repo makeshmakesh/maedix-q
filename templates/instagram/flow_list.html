@@ -837,6 +837,12 @@
                                 Connect Instagram
                             </button>
                         </form>
+                        <div class="mt-4 pt-3" style="border-top: 1px solid #f0f0f0;">
+                            <p class="text-muted mb-2" style="font-size: 0.85rem;">Meanwhile, set up your public profile</p>
+                            <a href="{% url 'profile_links_manage' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-link-45deg me-1"></i> Set Up Link in Bio
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -889,13 +895,15 @@
                                 Upgrade
                             </a>
                             {% endif %}
+                            <a href="{% url 'profile_links_manage' %}" class="btn-template" title="Set up your Link in Bio page">
+                                <i class="bi bi-link-45deg"></i>
+                                Bio Link
+                            </a>
                             <a href="{% url 'queued_flows' %}" class="btn-template" title="{% if queued_count > 0 %}{{ queued_count }} queued flows{% else %}API Usage: {{ calls_last_hour }}/{{ rate_limit }}{% endif %}">
                                 <i class="bi bi-{% if queued_count > 0 %}hourglass-split{% else %}speedometer2{% endif %}"></i>
-                                {% if queued_count > 0 %}Queue ({{ queued_count }}){% else %} 1hr {{ calls_last_hour }}/{{ rate_limit }}{% endif %}
                             </a>
                             <a href="{% url 'flow_builder_help' %}" class="btn-template" title="Learn about node types and how to build flows">
                                 <i class="bi bi-question-circle"></i>
-                                Guide
                             </a>
                         </div>
                     </div>

@@ -1,8 +1,18 @@
+import re
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import UserProfile
+from .models import UserProfile, ProfileLink, generate_unique_username
 
 User = get_user_model()
+
+RESERVED_USERNAMES = {
+    'admin', 'administrator', 'users', 'user', 'instagram', 'blog', 'static',
+    'media', 'api', 'settings', 'login', 'signup', 'logout', 'profile',
+    'dashboard', 'help', 'support', 'about', 'contact', 'terms', 'privacy',
+    'pricing', 'home', 'root', 'www', 'mail', 'ftp', 'ssh', 'test',
+    'maedix', 'system', 'moderator', 'mod', 'staff', 'null', 'undefined',
+    'quiz', 'youtube', 'roleplay', 'games', 'core', 'sitemap', 'robots',
+}
 
 
 class SignupForm(forms.ModelForm):
@@ -51,6 +61,7 @@ class SignupForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
+        user.username = generate_unique_username(user.email)
         if commit:
             user.save()
         return user
@@ -80,8 +91,26 @@ class UserForm(forms.ModelForm):
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'pattern': '[a-zA-Z0-9_]+',
+            }),
         }
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip().lower()
+        if len(username) < 3:
+            raise forms.ValidationError('Username must be at least 3 characters.')
+        if len(username) > 30:
+            raise forms.ValidationError('Username must be 30 characters or fewer.')
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise forms.ValidationError('Username may only contain letters, numbers, and underscores.')
+        if username in RESERVED_USERNAMES:
+            raise forms.ValidationError('This username is reserved. Please choose another.')
+        # Case-insensitive uniqueness check (exclude current user)
+        if User.objects.filter(username__iexact=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('This username is already taken.')
+        return username
 
 
 class ProfileForm(forms.ModelForm):
@@ -119,3 +148,27 @@ class OTPVerificationForm(forms.Form):
         if not otp.isdigit():
             raise forms.ValidationError('OTP must contain only digits')
         return otp
+
+
+class ProfileLinkForm(forms.ModelForm):
+    """Form for adding/editing a profile link."""
+    class Meta:
+        model = ProfileLink
+        fields = ['title', 'url', 'icon']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. My Website',
+            }),
+            'url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://example.com',
+            }),
+            'icon': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. bi-globe (optional)',
+            }),
+        }
+        help_texts = {
+            'icon': 'Bootstrap icon class. Examples: bi-globe, bi-github, bi-youtube, bi-instagram, bi-linkedin, bi-twitter-x',
+        }

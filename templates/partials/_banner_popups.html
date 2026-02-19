@@ -1,0 +1,176 @@
+{% if popup_banners %}
+{{ popup_banners|json_script:"popup-banners-data" }}
+
+<div id="popup-banner-overlay" class="popup-banner-overlay" style="display:none">
+    <div class="popup-banner-card">
+        <img id="popup-banner-image" class="popup-banner-image" src="" alt="" style="display:none">
+        <div class="popup-banner-body">
+            <h4 id="popup-banner-title" class="popup-banner-title"></h4>
+            <p id="popup-banner-message" class="popup-banner-message"></p>
+            <div class="popup-banner-actions">
+                <a id="popup-banner-cta" href="#" class="btn btn-primary btn-sm" style="display:none"></a>
+                <button id="popup-banner-dismiss" type="button" class="btn btn-outline-secondary btn-sm">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.popup-banner-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    animation: popupFadeIn 0.25s ease;
+}
+
+@keyframes popupFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.popup-banner-card {
+    background: var(--bg-white, #fff);
+    border-radius: var(--radius, 12px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    max-width: 540px;
+    width: 100%;
+    overflow: hidden;
+    animation: popupSlideUp 0.3s ease;
+}
+
+@keyframes popupSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.popup-banner-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+.popup-banner-body {
+    padding: 1.5rem;
+}
+
+.popup-banner-title {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark, #1f2937);
+}
+
+.popup-banner-message {
+    color: var(--text-muted, #6b7280);
+    margin-bottom: 1.25rem;
+    line-height: 1.6;
+}
+
+.popup-banner-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+@media (max-width: 576px) {
+    .popup-banner-card {
+        max-width: 100%;
+    }
+
+    .popup-banner-image {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .popup-banner-body {
+        padding: 1.25rem;
+    }
+}
+</style>
+
+<script>
+(function() {
+    const dataEl = document.getElementById('popup-banners-data');
+    if (!dataEl) return;
+
+    let popups;
+    try {
+        popups = JSON.parse(dataEl.textContent);
+    } catch (e) {
+        return;
+    }
+    if (!popups || popups.length === 0) return;
+
+    const dismissedKey = 'dismissed_banners';
+    const dismissed = JSON.parse(localStorage.getItem(dismissedKey) || '[]');
+
+    // Filter out dismissed popups
+    const active = popups.filter(p => !dismissed.includes(String(p.id)));
+    if (active.length === 0) return;
+
+    const overlay = document.getElementById('popup-banner-overlay');
+    const imgEl = document.getElementById('popup-banner-image');
+    const titleEl = document.getElementById('popup-banner-title');
+    const msgEl = document.getElementById('popup-banner-message');
+    const ctaEl = document.getElementById('popup-banner-cta');
+    const dismissBtn = document.getElementById('popup-banner-dismiss');
+
+    let currentIdx = 0;
+
+    function showPopup(idx) {
+        const popup = active[idx];
+        if (!popup) return;
+
+        if (popup.image_url) {
+            imgEl.src = popup.image_url;
+            imgEl.alt = popup.title;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+
+        titleEl.textContent = popup.title;
+        msgEl.textContent = popup.message;
+
+        if (popup.link_url) {
+            ctaEl.href = popup.link_url;
+            ctaEl.textContent = popup.link_text || 'Learn More';
+            ctaEl.style.display = '';
+        } else {
+            ctaEl.style.display = 'none';
+        }
+
+        overlay.style.display = 'flex';
+    }
+
+    function dismissCurrent() {
+        const popup = active[currentIdx];
+        if (popup && popup.is_dismissible !== false) {
+            dismissed.push(String(popup.id));
+            localStorage.setItem(dismissedKey, JSON.stringify(dismissed));
+        }
+
+        currentIdx++;
+        if (currentIdx < active.length) {
+            showPopup(currentIdx);
+        } else {
+            overlay.style.display = 'none';
+        }
+    }
+
+    dismissBtn.addEventListener('click', dismissCurrent);
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) dismissCurrent();
+    });
+
+    showPopup(0);
+})();
+</script>
+{% endif %}

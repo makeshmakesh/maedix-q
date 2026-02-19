@@ -381,6 +381,28 @@
                         {% endfor %}
                     </tr>
 
+                    <!-- Link in Bio -->
+                    <tr>
+                        <td class="py-3">
+                            <i class="bi bi-link-45deg text-danger me-2"></i>
+                            <strong>Link in Bio</strong>
+                            <br><small class="text-muted">Public profile page at maedix.com/@you</small>
+                        </td>
+                        {% for item in plans_with_pricing %}
+                        <td class="py-3 text-center align-middle">
+                            {% for f in item.plan.features %}
+                                {% if f.code == 'profile_links' %}
+                                    {% if f.limit %}
+                                    <strong>{{ f.limit }} links</strong>
+                                    {% else %}
+                                    <span class="text-success fw-bold">Unlimited</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+
                     <!-- Lead Collection -->
                     <tr class="table-light">
                         <td class="py-3">

@@ -17,6 +17,15 @@ urlpatterns = [
     path('settings/delete-account/', views.DeleteAccountView.as_view(), name='delete_account'),
     path('subscription/', views.SubscriptionView.as_view(), name='subscription'),
 
+    # Profile Links Management
+    path('profile/links/', views.ProfileLinksManageView.as_view(), name='profile_links_manage'),
+    path('profile/links/add/', views.ProfileLinkAddView.as_view(), name='profile_link_add'),
+    path('profile/links/<int:pk>/edit/', views.ProfileLinkEditView.as_view(), name='profile_link_edit'),
+    path('profile/links/<int:pk>/delete/', views.ProfileLinkDeleteView.as_view(), name='profile_link_delete'),
+    path('profile/links/<int:pk>/toggle/', views.ProfileLinkToggleView.as_view(), name='profile_link_toggle'),
+    path('profile/links/reorder/', views.ProfileLinksReorderView.as_view(), name='profile_links_reorder'),
+    path('profile/links/analytics/', views.ProfileAnalyticsView.as_view(), name='profile_analytics'),
+
     # Password Reset URLs
     path('password/reset/', auth_views.PasswordResetView.as_view(
         template_name='users/password-reset.html',

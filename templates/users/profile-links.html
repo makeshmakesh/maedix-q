@@ -1,0 +1,433 @@
+{% extends 'base.html' %}
+
+{% block title %}Link in Bio{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lib-header {
+        background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        border-radius: var(--radius);
+        padding: 1.25rem 1.5rem;
+        color: #fff;
+        position: relative;
+    }
+    .lib-header::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .lib-header a, .lib-header button { position: relative; z-index: 1; }
+    .lib-header .btn-view { border: 1px solid rgba(255,255,255,0.4); color: #fff; background: transparent; text-decoration: none; }
+    .lib-header .btn-view:hover { background: rgba(255,255,255,0.2); border-color: #fff; color: #fff; }
+    .lib-header .btn-add {
+        background: #fff;
+        color: #cc2366;
+        border: none;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .lib-header .btn-add:hover { background: #f8f8f8; color: #cc2366; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+    .url-bar {
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        padding: 0.4rem 0.5rem 0.4rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .url-bar code {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .url-bar .btn-copy {
+        border-radius: 50px;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.75rem;
+        font-weight: 600;
+        background: var(--bg-gray);
+        border: none;
+        color: var(--text-dark);
+        white-space: nowrap;
+    }
+    .url-bar .btn-copy:hover { background: var(--border-color); }
+
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .stat-pill strong {
+        color: var(--text-dark);
+        font-size: 0.85rem;
+    }
+    .stat-pill .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .link-card {
+        touch-action: none;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        background: var(--bg-white);
+        padding: 0.875rem 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    .link-card:hover {
+        border-color: rgba(var(--primary-rgb), 0.3);
+        box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.08);
+    }
+    .link-card.dragging { opacity: 0.4; border-style: dashed; }
+
+    .link-icon-box {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--primary-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .link-icon-box.inactive {
+        background: var(--bg-gray);
+        color: var(--text-muted);
+    }
+
+    .link-url-preview {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .click-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--bg-gray);
+        color: var(--text-muted);
+        border-radius: 50px;
+        padding: 0.2rem 0.55rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-white);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        transition: all 0.15s;
+        cursor: pointer;
+        padding: 0;
+    }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
+
+    .drag-handle { cursor: grab; color: var(--border-color); transition: color 0.15s; }
+    .drag-handle:hover { color: var(--text-muted); }
+
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+    .empty-state-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--primary-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+
+    @media (max-width: 575.98px) {
+        .lib-header { padding: 1rem 1rem; border-radius: var(--radius-sm); }
+        .lib-header h4 { font-size: 1.1rem; }
+        .link-card { padding: 0.65rem 0.75rem; }
+        .link-icon-box { width: 32px; height: 32px; border-radius: 8px; font-size: 0.85rem; }
+        .action-btn { width: 28px; height: 28px; font-size: 0.7rem; }
+        .stat-pill { font-size: 0.7rem; padding: 0.25rem 0.6rem; }
+        .stat-pill strong { font-size: 0.78rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-3 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <!-- Gradient Header -->
+                <div class="lib-header mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="fw-bold mb-0"><i class="bi bi-link-45deg me-1"></i> Link in Bio</h4>
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if link_count >= link_limit %}
+                                <a href="{% url 'subscription' %}" class="btn btn-add btn-sm px-3 py-1">
+                                    <i class="bi bi-arrow-up-circle me-1"></i>Upgrade
+                                </a>
+                            {% else %}
+                                <a href="{% url 'profile_link_add' %}" class="btn btn-add btn-sm px-3 py-1">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Link
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'public_profile' request.user.username %}" class="btn btn-view btn-sm px-2 py-1" target="_blank" title="View public profile">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL Bar -->
+                <div class="url-bar mb-1">
+                    <code id="profileUrl">{{ request.scheme }}://{{ request.get_host }}/@{{ request.user.username }}/</code>
+                    <button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('profileUrl').textContent.trim()).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})">Copy</button>
+                </div>
+                <div class="mb-3" style="padding-left: 1rem;">
+                    <a href="{% url 'profile_edit' %}" class="text-muted text-decoration-none" style="font-size: 0.72rem;">
+                        Want a different username? <span style="color: var(--primary); font-weight: 600;">Change it</span>
+                    </a>
+                </div>
+
+                <!-- Stats Pills -->
+                <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                    <div class="stat-pill">
+                        <span class="dot" style="background: var(--primary);"></span>
+                        <strong>{{ total_views }}</strong> views
+                    </div>
+                    <div class="stat-pill">
+                        <span class="dot" style="background: var(--success);"></span>
+                        <strong>{{ total_clicks }}</strong> clicks
+                    </div>
+                    <div class="stat-pill">
+                        <span class="dot" style="background: var(--warning);"></span>
+                        <strong>{{ ctr }}%</strong> CTR
+                    </div>
+                    <a href="{% url 'profile_analytics' %}" class="stat-pill text-decoration-none" style="color: var(--primary);">
+                        <i class="bi bi-bar-chart-line"></i> Details
+                    </a>
+                    <div class="ms-auto stat-pill">
+                        <i class="bi bi-layers"></i>
+                        {{ link_count }}<span class="opacity-50">/</span>{{ link_limit }}
+                    </div>
+                </div>
+
+                {% if excess_links > 0 %}
+                <div class="alert alert-warning py-2 px-3 small mb-3" style="border-radius: var(--radius-sm);">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    {{ excess_links }} link{{ excess_links|pluralize }} over limit — hidden on public profile.
+                    <a href="{% url 'subscription' %}" class="fw-semibold">Upgrade</a>
+                </div>
+                {% endif %}
+
+                <!-- Links List -->
+                <div id="linksList">
+                    {% for item in links_with_stats %}
+                    <div class="link-card" data-link-id="{{ item.link.id }}">
+                        <!-- Desktop layout -->
+                        <div class="d-none d-md-flex align-items-center gap-3">
+                            <div class="drag-handle">
+                                <i class="bi bi-grip-vertical fs-5"></i>
+                            </div>
+                            <div class="link-icon-box {% if not item.link.is_active %}inactive{% endif %}">
+                                <i class="bi {{ item.link.icon|default:'bi-link-45deg' }}"></i>
+                            </div>
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="fw-semibold" style="font-size: 0.9rem;">
+                                    {{ item.link.title }}
+                                    {% if not item.link.is_active %}<span class="badge bg-secondary ms-1" style="font-size:0.6rem;">Hidden</span>{% endif %}
+                                </div>
+                                <div class="text-muted link-url-preview" style="font-size: 0.75rem;">{{ item.link.url }}</div>
+                            </div>
+                            <div class="click-badge" title="Total / Unique">
+                                <i class="bi bi-cursor"></i> {{ item.link.click_count }}<span class="opacity-50">/</span>{{ item.unique_clicks }}
+                            </div>
+                            <div class="d-flex gap-1">
+                                <form method="post" action="{% url 'profile_link_toggle' item.link.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn" title="{% if item.link.is_active %}Hide{% else %}Show{% endif %}">
+                                        <i class="bi {% if item.link.is_active %}bi-eye{% else %}bi-eye-slash{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'profile_link_edit' item.link.id %}" class="action-btn" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{% url 'profile_link_delete' item.link.id %}" onsubmit="return confirm('Delete this link?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Mobile layout -->
+                        <div class="d-md-none">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="drag-handle">
+                                    <i class="bi bi-grip-vertical"></i>
+                                </div>
+                                <div class="link-icon-box {% if not item.link.is_active %}inactive{% endif %}">
+                                    <i class="bi {{ item.link.icon|default:'bi-link-45deg' }}"></i>
+                                </div>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="fw-semibold" style="font-size: 0.85rem;">
+                                        {{ item.link.title }}
+                                        {% if not item.link.is_active %}<span class="badge bg-secondary ms-1" style="font-size:0.55rem;">Hidden</span>{% endif %}
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="click-badge">
+                                            <i class="bi bi-cursor"></i> {{ item.link.click_count }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <form method="post" action="{% url 'profile_link_toggle' item.link.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn">
+                                            <i class="bi {% if item.link.is_active %}bi-eye{% else %}bi-eye-slash{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'profile_link_edit' item.link.id %}" class="action-btn">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'profile_link_delete' item.link.id %}" onsubmit="return confirm('Delete this link?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-link-45deg"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">No links yet</h6>
+                        <p class="text-muted small mb-3">Add your first link to start sharing.</p>
+                        {% if link_count < link_limit %}
+                        <a href="{% url 'profile_link_add' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Add Your First Link
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const list = document.getElementById('linksList');
+    if (!list) return;
+    let dragEl = null;
+
+    list.querySelectorAll('.drag-handle').forEach(handle => {
+        const card = handle.closest('.link-card');
+        card.setAttribute('draggable', 'true');
+        card.addEventListener('dragstart', e => {
+            dragEl = card;
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            dragEl = null;
+            saveOrder();
+        });
+        card.addEventListener('dragover', e => {
+            e.preventDefault();
+            if (dragEl && dragEl !== card) {
+                const rect = card.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                if (e.clientY < mid) {
+                    list.insertBefore(dragEl, card);
+                } else {
+                    list.insertBefore(dragEl, card.nextSibling);
+                }
+            }
+        });
+        handle.addEventListener('touchstart', () => {
+            dragEl = card;
+            card.classList.add('dragging');
+        }, { passive: true });
+    });
+
+    document.addEventListener('touchmove', e => {
+        if (!dragEl) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!target) return;
+        const tc = target.closest('.link-card');
+        if (tc && tc !== dragEl) {
+            const rect = tc.getBoundingClientRect();
+            if (touch.clientY < rect.top + rect.height / 2) {
+                list.insertBefore(dragEl, tc);
+            } else {
+                list.insertBefore(dragEl, tc.nextSibling);
+            }
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        if (!dragEl) return;
+        dragEl.classList.remove('dragging');
+        dragEl = null;
+        saveOrder();
+    });
+
+    function saveOrder() {
+        const ids = Array.from(list.querySelectorAll('.link-card[data-link-id]'))
+            .map(c => parseInt(c.dataset.linkId));
+        fetch('{% url "profile_links_reorder" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ order: ids }),
+        });
+    }
+})();
+</script>
+{% endblock %}

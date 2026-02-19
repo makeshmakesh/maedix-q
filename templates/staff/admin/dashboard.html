@@ -210,10 +210,10 @@
                             <tbody>
                                 {% for u in funnel.messages_sent.users %}
                                 <tr>
-                                    <td>{{ u.user__email|default:u.account__user__email }}</td>
-                                    <td>@{{ u.username|default:u.account__username }}</td>
-                                    <td>{{ u.total_dms_sent|default:u.dms }}</td>
-                                    <td>{{ u.total_comments_replied|default:u.comments }}</td>
+                                    <td>{{ u.email }}</td>
+                                    <td>@{{ u.username }}</td>
+                                    <td>{{ u.dms }}</td>
+                                    <td>{{ u.comments }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="4" class="text-muted text-center">None</td></tr>

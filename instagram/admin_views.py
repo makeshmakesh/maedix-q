@@ -98,11 +98,11 @@ class AdminDashboardView(StaffRequiredMixin, View):
             user_qs = user_qs.filter(date_joined__gte=start_date)
         signups = user_qs.order_by('-date_joined')
         signup_count = signups.count()
-        google_count = signups.filter(password='!').count()
+        google_count = signups.filter(password__startswith='!').count()
         password_count = signup_count - google_count
         signup_users = list(signups.values('id', 'email', 'first_name', 'last_name', 'date_joined', 'password')[:50])
         for u in signup_users:
-            u['login_method'] = 'Google' if u.pop('password') == '!' else 'Email'
+            u['login_method'] = 'Google' if u.pop('password', '').startswith('!') else 'Email'
 
         # 2. Connected Instagram
         ig_qs = InstagramAccount.objects.filter(
@@ -128,30 +128,32 @@ class AdminDashboardView(StaffRequiredMixin, View):
         flow_users = list(flow_creators[:50])
 
         # 4. Messages Sent (users with DMs/comments sent)
-        msg_qs = InstagramAccount.objects.filter(
-            Q(total_dms_sent__gt=0) | Q(total_comments_replied__gt=0)
-        ).select_related('user')
         if start_date:
-            # For period filter, use API call logs instead
-            api_users = APICallLog.objects.filter(success=True)
-            if start_date:
-                api_users = api_users.filter(sent_at__gte=start_date)
-            api_users = api_users.values(
+            # For period filter, use API call logs
+            api_users = APICallLog.objects.filter(
+                success=True, sent_at__gte=start_date
+            ).values(
                 'account__user__id', 'account__user__email', 'account__username'
             ).annotate(
                 dms=Count('id', filter=Q(call_type='dm')),
                 comments=Count('id', filter=Q(call_type='comment_reply')),
-                total=Count('id'),
-            ).order_by('-total')
+            ).order_by('-dms')
             msg_user_count = api_users.count()
-            msg_users = list(api_users[:50])
+            msg_users = [
+                {'email': u['account__user__email'], 'username': u['account__username'],
+                 'dms': u['dms'], 'comments': u['comments']}
+                for u in api_users[:50]
+            ]
         else:
-            msg_accounts = msg_qs.order_by('-total_dms_sent')
+            msg_accounts = InstagramAccount.objects.filter(
+                Q(total_dms_sent__gt=0) | Q(total_comments_replied__gt=0)
+            ).select_related('user').order_by('-total_dms_sent')
             msg_user_count = msg_accounts.count()
-            msg_users = list(msg_accounts.values(
-                'user__id', 'user__email', 'username',
-                'total_dms_sent', 'total_comments_replied'
-            )[:50])
+            msg_users = [
+                {'email': a.user.email, 'username': a.username,
+                 'dms': a.total_dms_sent, 'comments': a.total_comments_replied}
+                for a in msg_accounts[:50]
+            ]
 
         # 5. Paid Users (successful transactions)
         txn_qs = Transaction.objects.filter(status='success').select_related('user', 'subscription__plan')

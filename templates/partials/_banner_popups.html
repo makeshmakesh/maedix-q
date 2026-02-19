@@ -166,6 +166,10 @@
 
     dismissBtn.addEventListener('click', dismissCurrent);
 
+    ctaEl.addEventListener('click', function() {
+        dismissCurrent();
+    });
+
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) dismissCurrent();
     });

@@ -10,7 +10,7 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
-from users.models import CustomUser
+from users.models import CustomUser, ProfileLink, ProfilePageView, ProfileLinkClick
 from core.models import Plan, Subscription, Transaction
 from .models import (
     InstagramAccount, APICallLog, DMFlow, FlowSession, FlowExecutionLog,
@@ -69,6 +69,9 @@ class AdminDashboardView(StaffRequiredMixin, View):
 
         # User Funnel
         context['funnel'] = self._get_user_funnel(start_date)
+
+        # Link in Bio Metrics
+        context['link_in_bio'] = self._get_link_in_bio_metrics(start_date)
 
         # Recent Activity
         context['recent_sessions'] = FlowSession.objects.select_related('flow').order_by('-created_at')[:10]
@@ -412,6 +415,48 @@ class AdminDashboardView(StaffRequiredMixin, View):
             'subs_by_plan': subs_by_plan,
             'recent_transactions': recent_transactions,
             'pending_transactions': pending_transactions,
+        }
+
+
+    def _get_link_in_bio_metrics(self, start_date):
+        """Get Link in Bio metrics"""
+        view_qs = ProfilePageView.objects.all()
+        click_qs = ProfileLinkClick.objects.all()
+        link_qs = ProfileLink.objects.all()
+        if start_date:
+            view_qs = view_qs.filter(viewed_at__gte=start_date)
+            click_qs = click_qs.filter(clicked_at__gte=start_date)
+            link_qs = link_qs.filter(created_at__gte=start_date)
+
+        total_views = view_qs.count()
+        total_clicks = click_qs.count()
+        total_links = link_qs.count()
+        total_profiles = ProfileLink.objects.values('user').distinct().count()
+
+        # Top profiles by views
+        top_profiles = view_qs.values(
+            'user__username', 'user__email'
+        ).annotate(
+            views=Count('id')
+        ).order_by('-views')[:5]
+
+        # Top links by clicks
+        top_links = click_qs.values(
+            'link__title', 'link__url', 'link__user__username'
+        ).annotate(
+            clicks=Count('id')
+        ).order_by('-clicks')[:5]
+
+        ctr = round((total_clicks / total_views * 100), 1) if total_views > 0 else 0
+
+        return {
+            'total_profiles': total_profiles,
+            'total_links': total_links,
+            'total_views': total_views,
+            'total_clicks': total_clicks,
+            'ctr': ctr,
+            'top_profiles': top_profiles,
+            'top_links': top_links,
         }
 
 

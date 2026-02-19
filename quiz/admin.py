@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Category, Quiz, Question, Option, QuizAttempt, QuestionAnswer,
-    VideoTemplate, Topic, TopicCard, TopicProgress, TopicCarouselExport
+    VideoTemplate, Topic, TopicCard, TopicProgress, TopicCarouselExport,
+    GeneratedVideo, Leaderboard, BulkVideoJob, VideoJob,
 )
 
 
@@ -58,3 +59,31 @@ class TopicProgressAdmin(admin.ModelAdmin):
 @admin.register(TopicCarouselExport)
 class TopicCarouselExportAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(GeneratedVideo)
+class GeneratedVideoAdmin(admin.ModelAdmin):
+    list_display = ['user', 'quiz', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__email', 'user__username']
+
+
+@admin.register(Leaderboard)
+class LeaderboardAdmin(admin.ModelAdmin):
+    list_display = ['user', 'period', 'score', 'updated_at']
+    list_filter = ['period']
+    search_fields = ['user__email', 'user__username']
+
+
+@admin.register(BulkVideoJob)
+class BulkVideoJobAdmin(admin.ModelAdmin):
+    list_display = ['user', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['user__email', 'user__username']
+
+
+@admin.register(VideoJob)
+class VideoJobAdmin(admin.ModelAdmin):
+    list_display = ['user', 'job_type', 'status', 'created_at']
+    list_filter = ['job_type', 'status', 'created_at']
+    search_fields = ['user__email', 'user__username']

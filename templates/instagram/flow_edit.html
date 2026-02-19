@@ -4,7 +4,7 @@
 {% block title %}Edit Automation: {{ flow.title }}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/flow_edit.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/flow_edit.css' %}?v=4">
 
 <section class="py-3 py-md-4">
     <div class="container-fluid">
@@ -531,7 +531,7 @@ const postsApiUrl = '{% url "instagram_api_posts" %}';
 const wizardUrl = '{% url "flow_edit_wizard" flow.pk %}';
 const hasAccountLevelAutomation = {{ features.account_level_automation|yesno:"true,false,false" }};
 </script>
-<script src="{% static 'js/flow_edit.js' %}?v=3"></script>
+<script src="{% static 'js/flow_edit.js' %}?v=4"></script>
 
 <!-- Post Selection Modal -->
 <div class="modal fade" id="postSelectModal" tabindex="-1">

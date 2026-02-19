@@ -4,7 +4,7 @@ from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, F
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
@@ -67,6 +67,9 @@ class AdminDashboardView(StaffRequiredMixin, View):
         # Revenue
         context['revenue'] = self._get_revenue_stats(start_date)
 
+        # User Funnel
+        context['funnel'] = self._get_user_funnel(start_date)
+
         # Recent Activity
         context['recent_sessions'] = FlowSession.objects.select_related('flow').order_by('-created_at')[:10]
         context['recent_leads'] = CollectedLead.objects.select_related('user', 'flow').order_by('-created_at')[:10]
@@ -85,6 +88,96 @@ class AdminDashboardView(StaffRequiredMixin, View):
             return now - timedelta(days=30)
         else:  # all
             return None
+
+    def _get_user_funnel(self, start_date):
+        """Get user funnel: signups → IG connected → flows created → messages sent → paid"""
+
+        # 1. Signed up
+        user_qs = CustomUser.objects.all()
+        if start_date:
+            user_qs = user_qs.filter(date_joined__gte=start_date)
+        signups = user_qs.order_by('-date_joined')
+        signup_count = signups.count()
+        google_count = signups.filter(password='!').count()
+        password_count = signup_count - google_count
+        signup_users = list(signups.values('id', 'email', 'first_name', 'last_name', 'date_joined', 'password')[:50])
+        for u in signup_users:
+            u['login_method'] = 'Google' if u.pop('password') == '!' else 'Email'
+
+        # 2. Connected Instagram
+        ig_qs = InstagramAccount.objects.filter(
+            access_token__isnull=False
+        ).exclude(access_token='').select_related('user')
+        if start_date:
+            ig_qs = ig_qs.filter(created_at__gte=start_date)
+        ig_connected = ig_qs.order_by('-created_at')
+        ig_count = ig_connected.count()
+        ig_users = list(ig_connected.values(
+            'user__id', 'user__email', 'username', 'created_at', 'is_active'
+        )[:50])
+
+        # 3. Created DM Flows
+        flow_qs = DMFlow.objects.all()
+        if start_date:
+            flow_qs = flow_qs.filter(created_at__gte=start_date)
+        flow_creators = flow_qs.values('user__id', 'user__email').annotate(
+            flow_count=Count('id'),
+            active_flows=Count('id', filter=Q(is_active=True)),
+        ).order_by('-flow_count')
+        flow_user_count = flow_creators.count()
+        flow_users = list(flow_creators[:50])
+
+        # 4. Messages Sent (users with DMs/comments sent)
+        msg_qs = InstagramAccount.objects.filter(
+            Q(total_dms_sent__gt=0) | Q(total_comments_replied__gt=0)
+        ).select_related('user')
+        if start_date:
+            # For period filter, use API call logs instead
+            api_users = APICallLog.objects.filter(success=True)
+            if start_date:
+                api_users = api_users.filter(sent_at__gte=start_date)
+            api_users = api_users.values(
+                'account__user__id', 'account__user__email', 'account__username'
+            ).annotate(
+                dms=Count('id', filter=Q(call_type='dm')),
+                comments=Count('id', filter=Q(call_type='comment_reply')),
+                total=Count('id'),
+            ).order_by('-total')
+            msg_user_count = api_users.count()
+            msg_users = list(api_users[:50])
+        else:
+            msg_accounts = msg_qs.order_by('-total_dms_sent')
+            msg_user_count = msg_accounts.count()
+            msg_users = list(msg_accounts.values(
+                'user__id', 'user__email', 'username',
+                'total_dms_sent', 'total_comments_replied'
+            )[:50])
+
+        # 5. Paid Users (successful transactions)
+        txn_qs = Transaction.objects.filter(status='success').select_related('user', 'subscription__plan')
+        if start_date:
+            txn_qs = txn_qs.filter(created_at__gte=start_date)
+        paid = txn_qs.values('user__id', 'user__email').annotate(
+            total_paid=Sum('amount'),
+            txn_count=Count('id'),
+        ).order_by('-total_paid')
+        paid_count = paid.count()
+        paid_users = list(paid[:50])
+
+        # Get current plan for paid users
+        for pu in paid_users:
+            sub = Subscription.objects.filter(
+                user_id=pu['user__id'], status='active'
+            ).select_related('plan').first()
+            pu['plan_name'] = sub.plan.name if sub else 'No active plan'
+
+        return {
+            'signups': {'count': signup_count, 'google_count': google_count, 'password_count': password_count, 'users': signup_users},
+            'ig_connected': {'count': ig_count, 'users': ig_users},
+            'flows_created': {'count': flow_user_count, 'users': flow_users},
+            'messages_sent': {'count': msg_user_count, 'users': msg_users},
+            'paid': {'count': paid_count, 'users': paid_users},
+        }
 
     def _get_overview_stats(self, start_date, today):
         """Get overview statistics"""

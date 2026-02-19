@@ -4,7 +4,7 @@
 {% block title %}Edit: {{ flow.title }}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/flow_edit_wizard.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/flow_edit_wizard.css' %}?v=3">
 
 <section class="wizard-page">
     <div class="container">
@@ -155,5 +155,5 @@ const flowSettings = {
     isActive: {{ flow.is_active|yesno:"true,false" }}
 };
 </script>
-<script src="{% static 'js/flow_edit_wizard.js' %}?v=2"></script>
+<script src="{% static 'js/flow_edit_wizard.js' %}?v=3"></script>
 {% endblock %}

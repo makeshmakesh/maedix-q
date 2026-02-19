@@ -61,6 +61,202 @@
     </div>
 </div>
 
+<!-- User Funnel -->
+<div class="card p-4 mb-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-funnel me-2"></i>User Funnel</h5>
+    <div class="row g-3 mb-3">
+        <div class="col">
+            <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb);">
+                <h3 class="fw-bold mb-0">{{ funnel.signups.count }}</h3>
+                <small class="text-muted">Signed Up</small>
+                <div class="mt-1">
+                    <span class="badge bg-danger bg-opacity-75" title="Google OAuth"><i class="bi bi-google"></i> {{ funnel.signups.google_count }}</span>
+                    <span class="badge bg-secondary bg-opacity-75" title="Email + Password"><i class="bi bi-envelope"></i> {{ funnel.signups.password_count }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-auto d-flex align-items-center"><i class="bi bi-chevron-right text-muted"></i></div>
+        <div class="col">
+            <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9);">
+                <h3 class="fw-bold mb-0">{{ funnel.ig_connected.count }}</h3>
+                <small class="text-muted">IG Connected</small>
+            </div>
+        </div>
+        <div class="col-auto d-flex align-items-center"><i class="bi bi-chevron-right text-muted"></i></div>
+        <div class="col">
+            <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2);">
+                <h3 class="fw-bold mb-0">{{ funnel.flows_created.count }}</h3>
+                <small class="text-muted">Created Flows</small>
+            </div>
+        </div>
+        <div class="col-auto d-flex align-items-center"><i class="bi bi-chevron-right text-muted"></i></div>
+        <div class="col">
+            <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #fce4ec, #f8bbd0);">
+                <h3 class="fw-bold mb-0">{{ funnel.messages_sent.count }}</h3>
+                <small class="text-muted">Sent Messages</small>
+            </div>
+        </div>
+        <div class="col-auto d-flex align-items-center"><i class="bi bi-chevron-right text-muted"></i></div>
+        <div class="col">
+            <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #e8eaf6, #c5cae9);">
+                <h3 class="fw-bold mb-0">{{ funnel.paid.count }}</h3>
+                <small class="text-muted">Paid</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="funnelAccordion">
+        <!-- Signed Up -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#funnelSignups">
+                    <i class="bi bi-person-add me-2"></i>Signed Up <span class="badge bg-primary ms-2">{{ funnel.signups.count }}</span>
+                </button>
+            </h2>
+            <div id="funnelSignups" class="accordion-collapse collapse" data-bs-parent="#funnelAccordion">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light"><tr><th>Email</th><th>Name</th><th>Login Method</th><th>Joined</th></tr></thead>
+                            <tbody>
+                                {% for u in funnel.signups.users %}
+                                <tr>
+                                    <td>{{ u.email }}</td>
+                                    <td>{{ u.first_name }} {{ u.last_name }}</td>
+                                    <td>{% if u.login_method == 'Google' %}<span class="badge bg-danger"><i class="bi bi-google"></i> Google</span>{% else %}<span class="badge bg-secondary"><i class="bi bi-envelope"></i> Email</span>{% endif %}</td>
+                                    <td>{{ u.date_joined|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-muted text-center">No signups</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IG Connected -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#funnelIG">
+                    <i class="bi bi-instagram me-2"></i>Connected Instagram <span class="badge bg-success ms-2">{{ funnel.ig_connected.count }}</span>
+                </button>
+            </h2>
+            <div id="funnelIG" class="accordion-collapse collapse" data-bs-parent="#funnelAccordion">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light"><tr><th>Email</th><th>IG Username</th><th>Connected</th><th>Active</th></tr></thead>
+                            <tbody>
+                                {% for u in funnel.ig_connected.users %}
+                                <tr>
+                                    <td>{{ u.user__email }}</td>
+                                    <td>@{{ u.username }}</td>
+                                    <td>{{ u.created_at|date:"M d, Y" }}</td>
+                                    <td>{% if u.is_active %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-muted text-center">None</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Created Flows -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#funnelFlows">
+                    <i class="bi bi-diagram-3 me-2"></i>Created DM Flows <span class="badge bg-warning text-dark ms-2">{{ funnel.flows_created.count }}</span>
+                </button>
+            </h2>
+            <div id="funnelFlows" class="accordion-collapse collapse" data-bs-parent="#funnelAccordion">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light"><tr><th>Email</th><th>Total Flows</th><th>Active Flows</th></tr></thead>
+                            <tbody>
+                                {% for u in funnel.flows_created.users %}
+                                <tr>
+                                    <td>{{ u.user__email }}</td>
+                                    <td>{{ u.flow_count }}</td>
+                                    <td><span class="badge bg-success">{{ u.active_flows }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-muted text-center">None</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Sent -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#funnelMessages">
+                    <i class="bi bi-chat-dots me-2"></i>Sent Messages <span class="badge bg-danger ms-2">{{ funnel.messages_sent.count }}</span>
+                </button>
+            </h2>
+            <div id="funnelMessages" class="accordion-collapse collapse" data-bs-parent="#funnelAccordion">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light"><tr><th>Email</th><th>IG Username</th><th>DMs Sent</th><th>Comments Replied</th></tr></thead>
+                            <tbody>
+                                {% for u in funnel.messages_sent.users %}
+                                <tr>
+                                    <td>{{ u.user__email|default:u.account__user__email }}</td>
+                                    <td>@{{ u.username|default:u.account__username }}</td>
+                                    <td>{{ u.total_dms_sent|default:u.dms }}</td>
+                                    <td>{{ u.total_comments_replied|default:u.comments }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-muted text-center">None</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paid Users -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#funnelPaid">
+                    <i class="bi bi-currency-rupee me-2"></i>Paid Users <span class="badge bg-info ms-2">{{ funnel.paid.count }}</span>
+                </button>
+            </h2>
+            <div id="funnelPaid" class="accordion-collapse collapse" data-bs-parent="#funnelAccordion">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light"><tr><th>Email</th><th>Current Plan</th><th>Total Paid</th><th>Transactions</th></tr></thead>
+                            <tbody>
+                                {% for u in funnel.paid.users %}
+                                <tr>
+                                    <td>{{ u.user__email }}</td>
+                                    <td><span class="badge bg-primary">{{ u.plan_name }}</span></td>
+                                    <td>&#8377;{{ u.total_paid }}</td>
+                                    <td>{{ u.txn_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-muted text-center">None</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4 mb-4">
     <!-- User Analytics -->
     <div class="col-md-6 col-lg-4">

@@ -25,7 +25,7 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('blog:category', kwargs={'slug': self.slug})
+        return reverse('blog:category', kwargs={'category_slug': self.slug})
 
 
 class BlogPost(models.Model):

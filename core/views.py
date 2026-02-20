@@ -371,7 +371,7 @@ class PaymentSuccessView(LoginRequiredMixin, View):
                 hashlib.sha256
             ).hexdigest()
 
-            if expected_signature != razorpay_signature:
+            if not hmac.compare_digest(expected_signature, razorpay_signature):
                 logger.error(f"Payment signature verification failed for user {request.user.id}")
                 messages.error(request, 'Payment verification failed. Please contact support.')
                 return redirect('pricing')
@@ -561,7 +561,7 @@ class PaymentWebhookView(View):
                 hashlib.sha256
             ).hexdigest()
 
-            if received_signature != expected_signature:
+            if not hmac.compare_digest(received_signature, expected_signature):
                 logger.error("Webhook signature verification failed")
                 return JsonResponse({'status': 'invalid_signature'}, status=400)
 
@@ -807,7 +807,7 @@ class CreditPaymentSuccessView(LoginRequiredMixin, View):
                     hashlib.sha256
                 ).hexdigest()
 
-                if expected_signature != razorpay_signature:
+                if not hmac.compare_digest(expected_signature, razorpay_signature):
                     logger.error(f"Credit payment signature verification failed for user {request.user.id}")
                     messages.error(request, 'Payment verification failed. Please contact support.')
                     return redirect('purchase_credits')

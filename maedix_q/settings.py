@@ -47,11 +47,8 @@ INSTALLED_APPS = [
     # Local apps
     'core',
     'users',
-    'quiz',
     'instagram',
     'youtube',
-    'roleplay',
-    'games',
     'blog',
     # 'courses',       # Phase 2
     # 'assessments',   # Phase 2

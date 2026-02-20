@@ -398,3 +398,7 @@ sudo systemctl restart maedix-q
 ## License
 
 Private - All rights reserved
+
+
+##################
+python manage.py migrate core 0009 --fake

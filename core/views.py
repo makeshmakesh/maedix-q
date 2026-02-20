@@ -14,8 +14,7 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.db import transaction
 from dateutil.relativedelta import relativedelta
-from .models import Plan, ContactMessage, Configuration, Subscription, Transaction
-from roleplay.models import CreditTransaction
+from .models import Plan, ContactMessage, Configuration, Subscription, Transaction, CreditTransaction
 from .forms import ContactForm
 from .utils import get_user_country, is_indian_user, get_currency_for_user
 

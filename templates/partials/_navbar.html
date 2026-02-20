@@ -10,37 +10,6 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                {% if user.is_staff %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'quiz_home' %}">
-                        <i class="bi bi-question-circle d-lg-none"></i> Quizzes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'topics_home' %}">
-                        <i class="bi bi-journal-text d-lg-none"></i> Learn
-                    </a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-grid d-lg-none"></i> Categories
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{% url 'categories' %}"><i class="bi bi-patch-question me-2"></i>Quiz Categories</a></li>
-                        <li><a class="dropdown-item" href="{% url 'topics_home' %}"><i class="bi bi-layers me-2"></i>Learn Categories</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'roleplay:home' %}">
-                        <i class="bi bi-mic d-lg-none"></i> Convo Practice
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'codeword_home' %}">
-                        <i class="bi bi-puzzle d-lg-none"></i> Games
-                    </a>
-                </li>
-                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'flow_list' %}">
                         <i class="bi bi-robot d-lg-none"></i> IG Automation
@@ -89,14 +58,7 @@
                             <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>
                             {% if user.is_staff %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Old Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{% url 'user_quiz_list' %}"><i class="bi bi-journal-plus me-2"></i>My Quizzes</a></li>
-                            <li><a class="dropdown-item" href="{% url 'user_topic_list' %}"><i class="bi bi-layers me-2"></i>My Shorts</a></li>
-                            <li><a class="dropdown-item" href="{% url 'video_job_list' %}"><i class="bi bi-film me-2"></i>My Video Jobs</a></li>
-                            <li><a class="dropdown-item" href="{% url 'topic_my_progress' %}"><i class="bi bi-book me-2"></i>My Learning Progress</a></li>
-                            <li><a class="dropdown-item" href="{% url 'quiz_history' %}"><i class="bi bi-clock-history me-2"></i>Quiz History</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-primary" href="{% url 'staff_dashboard' %}"><i class="bi bi-shield-check me-2"></i>Staff Portal</a></li>
+                            <li><a class="dropdown-item text-primary" href="{% url 'instagram_admin_dashboard' %}"><i class="bi bi-shield-check me-2"></i>Staff Portal</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li>

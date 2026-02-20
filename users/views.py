@@ -310,39 +310,6 @@ class LogoutView(View):
         return redirect('home')
 
 
-class DashboardView(LoginRequiredMixin, View):
-    """User dashboard - main hub after login"""
-    template_name = 'users/dashboard.html'
-
-    def get(self, request):
-        from quiz.models import GeneratedVideo
-
-        # Get or create user stats
-        stats, _ = UserStats.objects.get_or_create(user=request.user)
-
-        # Get recent generated videos
-        recent_videos = GeneratedVideo.objects.filter(
-            user=request.user
-        ).select_related('quiz')[:15]
-
-        # Check Instagram connection status
-        instagram_connected = False
-        if hasattr(request.user, 'instagram_account'):
-            instagram_connected = request.user.instagram_account.is_connected
-
-        # Check YouTube connection status
-        youtube_connected = False
-        if hasattr(request.user, 'youtube_account'):
-            youtube_connected = request.user.youtube_account.is_connected
-
-        return render(request, self.template_name, {
-            'stats': stats,
-            'recent_videos': recent_videos,
-            'instagram_connected': instagram_connected,
-            'youtube_connected': youtube_connected,
-        })
-
-
 class ProfileView(LoginRequiredMixin, View):
     """View user profile"""
     template_name = 'users/profile.html'

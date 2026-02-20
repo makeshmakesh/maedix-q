@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.conf import settings
 
@@ -270,3 +271,44 @@ class Banner(models.Model):
 
     class Meta:
         ordering = ['order', '-created_at']
+
+
+# Transaction status choices for credits
+CREDIT_TRANSACTION_STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('completed', 'Completed'),
+    ('failed', 'Failed'),
+    ('refunded', 'Refunded'),
+]
+
+
+class CreditTransaction(models.Model):
+    """Track credit purchases"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='credit_transactions'
+    )
+    credits = models.IntegerField(help_text="Number of credits purchased")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Payment amount")
+    currency = models.CharField(max_length=3, default='INR')
+    status = models.CharField(
+        max_length=20,
+        choices=CREDIT_TRANSACTION_STATUS_CHOICES,
+        default='pending'
+    )
+    razorpay_order_id = models.CharField(max_length=100, blank=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'roleplay_credittransaction'
+        ordering = ['-created_at']
+        verbose_name = 'Credit Transaction'
+        verbose_name_plural = 'Credit Transactions'
+
+    def __str__(self):
+        return f"{self.user.email} - {self.credits} credits ({self.status})"

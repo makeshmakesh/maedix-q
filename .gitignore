@@ -64,3 +64,6 @@ coverage.xml
 # Zappa
 zappa_settings.json
 ec2files/
+
+# Unused features
+unused/

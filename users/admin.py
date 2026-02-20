@@ -28,8 +28,8 @@ class ProfileLinkAdmin(admin.ModelAdmin):
 
 @admin.register(EmailOTP)
 class EmailOTPAdmin(admin.ModelAdmin):
-    list_display = ['email', 'created_at']
-    search_fields = ['email']
+    list_display = ['user', 'created_at']
+    search_fields = ['user__email']
 
 
 @admin.register(ProfilePageView)

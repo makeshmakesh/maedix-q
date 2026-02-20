@@ -14,9 +14,6 @@
                         <a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a>
                         <a class="nav-link active" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i> Subscription</a>
                         <a class="nav-link" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i> Settings</a>
-                        {% if user.is_staff %}
-                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Old Dashboard</a>
-                        {% endif %}
                     </nav>
                 </div>
 

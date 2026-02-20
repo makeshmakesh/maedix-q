@@ -556,7 +556,7 @@ class InstagramPostPageView(LoginRequiredMixin, View):
 
         if not video_url:
             messages.error(request, 'No video URL provided.')
-            return redirect('dashboard')
+            return redirect('home')
 
         if not hasattr(request.user, 'instagram_account') or not request.user.instagram_account.is_connected:
             messages.error(request, 'Please connect your Instagram account first.')
@@ -577,7 +577,7 @@ class InstagramPostPageView(LoginRequiredMixin, View):
 
         if not video_url:
             messages.error(request, 'No video URL provided.')
-            return redirect('dashboard')
+            return redirect('home')
 
         if not hasattr(request.user, 'instagram_account'):
             messages.error(request, 'Instagram not connected.')
@@ -609,7 +609,7 @@ class InstagramPostPageView(LoginRequiredMixin, View):
             if "id" not in container_data:
                 error_msg = container_data.get("error", {}).get("message", "Failed to create media")
                 messages.error(request, f'Instagram error: {error_msg}')
-                return redirect(return_url or 'dashboard')
+                return redirect(return_url or 'home')
 
             container_id = container_data["id"]
 
@@ -631,12 +631,12 @@ class InstagramPostPageView(LoginRequiredMixin, View):
                 elif status_code == "ERROR":
                     error_status = status_data.get("status", "Unknown processing error")
                     messages.error(request, f'Video processing failed: {error_status}')
-                    return redirect(return_url or 'dashboard')
+                    return redirect(return_url or 'home')
                 else:
                     time.sleep(10)
             else:
                 messages.error(request, 'Video processing timeout. Please try again.')
-                return redirect(return_url or 'dashboard')
+                return redirect(return_url or 'home')
 
             publish_response = requests.post(
                 f"https://graph.instagram.com/v21.0/{ig_user_id}/media_publish",
@@ -651,14 +651,14 @@ class InstagramPostPageView(LoginRequiredMixin, View):
             if "id" not in publish_data:
                 error_msg = publish_data.get("error", {}).get("message", "Failed to publish")
                 messages.error(request, f'Instagram error: {error_msg}')
-                return redirect(return_url or 'dashboard')
+                return redirect(return_url or 'home')
 
             messages.success(request, 'Video posted to Instagram Reels successfully!')
-            return redirect(return_url or 'dashboard')
+            return redirect(return_url or 'home')
 
         except Exception as e:
             messages.error(request, f'Error posting to Instagram: {str(e)}')
-            return redirect(return_url or 'dashboard')
+            return redirect(return_url or 'home')
 
 
 # =============================================================================

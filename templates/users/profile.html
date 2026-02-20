@@ -119,30 +119,7 @@
                 </div>
             </div>
 
-            {% if user.is_staff %}
             <div class="col-md-6 col-lg-5">
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-4">Quiz Statistics</h5>
-                    <div class="row g-4">
-                        <div class="col-6 text-center">
-                            <h3 class="fw-bold text-primary">{{ stats.xp_points }}</h3>
-                            <small class="text-muted">XP Points</small>
-                        </div>
-                        <div class="col-6 text-center">
-                            <h3 class="fw-bold text-success">{{ stats.total_quizzes_passed }}</h3>
-                            <small class="text-muted">Quizzes Passed</small>
-                        </div>
-                        <div class="col-6 text-center">
-                            <h3 class="fw-bold text-warning">{{ stats.accuracy }}%</h3>
-                            <small class="text-muted">Accuracy</small>
-                        </div>
-                        <div class="col-6 text-center">
-                            <h3 class="fw-bold text-danger">{{ stats.longest_streak }}</h3>
-                            <small class="text-muted">Best Streak</small>
-                        </div>
-                    </div>
-                </div>
-
                 {% if profile.skills %}
                 <div class="card p-4">
                     <h5 class="fw-bold mb-3">Skills</h5>
@@ -154,7 +131,6 @@
                 </div>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 </section>

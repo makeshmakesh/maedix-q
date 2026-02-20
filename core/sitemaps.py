@@ -24,6 +24,18 @@ class StaticSitemap(Sitemap):
         return reverse(item)
 
 
+class ComparisonSitemap(Sitemap):
+    """Sitemap for competitor comparison pages"""
+    priority = 0.7
+    changefreq = 'monthly'
+
+    def items(self):
+        return ['manychat', 'linkdm', 'replyrush']
+
+    def location(self, item):
+        return reverse('comparison', kwargs={'competitor_slug': item})
+
+
 class BlogPostSitemap(Sitemap):
     """Sitemap for published blog posts"""
     changefreq = 'weekly'

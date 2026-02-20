@@ -8,14 +8,16 @@ from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from core.sitemaps import (
     StaticSitemap,
+    ComparisonSitemap,
     BlogPostSitemap,
     BlogCategorySitemap,
 )
-from core.views import robots_txt
+from core.views import robots_txt, llms_txt
 from users.views import PublicProfileView, ProfileLinkClickView
 
 sitemaps = {
     'static': StaticSitemap,
+    'comparisons': ComparisonSitemap,
     'blog_posts': BlogPostSitemap,
     'blog_categories': BlogCategorySitemap,
 }
@@ -23,6 +25,7 @@ sitemaps = {
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt, name='robots_txt'),
+    path('llms.txt', llms_txt, name='llms_txt'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('', include('core.urls')),

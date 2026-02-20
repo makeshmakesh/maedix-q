@@ -13,12 +13,6 @@ Disallow: /instagram/automation/flows/
 Disallow: /instagram/automation/settings/
 Disallow: /instagram/webhook/
 
-# Other internal features (not user-facing)
-Disallow: /quiz/
-Disallow: /youtube/
-Disallow: /roleplay/
-Disallow: /games/
-
 # Payment routes
 Disallow: /checkout/
 Disallow: /payment/

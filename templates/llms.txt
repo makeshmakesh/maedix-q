@@ -1,0 +1,47 @@
+# Maedix
+
+> Instagram automation platform for auto comment replies and DMs. Meta verified provider.
+
+Maedix helps Instagram creators and businesses automate engagement. When someone comments on a post with a trigger keyword, Maedix auto-replies to the comment and sends a follow-up DM with interactive buttons, links, or AI-powered conversations.
+
+## Key Features
+
+- **Visual Automation Builder**: Drag-and-drop interface to build DM conversation flows
+- **Auto Comment Replies**: Instantly reply to every comment on your posts
+- **Auto Follow-up DMs**: Send personalized DMs to commenters automatically
+- **Keyword Triggers**: Only respond when specific words are mentioned
+- **Quick Reply Buttons**: Interactive tappable buttons in DMs
+- **Button Templates**: URL buttons that open links directly
+- **Follower Check**: Branch automation based on follow status
+- **AI Social Agents**: AI-powered conversations and data collection
+- **Smart Queue**: Viral post protection — never miss a follower when posts go viral
+- **Link in Bio**: Public profile page at maedix.com/@username
+- **Lead Collection**: Collect name, email, phone via DM conversations
+
+## Pricing
+
+- **Free**: $0/month — 1 active automation, unlimited replies, visual builder, keyword triggers
+- **Pro**: $1.99/month (₹49/month in India) — 5 active automations, smart queue, priority support
+- **Creator**: $5.99/month (₹249/month in India) — Unlimited automations, AI social agents, auto-processing smart queue
+
+All plans include unlimited replies per automation. No hidden fees. Cancel anytime.
+
+## Comparison with Alternatives
+
+- **vs ManyChat** ($15+/month): Maedix is simpler and more affordable, with a generous free plan and AI social agents included
+- **vs LinkDM** ($19/month flat): Maedix offers a free tier and tiered pricing, plus AI-powered conversation agents
+- **vs ReplyRush** ($19/month): Maedix provides a visual automation builder and AI social agents at lower price points
+
+## Links
+
+- Homepage: https://maedix.com
+- Pricing: https://maedix.com/pricing/
+- About: https://maedix.com/about/
+- Contact: https://maedix.com/contact/
+- Blog: https://maedix.com/blog/
+- Sign Up: https://maedix.com/users/signup/
+
+## Technical Details
+
+- Built on the official Instagram Graph API (Meta verified)
+- Works with Instagram Business and Creator accounts

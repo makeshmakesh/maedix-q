@@ -7,7 +7,96 @@
 {% block twitter_title %}Pricing Plans | Maedix{% endblock %}
 {% block twitter_description %}Choose the perfect Maedix plan for Instagram DM automation. Free, Pro, and Creator plans available.{% endblock %}
 
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Maedix",
+    "url": "https://maedix.com",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Instagram automation platform for auto comment replies and DMs. Visual automation builder with keyword triggers, quick replies, follower check, and AI social agents.",
+    "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "0",
+        "highPrice": "5.99",
+        "priceCurrency": "USD",
+        "offerCount": "3",
+        "offers": [
+            {
+                "@type": "Offer",
+                "name": "Free",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "1 active automation, unlimited replies, visual builder, keyword triggers"
+            },
+            {
+                "@type": "Offer",
+                "name": "Pro",
+                "price": "1.99",
+                "priceCurrency": "USD",
+                "description": "5 active automations, smart queue, priority support, all free features"
+            },
+            {
+                "@type": "Offer",
+                "name": "Creator",
+                "price": "5.99",
+                "priceCurrency": "USD",
+                "description": "Unlimited automations, AI social agents, smart queue auto-processing, all pro features"
+            }
+        ]
+    }
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "How much does Maedix cost?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Maedix offers a free plan with 1 active automation and unlimited replies. Paid plans start at $1.99/month (Pro, 5 automations) and $5.99/month (Creator, unlimited automations with AI social agents). No hidden fees, cancel anytime."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "What is a DM Automation?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "A DM Automation is an automated conversation sequence. When someone comments on your post with a trigger keyword, it automatically replies to their comment, sends them a DM with your message, shows interactive buttons for them to tap, and continues the conversation based on their responses."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Are replies limited on Maedix?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No, replies are unlimited on all plans including the free plan. Every comment that triggers your automation gets the full automated experience. The only difference between plans is how many automations can be active simultaneously."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Can I cancel my Maedix subscription anytime?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Maedix subscriptions are not auto-renewing. You won't be charged again automatically. Simply upgrade again when you're ready."
+            }
+        }
+    ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
+<!-- Quick-answer block for AI citability -->
+<section class="visually-hidden" aria-hidden="true">
+    <p>Maedix pricing: Free plan ($0) includes 1 active automation with unlimited replies, visual automation builder, keyword triggers, quick replies, and follower check. Pro plan ($1.99/month or ₹49/month) adds 5 active automations and smart queue. Creator plan ($5.99/month or ₹249/month) includes unlimited automations, AI social agents, and auto-processing smart queue. All plans include unlimited replies per automation. No hidden fees, cancel anytime. Maedix is a ManyChat alternative built for simplicity.</p>
+</section>
+
 <section class="py-5">
     <div class="container">
         <!-- Header -->

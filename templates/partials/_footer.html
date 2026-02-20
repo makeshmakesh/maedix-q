@@ -1,18 +1,17 @@
+{% load blog_tags %}
+{% latest_blog_posts 3 as recent_posts %}
 <footer class="py-5 mt-5">
     <div class="container">
         <div class="row">
-            <div class="col-lg-4 mb-4">
+            <div class="col-lg-3 mb-4">
                 <h5 class="mb-3">
                     <i class="bi bi-lightning-charge-fill text-primary"></i> Maedix
                 </h5>
                 <p class="text-muted small">
                     Automate your Instagram engagement with smart comment replies and DMs.
-                    Save time and grow your audience with personalized automation.
                 </p>
-                <div class="d-flex gap-2 mt-3 flex-wrap">
-                    <span class="badge bg-light text-dark"><i class="bi bi-instagram text-danger"></i> Instagram</span>
-                    <span class="badge bg-light text-dark"><i class="bi bi-robot text-primary"></i> Automation</span>
-                    <span class="badge bg-light text-dark"><i class="bi bi-chat-dots text-success"></i> Auto DM</span>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="https://www.instagram.com/maedix.com_/" class="footer-link fs-5"><i class="bi bi-instagram"></i></a>
                 </div>
             </div>
 
@@ -31,8 +30,19 @@
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="{% url 'about' %}" class="footer-link">About Us</a></li>
                     <li class="mb-2"><a href="{% url 'contact' %}" class="footer-link">Contact</a></li>
-                    {% comment %} <li class="mb-2"><a href="#" class="footer-link">Blog</a></li>
-                    <li class="mb-2"><a href="#" class="footer-link">Careers</a></li> {% endcomment %}
+                    <li class="mb-2"><a href="{% url 'blog:post_list' %}" class="footer-link">Blog</a></li>
+                    {% for post in recent_posts %}
+                    <li class="mb-2"><a href="{{ post.get_absolute_url }}" class="footer-link small">{{ post.title|truncatechars:30 }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="col-6 col-lg-2 mb-4">
+                <h6 class="mb-3">Compare</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{% url 'comparison' competitor_slug='manychat' %}" class="footer-link">vs ManyChat</a></li>
+                    <li class="mb-2"><a href="{% url 'comparison' competitor_slug='linkdm' %}" class="footer-link">vs LinkDM</a></li>
+                    <li class="mb-2"><a href="{% url 'comparison' competitor_slug='replyrush' %}" class="footer-link">vs ReplyRush</a></li>
                 </ul>
             </div>
 
@@ -45,15 +55,6 @@
                 </ul>
             </div>
 
-            <div class="col-6 col-lg-2 mb-4">
-                <h6 class="mb-3">Connect</h6>
-                <div class="d-flex gap-3">
-                    <a href="https://www.instagram.com/maedix.com_/" class="footer-link fs-5"><i class="bi bi-instagram"></i></a>
-                    {% comment %} <a href="#" class="footer-link fs-5"><i class="bi bi-youtube"></i></a>
-                    <a href="#" class="footer-link fs-5"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#" class="footer-link fs-5"><i class="bi bi-linkedin"></i></a> {% endcomment %}
-                </div>
-            </div>
         </div>
 
         <hr class="my-4">

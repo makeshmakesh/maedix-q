@@ -139,6 +139,11 @@ def robots_txt(request):
     return render(request, 'robots.txt', content_type='text/plain')
 
 
+def llms_txt(request):
+    """Serve llms.txt file for AI/LLM crawlers"""
+    return render(request, 'llms.txt', content_type='text/plain')
+
+
 def get_valid_coupon(code: str) -> dict | None:
     """
     Validate a coupon code and return coupon details if valid.
@@ -860,6 +865,131 @@ class CreditPaymentFailedView(View):
         except Exception as e:
             logger.error(f"Error logging credit payment failure: {e}")
             return JsonResponse({'status': 'error'}, status=400)
+
+
+COMPETITOR_DATA = {
+    'manychat': {
+        'name': 'ManyChat',
+        'slug': 'manychat',
+        'meta_description': 'Compare Maedix vs ManyChat for Instagram automation. Maedix offers a simpler, more affordable alternative with a free plan, visual automation builder, and AI social agents.',
+        'hero_subtitle': 'Looking for a simpler, more affordable Instagram automation tool? See how Maedix compares to ManyChat on features, pricing, and ease of use.',
+        'pricing_subtitle': 'Maedix offers a generous free plan and lower paid tiers compared to ManyChat.',
+        'quick_answer': 'Maedix vs ManyChat: Maedix is a simpler, more affordable Instagram DM automation alternative to ManyChat. Maedix offers a free plan with 1 active automation and unlimited replies ($0/month), Pro at $1.99/month, and Creator at $5.99/month with AI social agents. ManyChat starts free but charges $15+/month for pro features and scales with subscriber count. Maedix focuses on Instagram-only automation with a visual builder, while ManyChat supports multiple platforms but is more complex to set up.',
+        'features': [
+            {'name': 'Free plan with automations', 'icon': 'bi-gift', 'maedix': True, 'competitor': 'Limited'},
+            {'name': 'Visual Automation Builder', 'icon': 'bi-window-stack', 'maedix': True, 'competitor': True},
+            {'name': 'Auto Comment Replies', 'icon': 'bi-chat-dots', 'maedix': True, 'competitor': True},
+            {'name': 'Auto Follow-up DMs', 'icon': 'bi-envelope', 'maedix': True, 'competitor': True},
+            {'name': 'Keyword Triggers', 'icon': 'bi-hash', 'maedix': True, 'competitor': True},
+            {'name': 'Quick Reply Buttons', 'icon': 'bi-ui-radios-grid', 'maedix': True, 'competitor': True},
+            {'name': 'Follower Check Branching', 'icon': 'bi-person-check', 'maedix': True, 'competitor': False},
+            {'name': 'AI Social Agents', 'icon': 'bi-cpu', 'maedix': True, 'competitor': 'Add-on'},
+            {'name': 'Smart Queue (viral protection)', 'icon': 'bi-lightning-charge', 'maedix': True, 'competitor': False},
+            {'name': 'Unlimited replies (all plans)', 'icon': 'bi-infinity', 'maedix': True, 'competitor': False},
+            {'name': 'Multi-platform support', 'icon': 'bi-globe', 'maedix': False, 'competitor': True},
+            {'name': 'Simple setup (< 5 min)', 'icon': 'bi-clock', 'maedix': True, 'competitor': False},
+            {'name': 'Starting price', 'icon': 'bi-tag', 'maedix': 'Free', 'competitor': '$15/mo'},
+        ],
+        'pricing_points': [
+            'Free plan — limited features, ManyChat branding',
+            'Pro starts at $15/month (1,000 contacts)',
+            'Price increases with subscriber count',
+            'AI features cost extra',
+        ],
+        'reasons': [
+            {'icon': 'bi-currency-dollar', 'title': 'More Affordable', 'description': 'Maedix Pro is just $1.99/month flat vs ManyChat\'s $15+/month that scales with contacts. No surprise bills.'},
+            {'icon': 'bi-lightning', 'title': 'Simpler to Use', 'description': 'Maedix is built specifically for Instagram. Set up your first automation in under 5 minutes — no learning curve.'},
+            {'icon': 'bi-cpu', 'title': 'AI Built In', 'description': 'AI social agents are included on the Creator plan. ManyChat charges extra for AI capabilities.'},
+        ],
+        'faq_comparison': 'Maedix is a simpler, Instagram-focused automation platform, while ManyChat supports multiple platforms (Instagram, Facebook, WhatsApp, SMS). If you only need Instagram automation, Maedix is easier to set up and more affordable. ManyChat is better if you need multi-platform messaging. Maedix includes AI social agents and follower check branching, which ManyChat charges extra for or doesn\'t offer.',
+        'faq_pricing': 'Yes, Maedix is cheaper than ManyChat for Instagram automation. Maedix offers a free plan with 1 active automation and unlimited replies. Paid plans are $1.99/month (Pro) and $5.99/month (Creator). ManyChat\'s Pro plan starts at $15/month for 1,000 contacts and increases with your audience size.',
+        'faq_switch': 'If you primarily use Instagram automation and want a simpler, more affordable tool, switching to Maedix is worth it. You can start with the free plan to test it out. Maedix offers unlimited replies on all plans, built-in AI social agents, and a visual automation builder that\'s easy to learn.',
+    },
+    'linkdm': {
+        'name': 'LinkDM',
+        'slug': 'linkdm',
+        'meta_description': 'Compare Maedix vs LinkDM for Instagram automation. Maedix offers a free plan, AI social agents, and a visual automation builder at a lower price.',
+        'hero_subtitle': 'Both tools automate Instagram DMs, but Maedix offers more features at a lower price point — plus a free plan to get started.',
+        'pricing_subtitle': 'Maedix gives you a free tier and more features for less than LinkDM\'s flat rate.',
+        'quick_answer': 'Maedix vs LinkDM: Maedix is a more feature-rich Instagram DM automation tool compared to LinkDM. Maedix offers a free plan ($0/month), Pro ($1.99/month), and Creator ($5.99/month) with AI social agents. LinkDM charges a flat $19/month with no free tier. Maedix includes a visual automation builder, follower check branching, smart queue for viral posts, and AI-powered conversations — features not available on LinkDM.',
+        'features': [
+            {'name': 'Free plan available', 'icon': 'bi-gift', 'maedix': True, 'competitor': False},
+            {'name': 'Visual Automation Builder', 'icon': 'bi-window-stack', 'maedix': True, 'competitor': False},
+            {'name': 'Auto Comment Replies', 'icon': 'bi-chat-dots', 'maedix': True, 'competitor': True},
+            {'name': 'Auto Follow-up DMs', 'icon': 'bi-envelope', 'maedix': True, 'competitor': True},
+            {'name': 'Keyword Triggers', 'icon': 'bi-hash', 'maedix': True, 'competitor': True},
+            {'name': 'Quick Reply Buttons', 'icon': 'bi-ui-radios-grid', 'maedix': True, 'competitor': False},
+            {'name': 'Follower Check Branching', 'icon': 'bi-person-check', 'maedix': True, 'competitor': False},
+            {'name': 'AI Social Agents', 'icon': 'bi-cpu', 'maedix': True, 'competitor': False},
+            {'name': 'Smart Queue (viral protection)', 'icon': 'bi-lightning-charge', 'maedix': True, 'competitor': False},
+            {'name': 'Unlimited replies (all plans)', 'icon': 'bi-infinity', 'maedix': True, 'competitor': True},
+            {'name': 'Link in Bio page', 'icon': 'bi-link-45deg', 'maedix': True, 'competitor': False},
+            {'name': 'Starting price', 'icon': 'bi-tag', 'maedix': 'Free', 'competitor': '$19/mo'},
+        ],
+        'pricing_points': [
+            'No free plan available',
+            'Flat rate — $19/month',
+            'No tiered pricing',
+            'No AI features included',
+        ],
+        'reasons': [
+            {'icon': 'bi-gift', 'title': 'Free Plan Available', 'description': 'Start automating for free with Maedix. LinkDM has no free tier — you pay $19/month from day one.'},
+            {'icon': 'bi-diagram-3', 'title': 'Visual Automation Builder', 'description': 'Build complex conversation flows with drag-and-drop. LinkDM offers basic keyword-to-DM without branching logic.'},
+            {'icon': 'bi-cpu', 'title': 'AI-Powered Agents', 'description': 'Maedix Creator plan includes AI social agents for intelligent conversations and data collection.'},
+        ],
+        'faq_comparison': 'Maedix offers more features than LinkDM at a lower price. Maedix includes a visual automation builder, follower check branching, quick reply buttons, AI social agents, and smart queue protection. LinkDM focuses on basic keyword-triggered DMs without advanced branching or AI capabilities. Maedix also has a free plan, while LinkDM starts at $19/month.',
+        'faq_pricing': 'Yes, Maedix is more affordable. Maedix has a free plan and paid plans starting at $1.99/month. LinkDM charges a flat $19/month with no free tier. Even Maedix\'s top Creator plan ($5.99/month) offers significantly more features than LinkDM at a similar price.',
+        'faq_switch': 'If you want more advanced automation features like a visual builder, AI agents, follower checking, and quick reply buttons, Maedix is a strong upgrade from LinkDM. You can try Maedix for free before committing to a paid plan.',
+    },
+    'replyrush': {
+        'name': 'ReplyRush',
+        'slug': 'replyrush',
+        'meta_description': 'Compare Maedix vs ReplyRush for Instagram automation. Maedix offers a free plan, AI social agents, and a visual builder starting at $0/month.',
+        'hero_subtitle': 'Both platforms automate Instagram engagement, but Maedix offers a free plan, AI-powered agents, and a visual builder at more affordable pricing.',
+        'pricing_subtitle': 'Maedix gives you more value with a free plan and lower entry price.',
+        'quick_answer': 'Maedix vs ReplyRush: Maedix is a more affordable Instagram automation tool compared to ReplyRush. Maedix offers a free plan ($0/month), Pro ($1.99/month), and Creator ($5.99/month) with AI social agents and a visual automation builder. ReplyRush charges $19/month with no free tier. Maedix includes smart queue for viral post protection, follower check branching, and link in bio pages.',
+        'features': [
+            {'name': 'Free plan available', 'icon': 'bi-gift', 'maedix': True, 'competitor': False},
+            {'name': 'Visual Automation Builder', 'icon': 'bi-window-stack', 'maedix': True, 'competitor': True},
+            {'name': 'Auto Comment Replies', 'icon': 'bi-chat-dots', 'maedix': True, 'competitor': True},
+            {'name': 'Auto Follow-up DMs', 'icon': 'bi-envelope', 'maedix': True, 'competitor': True},
+            {'name': 'Keyword Triggers', 'icon': 'bi-hash', 'maedix': True, 'competitor': True},
+            {'name': 'Quick Reply Buttons', 'icon': 'bi-ui-radios-grid', 'maedix': True, 'competitor': True},
+            {'name': 'Follower Check Branching', 'icon': 'bi-person-check', 'maedix': True, 'competitor': False},
+            {'name': 'AI Social Agents', 'icon': 'bi-cpu', 'maedix': True, 'competitor': False},
+            {'name': 'Smart Queue (viral protection)', 'icon': 'bi-lightning-charge', 'maedix': True, 'competitor': False},
+            {'name': 'Unlimited replies (all plans)', 'icon': 'bi-infinity', 'maedix': True, 'competitor': True},
+            {'name': 'Link in Bio page', 'icon': 'bi-link-45deg', 'maedix': True, 'competitor': False},
+            {'name': 'Starting price', 'icon': 'bi-tag', 'maedix': 'Free', 'competitor': '$19/mo'},
+        ],
+        'pricing_points': [
+            'No free plan available',
+            'Flat rate — $19/month',
+            'No tiered pricing options',
+            'No AI agent features',
+        ],
+        'reasons': [
+            {'icon': 'bi-currency-dollar', 'title': 'Start Free', 'description': 'Maedix offers a free plan with unlimited replies. ReplyRush requires $19/month from day one.'},
+            {'icon': 'bi-cpu', 'title': 'AI Social Agents', 'description': 'Maedix Creator plan includes AI-powered conversation agents for intelligent DM interactions and data collection.'},
+            {'icon': 'bi-lightning-charge', 'title': 'Smart Queue', 'description': 'When your post goes viral, Maedix\'s smart queue ensures no follower is missed. ReplyRush drops overflow messages.'},
+        ],
+        'faq_comparison': 'Maedix and ReplyRush both offer Instagram comment and DM automation. Maedix differentiates with a free plan, AI social agents, smart queue for viral posts, and follower check branching. ReplyRush has a $19/month flat rate with no free tier. Maedix is also more affordable with plans starting at $0 (free) and $1.99/month (Pro).',
+        'faq_pricing': 'Yes, Maedix is more affordable. It offers a free plan and paid plans at $1.99/month and $5.99/month. ReplyRush charges $19/month flat with no free option. Maedix\'s Pro plan at $1.99/month includes smart queue and 5 active automations.',
+        'faq_switch': 'If you\'re looking for a more affordable option with AI capabilities, Maedix is a great alternative to ReplyRush. You can start with the free plan to test the platform, then upgrade to Pro ($1.99/month) or Creator ($5.99/month) for advanced features like AI social agents and smart queue.',
+    },
+}
+
+
+class ComparisonView(View):
+    """Competitor comparison pages for SEO"""
+    template_name = 'core/compare.html'
+
+    def get(self, request, competitor_slug):
+        competitor = COMPETITOR_DATA.get(competitor_slug)
+        if not competitor:
+            from django.http import Http404
+            raise Http404("Comparison not found")
+        return render(request, self.template_name, {'competitor': competitor})
 
 
 class LinkRedirectView(View):

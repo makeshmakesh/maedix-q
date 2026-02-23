@@ -44,6 +44,13 @@ class InstagramAPIError(Exception):
             return True
         return False
 
+    def is_token_invalid_error(self) -> bool:
+        """Check if this error indicates the access token is expired or invalid (code 190)."""
+        if self.code == 190:
+            return True
+        error_lower = self.message.lower()
+        return 'session has been invalidated' in error_lower or 'validating access token' in error_lower
+
     def is_messaging_restricted_error(self) -> bool:
         """
         Check if this error indicates the user has restricted messaging.
@@ -84,6 +91,27 @@ class InstagramAPIClient:
         self.ig_user_id = ig_user_id
         self.account_id = account_id
         self.timeout = 30
+
+    def _deactivate_account(self):
+        """Deactivate the Instagram account and unsubscribe webhook when the token is invalid."""
+        try:
+            from .models import InstagramAccount
+            account = InstagramAccount.objects.filter(id=self.account_id, is_active=True).first()
+            if not account:
+                return
+            account.is_active = False
+            account.save(update_fields=['is_active'])
+            logger.warning(f"Deactivated Instagram account {self.account_id} due to invalid token")
+
+            # Unsubscribe from webhook events
+            try:
+                url = f"{BASE_URL}/{self.ig_user_id}/subscribed_apps"
+                requests.delete(url, params={'access_token': self.access_token}, timeout=10)
+                logger.info(f"Unsubscribed webhook for account {self.account_id}")
+            except Exception:
+                pass  # Token is invalid anyway, unsubscribe is best-effort
+        except Exception as e:
+            logger.error(f"Failed to deactivate account {self.account_id}: {e}")
 
     def _apply_dm_delay(self):
         """
@@ -211,11 +239,15 @@ class InstagramAPIClient:
                 logger.error(f"Instagram API error: {error_message} (code: {error_code})")
                 # Log failed API call
                 self._log_api_call(method, endpoint, json_data, success=False)
-                raise InstagramAPIError(
+                api_error = InstagramAPIError(
                     message=error_message,
                     code=error_code,
                     response_data=response_data
                 )
+                # Deactivate account on invalid token to stop further retries
+                if api_error.is_token_invalid_error() and self.account_id:
+                    self._deactivate_account()
+                raise api_error
 
             # Log successful API call
             self._log_api_call(method, endpoint, json_data, success=True)

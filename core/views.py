@@ -584,6 +584,7 @@ class PaymentWebhookView(View):
     """Razorpay webhook handler for subscription events"""
 
     def get(self, request):
+        logger.info("Razorpay webhook GET ping received")
         return JsonResponse({'status': 'ok'})
 
     def post(self, request):

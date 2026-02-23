@@ -71,8 +71,14 @@ LOGGING = {
       'handlers': {
           'console': {'class': 'logging.StreamHandler'},
       },
+      'root': {
+          'level': 'WARNING',
+          'handlers': ['console'],
+      },
       'loggers': {
+          'core': {'level': 'INFO', 'handlers': ['console']},
           'instagram': {'level': 'WARNING'},
+          'django.security.DisallowedHost': {'level': 'CRITICAL'},
       },
   }
 

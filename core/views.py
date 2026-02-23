@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.db import transaction
+from django.contrib.auth import get_user_model
 from dateutil.relativedelta import relativedelta
 from .models import Plan, ContactMessage, Configuration, Subscription, Transaction, CreditTransaction
 from .forms import ContactForm
@@ -179,6 +180,103 @@ def get_public_coupons():
         return [c for c in coupons if c.get('active', True) and c.get('public', False)]
     except (json.JSONDecodeError, TypeError):
         return []
+
+
+def _process_successful_payment(user, plan, billing, razorpay_order_id, razorpay_payment_id,
+                                amount, currency, razorpay_signature='', coupon_code='',
+                                discount_percentage=None, original_price=None):
+    """
+    Create Transaction + Subscription for a successful payment.
+    Shared by PaymentSuccessView (frontend callback) and PaymentWebhookView (webhook fallback).
+
+    Returns (transaction, subscription) or None if already processed (idempotent).
+    """
+    # Idempotency check
+    if Transaction.objects.filter(
+        razorpay_order_id=razorpay_order_id, user=user, status='success'
+    ).exists():
+        return None
+
+    with transaction.atomic():
+        # Double-check inside transaction (another request may have just completed)
+        if Transaction.objects.filter(
+            razorpay_order_id=razorpay_order_id, user=user, status='success'
+        ).exists():
+            return None
+
+        # Build metadata
+        transaction_metadata = {
+            'plan_slug': plan.slug,
+            'billing': billing,
+        }
+        if coupon_code:
+            transaction_metadata['coupon_code'] = coupon_code
+        if discount_percentage is not None:
+            transaction_metadata['discount_percentage'] = discount_percentage
+        if original_price is not None:
+            transaction_metadata['original_price'] = str(original_price)
+
+        payment_txn = Transaction.objects.create(
+            user=user,
+            amount=Decimal(str(amount)),
+            currency=currency,
+            status='success',
+            razorpay_order_id=razorpay_order_id,
+            razorpay_payment_id=razorpay_payment_id,
+            razorpay_signature=razorpay_signature,
+            metadata=transaction_metadata,
+        )
+
+        # Calculate subscription dates
+        now = timezone.now()
+        is_yearly = billing == 'yearly'
+        if is_yearly:
+            end_date = now + relativedelta(years=1)
+            next_reset = now + relativedelta(months=1)
+        else:
+            end_date = now + relativedelta(months=1)
+            next_reset = end_date
+
+        # Create or update subscription
+        subscription, created = Subscription.objects.update_or_create(
+            user=user,
+            defaults={
+                'plan': plan,
+                'status': 'active',
+                'start_date': now,
+                'end_date': end_date,
+                'is_yearly': is_yearly,
+                'usage_data': {},
+                'last_reset_date': now,
+                'next_reset_date': next_reset,
+            }
+        )
+
+        # Link transaction to subscription
+        payment_txn.subscription = subscription
+        payment_txn.save()
+
+        # Reactivate system-deactivated flows up to new plan limit
+        from instagram.models import DMFlow
+        new_limit = plan.get_feature_limit('ig_flow_builder', 0)
+        active_count = DMFlow.objects.filter(user=user, is_active=True).count()
+        if new_limit is None or new_limit == 0:
+            budget = float('inf')
+        else:
+            budget = max(0, new_limit - active_count)
+        if budget > 0:
+            system_deactivated = DMFlow.objects.filter(
+                user=user, is_active=False, deactivated_by='system'
+            ).order_by('created_at')
+            if budget != float('inf'):
+                system_deactivated = system_deactivated[:int(budget)]
+            reactivate_ids = list(system_deactivated.values_list('id', flat=True))
+            if reactivate_ids:
+                DMFlow.objects.filter(id__in=reactivate_ids).update(
+                    is_active=True, deactivated_by=None
+                )
+
+    return (payment_txn, subscription)
 
 
 class ValidateCouponView(LoginRequiredMixin, View):
@@ -356,14 +454,13 @@ class PaymentSuccessView(LoginRequiredMixin, View):
         price = original_price
 
         # Apply coupon discount if provided
-        applied_coupon = None
+        discount_pct = None
         if coupon_code:
             coupon = get_valid_coupon(coupon_code)
             if coupon:
-                discount_percentage = Decimal(str(coupon.get('discount_percentage', 0)))
-                discount_amount = (original_price * discount_percentage / 100).quantize(Decimal('0.01'))
+                discount_pct = Decimal(str(coupon.get('discount_percentage', 0)))
+                discount_amount = (original_price * discount_pct / 100).quantize(Decimal('0.01'))
                 price = original_price - discount_amount
-                applied_coupon = coupon
 
         # Verify signature
         try:
@@ -381,87 +478,27 @@ class PaymentSuccessView(LoginRequiredMixin, View):
                 messages.error(request, 'Payment verification failed. Please contact support.')
                 return redirect('pricing')
 
-            # Use atomic transaction to prevent duplicate processing
-            with transaction.atomic():
-                # Double-check inside transaction (another request may have just completed)
-                if Transaction.objects.filter(
-                    razorpay_order_id=razorpay_order_id,
-                    user=request.user,
-                    status='success'
-                ).exists():
-                    messages.info(request, 'This payment has already been processed.')
-                    return redirect('payment_success_page')
+            result = _process_successful_payment(
+                user=request.user,
+                plan=plan,
+                billing=billing,
+                razorpay_order_id=razorpay_order_id,
+                razorpay_payment_id=razorpay_payment_id,
+                amount=price,
+                currency=currency,
+                razorpay_signature=razorpay_signature,
+                coupon_code=coupon_code,
+                discount_percentage=float(discount_pct) if discount_pct else None,
+                original_price=original_price if discount_pct else None,
+            )
 
-                # Create transaction record with coupon info if applied
-                transaction_metadata = {
-                    'plan_slug': plan_slug,
-                    'billing': billing,
-                }
-                if applied_coupon:
-                    transaction_metadata['coupon_code'] = applied_coupon['code']
-                    transaction_metadata['discount_percentage'] = applied_coupon.get('discount_percentage', 0)
-                    transaction_metadata['original_price'] = str(original_price)
+            if result is None:
+                messages.info(request, 'This payment has already been processed.')
+                return redirect('payment_success_page')
 
-                payment_txn = Transaction.objects.create(
-                    user=request.user,
-                    amount=Decimal(str(price)),
-                    currency=currency,
-                    status='success',
-                    razorpay_order_id=razorpay_order_id,
-                    razorpay_payment_id=razorpay_payment_id,
-                    razorpay_signature=razorpay_signature,
-                    metadata=transaction_metadata
-                )
+            payment_txn, subscription = result
 
-                # Calculate subscription dates
-                now = timezone.now()
-                if is_yearly:
-                    end_date = now + relativedelta(years=1)
-                    next_reset = now + relativedelta(months=1)
-                else:
-                    end_date = now + relativedelta(months=1)
-                    next_reset = end_date
-
-                # Create or update subscription
-                subscription, created = Subscription.objects.update_or_create(
-                    user=request.user,
-                    defaults={
-                        'plan': plan,
-                        'status': 'active',
-                        'start_date': now,
-                        'end_date': end_date,
-                        'is_yearly': is_yearly,
-                        'usage_data': {},  # Reset usage on new subscription
-                        'last_reset_date': now,
-                        'next_reset_date': next_reset,
-                    }
-                )
-
-                # Link transaction to subscription
-                payment_txn.subscription = subscription
-                payment_txn.save()
-
-                # Reactivate system-deactivated flows up to new plan limit
-                from instagram.models import DMFlow
-                new_limit = plan.get_feature_limit('ig_flow_builder', 0)
-                active_count = DMFlow.objects.filter(user=request.user, is_active=True).count()
-                if new_limit is None or new_limit == 0:
-                    budget = float('inf')
-                else:
-                    budget = max(0, new_limit - active_count)
-                if budget > 0:
-                    system_deactivated = DMFlow.objects.filter(
-                        user=request.user, is_active=False, deactivated_by='system'
-                    ).order_by('created_at')
-                    if budget != float('inf'):
-                        system_deactivated = system_deactivated[:int(budget)]
-                    reactivate_ids = list(system_deactivated.values_list('id', flat=True))
-                    if reactivate_ids:
-                        DMFlow.objects.filter(id__in=reactivate_ids).update(
-                            is_active=True, deactivated_by=None
-                        )
-
-            # Store success data in session (outside atomic block)
+            # Store success data in session
             request.session['payment_success_data'] = {
                 'transaction_id': payment_txn.id,
                 'subscription_id': subscription.id,
@@ -572,9 +609,74 @@ class PaymentWebhookView(View):
 
             # Handle different events
             if event == 'payment.captured':
-                # Payment was successful
                 payment = payload.get('payload', {}).get('payment', {}).get('entity', {})
-                logger.info(f"Payment captured: {payment.get('id')}")
+                notes = payment.get('notes', {})
+                razorpay_payment_id = payment.get('id', '')
+                razorpay_order_id = payment.get('order_id', '')
+
+                logger.info(f"Payment captured: {razorpay_payment_id}")
+
+                # Skip credit purchases (handled separately)
+                if notes.get('type') == 'credits':
+                    logger.info(f"payment.captured: skipping credit purchase {razorpay_payment_id}")
+                else:
+                    user_id = notes.get('user_id')
+                    plan_slug = notes.get('plan_slug')
+                    billing = notes.get('billing', 'monthly')
+                    coupon_code = notes.get('coupon_code', '')
+                    discount_percentage = notes.get('discount_percentage')
+
+                    if not all([user_id, plan_slug, razorpay_payment_id, razorpay_order_id]):
+                        logger.warning(f"payment.captured missing required notes: {notes}")
+                    else:
+                        try:
+                            User = get_user_model()
+                            user = User.objects.get(id=user_id)
+                            plan = Plan.objects.get(slug=plan_slug, is_active=True)
+                        except Exception as e:
+                            logger.error(f"payment.captured lookup failed: {e}")
+                            return JsonResponse({'status': 'ok'})
+
+                        # Amount from Razorpay is in paise/cents
+                        amount = Decimal(str(payment.get('amount', 0))) / Decimal('100')
+                        currency = payment.get('currency', 'INR')
+
+                        # Compute original_price for metadata if discount was applied
+                        original_price = None
+                        if discount_percentage:
+                            try:
+                                dp = Decimal(str(discount_percentage))
+                                if dp > 0:
+                                    original_price = (amount / (1 - dp / 100)).quantize(Decimal('0.01'))
+                            except Exception:
+                                pass
+
+                        try:
+                            result = _process_successful_payment(
+                                user=user,
+                                plan=plan,
+                                billing=billing,
+                                razorpay_order_id=razorpay_order_id,
+                                razorpay_payment_id=razorpay_payment_id,
+                                amount=amount,
+                                currency=currency,
+                                coupon_code=coupon_code,
+                                discount_percentage=float(discount_percentage) if discount_percentage else None,
+                                original_price=original_price,
+                            )
+                            if result:
+                                logger.info(
+                                    f"payment.captured: created Transaction+Subscription "
+                                    f"for user {user_id}, order {razorpay_order_id}"
+                                )
+                            else:
+                                logger.info(
+                                    f"payment.captured: already processed order {razorpay_order_id}"
+                                )
+                        except Exception as e:
+                            logger.error(
+                                f"payment.captured processing error for order {razorpay_order_id}: {e}"
+                            )
 
             elif event == 'payment.failed':
                 # Payment failed

@@ -71,9 +71,8 @@ LOGGING = {
       'handlers': {
           'console': {'class': 'logging.StreamHandler'},
       },
-      'root': {
-          'level': 'WARNING',
-          'handlers': ['console'],
+      'loggers': {
+          'instagram': {'level': 'WARNING'},
       },
   }
 

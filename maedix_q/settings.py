@@ -62,6 +62,22 @@ INSTALLED_APPS = [
     # 'hr',            # Phase 3
 ]
 
+
+
+
+LOGGING = {
+      'version': 1,
+      'disable_existing_loggers': False,
+      'handlers': {
+          'console': {'class': 'logging.StreamHandler'},
+      },
+      'root': {
+          'level': 'WARNING',
+          'handlers': ['console'],
+      },
+  }
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

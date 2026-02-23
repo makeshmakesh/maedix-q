@@ -2408,7 +2408,6 @@ class InstagramWebhookView(View):
         """Process incoming webhook events"""
         try:
             payload = json.loads(request.body)
-            print(payload)
             logger.info(f"Instagram webhook received: {json.dumps(payload)[:1000]}")
 
             for entry in payload.get('entry', []):

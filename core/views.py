@@ -145,6 +145,13 @@ def llms_txt(request):
     return render(request, 'llms.txt', content_type='text/plain')
 
 
+def ads_txt(request):
+    """Serve ads.txt for AdSense verification"""
+    from django.http import HttpResponse
+    content = "google.com, pub-2686769515625508, DIRECT, f08c47fec0942fa0\n"
+    return HttpResponse(content, content_type='text/plain')
+
+
 def get_valid_coupon(code: str) -> dict | None:
     """
     Validate a coupon code and return coupon details if valid.

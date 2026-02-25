@@ -18,6 +18,15 @@
     <meta name="twitter:title" content="{{ profile_user.get_full_name }} (@{{ profile_user.username }})">
     <meta name="twitter:description" content="{{ profile.bio|default:'Check out my links on Maedix' }}">
 
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HQ8163C2RE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HQ8163C2RE');
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>

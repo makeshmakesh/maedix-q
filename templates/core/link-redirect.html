@@ -147,10 +147,16 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
         }
 
-        .go-btn:hover {
+        .go-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        .go-btn:hover:not(.disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
             color: white;
@@ -248,8 +254,8 @@
             <div class="destination-url">{{ target_url|truncatechars:50 }}</div>
         </div>
 
-        <a href="{{ target_url }}" class="go-btn" id="go-btn">
-            Go to Link <i class="bi bi-arrow-right"></i>
+        <a href="{{ target_url }}" class="go-btn disabled" id="go-btn">
+            Wait <span id="countdown">{{ redirect_delay }}</span>s <i class="bi bi-hourglass-split"></i>
         </a>
         {% endif %}
 
@@ -282,6 +288,31 @@
         var start = Date.now();
         var eventId = "{{ event_id }}";
         var sent = false;
+        var delay = {{ redirect_delay }};
+        var btn = document.getElementById("go-btn");
+        var countdownEl = document.getElementById("countdown");
+
+        // Countdown timer
+        var remaining = delay;
+        var timer = setInterval(function() {
+            remaining--;
+            if (remaining > 0) {
+                countdownEl.textContent = remaining;
+            } else {
+                clearInterval(timer);
+                btn.classList.remove("disabled");
+                btn.innerHTML = 'Go to Link <i class="bi bi-arrow-right"></i>';
+            }
+        }, 1000);
+
+        // Block click during countdown
+        btn.addEventListener("click", function(e) {
+            if (btn.classList.contains("disabled")) {
+                e.preventDefault();
+                return;
+            }
+            sendPing(true);
+        });
 
         function sendPing(clicked) {
             if (sent) return;
@@ -295,10 +326,6 @@
                 navigator.sendBeacon("{% url 'link_redirect_ping' %}", new Blob([data], {type: "application/json"}));
             }
         }
-
-        document.getElementById("go-btn").addEventListener("click", function() {
-            sendPing(true);
-        });
 
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === "hidden") sendPing(false);

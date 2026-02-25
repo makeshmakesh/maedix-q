@@ -152,18 +152,78 @@
 
         .go-btn.disabled {
             background: #9ca3af;
-            pointer-events: none;
             cursor: not-allowed;
         }
 
-        .spinner {
+        .verify-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .verify-box:hover {
+            border-color: #9ca3af;
+        }
+
+        .verify-box.verified {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .verify-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .verify-box.verified .verify-checkbox {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .verify-checkbox i {
+            color: white;
+            font-size: 14px;
+            display: none;
+        }
+
+        .verify-box.verified .verify-checkbox i {
+            display: block;
+        }
+
+        .verify-spinner {
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
+            border: 2px solid #e5e7eb;
+            border-top-color: #6b7280;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            display: inline-block;
+        }
+
+        .verify-label {
+            font-size: 0.85rem;
+            color: #374151;
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .verify-brand {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            text-align: right;
         }
 
         @keyframes spin {
@@ -268,8 +328,14 @@
             <div class="destination-url">{{ target_url|truncatechars:50 }}</div>
         </div>
 
+        <div class="verify-box" id="verify-box">
+            <div class="verify-checkbox" id="verify-check"><i class="bi bi-check-lg"></i></div>
+            <div class="verify-label" id="verify-label">I trust this link shared via Instagram DM</div>
+            <div class="verify-brand"><i class="bi bi-shield-check"></i> Safe Link</div>
+        </div>
+
         <a href="{{ target_url }}" class="go-btn disabled" id="go-btn">
-            <span class="spinner"></span> Preparing your link...
+            Go to Link <i class="bi bi-arrow-right"></i>
         </a>
         {% endif %}
 
@@ -303,18 +369,44 @@
         var eventId = "{{ event_id }}";
         var sent = false;
         var delay = {{ redirect_delay }};
+        var verifyBox = document.getElementById("verify-box");
+        var verifyCheck = document.getElementById("verify-check");
+        var verifyLabel = document.getElementById("verify-label");
         var btn = document.getElementById("go-btn");
+        var clicked = false;
 
-        // Enable button after delay
-        setTimeout(function() {
-            btn.classList.remove("disabled");
-            btn.innerHTML = 'Go to Link <i class="bi bi-arrow-right"></i>';
-        }, delay * 1000);
+        verifyBox.addEventListener("click", function() {
+            if (clicked) return;
+            clicked = true;
 
-        // Block click during countdown
+            // Show spinner in checkbox
+            verifyCheck.innerHTML = '<div class="verify-spinner"></div>';
+            verifyLabel.textContent = "Checking link safety...";
+            verifyBox.style.cursor = "default";
+
+            // After delay, show verified + enable button
+            setTimeout(function() {
+                verifyBox.classList.add("verified");
+                verifyCheck.innerHTML = '<i class="bi bi-check-lg" style="display:block"></i>';
+                verifyLabel.textContent = "Link verified safe";
+                btn.classList.remove("disabled");
+            }, delay * 1000);
+        });
+
         btn.addEventListener("click", function(e) {
             if (btn.classList.contains("disabled")) {
                 e.preventDefault();
+                // Highlight the checkbox
+                verifyBox.style.borderColor = "#ef4444";
+                verifyBox.style.background = "#fef2f2";
+                verifyLabel.textContent = "Please confirm you trust this link";
+                setTimeout(function() {
+                    if (!clicked) {
+                        verifyBox.style.borderColor = "";
+                        verifyBox.style.background = "";
+                        verifyLabel.textContent = "I trust this link shared via Instagram DM";
+                    }
+                }, 2000);
                 return;
             }
             sendPing(true);

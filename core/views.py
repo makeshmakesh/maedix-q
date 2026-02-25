@@ -1158,6 +1158,8 @@ class LinkRedirectView(View):
             'target_url': target_url,
             'redirect_delay': 5,  # seconds before redirect
             'event_id': event.pk,
+            'adsense_pub_id': Configuration.get_value('adsense_pub_id', ''),
+            'adsense_slot_id': Configuration.get_value('adsense_slot_id', ''),
         })
 
 

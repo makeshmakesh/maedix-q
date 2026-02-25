@@ -215,6 +215,18 @@
             <div class="brand-slogan">Instagram Automation Platform</div>
         </div>
 
+        {% if branding_only %}
+        <div class="link-icon" style="background: var(--gradient);">
+            <i class="bi bi-lightning-charge-fill"></i>
+        </div>
+
+        <h1 class="redirect-title">Automate Your Instagram</h1>
+        <p class="redirect-subtitle">Turn comments into DMs, collect leads, and grow on autopilot</p>
+
+        <a href="{% url 'home' %}" class="go-btn" id="go-btn" style="background: var(--gradient);">
+            Get Started Free <i class="bi bi-arrow-right"></i>
+        </a>
+        {% else %}
         <div class="link-icon">
             <i class="bi bi-box-arrow-up-right"></i>
         </div>
@@ -230,6 +242,7 @@
         <a href="{{ target_url }}" class="go-btn" id="go-btn">
             Go to Link <i class="bi bi-arrow-right"></i>
         </a>
+        {% endif %}
 
         {% if adsense_pub_id and adsense_slot_id %}
         <div class="ad-container">
@@ -254,6 +267,7 @@
         </div>
     </div>
 
+    {% if not branding_only %}
     <script>
     (function() {
         var start = Date.now();
@@ -282,5 +296,6 @@
         });
     })();
     </script>
+    {% endif %}
 </body>
 </html>

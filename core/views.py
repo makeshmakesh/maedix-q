@@ -1108,11 +1108,15 @@ class LinkRedirectView(View):
     def get(self, request):
         import urllib.parse
 
-        target_url = request.GET.get('url', '')
+        target_url = request.GET.get('url', '').strip()
 
         if not target_url:
-            messages.error(request, 'No destination URL provided.')
-            return redirect('home')
+            return render(request, self.template_name, {
+                'target_url': '',
+                'branding_only': True,
+                'adsense_pub_id': Configuration.get_value('adsense_pub_id', ''),
+                'adsense_slot_id': Configuration.get_value('adsense_slot_id', ''),
+            })
 
         # Decode URL if needed
         try:

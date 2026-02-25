@@ -17,9 +17,10 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from .forms import SignupForm, LoginForm, ProfileForm, UserForm, OTPVerificationForm, ProfileLinkForm
 from .models import (
-    UserProfile, UserStats, EmailOTP, ProfileLink, ProfilePageView,
-    ProfileLinkClick, generate_unique_username, hash_ip,
+    UserProfile, UserStats, EmailOTP, UserAcquisition, ProfileLink,
+    ProfilePageView, ProfileLinkClick, generate_unique_username, hash_ip,
 )
+from .middleware import SESSION_KEY as ACQUISITION_SESSION_KEY
 from .otp_utils import send_otp_email, verify_otp
 from core.models import Configuration, Subscription, Plan, Transaction
 from core.subscription_utils import get_or_create_free_subscription, get_user_subscription
@@ -27,6 +28,26 @@ from core.utils import get_user_country
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+def _save_acquisition(request, user):
+    """Save acquisition data from session to the user's record."""
+    data = request.session.pop(ACQUISITION_SESSION_KEY, None)
+    if not data:
+        return
+    UserAcquisition.objects.get_or_create(
+        user=user,
+        defaults={
+            'utm_source': data.get('utm_source', ''),
+            'utm_medium': data.get('utm_medium', ''),
+            'utm_campaign': data.get('utm_campaign', ''),
+            'utm_term': data.get('utm_term', ''),
+            'utm_content': data.get('utm_content', ''),
+            'referrer': data.get('referrer', ''),
+            'referrer_domain': data.get('referrer_domain', ''),
+            'landing_page': data.get('landing_page', ''),
+        },
+    )
 
 
 class SignupView(View):
@@ -114,6 +135,8 @@ class OTPVerificationView(View):
                 UserStats.objects.get_or_create(user=user)
                 # Create free subscription for new user
                 get_or_create_free_subscription(user)
+                # Save acquisition source
+                _save_acquisition(request, user)
 
                 # Clean up session
                 del request.session['pending_user_id']
@@ -290,6 +313,7 @@ class GoogleAuthView(View):
                 UserProfile.objects.get_or_create(user=user)
                 UserStats.objects.get_or_create(user=user)
                 get_or_create_free_subscription(user)
+                _save_acquisition(request, user)
             except IntegrityError:
                 # Race condition: user was created between our check and save
                 user = User.objects.get(email=email)

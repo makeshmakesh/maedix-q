@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from dateutil.relativedelta import relativedelta
-from .models import Plan, ContactMessage, Configuration, Subscription, Transaction, CreditTransaction
+from .models import Plan, ContactMessage, Configuration, Subscription, Transaction, CreditTransaction, LinkRedirectEvent
 from .forms import ContactForm
 from .utils import get_user_country, is_indian_user, get_currency_for_user
 
@@ -1117,14 +1117,75 @@ class LinkRedirectView(View):
         # Decode URL if needed
         try:
             target_url = urllib.parse.unquote(target_url)
-        except:
+        except Exception:
             pass
 
         # Basic validation - ensure it looks like a URL
         if not target_url.startswith(('http://', 'https://')):
             target_url = 'https://' + target_url
 
+        # Extract domain
+        try:
+            target_domain = urllib.parse.urlparse(target_url).netloc[:253]
+        except Exception:
+            target_domain = ''
+
+        # Get IP
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+        if ',' in ip:
+            ip = ip.split(',')[0].strip()
+
+        # Get referrer
+        referrer = request.META.get('HTTP_REFERER', '')
+        if referrer:
+            try:
+                parsed = urllib.parse.urlparse(referrer)
+                if not parsed.scheme or not parsed.netloc:
+                    referrer = ''
+            except Exception:
+                referrer = ''
+
+        # Log the redirect event
+        event = LinkRedirectEvent.objects.create(
+            target_url=target_url[:2000],
+            target_domain=target_domain,
+            ip_hash=LinkRedirectEvent.hash_ip(ip),
+            referrer=referrer[:2000],
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:300],
+        )
+
         return render(request, self.template_name, {
             'target_url': target_url,
             'redirect_delay': 5,  # seconds before redirect
+            'event_id': event.pk,
         })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LinkRedirectPingView(View):
+    """Receives duration/click data from the redirect page via sendBeacon."""
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, AttributeError):
+            return JsonResponse({'error': 'bad json'}, status=400)
+
+        event_id = data.get('event_id')
+        duration_ms = data.get('duration_ms')
+        clicked = data.get('clicked', False)
+
+        if not event_id:
+            return JsonResponse({'error': 'missing event_id'}, status=400)
+
+        updated = LinkRedirectEvent.objects.filter(
+            pk=event_id, duration_ms__isnull=True
+        ).update(
+            duration_ms=min(int(duration_ms), 600_000) if duration_ms else None,
+            clicked=bool(clicked),
+        )
+
+        if not updated:
+            return JsonResponse({'status': 'skipped'})
+
+        return JsonResponse({'status': 'ok'})

@@ -10,8 +10,8 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
-from users.models import CustomUser, ProfileLink, ProfilePageView, ProfileLinkClick
-from core.models import Plan, Subscription, Transaction
+from users.models import CustomUser, UserAcquisition, ProfileLink, ProfilePageView, ProfileLinkClick
+from core.models import Plan, Subscription, Transaction, LinkRedirectEvent
 from .models import (
     InstagramAccount, APICallLog, DMFlow, FlowSession, FlowExecutionLog,
     CollectedLead, QueuedFlowTrigger, SocialAgent, AIUsageLog,
@@ -72,6 +72,12 @@ class AdminDashboardView(StaffRequiredMixin, View):
 
         # Link in Bio Metrics
         context['link_in_bio'] = self._get_link_in_bio_metrics(start_date)
+
+        # User Acquisition Sources
+        context['acquisition'] = self._get_acquisition_stats(start_date)
+
+        # Link Redirect (/go/) Metrics
+        context['redirect'] = self._get_redirect_stats(start_date)
 
         # Recent Activity
         context['recent_sessions'] = FlowSession.objects.select_related('flow').order_by('-created_at')[:10]
@@ -158,6 +164,20 @@ class AdminDashboardView(StaffRequiredMixin, View):
                 for a in msg_accounts[:50]
             ]
 
+        # Add time saved per user (2 min/DM, 1 min/comment)
+        total_time_saved = 0
+        for u in msg_users:
+            mins = (u['dms'] or 0) * 2 + (u['comments'] or 0) * 1
+            total_time_saved += mins
+            if mins >= 60:
+                u['time_saved'] = f"{mins // 60}h {mins % 60}m"
+            else:
+                u['time_saved'] = f"{mins}m"
+        if total_time_saved >= 60:
+            total_time_saved_display = f"{total_time_saved // 60}h {total_time_saved % 60}m"
+        else:
+            total_time_saved_display = f"{total_time_saved}m"
+
         # 5. Paid Users (successful transactions)
         txn_qs = Transaction.objects.filter(status='success').select_related('user', 'subscription__plan')
         if start_date:
@@ -176,12 +196,13 @@ class AdminDashboardView(StaffRequiredMixin, View):
             ).select_related('plan').first()
             pu['plan_name'] = sub.plan.name if sub else 'No active plan'
 
+        FUNNEL_LIMIT = 50
         return {
-            'signups': {'count': signup_count, 'google_count': google_count, 'password_count': password_count, 'users': signup_users},
-            'ig_connected': {'count': ig_count, 'users': ig_users},
-            'flows_created': {'count': flow_user_count, 'users': flow_users},
-            'messages_sent': {'count': msg_user_count, 'users': msg_users},
-            'paid': {'count': paid_count, 'users': paid_users},
+            'signups': {'count': signup_count, 'google_count': google_count, 'password_count': password_count, 'users': signup_users, 'shown': min(signup_count, FUNNEL_LIMIT)},
+            'ig_connected': {'count': ig_count, 'users': ig_users, 'shown': min(ig_count, FUNNEL_LIMIT)},
+            'flows_created': {'count': flow_user_count, 'users': flow_users, 'shown': min(flow_user_count, FUNNEL_LIMIT)},
+            'messages_sent': {'count': msg_user_count, 'users': msg_users, 'time_saved': total_time_saved_display, 'shown': min(msg_user_count, FUNNEL_LIMIT)},
+            'paid': {'count': paid_count, 'users': paid_users, 'shown': min(paid_count, FUNNEL_LIMIT)},
         }
 
     def _get_overview_stats(self, start_date, today):
@@ -460,6 +481,96 @@ class AdminDashboardView(StaffRequiredMixin, View):
         }
 
 
+    def _get_acquisition_stats(self, start_date):
+        """Get user acquisition source breakdown."""
+        qs = UserAcquisition.objects.all()
+        if start_date:
+            qs = qs.filter(created_at__gte=start_date)
+
+        total = qs.count()
+
+        # Source breakdown
+        utm_users = qs.exclude(utm_source='').count()
+        referrer_users = qs.filter(utm_source='').exclude(referrer_domain='').count()
+        direct_users = total - utm_users - referrer_users
+
+        # Top UTM sources
+        top_sources = list(
+            qs.exclude(utm_source='')
+            .values('utm_source')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        # Top UTM campaigns
+        top_campaigns = list(
+            qs.exclude(utm_campaign='')
+            .values('utm_campaign', 'utm_source')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        # Top referrer domains (non-UTM)
+        top_referrers = list(
+            qs.filter(utm_source='').exclude(referrer_domain='')
+            .values('referrer_domain')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        # Top UTM mediums
+        top_mediums = list(
+            qs.exclude(utm_medium='')
+            .values('utm_medium')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        return {
+            'total': total,
+            'utm_users': utm_users,
+            'referrer_users': referrer_users,
+            'direct_users': direct_users,
+            'top_sources': top_sources,
+            'top_campaigns': top_campaigns,
+            'top_referrers': top_referrers,
+            'top_mediums': top_mediums,
+        }
+
+    def _get_redirect_stats(self, start_date):
+        """Get /go/ link redirect page metrics."""
+        qs = LinkRedirectEvent.objects.all()
+        if start_date:
+            qs = qs.filter(created_at__gte=start_date)
+
+        total_views = qs.count()
+        total_clicked = qs.filter(clicked=True).count()
+        click_rate = round((total_clicked / total_views * 100), 1) if total_views > 0 else 0
+
+        # Average duration (only where duration was recorded)
+        duration_qs = qs.filter(duration_ms__isnull=False)
+        avg_duration = duration_qs.aggregate(avg=Sum('duration_ms') / Count('id'))['avg'] or 0
+        avg_duration_sec = round(avg_duration / 1000, 1) if avg_duration else 0
+
+        # Top target domains
+        top_domains = list(
+            qs.values('target_domain')
+            .annotate(
+                views=Count('id'),
+                clicks=Count('id', filter=Q(clicked=True)),
+            )
+            .order_by('-views')[:10]
+        )
+
+        return {
+            'total_views': total_views,
+            'total_clicked': total_clicked,
+            'click_rate': click_rate,
+            'avg_duration_sec': avg_duration_sec,
+            'top_domains': top_domains,
+        }
+
+
 class AdminQueuedFlowsView(StaffRequiredMixin, View):
     """Admin view to see all queued flows across all users"""
     template_name = 'staff/admin/queued_flows.html'
@@ -489,7 +600,9 @@ class AdminQueuedFlowsView(StaffRequiredMixin, View):
         else:
             qs = qs.order_by('-created_at')
 
-        queued_flows = qs[:200]
+        queue_total = qs.count()
+        QUEUE_LIMIT = 200
+        queued_flows = qs[:QUEUE_LIMIT]
 
         # Summary stats
         total_pending = QueuedFlowTrigger.objects.filter(status='pending').count()
@@ -528,6 +641,8 @@ class AdminQueuedFlowsView(StaffRequiredMixin, View):
 
         context = {
             'queued_flows': queued_flows,
+            'queue_total': queue_total,
+            'queue_shown': min(queue_total, QUEUE_LIMIT),
             'status_filter': status_filter,
             'account_filter': account_filter,
             'user_search': user_search,

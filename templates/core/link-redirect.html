@@ -216,7 +216,7 @@
             <div class="destination-url">{{ target_url|truncatechars:50 }}</div>
         </div>
 
-        <a href="{{ target_url }}" class="go-btn">
+        <a href="{{ target_url }}" class="go-btn" id="go-btn">
             Go to Link <i class="bi bi-arrow-right"></i>
         </a>
 
@@ -231,5 +231,33 @@
         </div>
     </div>
 
+    <script>
+    (function() {
+        var start = Date.now();
+        var eventId = "{{ event_id }}";
+        var sent = false;
+
+        function sendPing(clicked) {
+            if (sent) return;
+            sent = true;
+            var data = JSON.stringify({
+                event_id: eventId,
+                duration_ms: Date.now() - start,
+                clicked: !!clicked
+            });
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon("{% url 'link_redirect_ping' %}", new Blob([data], {type: "application/json"}));
+            }
+        }
+
+        document.getElementById("go-btn").addEventListener("click", function() {
+            sendPing(true);
+        });
+
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === "hidden") sendPing(false);
+        });
+    })();
+    </script>
 </body>
 </html>

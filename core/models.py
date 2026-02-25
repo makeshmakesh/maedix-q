@@ -1,4 +1,5 @@
 import uuid
+import hashlib
 from django.db import models
 from django.conf import settings
 
@@ -312,3 +313,32 @@ class CreditTransaction(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.credits} credits ({self.status})"
+
+
+class LinkRedirectEvent(models.Model):
+    """Tracks each visit to the /go/ branded redirect page."""
+    target_url = models.URLField(max_length=2000)
+    target_domain = models.CharField(max_length=253, blank=True)
+    ip_hash = models.CharField(max_length=64)
+    referrer = models.URLField(max_length=2000, blank=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    duration_ms = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Time spent on page in milliseconds before leaving',
+    )
+    clicked = models.BooleanField(default=False, help_text='Whether the user clicked "Go to Link"')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.target_domain} — {self.duration_ms or '?'}ms"
+
+    @staticmethod
+    def hash_ip(ip_address):
+        return hashlib.sha256(ip_address.encode()).hexdigest()
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Link Redirect Event'
+        indexes = [
+            models.Index(fields=['target_domain', 'created_at']),
+        ]

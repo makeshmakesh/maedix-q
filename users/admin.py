@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import CustomUser, UserProfile, UserStats, ProfileLink, EmailOTP, ProfilePageView, ProfileLinkClick
+from .models import CustomUser, UserProfile, UserStats, UserAcquisition, ProfileLink, EmailOTP, ProfilePageView, ProfileLinkClick
 
 
 @admin.register(CustomUser)
@@ -16,6 +16,15 @@ class UserProfileAdmin(admin.ModelAdmin):
 @admin.register(UserStats)
 class UserStatsAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(UserAcquisition)
+class UserAcquisitionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_domain', 'created_at']
+    list_filter = ['utm_source', 'utm_medium', 'referrer_domain', 'created_at']
+    search_fields = ['user__email', 'user__username', 'utm_source', 'utm_campaign', 'referrer_domain']
+    readonly_fields = ['user', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'referrer', 'referrer_domain', 'landing_page', 'created_at']
+    date_hierarchy = 'created_at'
 
 
 @admin.register(ProfileLink)

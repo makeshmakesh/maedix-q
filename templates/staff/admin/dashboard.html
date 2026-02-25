@@ -94,6 +94,9 @@
             <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, #fce4ec, #f8bbd0);">
                 <h3 class="fw-bold mb-0">{{ funnel.messages_sent.count }}</h3>
                 <small class="text-muted">Sent Messages</small>
+                <div class="mt-1">
+                    <span class="badge bg-success bg-opacity-75"><i class="bi bi-clock"></i> {{ funnel.messages_sent.time_saved }} saved</span>
+                </div>
             </div>
         </div>
         <div class="col-auto d-flex align-items-center"><i class="bi bi-chevron-right text-muted"></i></div>
@@ -131,6 +134,9 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% if funnel.signups.shown < funnel.signups.count %}
+                        <div class="text-center text-muted py-2 small border-top">Showing {{ funnel.signups.shown }} of {{ funnel.signups.count }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -161,6 +167,9 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% if funnel.ig_connected.shown < funnel.ig_connected.count %}
+                        <div class="text-center text-muted py-2 small border-top">Showing {{ funnel.ig_connected.shown }} of {{ funnel.ig_connected.count }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -190,6 +199,9 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% if funnel.flows_created.shown < funnel.flows_created.count %}
+                        <div class="text-center text-muted py-2 small border-top">Showing {{ funnel.flows_created.shown }} of {{ funnel.flows_created.count }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -206,7 +218,7 @@
                 <div class="accordion-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light"><tr><th>Email</th><th>IG Username</th><th>DMs Sent</th><th>Comments Replied</th></tr></thead>
+                            <thead class="table-light"><tr><th>Email</th><th>IG Username</th><th>DMs Sent</th><th>Comments Replied</th><th>Time Saved</th></tr></thead>
                             <tbody>
                                 {% for u in funnel.messages_sent.users %}
                                 <tr>
@@ -214,12 +226,16 @@
                                     <td>@{{ u.username }}</td>
                                     <td>{{ u.dms }}</td>
                                     <td>{{ u.comments }}</td>
+                                    <td><span class="badge bg-success">{{ u.time_saved }}</span></td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="4" class="text-muted text-center">None</td></tr>
+                                <tr><td colspan="5" class="text-muted text-center">None</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% if funnel.messages_sent.shown < funnel.messages_sent.count %}
+                        <div class="text-center text-muted py-2 small border-top">Showing {{ funnel.messages_sent.shown }} of {{ funnel.messages_sent.count }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -250,6 +266,9 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% if funnel.paid.shown < funnel.paid.count %}
+                        <div class="text-center text-muted py-2 small border-top">Showing {{ funnel.paid.shown }} of {{ funnel.paid.count }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -515,6 +534,125 @@
             </div>
             {% empty %}
             <p class="text-muted mb-0">No clicks yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- User Acquisition Sources & Link Redirect -->
+<div class="row g-4 mb-4">
+    <!-- User Acquisition Sources -->
+    <div class="col-md-7">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-signpost-split me-2"></i>User Acquisition Sources</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-4">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">UTM</small>
+                        <strong class="fs-5 text-primary">{{ acquisition.utm_users }}</strong>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">Referrer</small>
+                        <strong class="fs-5 text-success">{{ acquisition.referrer_users }}</strong>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">Direct</small>
+                        <strong class="fs-5 text-secondary">{{ acquisition.direct_users }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-6">
+                    <h6 class="fw-bold mb-2">Top Sources</h6>
+                    {% for s in acquisition.top_sources %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ s.utm_source }}</span>
+                        <strong>{{ s.count }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No UTM data yet.</p>
+                    {% endfor %}
+
+                    {% if acquisition.top_mediums %}
+                    <h6 class="fw-bold mb-2 mt-3">Top Mediums</h6>
+                    {% for m in acquisition.top_mediums %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ m.utm_medium }}</span>
+                        <strong>{{ m.count }}</strong>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="col-6">
+                    <h6 class="fw-bold mb-2">Top Campaigns</h6>
+                    {% for c in acquisition.top_campaigns %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ c.utm_campaign|truncatechars:20 }} <small class="text-muted">({{ c.utm_source }})</small></span>
+                        <strong>{{ c.count }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No campaigns yet.</p>
+                    {% endfor %}
+
+                    {% if acquisition.top_referrers %}
+                    <h6 class="fw-bold mb-2 mt-3">Top Referrer Domains</h6>
+                    {% for r in acquisition.top_referrers %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ r.referrer_domain|truncatechars:25 }}</span>
+                        <strong>{{ r.count }}</strong>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Redirect (/go/) Metrics -->
+    <div class="col-md-5">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-box-arrow-up-right me-2"></i>Link Redirect <small class="text-muted fw-normal">/go/</small></h5>
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">Views</small>
+                        <strong class="fs-5">{{ redirect.total_views }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">Clicked</small>
+                        <strong class="fs-5 text-success">{{ redirect.total_clicked }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">Click Rate</small>
+                        <strong class="fs-5">{{ redirect.click_rate }}%</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded text-center">
+                        <small class="text-muted d-block">Avg Duration</small>
+                        <strong class="fs-5">{{ redirect.avg_duration_sec }}s</strong>
+                    </div>
+                </div>
+            </div>
+            <h6 class="fw-bold mb-2">Top Redirect Domains</h6>
+            {% for d in redirect.top_domains %}
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span>{{ d.target_domain|truncatechars:30 }}</span>
+                <span>
+                    <strong>{{ d.views }}</strong> views
+                    <span class="text-success ms-1">{{ d.clicks }} clicks</span>
+                </span>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No redirects yet.</p>
             {% endfor %}
         </div>
     </div>

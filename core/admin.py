@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 
-from .models import Configuration, Plan, Subscription, Transaction, ContactMessage, Banner
+from .models import Configuration, Plan, Subscription, Transaction, ContactMessage, Banner, LinkRedirectEvent
 
 
 @admin.register(Configuration)
@@ -55,3 +55,23 @@ class BannerAdmin(admin.ModelAdmin):
                 obj.image_url = url
                 obj.image_s3_key = s3_key
         super().save_model(request, obj, form, change)
+
+
+@admin.register(LinkRedirectEvent)
+class LinkRedirectEventAdmin(admin.ModelAdmin):
+    list_display = ['target_domain', 'clicked', 'duration_display', 'ip_hash_short', 'created_at']
+    list_filter = ['clicked', 'target_domain', 'created_at']
+    search_fields = ['target_url', 'target_domain']
+    readonly_fields = ['target_url', 'target_domain', 'ip_hash', 'referrer', 'user_agent', 'duration_ms', 'clicked', 'created_at']
+    date_hierarchy = 'created_at'
+
+    @admin.display(description='Duration')
+    def duration_display(self, obj):
+        if obj.duration_ms is None:
+            return '—'
+        seconds = obj.duration_ms / 1000
+        return f'{seconds:.1f}s'
+
+    @admin.display(description='IP')
+    def ip_hash_short(self, obj):
+        return obj.ip_hash[:12] + '...'

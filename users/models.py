@@ -207,6 +207,44 @@ class EmailOTP(models.Model):
         ordering = ['-created_at']
 
 
+class UserAcquisition(models.Model):
+    """Tracks how a user discovered and arrived at the platform."""
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='acquisition'
+    )
+    # UTM parameters
+    utm_source = models.CharField(max_length=200, blank=True)
+    utm_medium = models.CharField(max_length=200, blank=True)
+    utm_campaign = models.CharField(max_length=200, blank=True)
+    utm_term = models.CharField(max_length=200, blank=True)
+    utm_content = models.CharField(max_length=200, blank=True)
+    # HTTP referrer
+    referrer = models.URLField(max_length=2000, blank=True)
+    referrer_domain = models.CharField(max_length=253, blank=True)
+    # First page they landed on
+    landing_page = models.CharField(max_length=2000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        source = self.utm_source or self.referrer_domain or 'direct'
+        return f"{self.user.email} — {source}"
+
+    @property
+    def source_display(self):
+        """Human-readable acquisition source."""
+        if self.utm_source:
+            return self.utm_source
+        if self.referrer_domain:
+            return self.referrer_domain
+        return 'Direct'
+
+    class Meta:
+        verbose_name = 'User Acquisition'
+        verbose_name_plural = 'User Acquisitions'
+
+
 class ProfileLink(models.Model):
     """A link on a user's public profile page (Linktree-style)."""
     user = models.ForeignKey(

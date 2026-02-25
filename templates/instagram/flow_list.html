@@ -858,20 +858,16 @@
                             <!-- Stats -->
                             <div class="header-stats">
                                 <div class="header-stat">
-                                    <div class="header-stat-value">{{ flow_count }}</div>
-                                    <div class="header-stat-label">Automations</div>
-                                </div>
-                                <div class="header-stat">
-                                    <div class="header-stat-value">{{ total_triggered|default:0 }}</div>
-                                    <div class="header-stat-label">Triggered</div>
-                                </div>
-                                <div class="header-stat">
                                     <div class="header-stat-value">{{ instagram_account.total_dms_sent|default:0 }}</div>
                                     <div class="header-stat-label">DMs Sent</div>
                                 </div>
                                 <div class="header-stat">
                                     <div class="header-stat-value">{{ instagram_account.total_comments_replied|default:0 }}</div>
                                     <div class="header-stat-label">Comment</div>
+                                </div>
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ time_saved }}</div>
+                                    <div class="header-stat-label">Time Saved</div>
                                 </div>
                             </div>
 

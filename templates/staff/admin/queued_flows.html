@@ -205,6 +205,9 @@
             </tbody>
         </table>
     </div>
+    {% if queue_shown < queue_total %}
+    <div class="text-center text-muted py-2 small border-top">Showing {{ queue_shown }} of {{ queue_total }}</div>
+    {% endif %}
     {% else %}
     <div class="text-center py-5">
         <i class="bi bi-inbox text-muted" style="font-size: 2.5rem;"></i>

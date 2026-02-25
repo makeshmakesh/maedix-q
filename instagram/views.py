@@ -822,6 +822,18 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     created_at__gte=since,
                 ).count()
 
+        # Time saved: ~2 min per DM, ~1 min per comment reply
+        time_saved_minutes = 0
+        if instagram_account:
+            time_saved_minutes = (
+                (instagram_account.total_dms_sent or 0) * 2
+                + (instagram_account.total_comments_replied or 0) * 1
+            )
+        if time_saved_minutes >= 60:
+            time_saved_display = f"{time_saved_minutes // 60}h {time_saved_minutes % 60}m"
+        else:
+            time_saved_display = f"{time_saved_minutes}m"
+
         context = {
             'instagram_connected': instagram_connected,
             'instagram_account': instagram_account,
@@ -838,6 +850,7 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'dropped_message_count': dropped_message_count,
             'status_filter': status_filter,
             'search_filter': search_filter,
+            'time_saved': time_saved_display,
         }
         return render(request, self.template_name, context)
 

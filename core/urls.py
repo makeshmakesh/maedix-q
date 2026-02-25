@@ -31,4 +31,5 @@ urlpatterns = [
 
     # Link redirect (watermark/branding page)
     path('go/', views.LinkRedirectView.as_view(), name='link_redirect'),
+    path('go/ping/', views.LinkRedirectPingView.as_view(), name='link_redirect_ping'),
 ]

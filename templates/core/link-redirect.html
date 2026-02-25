@@ -151,9 +151,23 @@
         }
 
         .go-btn.disabled {
-            opacity: 0.5;
+            background: #9ca3af;
             pointer-events: none;
             cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .go-btn:hover:not(.disabled) {
@@ -255,7 +269,7 @@
         </div>
 
         <a href="{{ target_url }}" class="go-btn disabled" id="go-btn">
-            Wait <span id="countdown">{{ redirect_delay }}</span>s <i class="bi bi-hourglass-split"></i>
+            <span class="spinner"></span> Preparing your link...
         </a>
         {% endif %}
 
@@ -290,20 +304,12 @@
         var sent = false;
         var delay = {{ redirect_delay }};
         var btn = document.getElementById("go-btn");
-        var countdownEl = document.getElementById("countdown");
 
-        // Countdown timer
-        var remaining = delay;
-        var timer = setInterval(function() {
-            remaining--;
-            if (remaining > 0) {
-                countdownEl.textContent = remaining;
-            } else {
-                clearInterval(timer);
-                btn.classList.remove("disabled");
-                btn.innerHTML = 'Go to Link <i class="bi bi-arrow-right"></i>';
-            }
-        }, 1000);
+        // Enable button after delay
+        setTimeout(function() {
+            btn.classList.remove("disabled");
+            btn.innerHTML = 'Go to Link <i class="bi bi-arrow-right"></i>';
+        }, delay * 1000);
 
         // Block click during countdown
         btn.addEventListener("click", function(e) {

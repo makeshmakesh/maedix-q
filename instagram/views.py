@@ -822,6 +822,17 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                     created_at__gte=since,
                 ).count()
 
+        # Lead usage vs limit
+        leads_used = CollectedLead.objects.filter(user=request.user).count()
+        lead_limit = None
+        leads_exceeded = False
+        if not request.user.is_staff:
+            sub = get_user_subscription(request.user)
+            if sub and sub.plan and sub.plan.has_feature('lead_capture'):
+                lead_limit = sub.plan.get_feature_limit('lead_capture', default=None)
+                if lead_limit is not None:
+                    leads_exceeded = leads_used >= lead_limit
+
         # Time saved: ~2 min per DM, ~1 min per comment reply
         time_saved_minutes = 0
         if instagram_account:
@@ -851,6 +862,9 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'status_filter': status_filter,
             'search_filter': search_filter,
             'time_saved': time_saved_display,
+            'leads_used': leads_used,
+            'lead_limit': lead_limit,
+            'leads_exceeded': leads_exceeded,
         }
         return render(request, self.template_name, context)
 

@@ -911,9 +911,12 @@
                                 Upgrade
                             </a>
                             {% endif %}
-                            <a href="{% url 'leads_list' %}" class="btn-template" title="Collected Leads">
+                            <a href="{% url 'leads_list' %}" class="btn-template position-relative" title="{% if leads_exceeded %}Lead limit reached ({{ leads_used }}/{{ lead_limit }}){% else %}Collected Leads{% endif %}">
                                 <i class="bi bi-people"></i>
                                 Leads
+                                {% if leads_exceeded %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem;">!</span>
+                                {% endif %}
                             </a>
                             <a href="{% url 'profile_links_manage' %}" class="btn-template" title="Set up your Link in Bio page">
                                 <i class="bi bi-link-45deg"></i>
@@ -937,6 +940,17 @@
                         <strong>You missed {{ dropped_message_count }} message{{ dropped_message_count|pluralize }} in the last 24 hours</strong> due to rate limits!
                     </div>
                     <a href="{% url 'pricing' %}" class="btn btn-danger btn-sm ms-3 flex-shrink-0">Upgrade to Pro</a>
+                </div>
+                {% endif %}
+
+                {% if leads_exceeded %}
+                <!-- Lead Limit Exceeded Banner -->
+                <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3" role="alert">
+                    <div>
+                        <i class="bi bi-people-fill me-2"></i>
+                        <strong>Lead storage full!</strong> You've reached your limit of {{ lead_limit }} leads ({{ leads_used }}/{{ lead_limit }}). New leads won't be captured.
+                    </div>
+                    <a href="{% url 'pricing' %}" class="btn btn-warning btn-sm ms-3 flex-shrink-0">Upgrade</a>
                 </div>
                 {% endif %}
 

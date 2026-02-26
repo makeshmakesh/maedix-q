@@ -855,6 +855,95 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+class DashboardView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """User dashboard with overview of all automation metrics"""
+    template_name = 'instagram/dashboard.html'
+
+    def get(self, request):
+        from django.db.models import Sum, Count
+
+        instagram_connected = False
+        instagram_account = None
+        if hasattr(request.user, 'instagram_account'):
+            instagram_account = request.user.instagram_account
+            instagram_connected = instagram_account.is_connected
+
+        # Flow stats
+        flows = DMFlow.objects.filter(user=request.user)
+        total_flows = flows.count()
+        active_flows = flows.filter(is_active=True).count()
+        paused_flows = total_flows - active_flows
+        flow_agg = flows.aggregate(
+            total_triggered=Sum('total_triggered'),
+            total_completed=Sum('total_completed')
+        )
+        total_triggered = flow_agg['total_triggered'] or 0
+        total_completed = flow_agg['total_completed'] or 0
+
+        # Account stats
+        total_dms_sent = 0
+        total_comments_replied = 0
+        if instagram_account:
+            total_dms_sent = instagram_account.total_dms_sent or 0
+            total_comments_replied = instagram_account.total_comments_replied or 0
+
+        # Session breakdown
+        session_qs = FlowSession.objects.filter(flow__user=request.user)
+        session_status_counts = dict(
+            session_qs.values_list('status').annotate(count=Count('id')).values_list('status', 'count')
+        )
+        total_sessions = sum(session_status_counts.values())
+        completed_sessions = session_status_counts.get('completed', 0)
+        completion_rate = round((completed_sessions / total_sessions * 100) if total_sessions > 0 else 0)
+
+        # Leads
+        leads_count = CollectedLead.objects.filter(user=request.user).count()
+
+        # Time saved
+        time_saved_minutes = total_dms_sent * 2 + total_comments_replied * 1
+        if time_saved_minutes >= 60:
+            time_saved_display = f"{time_saved_minutes // 60}h {time_saved_minutes % 60}m"
+        else:
+            time_saved_display = f"{time_saved_minutes}m"
+
+        # Queue / API
+        queued_count = 0
+        calls_last_hour = 0
+        rate_limit = QueuedFlowTrigger.get_rate_limit(request.user)
+        if instagram_account:
+            queued_count = QueuedFlowTrigger.objects.filter(
+                account=instagram_account, status='pending'
+            ).count()
+            calls_last_hour = APICallLog.get_calls_last_hour(instagram_account)
+
+        # Recent sessions
+        recent_sessions = FlowSession.objects.filter(
+            flow__user=request.user
+        ).select_related('flow').order_by('-created_at')[:5]
+
+        context = {
+            'instagram_connected': instagram_connected,
+            'instagram_account': instagram_account,
+            'total_flows': total_flows,
+            'active_flows': active_flows,
+            'paused_flows': paused_flows,
+            'total_triggered': total_triggered,
+            'total_completed': total_completed,
+            'total_dms_sent': total_dms_sent,
+            'total_comments_replied': total_comments_replied,
+            'total_sessions': total_sessions,
+            'session_status_counts': session_status_counts,
+            'completion_rate': completion_rate,
+            'leads_count': leads_count,
+            'time_saved': time_saved_display,
+            'queued_count': queued_count,
+            'calls_last_hour': calls_last_hour,
+            'rate_limit': rate_limit,
+            'recent_sessions': recent_sessions,
+        }
+        return render(request, self.template_name, context)
+
+
 class FlowTemplatesView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """Browse flow templates by category"""
     template_name = 'instagram/flow_templates.html'
@@ -2010,9 +2099,18 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     def get(self, request):
         from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-        leads = CollectedLead.objects.filter(
-            user=request.user
-        ).select_related('flow').order_by('-created_at')
+        # Staff can see all leads, regular users see only their own
+        if request.user.is_staff:
+            leads = CollectedLead.objects.all().select_related('flow', 'user').order_by('-created_at')
+        else:
+            leads = CollectedLead.objects.filter(
+                user=request.user
+            ).select_related('flow').order_by('-created_at')
+
+        # Filter by user (staff only)
+        filter_user = request.GET.get('user', '').strip()
+        if filter_user and request.user.is_staff:
+            leads = leads.filter(user__username__icontains=filter_user)
 
         # Filter by flow
         flow_id = request.GET.get('flow')
@@ -2051,17 +2149,37 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         except EmptyPage:
             leads_page = paginator.page(paginator.num_pages)
 
-        # Get user's flows for filter dropdown
-        user_flows = DMFlow.objects.filter(user=request.user).order_by('title')
+        # Get flows for filter dropdown
+        if request.user.is_staff:
+            user_flows = DMFlow.objects.all().select_related('user').order_by('title')
+        else:
+            user_flows = DMFlow.objects.filter(user=request.user).order_by('title')
+
+        # Lead limit from subscription
+        lead_limit = None
+        if not request.user.is_staff:
+            subscription = get_user_subscription(request.user)
+            if subscription and subscription.plan:
+                lead_limit = subscription.plan.get_feature_limit('lead_capture', default=None)
+
+        # Total unfiltered count for limit display
+        if request.user.is_staff:
+            leads_used = CollectedLead.objects.count()
+        else:
+            leads_used = CollectedLead.objects.filter(user=request.user).count()
 
         context = {
             'leads': leads_page,
             'total_leads': total_leads,
+            'leads_used': leads_used,
+            'lead_limit': lead_limit,
             'user_flows': user_flows,
+            'is_staff': request.user.is_staff,
             # Preserve filter values
             'filter_flow': flow_id,
             'filter_is_follower': is_follower,
             'filter_username': username,
+            'filter_user': filter_user,
             'filter_date_from': date_from,
             'filter_date_to': date_to,
         }
@@ -2146,12 +2264,38 @@ class LeadDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     template_name = 'instagram/lead_detail.html'
 
     def get(self, request, pk):
-        lead = get_object_or_404(CollectedLead, pk=pk, user=request.user)
+        if request.user.is_staff:
+            lead = get_object_or_404(CollectedLead, pk=pk)
+        else:
+            lead = get_object_or_404(CollectedLead, pk=pk, user=request.user)
 
         context = {
             'lead': lead,
         }
         return render(request, self.template_name, context)
+
+
+class LeadDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Delete a single lead"""
+
+    def post(self, request, pk):
+        lead = get_object_or_404(CollectedLead, pk=pk, user=request.user)
+        lead.delete()
+        messages.success(request, 'Lead deleted.')
+        return redirect('leads_list')
+
+
+class LeadsBulkDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
+    """Delete multiple leads at once"""
+
+    def post(self, request):
+        lead_ids = request.POST.getlist('lead_ids')
+        if lead_ids:
+            deleted_count, _ = CollectedLead.objects.filter(
+                pk__in=lead_ids, user=request.user
+            ).delete()
+            messages.success(request, f'{deleted_count} lead{"s" if deleted_count != 1 else ""} deleted.')
+        return redirect('leads_list')
 
 
 # =============================================================================

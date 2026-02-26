@@ -8,13 +8,21 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <!-- Header -->
-                <div class="mb-4">
-                    <a href="{% url 'leads_list' %}" class="text-decoration-none text-muted small">
-                        <i class="bi bi-arrow-left me-1"></i>Back to Leads
-                    </a>
-                    <h3 class="mb-1 mt-2">
-                        <i class="bi bi-person text-primary me-2"></i>@{{ lead.instagram_username|default:"Unknown User" }}
-                    </h3>
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <a href="{% url 'leads_list' %}" class="text-decoration-none text-muted small">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Leads
+                        </a>
+                        <h3 class="mb-1 mt-2">
+                            <i class="bi bi-person text-primary me-2"></i>@{{ lead.instagram_username|default:"Unknown User" }}
+                        </h3>
+                    </div>
+                    <form method="post" action="{% url 'lead_delete' lead.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this lead? This cannot be undone.')">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </form>
                 </div>
 
                 <div class="row">
@@ -74,6 +82,12 @@
                                 <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Details</h6>
                             </div>
                             <div class="card-body">
+                                {% if request.user.is_staff %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Owner</label>
+                                    <div><strong>{{ lead.user.username }}</strong> <small class="text-muted">({{ lead.user.email }})</small></div>
+                                </div>
+                                {% endif %}
                                 <div class="mb-3">
                                     <label class="form-label text-muted small">From Automation</label>
                                     <div>

@@ -23,6 +23,7 @@ from .models import (
     FlowExecutionLog, CollectedLead, InstagramAccount
 )
 from .instagram_api import InstagramAPIClient, InstagramAPIError, get_api_client_for_account
+from core.subscription_utils import get_user_subscription
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,25 @@ class FlowEngine:
             )
 
             flow.increment_triggered()
+
+            # Create or update lead record for every session
+            existing_lead = CollectedLead.objects.filter(
+                user=flow.user, instagram_scoped_id=commenter_id
+            ).first()
+            if existing_lead:
+                existing_lead.flow = flow
+                existing_lead.session = session
+                if existing_lead.instagram_username != commenter_username:
+                    existing_lead.instagram_username = commenter_username
+                existing_lead.save(update_fields=['flow', 'session', 'instagram_username', 'updated_at'])
+            elif self._can_create_lead(flow.user):
+                CollectedLead.objects.create(
+                    user=flow.user,
+                    instagram_scoped_id=commenter_id,
+                    flow=flow,
+                    session=session,
+                    instagram_username=commenter_username,
+                )
 
             self._log_action(session, 'flow_started', details={
                 'comment_id': comment_id,
@@ -598,6 +618,22 @@ class FlowEngine:
                 'is_business_follow_user': profile_data.get('is_business_follow_user', False)
             })
 
+        # Update lead with profile data
+        lead = CollectedLead.objects.filter(
+            user=session.flow.user,
+            instagram_scoped_id=session.instagram_scoped_id,
+        ).first()
+        if lead:
+            lead.is_follower = is_follower
+            if profile_data:
+                profile_name = profile_data.get('name', '')
+                if profile_name and not lead.name:
+                    lead.name = profile_name
+                lead.custom_data['follower_count'] = profile_data.get('follower_count')
+                lead.custom_data['is_verified'] = profile_data.get('is_verified_user', False)
+                lead.custom_data['is_business_follow_user'] = profile_data.get('is_business_follow_user', False)
+            lead.save()
+
         self._log_action(session, 'condition_checked', node, {
             'condition': 'follower_check',
             'result': 'is_follower' if is_follower else 'not_follower',
@@ -970,6 +1006,9 @@ class FlowEngine:
             'message_id': message_id
         })
 
+        # User interacted — check and store follower status on the lead
+        self._check_and_store_follower_status(session)
+
         # If option has a target node, execute it
         if option.target_node:
             session.status = 'active'
@@ -1046,6 +1085,9 @@ class FlowEngine:
             'type': 'button_postback',
             'message_id': message_id
         })
+
+        # User interacted — check and store follower status on the lead
+        self._check_and_store_follower_status(session)
 
         # If button has a target node, execute it (branching)
         if target_node:
@@ -1137,6 +1179,61 @@ class FlowEngine:
     # =========================================================================
     # Helper Methods
     # =========================================================================
+
+    def _can_create_lead(self, user) -> bool:
+        """Check if user is within their lead_capture feature limit."""
+        if user.is_staff:
+            return True
+        subscription = get_user_subscription(user)
+        if not subscription or not subscription.plan.has_feature('lead_capture'):
+            return False
+        limit = subscription.plan.get_feature_limit('lead_capture', default=None)
+        if limit is None:
+            return True  # No limit set = unlimited
+        current_count = CollectedLead.objects.filter(user=user).count()
+        return current_count < limit
+
+    def _check_and_store_follower_status(self, session: FlowSession):
+        """Check follower status via Profile API and store on session + lead.
+
+        Should be called after user interaction (quick reply click or button
+        postback) which grants consent for the Profile API.
+        """
+        if session.context_data.get('is_follower') is not None:
+            return  # Already checked
+
+        try:
+            is_follower, profile_data = self.api_client.check_is_follower(
+                session.instagram_scoped_id
+            )
+            session.update_context('is_follower', is_follower)
+            if profile_data:
+                session.update_context('user_profile', {
+                    'name': profile_data.get('name'),
+                    'username': profile_data.get('username'),
+                    'follower_count': profile_data.get('follower_count'),
+                    'is_verified': profile_data.get('is_verified_user', False),
+                    'is_business_follow_user': profile_data.get('is_business_follow_user', False)
+                })
+
+            # Update lead with profile data
+            lead = CollectedLead.objects.filter(
+                user=session.flow.user,
+                instagram_scoped_id=session.instagram_scoped_id,
+            ).first()
+            if lead:
+                lead.is_follower = is_follower
+                if profile_data:
+                    profile_name = profile_data.get('name', '')
+                    if profile_name and not lead.name:
+                        lead.name = profile_name
+                    lead.custom_data['follower_count'] = profile_data.get('follower_count')
+                    lead.custom_data['is_verified'] = profile_data.get('is_verified_user', False)
+                    lead.custom_data['is_business_follow_user'] = profile_data.get('is_business_follow_user', False)
+                lead.save()
+
+        except InstagramAPIError as e:
+            logger.warning(f"Could not check follower status for {session.instagram_username}: {e}")
 
     def _advance_to_next_node(self, session: FlowSession, current_node: FlowNode):
         """Advance to the next node in the flow."""
@@ -1307,17 +1404,30 @@ class FlowEngine:
         field_label: str = None
     ):
         """Update or create lead record with collected data."""
-        # Get or create lead
-        lead, created = CollectedLead.objects.get_or_create(
+        # Find existing lead or create if within limit
+        lead = CollectedLead.objects.filter(
             user=session.flow.user,
-            flow=session.flow,
-            session=session,
-            defaults={
-                'instagram_scoped_id': session.instagram_scoped_id,
-                'instagram_username': session.instagram_username,
-                'is_follower': session.context_data.get('is_follower', False)
-            }
-        )
+            instagram_scoped_id=session.instagram_scoped_id,
+        ).first()
+
+        if not lead:
+            if not self._can_create_lead(session.flow.user):
+                logger.info(f"Lead capture limit reached for user {session.flow.user.id}, skipping lead creation")
+                return
+            lead = CollectedLead.objects.create(
+                user=session.flow.user,
+                instagram_scoped_id=session.instagram_scoped_id,
+                flow=session.flow,
+                session=session,
+                instagram_username=session.instagram_username,
+                is_follower=session.context_data.get('is_follower', False),
+            )
+
+        # Always keep lead fresh with latest flow, session, and username
+        lead.flow = session.flow
+        lead.session = session
+        if lead.instagram_username != session.instagram_username:
+            lead.instagram_username = session.instagram_username
 
         # Update the appropriate field
         if field_type == 'name':

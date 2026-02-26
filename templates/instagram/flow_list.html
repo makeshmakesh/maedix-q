@@ -744,6 +744,26 @@
         to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
+    /* Queue count badge */
+    .queue-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #dc3545;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
     /* Responsive adjustments */
     @media (max-width: 767.98px) {
         .flow-card {
@@ -891,15 +911,19 @@
                                 Upgrade
                             </a>
                             {% endif %}
+                            <a href="{% url 'leads_list' %}" class="btn-template" title="Collected Leads">
+                                <i class="bi bi-people"></i>
+                                Leads
+                            </a>
                             <a href="{% url 'profile_links_manage' %}" class="btn-template" title="Set up your Link in Bio page">
                                 <i class="bi bi-link-45deg"></i>
                                 Bio Link
                             </a>
-                            <a href="{% url 'queued_flows' %}" class="btn-template" title="{% if queued_count > 0 %}{{ queued_count }} queued flows{% else %}API Usage: {{ calls_last_hour }}/{{ rate_limit }}{% endif %}">
+                            <a href="{% url 'queued_flows' %}" class="btn-template position-relative" title="{% if queued_count > 0 %}{{ queued_count }} queued flows{% else %}API Usage: {{ calls_last_hour }}/{{ rate_limit }}{% endif %}">
                                 <i class="bi bi-{% if queued_count > 0 %}hourglass-split{% else %}speedometer2{% endif %}"></i>
-                            </a>
-                            <a href="{% url 'flow_builder_help' %}" class="btn-template" title="Learn about node types and how to build flows">
-                                <i class="bi bi-question-circle"></i>
+                                {% if queued_count > 0 %}
+                                <span class="queue-badge">{{ queued_count }}</span>
+                                {% endif %}
                             </a>
                         </div>
                     </div>

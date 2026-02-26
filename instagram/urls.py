@@ -21,6 +21,9 @@ urlpatterns = [
     # Instagram Posts API
     path('api/posts/', views.InstagramPostsAPIView.as_view(), name='instagram_api_posts'),
 
+    # User Dashboard
+    path('dashboard/', views.DashboardView.as_view(), name='instagram_dashboard'),
+
     # DM Flow Builder
     path('flows/', views.FlowListView.as_view(), name='flow_list'),
     path('flows/help/', views.FlowBuilderHelpView.as_view(), name='flow_builder_help'),
@@ -45,7 +48,9 @@ urlpatterns = [
     # Leads / CRM
     path('leads/', views.LeadsListView.as_view(), name='leads_list'),
     path('leads/export/', views.LeadsExportView.as_view(), name='leads_export'),
+    path('leads/bulk-delete/', views.LeadsBulkDeleteView.as_view(), name='leads_bulk_delete'),
     path('leads/<int:pk>/', views.LeadDetailView.as_view(), name='lead_detail'),
+    path('leads/<int:pk>/delete/', views.LeadDeleteView.as_view(), name='lead_delete'),
 
     # Queued Flow Triggers
     path('queue/', views.QueuedFlowListView.as_view(), name='queued_flows'),

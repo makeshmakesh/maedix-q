@@ -2,86 +2,396 @@
 
 {% block title %}Collected Leads{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Page header - matches flow_list.html */
+    .page-header {
+        background: var(--gradient);
+        color: white;
+        padding: 1rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        margin: -1rem -12px 1.5rem -12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            border-radius: var(--radius);
+            margin: 0 0 1.5rem 0;
+            padding: 2rem;
+        }
+    }
+
+    .page-header h1 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 1.75rem;
+        }
+    }
+
+    .page-header p {
+        opacity: 0.9;
+        margin: 0.5rem 0 0 0;
+        font-size: 0.9rem;
+    }
+
+    .header-stats {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .header-stat {
+        text-align: center;
+    }
+
+    .header-stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .header-stat-label {
+        font-size: 0.65rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    @media (min-width: 768px) {
+        .header-stats {
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .header-stat-value { font-size: 1.5rem; }
+        .header-stat-label { font-size: 0.75rem; }
+    }
+
+    @media (max-width: 767.98px) {
+        .header-stats {
+            justify-content: space-between;
+            gap: 0.125rem;
+        }
+        .header-stat { flex: 1; min-width: 0; overflow: hidden; }
+        .header-stat-value { font-size: 0.85rem; line-height: 1.2; }
+        .header-stat-label { font-size: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+
+    .btn-header {
+        background: rgba(255,255,255,0.2);
+        border: 2px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .btn-header:hover {
+        background: rgba(255,255,255,0.3);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 767.98px) {
+        .btn-header {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+            gap: 0.3rem;
+        }
+    }
+
+    /* Section cards */
+    .section-card {
+        background: var(--bg-white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .section-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Filter bar - matches flow_list.html */
+    .filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar .form-control,
+    .filter-bar .form-select {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.375rem;
+    }
+
+    .filter-bar .form-control { flex: 1; min-width: 0; }
+    .filter-bar .form-select { width: auto; flex: 0 0 auto; }
+
+    .filter-bar .btn {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 767.98px) {
+        .filter-bar {
+            padding: 0.375rem 0.5rem;
+            gap: 0.25rem;
+            flex-wrap: nowrap;
+        }
+        .filter-bar .form-control { font-size: 0.75rem; padding: 0.25rem 0.4rem; }
+        .filter-bar .form-select { font-size: 0.7rem; padding: 0.25rem 0.3rem; }
+        .filter-bar .btn { font-size: 0.65rem; padding: 0.25rem 0.4rem; }
+        .filter-advanced { display: none; }
+    }
+
+    /* Bulk bar */
+    .bulk-bar {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.85rem;
+    }
+
+    /* Lead cards (mobile) */
+    .lead-card {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f5f5f5;
+        transition: all 0.2s ease;
+    }
+
+    .lead-card:last-child { border-bottom: none; }
+    .lead-card:hover { background: #fafafa; }
+
+    .lead-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .lead-card-username {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #212529;
+        text-decoration: none;
+    }
+
+    .lead-card-username:hover { color: var(--primary); }
+
+    .lead-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .lead-card-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .lead-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Desktop table */
+    .leads-table { display: none; }
+
+    @media (min-width: 768px) {
+        .leads-table { display: block; }
+        .leads-cards { display: none !important; }
+    }
+
+    @media (max-width: 767.98px) {
+        .leads-table { display: none !important; }
+        .leads-cards { display: block; }
+    }
+
+    /* Limit warning */
+    .limit-warning {
+        background: rgba(220,53,69,0.05);
+        border: 1px solid rgba(220,53,69,0.2);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.8rem;
+        color: #dc3545;
+    }
+
+    .limit-warning a { color: #dc3545; font-weight: 600; }
+
+    /* Pagination */
+    .leads-pagination {
+        padding: 0.75rem;
+        text-align: center;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .leads-pagination .pagination {
+        margin: 0;
+        gap: 0.25rem;
+    }
+
+    .leads-pagination .page-link {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 0.375rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .leads-pagination { padding: 0.5rem; }
+        .leads-pagination .page-link { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="py-4 py-md-5">
+<section class="py-3 py-md-4">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-11">
-                <!-- Header -->
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
-                    <div>
-                        <a href="{% url 'flow_list' %}" class="text-decoration-none text-muted small">
-                            <i class="bi bi-arrow-left me-1"></i>Back to Automations
-                        </a>
-                        <h3 class="mb-1 mt-2">
-                            <i class="bi bi-people text-primary me-2"></i>Collected Leads
-                        </h3>
-                        <p class="text-muted mb-0">{{ total_leads }} lead{% if total_leads != 1 %}s{% endif %} collected</p>
-                    </div>
-                    {% if total_leads > 0 %}
-                    <a href="{% url 'leads_export' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-outline-primary">
-                        <i class="bi bi-download me-1"></i>Export CSV
-                    </a>
-                    {% endif %}
-                </div>
+            <div class="col-lg-10">
 
-                <!-- Filters -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="get" class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Username</label>
-                                <input type="text" class="form-control" name="username" value="{{ filter_username|default:'' }}" placeholder="Search @username">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 w-100">
+                        <div class="flex-grow-1 w-100">
+                            <h1><i class="bi bi-people me-2"></i>Collected Leads</h1>
+                            <p class="mb-0 d-none d-md-block">View and manage leads from your automations</p>
+
+                            <div class="header-stats">
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ leads_used }}</div>
+                                    <div class="header-stat-label">Total Leads</div>
+                                </div>
+                                {% if lead_limit %}
+                                <div class="header-stat">
+                                    <div class="header-stat-value">{{ lead_limit }}</div>
+                                    <div class="header-stat-label">Limit</div>
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label small text-muted">Automation</label>
-                                <select class="form-select" name="flow">
-                                    <option value="">All Automations</option>
-                                    {% for flow in user_flows %}
-                                    <option value="{{ flow.pk }}" {% if filter_flow == flow.pk|stringformat:"s" %}selected{% endif %}>{{ flow.title|truncatechars:25 }}</option>
-                                    {% endfor %}
-                                </select>
+
+                            {% if lead_limit %}
+                            <div style="background: rgba(255,255,255,0.2); height: 6px; border-radius: 3px; margin-top: 0.75rem; overflow: hidden;">
+                                <div style="background: white; height: 100%; border-radius: 3px; width: {% widthratio leads_used lead_limit 100 %}%;"></div>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label small text-muted">Follower</label>
-                                <select class="form-select" name="is_follower">
-                                    <option value="">All</option>
-                                    <option value="1" {% if filter_is_follower == '1' %}selected{% endif %}>Yes</option>
-                                    <option value="0" {% if filter_is_follower == '0' %}selected{% endif %}>No</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small text-muted">From Date</label>
-                                <input type="date" class="form-control" name="date_from" value="{{ filter_date_from|default:'' }}">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small text-muted">To Date</label>
-                                <input type="date" class="form-control" name="date_to" value="{{ filter_date_to|default:'' }}">
-                            </div>
-                            <div class="col-md-1">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                        </form>
-                        {% if filter_username or filter_flow or filter_is_follower or filter_date_from or filter_date_to %}
-                        <div class="mt-2">
-                            <a href="{% url 'leads_list' %}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Clear Filters
+                            <div style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.375rem;">{{ leads_used }} of {{ lead_limit }} leads used</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-shrink-0 d-flex gap-2 align-items-center flex-nowrap">
+                            {% if total_leads > 0 %}
+                            <a href="{% url 'leads_export' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="btn-header">
+                                <i class="bi bi-download"></i>
+                                Export
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'flow_list' %}" class="btn-header">
+                                <i class="bi bi-robot"></i>
                             </a>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
 
-                <!-- Leads Table -->
-                <div class="card">
-                    <div class="card-body p-0">
-                        {% if leads %}
+                {% if lead_limit and leads_used >= lead_limit %}
+                <div class="limit-warning">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    Lead limit reached — <a href="{% url 'pricing' %}">upgrade</a> or delete leads to free up space.
+                </div>
+                {% endif %}
+
+                <!-- Filter Bar -->
+                <form method="get" class="filter-bar">
+                    {% if is_staff %}
+                    <input type="text" name="user" class="form-control" placeholder="Owner" value="{{ filter_user|default:'' }}" style="max-width: 100px;">
+                    {% endif %}
+                    <input type="text" name="username" class="form-control" placeholder="Search @username" value="{{ filter_username|default:'' }}">
+                    <select name="flow" class="form-select">
+                        <option value="">All</option>
+                        {% for flow in user_flows %}
+                        <option value="{{ flow.pk }}" {% if filter_flow == flow.pk|stringformat:"s" %}selected{% endif %}>{% if is_staff %}{{ flow.user.username }}: {% endif %}{{ flow.title|truncatechars:20 }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="is_follower" class="form-select filter-advanced">
+                        <option value="">Follower</option>
+                        <option value="1" {% if filter_is_follower == '1' %}selected{% endif %}>Yes</option>
+                        <option value="0" {% if filter_is_follower == '0' %}selected{% endif %}>No</option>
+                    </select>
+                    <input type="date" name="date_from" class="form-control filter-advanced" value="{{ filter_date_from|default:'' }}" placeholder="From">
+                    <input type="date" name="date_to" class="form-control filter-advanced" value="{{ filter_date_to|default:'' }}" placeholder="To">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+                    {% if filter_username or filter_flow or filter_is_follower or filter_date_from or filter_date_to or filter_user %}
+                    <a href="{% url 'leads_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+                    {% endif %}
+                </form>
+
+                <!-- Bulk Delete Bar (hidden by default) -->
+                <div id="bulkBar" class="bulk-bar" style="display: none !important;">
+                    <span><strong id="selectedCount">0</strong> selected</span>
+                    <form method="post" action="{% url 'leads_bulk_delete' %}" id="bulkDeleteForm">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete selected leads? This cannot be undone.')">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Leads -->
+                <div class="section-card">
+                    {% if leads %}
+
+                    <!-- Desktop: Table -->
+                    <div class="leads-table">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
+                                        <th style="width: 40px;"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                                        {% if is_staff %}<th>Owner</th>{% endif %}
                                         <th>Instagram</th>
                                         <th>Name</th>
                                         <th>Email</th>
@@ -89,11 +399,16 @@
                                         <th>Follower</th>
                                         <th>Automation</th>
                                         <th>Date</th>
+                                        <th style="width: 40px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for lead in leads %}
                                     <tr>
+                                        <td><input type="checkbox" class="form-check-input lead-checkbox" value="{{ lead.pk }}"></td>
+                                        {% if is_staff %}
+                                        <td><small class="text-muted">{{ lead.user.username }}</small></td>
+                                        {% endif %}
                                         <td>
                                             <a href="{% url 'lead_detail' lead.pk %}" class="text-decoration-none">
                                                 <strong>@{{ lead.instagram_username|default:"-" }}</strong>
@@ -103,9 +418,7 @@
                                         <td>
                                             {% if lead.email %}
                                             <a href="mailto:{{ lead.email }}">{{ lead.email }}</a>
-                                            {% else %}
-                                            -
-                                            {% endif %}
+                                            {% else %}-{% endif %}
                                         </td>
                                         <td>{{ lead.phone|default:"-" }}</td>
                                         <td>
@@ -122,88 +435,179 @@
                                             <small class="text-muted">-</small>
                                             {% endif %}
                                         </td>
+                                        <td><small>{{ lead.created_at|date:"M j, Y" }}</small></td>
                                         <td>
-                                            <small>{{ lead.created_at|date:"M j, Y" }}</small>
+                                            <form method="post" action="{% url 'lead_delete' lead.pk %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-link btn-sm text-danger p-0" title="Delete" onclick="return confirm('Delete this lead?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <!-- Pagination -->
-                        {% if leads.has_other_pages %}
-                        <div class="card-footer bg-white">
-                            <nav aria-label="Leads pagination">
-                                <ul class="pagination pagination-sm mb-0 justify-content-center">
-                                    {% if leads.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ leads.previous_page_number }}{% if filter_flow %}&flow={{ filter_flow }}{% endif %}{% if filter_is_follower %}&is_follower={{ filter_is_follower }}{% endif %}{% if filter_username %}&username={{ filter_username }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                    {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                    </li>
+                    <!-- Mobile: Cards -->
+                    <div class="leads-cards">
+                        {% for lead in leads %}
+                        <div class="lead-card">
+                            <div class="lead-card-header">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
+                                    <input type="checkbox" class="form-check-input lead-checkbox" value="{{ lead.pk }}">
+                                    <a href="{% url 'lead_detail' lead.pk %}" class="lead-card-username text-truncate">
+                                        @{{ lead.instagram_username|default:"unknown" }}
+                                    </a>
+                                </div>
+                                <div class="lead-card-actions">
+                                    {% if lead.is_follower %}
+                                    <span class="badge bg-success" style="font-size: 0.65rem;">Follows</span>
                                     {% endif %}
-
-                                    {% for num in leads.paginator.page_range %}
-                                        {% if leads.number == num %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ num }}</span>
-                                        </li>
-                                        {% elif num > leads.number|add:'-3' and num < leads.number|add:'3' %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ num }}{% if filter_flow %}&flow={{ filter_flow }}{% endif %}{% if filter_is_follower %}&is_follower={{ filter_is_follower }}{% endif %}{% if filter_username %}&username={{ filter_username }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}">{{ num }}</a>
-                                        </li>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    {% if leads.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ leads.next_page_number }}{% if filter_flow %}&flow={{ filter_flow }}{% endif %}{% if filter_is_follower %}&is_follower={{ filter_is_follower }}{% endif %}{% if filter_username %}&username={{ filter_username }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                    {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                    </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
-                            <p class="text-center text-muted small mt-2 mb-0">
-                                Showing {{ leads.start_index }}-{{ leads.end_index }} of {{ total_leads }}
-                            </p>
+                                    <form method="post" action="{% url 'lead_delete' lead.pk %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0" onclick="return confirm('Delete this lead?')">
+                                            <i class="bi bi-trash" style="font-size: 0.85rem;"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="lead-card-meta">
+                                {% if is_staff %}<span><i class="bi bi-shield-check"></i> {{ lead.user.username }}</span>{% endif %}
+                                {% if lead.name %}<span><i class="bi bi-person"></i> {{ lead.name }}</span>{% endif %}
+                                {% if lead.email %}<span><i class="bi bi-envelope"></i> {{ lead.email|truncatechars:20 }}</span>{% endif %}
+                                {% if lead.phone %}<span><i class="bi bi-phone"></i> {{ lead.phone }}</span>{% endif %}
+                                {% if lead.flow %}<span><i class="bi bi-diagram-3"></i> {{ lead.flow.title|truncatechars:15 }}</span>{% endif %}
+                                <span><i class="bi bi-clock"></i> {{ lead.created_at|timesince }} ago</span>
+                            </div>
                         </div>
-                        {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if leads.has_other_pages %}
+                    <div class="leads-pagination">
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                                {% if leads.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ leads.previous_page_number }}{% if filter_flow %}&flow={{ filter_flow }}{% endif %}{% if filter_is_follower %}&is_follower={{ filter_is_follower }}{% endif %}{% if filter_username %}&username={{ filter_username }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}{% if filter_user %}&user={{ filter_user }}{% endif %}">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+                                {% endif %}
+
+                                {% for num in leads.paginator.page_range %}
+                                    {% if leads.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > leads.number|add:'-3' and num < leads.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if filter_flow %}&flow={{ filter_flow }}{% endif %}{% if filter_is_follower %}&is_follower={{ filter_is_follower }}{% endif %}{% if filter_username %}&username={{ filter_username }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}{% if filter_user %}&user={{ filter_user }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if leads.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ leads.next_page_number }}{% if filter_flow %}&flow={{ filter_flow }}{% endif %}{% if filter_is_follower %}&is_follower={{ filter_is_follower }}{% endif %}{% if filter_username %}&username={{ filter_username }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}{% if filter_user %}&user={{ filter_user }}{% endif %}">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        <p class="text-center text-muted small mt-2 mb-0">
+                            Showing {{ leads.start_index }}-{{ leads.end_index }} of {{ total_leads }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                        {% if filter_username or filter_flow or filter_is_follower or filter_date_from or filter_date_to %}
+                        <h5 class="mt-3">No Leads Match Your Filters</h5>
+                        <p class="text-muted">Try adjusting your filters or clear them to see all leads.</p>
+                        <a href="{% url 'leads_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-x-circle me-1"></i>Clear Filters
+                        </a>
                         {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
-                            {% if filter_username or filter_flow or filter_is_follower or filter_date_from or filter_date_to %}
-                            <h5 class="mt-3">No Leads Match Your Filters</h5>
-                            <p class="text-muted">
-                                Try adjusting your filters or clear them to see all leads.
-                            </p>
-                            <a href="{% url 'leads_list' %}" class="btn btn-outline-primary">
-                                <i class="bi bi-x-circle me-1"></i>Clear Filters
-                            </a>
-                            {% else %}
-                            <h5 class="mt-3">No Leads Yet</h5>
-                            <p class="text-muted">
-                                Leads will appear here when users provide their information through your automations.
-                            </p>
-                            <a href="{% url 'flow_list' %}" class="btn btn-primary">
-                                <i class="bi bi-diagram-3 me-1"></i>Create an Automation
-                            </a>
-                            {% endif %}
-                        </div>
+                        <h5 class="mt-3">No Leads Yet</h5>
+                        <p class="text-muted">Leads will appear here when users interact with your automations.</p>
+                        <a href="{% url 'flow_list' %}" class="btn btn-primary">
+                            <i class="bi bi-diagram-3 me-1"></i>Create an Automation
+                        </a>
                         {% endif %}
                     </div>
+                    {% endif %}
                 </div>
+
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const bulkBar = document.getElementById('bulkBar');
+    const bulkForm = document.getElementById('bulkDeleteForm');
+    const selectedCount = document.getElementById('selectedCount');
+
+    function getCheckboxes() {
+        return document.querySelectorAll('.lead-checkbox');
+    }
+
+    function getChecked() {
+        return document.querySelectorAll('.lead-checkbox:checked');
+    }
+
+    function updateBulkBar() {
+        const checked = getChecked();
+        const count = checked.length;
+        selectedCount.textContent = count;
+        bulkBar.style.setProperty('display', count > 0 ? 'flex' : 'none', 'important');
+
+        // Sync hidden inputs
+        bulkForm.querySelectorAll('input[name="lead_ids"]').forEach(el => el.remove());
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'lead_ids';
+            input.value = cb.value;
+            bulkForm.appendChild(input);
+        });
+    }
+
+    // Select all (desktop only)
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            getCheckboxes().forEach(cb => cb.checked = this.checked);
+            updateBulkBar();
+        });
+    }
+
+    // Individual checkboxes (both desktop table and mobile cards)
+    getCheckboxes().forEach(cb => {
+        cb.addEventListener('change', function() {
+            const all = getCheckboxes();
+            const checked = getChecked();
+            if (selectAll) {
+                selectAll.checked = all.length === checked.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+            }
+            updateBulkBar();
+        });
+    });
+});
+</script>
 {% endblock %}

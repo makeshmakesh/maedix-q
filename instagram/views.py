@@ -780,7 +780,7 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             flows = flows.filter(title__icontains=search_filter)
 
         # Annotate node count so template uses it without N+1 queries
-        flows = flows.annotate(node_count=Count('nodes'))
+        flows = flows.annotate(node_count=Count('nodes')).order_by('-created_at')
 
         # Pagination
         paginator = Paginator(flows, 10)

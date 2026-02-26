@@ -57,6 +57,7 @@ class FlowEngine:
         self.instagram_account = instagram_account
         self.api_client = get_api_client_for_account(instagram_account)
         self._branch_targets = {}  # {flow_id: set of node_ids} — computed once per flow
+        self._dm_sent_sessions = set()  # session IDs known to have sent a DM
 
     def _log_action(
         self,
@@ -72,6 +73,8 @@ class FlowEngine:
             action=action,
             details=details or {}
         )
+        if action == 'message_sent':
+            self._dm_sent_sessions.add(session.id)
 
     # =========================================================================
     # Flow Triggering
@@ -329,9 +332,9 @@ class FlowEngine:
         # Substitute context variables
         text = self._substitute_variables(text, session.context_data)
 
-        # Get quick reply options
-        options = node.quick_reply_options.all().order_by('order')
-        if not options.exists():
+        # Get quick reply options (evaluate once to avoid double DB hit)
+        options = list(node.quick_reply_options.all().order_by('order'))
+        if not options:
             logger.warning("Quick reply node has no options, sending as plain text")
             try:
                 # Use comment_id for first DM, IGSID for follow-ups
@@ -633,7 +636,7 @@ class FlowEngine:
                 lead.custom_data['follower_count'] = profile_data.get('follower_count')
                 lead.custom_data['is_verified'] = profile_data.get('is_verified_user', False)
                 lead.custom_data['is_business_follow_user'] = profile_data.get('is_business_follow_user', False)
-            lead.save()
+            lead.save(update_fields=['is_follower', 'name', 'custom_data', 'updated_at'])
 
         self._log_action(session, 'condition_checked', node, {
             'condition': 'follower_check',
@@ -1231,7 +1234,7 @@ class FlowEngine:
                     lead.custom_data['follower_count'] = profile_data.get('follower_count')
                     lead.custom_data['is_verified'] = profile_data.get('is_verified_user', False)
                     lead.custom_data['is_business_follow_user'] = profile_data.get('is_business_follow_user', False)
-                lead.save()
+                lead.save(update_fields=['is_follower', 'name', 'custom_data', 'updated_at'])
 
         except InstagramAPIError as e:
             logger.warning(f"Could not check follower status for {session.instagram_username}: {e}")
@@ -1319,11 +1322,16 @@ class FlowEngine:
         self._log_action(session, 'flow_completed')
 
     def _has_sent_dm(self, session: FlowSession) -> bool:
-        """Check if we've already sent a DM in this session."""
-        return FlowExecutionLog.objects.filter(
+        """Check if we've already sent a DM in this session (cached after True)."""
+        if session.id in self._dm_sent_sessions:
+            return True
+        result = FlowExecutionLog.objects.filter(
             session=session,
             action='message_sent'
         ).exists()
+        if result:
+            self._dm_sent_sessions.add(session.id)
+        return result
 
     def _has_user_interacted(self, session: FlowSession) -> bool:
         """
@@ -1449,7 +1457,7 @@ class FlowEngine:
             }
 
         lead.is_follower = session.context_data.get('is_follower', lead.is_follower)
-        lead.save()
+        lead.save(update_fields=['flow', 'session', 'instagram_username', 'name', 'email', 'phone', 'custom_data', 'is_follower', 'updated_at'])
 
 
 def find_matching_flow(

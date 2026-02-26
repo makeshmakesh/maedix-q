@@ -2260,19 +2260,26 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
 
 class LeadDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
-    """View a single lead's details"""
+    """View and edit a single lead's details"""
     template_name = 'instagram/lead_detail.html'
 
-    def get(self, request, pk):
+    def _get_lead(self, request, pk):
         if request.user.is_staff:
-            lead = get_object_or_404(CollectedLead, pk=pk)
-        else:
-            lead = get_object_or_404(CollectedLead, pk=pk, user=request.user)
+            return get_object_or_404(CollectedLead, pk=pk)
+        return get_object_or_404(CollectedLead, pk=pk, user=request.user)
 
-        context = {
-            'lead': lead,
-        }
-        return render(request, self.template_name, context)
+    def get(self, request, pk):
+        lead = self._get_lead(request, pk)
+        return render(request, self.template_name, {'lead': lead})
+
+    def post(self, request, pk):
+        lead = self._get_lead(request, pk)
+        lead.name = request.POST.get('name', '').strip()
+        lead.email = request.POST.get('email', '').strip()
+        lead.phone = request.POST.get('phone', '').strip()
+        lead.save(update_fields=['name', 'email', 'phone', 'updated_at'])
+        messages.success(request, 'Lead updated.')
+        return redirect('lead_detail', pk=lead.pk)
 
 
 class LeadDeleteView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):

@@ -739,25 +739,33 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     template_name = 'instagram/flow_list.html'
 
     def get(self, request):
+        from django.db.models import Sum, Count
+        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
         instagram_connected = False
         instagram_account = None
         if hasattr(request.user, 'instagram_account'):
             instagram_account = request.user.instagram_account
             instagram_connected = instagram_account.is_connected
 
+        # Get subscription once for all checks below
+        subscription = None
+        if not request.user.is_staff:
+            subscription = get_user_subscription(request.user)
+
         # Admin can see all flows, regular users see only their own
         if request.user.is_staff:
-            flows = DMFlow.objects.all().select_related('user').prefetch_related('nodes')
+            flows = DMFlow.objects.all().select_related('user')
         else:
-            flows = DMFlow.objects.filter(user=request.user).prefetch_related('nodes')
+            flows = DMFlow.objects.filter(user=request.user)
 
-        # Total count and stats before filters
-        flow_count = flows.count()
-        from django.db.models import Sum
+        # Total count and stats in a single query (instead of separate count + aggregate)
         stats = flows.aggregate(
+            flow_count=Count('id'),
             total_triggered=Sum('total_triggered'),
             total_completed=Sum('total_completed')
         )
+        flow_count = stats['flow_count']
 
         # Apply filters
         status_filter = request.GET.get('status', '')
@@ -771,8 +779,10 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         if search_filter:
             flows = flows.filter(title__icontains=search_filter)
 
+        # Annotate node count so template uses it without N+1 queries
+        flows = flows.annotate(node_count=Count('nodes'))
+
         # Pagination
-        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
         paginator = Paginator(flows, 10)
         page = request.GET.get('page')
         try:
@@ -782,18 +792,16 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         except EmptyPage:
             flows_page = paginator.page(paginator.num_pages)
 
-        # Get flow limit from subscription
+        # Get flow limit from subscription (reuses single subscription call)
         flow_limit = None
         can_create_more = True
 
-        if not request.user.is_staff:
-            subscription = get_user_subscription(request.user)
-            if subscription and subscription.plan:
-                feature = subscription.plan.get_feature('ig_flow_builder')
-                if feature:
-                    flow_limit = feature.get('limit')
-                    if flow_limit:
-                        can_create_more = flow_count < flow_limit
+        if subscription and subscription.plan:
+            feature = subscription.plan.get_feature('ig_flow_builder')
+            if feature:
+                flow_limit = feature.get('limit')
+                if flow_limit:
+                    can_create_more = flow_count < flow_limit
 
         # Get active flow templates
         flow_templates = FlowTemplate.objects.filter(is_active=True).order_by('order', 'title')
@@ -812,26 +820,22 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         # Count dropped messages in last 24h for upgrade CTA
         dropped_message_count = 0
         if instagram_account:
-            subscription = get_user_subscription(request.user)
             has_queue = subscription and subscription.plan.has_feature('queue_triggers')
             if has_queue:
-                from datetime import timedelta
                 since = timezone.now() - timedelta(hours=24)
                 dropped_message_count = DroppedMessage.objects.filter(
                     account=instagram_account,
                     created_at__gte=since,
                 ).count()
 
-        # Lead usage vs limit
+        # Lead usage vs limit (reuses single subscription call)
         leads_used = CollectedLead.objects.filter(user=request.user).count()
         lead_limit = None
         leads_exceeded = False
-        if not request.user.is_staff:
-            sub = get_user_subscription(request.user)
-            if sub and sub.plan and sub.plan.has_feature('lead_capture'):
-                lead_limit = sub.plan.get_feature_limit('lead_capture', default=None)
-                if lead_limit is not None:
-                    leads_exceeded = leads_used >= lead_limit
+        if subscription and subscription.plan and subscription.plan.has_feature('lead_capture'):
+            lead_limit = subscription.plan.get_feature_limit('lead_capture', default=None)
+            if lead_limit is not None:
+                leads_exceeded = leads_used >= lead_limit
 
         # Time saved: ~2 min per DM, ~1 min per comment reply
         time_saved_minutes = 0
@@ -874,7 +878,7 @@ class DashboardView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     template_name = 'instagram/dashboard.html'
 
     def get(self, request):
-        from django.db.models import Sum, Count
+        from django.db.models import Sum, Count, Q
 
         instagram_connected = False
         instagram_account = None
@@ -882,17 +886,18 @@ class DashboardView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             instagram_account = request.user.instagram_account
             instagram_connected = instagram_account.is_connected
 
-        # Flow stats
-        flows = DMFlow.objects.filter(user=request.user)
-        total_flows = flows.count()
-        active_flows = flows.filter(is_active=True).count()
-        paused_flows = total_flows - active_flows
-        flow_agg = flows.aggregate(
+        # Flow stats — single query instead of 3 (count + filtered count + aggregate)
+        flow_stats = DMFlow.objects.filter(user=request.user).aggregate(
+            total_flows=Count('id'),
+            active_flows=Count('id', filter=Q(is_active=True)),
             total_triggered=Sum('total_triggered'),
-            total_completed=Sum('total_completed')
+            total_completed=Sum('total_completed'),
         )
-        total_triggered = flow_agg['total_triggered'] or 0
-        total_completed = flow_agg['total_completed'] or 0
+        total_flows = flow_stats['total_flows']
+        active_flows = flow_stats['active_flows']
+        paused_flows = total_flows - active_flows
+        total_triggered = flow_stats['total_triggered'] or 0
+        total_completed = flow_stats['total_completed'] or 0
 
         # Account stats
         total_dms_sent = 0
@@ -2112,6 +2117,7 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
     def get(self, request):
         from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+        from datetime import datetime, time
 
         # Staff can see all leads, regular users see only their own
         if request.user.is_staff:
@@ -2119,7 +2125,7 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         else:
             leads = CollectedLead.objects.filter(
                 user=request.user
-            ).select_related('flow').order_by('-created_at')
+            ).select_related('flow', 'user').order_by('-created_at')
 
         # Filter by user (staff only)
         filter_user = request.GET.get('user', '').strip()
@@ -2143,17 +2149,19 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         if username:
             leads = leads.filter(instagram_username__icontains=username)
 
-        # Filter by date range
+        # Filter by date range — use datetime range to preserve index usage
         date_from = request.GET.get('date_from')
         date_to = request.GET.get('date_to')
         if date_from:
-            leads = leads.filter(created_at__date__gte=date_from)
+            leads = leads.filter(created_at__gte=date_from)
         if date_to:
-            leads = leads.filter(created_at__date__lte=date_to)
+            leads = leads.filter(created_at__lte=datetime.combine(
+                datetime.strptime(date_to, '%Y-%m-%d').date(), time.max
+            ))
 
-        total_leads = leads.count()
+        has_filters = any([filter_user, flow_id, is_follower, username, date_from, date_to])
 
-        # Pagination
+        # Pagination (paginator computes count internally — reuse it)
         page = request.GET.get('page', 1)
         paginator = Paginator(leads, self.paginate_by)
         try:
@@ -2163,11 +2171,13 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         except EmptyPage:
             leads_page = paginator.page(paginator.num_pages)
 
-        # Get flows for filter dropdown
+        total_leads = paginator.count
+
+        # Get flows for filter dropdown — only fetch needed fields
         if request.user.is_staff:
-            user_flows = DMFlow.objects.all().select_related('user').order_by('title')
+            user_flows = DMFlow.objects.all().select_related('user').only('id', 'title', 'user__username').order_by('title')
         else:
-            user_flows = DMFlow.objects.filter(user=request.user).order_by('title')
+            user_flows = DMFlow.objects.filter(user=request.user).only('id', 'title').order_by('title')
 
         # Lead limit from subscription
         lead_limit = None
@@ -2176,11 +2186,14 @@ class LeadsListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             if subscription and subscription.plan:
                 lead_limit = subscription.plan.get_feature_limit('lead_capture', default=None)
 
-        # Total unfiltered count for limit display
-        if request.user.is_staff:
-            leads_used = CollectedLead.objects.count()
+        # Total unfiltered count for limit display — reuse paginator count when no filters
+        if has_filters:
+            if request.user.is_staff:
+                leads_used = CollectedLead.objects.count()
+            else:
+                leads_used = CollectedLead.objects.filter(user=request.user).count()
         else:
-            leads_used = CollectedLead.objects.filter(user=request.user).count()
+            leads_used = total_leads
 
         context = {
             'leads': leads_page,
@@ -2204,7 +2217,11 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     """Export leads as CSV"""
 
     def get(self, request):
-        leads = CollectedLead.objects.filter(user=request.user).order_by('-created_at')
+        from datetime import datetime, time
+
+        leads = CollectedLead.objects.filter(
+            user=request.user
+        ).select_related('flow').order_by('-created_at')
 
         # Apply same filters as list view
         flow_id = request.GET.get('flow')
@@ -2224,9 +2241,14 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         date_from = request.GET.get('date_from')
         date_to = request.GET.get('date_to')
         if date_from:
-            leads = leads.filter(created_at__date__gte=date_from)
+            leads = leads.filter(created_at__gte=date_from)
         if date_to:
-            leads = leads.filter(created_at__date__lte=date_to)
+            leads = leads.filter(created_at__lte=datetime.combine(
+                datetime.strptime(date_to, '%Y-%m-%d').date(), time.max
+            ))
+
+        # Evaluate once — avoids hitting DB twice (custom fields scan + CSV rows)
+        leads = list(leads)
 
         # Collect all unique custom field labels
         custom_fields = {}  # {variable_name: label}
@@ -2278,9 +2300,10 @@ class LeadDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     template_name = 'instagram/lead_detail.html'
 
     def _get_lead(self, request, pk):
+        qs = CollectedLead.objects.select_related('user', 'flow')
         if request.user.is_staff:
-            return get_object_or_404(CollectedLead, pk=pk)
-        return get_object_or_404(CollectedLead, pk=pk, user=request.user)
+            return get_object_or_404(qs, pk=pk)
+        return get_object_or_404(qs, pk=pk, user=request.user)
 
     def get(self, request, pk):
         lead = self._get_lead(request, pk)
@@ -2854,32 +2877,36 @@ class InstagramWebhookView(View):
         if not ig_business_account_id:
             return None
 
-        # Try multiple methods to find the account
-        lookup_fields = [
-            {'instagram_user_id': ig_business_account_id},
-            {'instagram_data__account_id': ig_business_account_id},
-            {'instagram_data__business_account_id': ig_business_account_id},
-            {'instagram_data__user_id': ig_business_account_id},
-            {'instagram_data__ig_id': ig_business_account_id},
-        ]
+        from django.db.models import Q
 
-        for lookup in lookup_fields:
-            account = InstagramAccount.objects.filter(
-                **lookup,
-                is_active=True
-            ).first()
-            if account:
-                return account
+        # Fast path: direct indexed field lookup (1 query)
+        account = InstagramAccount.objects.filter(
+            instagram_user_id=ig_business_account_id,
+            is_active=True
+        ).first()
+        if account:
+            return account
+
+        # Slow path: combine all JSON field lookups into 1 query
+        account = InstagramAccount.objects.filter(
+            Q(instagram_data__account_id=ig_business_account_id) |
+            Q(instagram_data__business_account_id=ig_business_account_id) |
+            Q(instagram_data__user_id=ig_business_account_id) |
+            Q(instagram_data__ig_id=ig_business_account_id),
+            is_active=True
+        ).first()
+        if account:
+            return account
 
         # Fallback: If only one active account with webhook subscribed, use it
         # This handles cases where the webhook ID format changed
-        active_accounts = InstagramAccount.objects.filter(
+        active_accounts = list(InstagramAccount.objects.filter(
             is_active=True,
             instagram_data__webhook_subscribed=True
-        )
-        if active_accounts.count() == 1:
+        )[:2])
+        if len(active_accounts) == 1:
             logger.info(f"Using fallback: only one active webhook account found")
-            return active_accounts.first()
+            return active_accounts[0]
 
         logger.warning(f"Account lookup failed for ID: {ig_business_account_id}")
         return None

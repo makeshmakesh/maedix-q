@@ -56,6 +56,7 @@ class FlowEngine:
         """
         self.instagram_account = instagram_account
         self.api_client = get_api_client_for_account(instagram_account)
+        self._branch_targets = {}  # {flow_id: set of node_ids} — computed once per flow
 
     def _log_action(
         self,
@@ -1264,49 +1265,52 @@ class FlowEngine:
         else:
             self._complete_flow(session)
 
+    def _get_branch_targets(self, flow) -> set:
+        """Compute and cache the set of all branch-target node IDs for a flow.
+        Replaces 4 separate queries per call with 2 queries total, cached for reuse."""
+        if flow.id in self._branch_targets:
+            return self._branch_targets[flow.id]
+
+        targets = set()
+
+        # 1 query: get all nodes for this flow (covers next_node, conditions, buttons)
+        all_nodes = FlowNode.objects.filter(flow=flow)
+        for n in all_nodes:
+            # Nodes connected via next_node
+            if n.next_node_id:
+                targets.add(n.next_node_id)
+
+            # Condition node targets (true/false branches)
+            if n.node_type in ('condition_follower', 'condition_user_interacted'):
+                config = n.config or {}
+                if config.get('true_node_id'):
+                    targets.add(config['true_node_id'])
+                if config.get('false_node_id'):
+                    targets.add(config['false_node_id'])
+
+            # Button template targets
+            if n.node_type == 'message_button_template':
+                config = n.config or {}
+                for button in config.get('buttons', []):
+                    if button.get('target_node_id'):
+                        targets.add(button['target_node_id'])
+
+        # 1 query: quick reply option targets
+        qr_target_ids = QuickReplyOption.objects.filter(
+            node__flow=flow,
+            target_node__isnull=False
+        ).values_list('target_node_id', flat=True)
+        targets.update(qr_target_ids)
+
+        self._branch_targets[flow.id] = targets
+        return targets
+
     def _is_branch_target(self, node: FlowNode) -> bool:
         """
-        Check if a node is explicitly connected from another node.
-        This includes:
-        - Target of quick reply option
-        - Target of condition node (true/false branch)
-        - Target of button template button
-        - Connected via next_node from another node
+        Check if a node is explicitly connected from another node (cached).
+        Uses precomputed branch target set instead of 4 separate queries per call.
         """
-        # Check if this node is a target of any quick reply option
-        if QuickReplyOption.objects.filter(target_node=node).exists():
-            return True
-
-        # Check if this node is connected via next_node from another node
-        # This means it's explicitly part of a flow path, not just ordered
-        if FlowNode.objects.filter(flow=node.flow, next_node=node).exists():
-            return True
-
-        # Check if this node is a target of any condition node
-        # (true_node_id or false_node_id in condition_follower/condition_user_interacted configs)
-        condition_nodes = FlowNode.objects.filter(
-            flow=node.flow,
-            node_type__in=['condition_follower', 'condition_user_interacted']
-        )
-        for cond_node in condition_nodes:
-            config = cond_node.config or {}
-            if config.get('true_node_id') == node.id or config.get('false_node_id') == node.id:
-                return True
-
-        # Check if this node is a target of any button template button
-        button_template_nodes = FlowNode.objects.filter(
-            flow=node.flow,
-            node_type='message_button_template'
-        )
-        for btn_node in button_template_nodes:
-            # Use deep copy to avoid any potential shared reference issues
-            config = copy.deepcopy(btn_node.config) if btn_node.config else {}
-            buttons = config.get('buttons', [])
-            for button in buttons:
-                if button.get('target_node_id') == node.id:
-                    return True
-
-        return False
+        return node.id in self._get_branch_targets(node.flow)
 
     def _complete_flow(self, session: FlowSession):
         """Mark the flow as completed."""

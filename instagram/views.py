@@ -2864,13 +2864,12 @@ class InstagramWebhookView(View):
         ]
 
         for lookup in lookup_fields:
-            try:
-                return InstagramAccount.objects.get(
-                    **lookup,
-                    is_active=True
-                )
-            except InstagramAccount.DoesNotExist:
-                continue
+            account = InstagramAccount.objects.filter(
+                **lookup,
+                is_active=True
+            ).first()
+            if account:
+                return account
 
         # Fallback: If only one active account with webhook subscribed, use it
         # This handles cases where the webhook ID format changed

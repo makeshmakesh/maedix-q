@@ -965,8 +965,16 @@
                                 <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
                                 <option value="paused" {% if status_filter == 'paused' %}selected{% endif %}>Paused</option>
                             </select>
+                            {% if request.user.is_staff and filter_users %}
+                            <select name="user" class="form-select">
+                                <option value="">All Users</option>
+                                {% for u in filter_users %}
+                                <option value="{{ u.pk }}" {% if user_filter == u.pk|stringformat:"d" %}selected{% endif %}>{{ u.email|default:u.username }}</option>
+                                {% endfor %}
+                            </select>
+                            {% endif %}
                             <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
-                            {% if status_filter or search_filter %}
+                            {% if status_filter or search_filter or user_filter %}
                             <a href="{% url 'flow_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-lg"></i></a>
                             {% endif %}
                         </form>
@@ -1065,7 +1073,7 @@
                                     <ul class="pagination pagination-sm justify-content-center">
                                         {% if flows.has_previous %}
                                         <li class="page-item">
-                                            <a class="page-link" href="?page={{ flows.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_filter %}&q={{ search_filter }}{% endif %}">
+                                            <a class="page-link" href="?page={{ flows.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_filter %}&q={{ search_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">
                                                 <i class="bi bi-chevron-left"></i>
                                             </a>
                                         </li>
@@ -1076,14 +1084,14 @@
                                             <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                                             {% elif num > flows.number|add:'-3' and num < flows.number|add:'3' %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_filter %}&q={{ search_filter }}{% endif %}">{{ num }}</a>
+                                                <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_filter %}&q={{ search_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">{{ num }}</a>
                                             </li>
                                             {% endif %}
                                         {% endfor %}
 
                                         {% if flows.has_next %}
                                         <li class="page-item">
-                                            <a class="page-link" href="?page={{ flows.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_filter %}&q={{ search_filter }}{% endif %}">
+                                            <a class="page-link" href="?page={{ flows.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_filter %}&q={{ search_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">
                                                 <i class="bi bi-chevron-right"></i>
                                             </a>
                                         </li>

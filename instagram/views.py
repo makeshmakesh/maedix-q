@@ -15,12 +15,13 @@ from datetime import timedelta
 from django.db import models, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from .models import (
     InstagramAccount, DMFlow, FlowNode, QuickReplyOption,
     FlowSession, FlowExecutionLog, CollectedLead, FlowTemplate,
@@ -770,6 +771,10 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
         # Apply filters
         status_filter = request.GET.get('status', '')
         search_filter = request.GET.get('q', '').strip()
+        user_filter = request.GET.get('user', '')
+
+        if request.user.is_staff and user_filter:
+            flows = flows.filter(user_id=user_filter)
 
         if status_filter == 'active':
             flows = flows.filter(is_active=True)
@@ -865,6 +870,8 @@ class FlowListView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
             'dropped_message_count': dropped_message_count,
             'status_filter': status_filter,
             'search_filter': search_filter,
+            'user_filter': user_filter,
+            'filter_users': get_user_model().objects.filter(dm_flows__isnull=False).distinct().order_by('email') if request.user.is_staff else [],
             'time_saved': time_saved_display,
             'leads_used': leads_used,
             'lead_limit': lead_limit,
@@ -2219,9 +2226,18 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
     def get(self, request):
         from datetime import datetime, time
 
-        leads = CollectedLead.objects.filter(
-            user=request.user
-        ).select_related('flow').order_by('-created_at')
+        # Staff can export all leads, regular users only their own
+        if request.user.is_staff:
+            leads = CollectedLead.objects.all().select_related('flow', 'user').order_by('-created_at')
+        else:
+            leads = CollectedLead.objects.filter(
+                user=request.user
+            ).select_related('flow').order_by('-created_at')
+
+        # Filter by user (staff only)
+        filter_user = request.GET.get('user', '').strip()
+        if filter_user and request.user.is_staff:
+            leads = leads.filter(user__username__icontains=filter_user)
 
         # Apply same filters as list view
         flow_id = request.GET.get('flow')
@@ -2247,51 +2263,58 @@ class LeadsExportView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
                 datetime.strptime(date_to, '%Y-%m-%d').date(), time.max
             ))
 
-        # Evaluate once — avoids hitting DB twice (custom fields scan + CSV rows)
-        leads = list(leads)
-
-        # Collect all unique custom field labels
+        # First pass: collect custom field keys (only scan custom_data column)
         custom_fields = {}  # {variable_name: label}
-        for lead in leads:
-            if lead.custom_data:
-                for key, val in lead.custom_data.items():
+        for cd in leads.values_list('custom_data', flat=True).iterator(chunk_size=500):
+            if cd:
+                for key, val in cd.items():
                     if isinstance(val, dict) and 'label' in val:
                         custom_fields[key] = val['label']
                     elif key not in custom_fields:
                         custom_fields[key] = key
 
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="leads.csv"'
-
-        writer = csv.writer(response)
-
-        # Header row with custom fields
         header = [
             'Instagram Username', 'Name', 'Email', 'Phone',
             'Is Follower', 'Flow', 'Created At'
         ]
         header.extend(custom_fields.values())
-        writer.writerow(header)
+        custom_keys = list(custom_fields.keys())
 
-        for lead in leads:
-            row = [
-                lead.instagram_username,
-                lead.name,
-                lead.email,
-                lead.phone,
-                'Yes' if lead.is_follower else 'No',
-                lead.flow.title if lead.flow else '',
-                lead.created_at.strftime('%Y-%m-%d %H:%M'),
-            ]
-            # Add custom field values
-            for key in custom_fields.keys():
-                val = lead.custom_data.get(key, '') if lead.custom_data else ''
-                if isinstance(val, dict) and 'value' in val:
-                    row.append(val['value'])
-                else:
-                    row.append(val)
-            writer.writerow(row)
+        # Stream CSV rows to avoid loading all leads into memory
+        import io
 
+        def csv_rows():
+            buf = io.StringIO()
+            writer = csv.writer(buf)
+
+            writer.writerow(header)
+            yield buf.getvalue()
+            buf.seek(0)
+            buf.truncate(0)
+
+            for lead in leads.iterator(chunk_size=500):
+                row = [
+                    lead.instagram_username,
+                    lead.name,
+                    lead.email,
+                    lead.phone,
+                    'Yes' if lead.is_follower else 'No',
+                    lead.flow.title if lead.flow else '',
+                    lead.created_at.strftime('%Y-%m-%d %H:%M'),
+                ]
+                for key in custom_keys:
+                    val = lead.custom_data.get(key, '') if lead.custom_data else ''
+                    if isinstance(val, dict) and 'value' in val:
+                        row.append(val['value'])
+                    else:
+                        row.append(val)
+                writer.writerow(row)
+                yield buf.getvalue()
+                buf.seek(0)
+                buf.truncate(0)
+
+        response = StreamingHttpResponse(csv_rows(), content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="leads.csv"'
         return response
 
 

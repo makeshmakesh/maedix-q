@@ -86,11 +86,14 @@ class Plan(models.Model):
         """
         Get pricing for a specific country.
         Returns dict with monthly, yearly, currency, symbol.
-        Falls back to INR pricing if country not found.
+        Falls back to: country-specific → 'default' USD → INR base prices.
         """
         if country_code and country_code in self.pricing_data:
             return self.pricing_data[country_code]
-        # Default to INR pricing
+        # Non-Indian users: fall back to 'default' USD pricing if available
+        if country_code and country_code != 'IN' and 'default' in self.pricing_data:
+            return self.pricing_data['default']
+        # Final fallback to INR base prices
         return {
             'monthly': float(self.price_monthly),
             'yearly': float(self.price_yearly),

@@ -452,6 +452,10 @@
 
                     <!-- Mobile: Cards -->
                     <div class="leads-cards">
+                        <div style="padding: 0.5rem 1rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 0.5rem; background: #f8f9fa;">
+                            <input type="checkbox" id="selectAllMobile" class="form-check-input">
+                            <label for="selectAllMobile" style="font-size: 0.8rem; color: #6c757d; margin: 0; cursor: pointer;">Select all</label>
+                        </div>
                         {% for lead in leads %}
                         <div class="lead-card">
                             <div class="lead-card-header">
@@ -587,23 +591,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Select all (desktop only)
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            getCheckboxes().forEach(cb => cb.checked = this.checked);
-            updateBulkBar();
+    const selectAllMobile = document.getElementById('selectAllMobile');
+
+    function updateSelectAllState() {
+        const all = getCheckboxes();
+        const checked = getChecked();
+        [selectAll, selectAllMobile].forEach(sa => {
+            if (sa) {
+                sa.checked = all.length > 0 && all.length === checked.length;
+                sa.indeterminate = checked.length > 0 && checked.length < all.length;
+            }
         });
     }
+
+    // Select all (desktop + mobile)
+    [selectAll, selectAllMobile].forEach(sa => {
+        if (sa) {
+            sa.addEventListener('change', function() {
+                getCheckboxes().forEach(cb => cb.checked = this.checked);
+                updateSelectAllState();
+                updateBulkBar();
+            });
+        }
+    });
 
     // Individual checkboxes (both desktop table and mobile cards)
     getCheckboxes().forEach(cb => {
         cb.addEventListener('change', function() {
-            const all = getCheckboxes();
-            const checked = getChecked();
-            if (selectAll) {
-                selectAll.checked = all.length === checked.length;
-                selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
-            }
+            updateSelectAllState();
             updateBulkBar();
         });
     });

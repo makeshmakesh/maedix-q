@@ -569,7 +569,7 @@ class PaymentFailedView(View):
                 Transaction.objects.create(
                     user=request.user,
                     amount=Decimal('0.00'),
-                    currency='INR',
+                    currency=data.get('currency', 'INR'),
                     status='failed',
                     razorpay_order_id=data.get('order_id', ''),
                     razorpay_payment_id=data.get('payment_id', ''),

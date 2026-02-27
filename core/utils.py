@@ -29,7 +29,7 @@ def get_country_from_ip(ip_address):
     Results are cached to reduce API calls.
     """
     if not ip_address or ip_address in ('127.0.0.1', 'localhost', '::1'):
-        return 'US'  # Default to India for local development
+        return 'US'  # Default to US for local development
 
     try:
         response = requests.get(
@@ -73,7 +73,7 @@ def get_user_country(request):
     if country_code:
         request.session['user_country'] = country_code
 
-    return country_code or 'USD'  # Default to USD for international users
+    return country_code or 'US'  # Default to US for international users
 
 
 def is_indian_user(request):

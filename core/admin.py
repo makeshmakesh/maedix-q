@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 
-from .models import Configuration, Plan, Subscription, Transaction, ContactMessage, Banner, LinkRedirectEvent
+from .models import Configuration, Plan, Subscription, Transaction, ContactMessage, Banner, LinkRedirectEvent, CreditTransaction
 
 
 @admin.register(Configuration)
@@ -22,6 +22,15 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(CreditTransaction)
+class CreditTransactionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'credits', 'amount', 'currency', 'status', 'created_at')
+    list_filter = ('status', 'currency', 'created_at')
+    search_fields = ('user__email', 'razorpay_order_id', 'razorpay_payment_id')
+    readonly_fields = ('id', 'razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature', 'created_at', 'updated_at')
+    date_hierarchy = 'created_at'
 
 
 @admin.register(ContactMessage)

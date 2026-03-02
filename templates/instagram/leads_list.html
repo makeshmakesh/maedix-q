@@ -166,6 +166,24 @@
         flex-shrink: 0;
     }
 
+    .date-field {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .date-field label {
+        position: absolute;
+        top: -0.5rem;
+        left: 0.5rem;
+        background: #f8f9fa;
+        padding: 0 0.25rem;
+        font-size: 0.6rem;
+        color: #6c757d;
+        z-index: 1;
+        pointer-events: none;
+    }
+
     @media (max-width: 767.98px) {
         .filter-bar {
             padding: 0.5rem;
@@ -174,6 +192,7 @@
         }
         .filter-bar .form-control { font-size: 0.8rem; padding: 0.35rem 0.5rem; flex: 1 1 45%; min-width: 0; }
         .filter-bar .form-select { font-size: 0.8rem; padding: 0.35rem 0.5rem; flex: 1 1 45%; min-width: 0; width: auto; }
+        .filter-bar .date-field { flex: 1 1 45%; }
         .filter-bar .btn { font-size: 0.8rem; padding: 0.35rem 0.6rem; }
     }
 
@@ -360,8 +379,14 @@
                         <option value="1" {% if filter_is_follower == '1' %}selected{% endif %}>Yes</option>
                         <option value="0" {% if filter_is_follower == '0' %}selected{% endif %}>No</option>
                     </select>
-                    <input type="date" name="date_from" class="form-control" value="{{ filter_date_from|default:'' }}" placeholder="From">
-                    <input type="date" name="date_to" class="form-control" value="{{ filter_date_to|default:'' }}" placeholder="To">
+                    <div class="date-field">
+                        <label>From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ filter_date_from|default:'' }}">
+                    </div>
+                    <div class="date-field">
+                        <label>To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ filter_date_to|default:'' }}">
+                    </div>
                     <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
                     {% if filter_username or filter_flow or filter_is_follower or filter_date_from or filter_date_to or filter_user %}
                     <a href="{% url 'leads_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>

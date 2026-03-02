@@ -60,8 +60,6 @@
 
 <!-- ==================== 1. HERO ==================== -->
 <section class="lp-hero">
-    <div class="lp-hero__glow"></div>
-    <div class="lp-hero__noise"></div>
     <div class="container">
         <div class="lp-hero__inner">
             <div class="lp-hero__badge">
@@ -85,7 +83,7 @@
                 {% else %}
                 <a href="{% url 'signup' %}" class="lp-btn">Start free</a>
                 {% endif %}
-                <a href="#how-it-works" class="lp-btn lp-btn--ghost">See how it works</a>
+                <a href="#how-it-works" class="lp-btn lp-btn--ghost-light">See how it works</a>
             </div>
 
             <!-- Browser chrome demo -->
@@ -287,67 +285,9 @@
             <p>Drag and drop steps to create powerful automations in minutes.</p>
         </div>
 
-        <!-- Builder demo -->
-        <div class="lp-builder__canvas">
-            <div class="lp-canvas__grid"></div>
-            <div class="lp-canvas__flow">
-                <!-- Trigger -->
-                <div class="lp-node lp-node--trigger animate-node delay-1">
-                    <div class="lp-node__header lp-node__header--orange">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                        Trigger
-                    </div>
-                    <div class="lp-node__body">
-                        <div class="lp-node__label">When someone comments</div>
-                        <div class="lp-node__value">"FREE" on any post</div>
-                    </div>
-                </div>
-
-                <svg class="lp-connector animate-connector delay-2" width="2" height="40"><line x1="1" y1="0" x2="1" y2="40" stroke="#6366f1" stroke-width="2" stroke-dasharray="4"/></svg>
-
-                <!-- Follower Check -->
-                <div class="lp-node lp-node--condition animate-node delay-3">
-                    <div class="lp-node__header lp-node__header--green">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                        Follow Gate
-                    </div>
-                    <div class="lp-node__body">
-                        <div class="lp-node__label">Check if user</div>
-                        <div class="lp-node__value">follows you</div>
-                    </div>
-                </div>
-
-                <!-- Branch -->
-                <div class="lp-branch animate-branch delay-4">
-                    <div class="lp-branch__line-left"></div>
-                    <div class="lp-branch__line-right"></div>
-                    <span class="lp-branch__label lp-branch__label--yes">Yes</span>
-                    <span class="lp-branch__label lp-branch__label--no">No</span>
-                </div>
-
-                <div class="lp-branch__nodes">
-                    <div class="lp-node lp-node--message animate-node delay-5">
-                        <div class="lp-node__header lp-node__header--blue">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            Send DM
-                        </div>
-                        <div class="lp-node__body">
-                            <div class="lp-node__label">Send exclusive link</div>
-                            <div class="lp-node__preview">"Thanks for following! Here's your free guide: [link]"</div>
-                        </div>
-                    </div>
-                    <div class="lp-node lp-node--message animate-node delay-6">
-                        <div class="lp-node__header lp-node__header--purple">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            Send DM
-                        </div>
-                        <div class="lp-node__body">
-                            <div class="lp-node__label">Ask to follow</div>
-                            <div class="lp-node__preview">"Follow me first to get the free guide!"</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Builder summary -->
+        <div class="lp-builder__summary">
+            <p>Set triggers, add messages, buttons, and conditions — then connect them into a flow. Your automation runs 24/7 while you focus on creating content.</p>
         </div>
 
         <!-- Feature Tabs -->
@@ -560,8 +500,6 @@
 
 <!-- ==================== 6. AI CONVERSATIONS ==================== -->
 <section class="lp-section lp-ai" id="ai-conversations" data-animate>
-    <div class="lp-ai__noise"></div>
-    <div class="lp-ai__glow"></div>
     <div class="container">
         <div class="lp-ai__grid">
             <div class="lp-ai__content">
@@ -725,17 +663,14 @@
 
 <!-- ==================== 8. FINAL CTA ==================== -->
 <section class="lp-cta" data-animate>
-    <div class="lp-cta__orb lp-cta__orb--1"></div>
-    <div class="lp-cta__orb lp-cta__orb--2"></div>
-    <div class="lp-cta__orb lp-cta__orb--3"></div>
     <div class="container">
         <div class="lp-cta__inner">
             <h2>Stop losing conversations you already earned.</h2>
             <div class="lp-cta__actions">
                 {% if user.is_authenticated %}
-                <a href="{% url 'flow_list' %}" class="lp-btn lp-btn--white">Go to Dashboard</a>
+                <a href="{% url 'flow_list' %}" class="lp-btn">Go to Dashboard</a>
                 {% else %}
-                <a href="{% url 'signup' %}" class="lp-btn lp-btn--white">Start free</a>
+                <a href="{% url 'signup' %}" class="lp-btn">Start free</a>
                 {% endif %}
             </div>
             <p class="lp-cta__note">No credit card. Cancel anytime.</p>
@@ -747,14 +682,9 @@
 <style>
 /* ========== Design System ========== */
 :root {
-    --lp-dark: #09090b;
-    --lp-dark-soft: #18181b;
-    --lp-text: #fafafa;
-    --lp-text-secondary: #a1a1aa;
     --lp-accent: #6366f1;
     --lp-accent-light: #818cf8;
     --lp-border: rgba(0,0,0,0.06);
-    --lp-border-dark: rgba(255,255,255,0.08);
     --lp-bg: #ffffff;
     --lp-bg-soft: #f9fafb;
     --lp-text-dark: #09090b;
@@ -797,30 +727,18 @@
     color: #fff;
 }
 
-.lp-btn--ghost {
+.lp-btn--ghost-light {
     background: transparent;
-    border: 1px solid var(--lp-border-dark);
-    color: var(--lp-text-secondary);
+    border: 1px solid rgba(0,0,0,0.15);
+    color: var(--lp-text-dark-secondary);
     box-shadow: none;
 }
 
-.lp-btn--ghost:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.15);
-    color: #fff;
+.lp-btn--ghost-light:hover {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.25);
+    color: var(--lp-text-dark);
     box-shadow: none;
-}
-
-.lp-btn--white {
-    background: #fff;
-    color: var(--lp-dark);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-}
-
-.lp-btn--white:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    color: var(--lp-dark);
 }
 
 /* ========== Scroll Fade-in ========== */
@@ -837,29 +755,11 @@
 
 /* ========== 1. HERO ========== */
 .lp-hero {
-    background: var(--lp-dark);
+    background: linear-gradient(180deg, #eef2ff 0%, #f9fafb 60%, #fff 100%);
     padding: 7rem 0 4rem;
     position: relative;
     overflow: hidden;
     text-align: center;
-}
-
-.lp-hero__glow {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 800px;
-    height: 500px;
-    background: radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.lp-hero__noise {
-    position: absolute;
-    inset: 0;
-    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
 }
 
 .lp-hero__inner {
@@ -873,8 +773,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(99,102,241,0.15);
-    color: var(--lp-accent-light);
+    background: rgba(99,102,241,0.1);
+    color: var(--lp-accent);
     font-size: 0.85rem;
     font-weight: 500;
     padding: 0.5rem 1rem;
@@ -886,7 +786,7 @@
     font-size: clamp(2.25rem, 5vw, 4rem);
     font-weight: 700;
     line-height: 1.15;
-    color: var(--lp-text);
+    color: var(--lp-text-dark);
     margin-bottom: 1.5rem;
     letter-spacing: -0.03em;
 }
@@ -894,7 +794,7 @@
 .lp-hero__desc {
     font-size: clamp(1rem, 2vw, 1.25rem);
     line-height: 1.7;
-    color: var(--lp-text-secondary);
+    color: var(--lp-text-dark-secondary);
     margin-bottom: 2.5rem;
 }
 
@@ -908,13 +808,13 @@
 
 /* Browser chrome */
 .lp-hero__browser {
-    background: var(--lp-dark-soft);
-    border: 1px solid var(--lp-border-dark);
+    background: #fff;
+    border: 1px solid var(--lp-border);
     border-radius: 16px;
     overflow: hidden;
     max-width: 520px;
     margin: 0 auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
 }
 
 .lp-browser__bar {
@@ -922,15 +822,15 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    background: rgba(255,255,255,0.03);
-    border-bottom: 1px solid var(--lp-border-dark);
+    background: var(--lp-bg-soft);
+    border-bottom: 1px solid var(--lp-border);
 }
 
 .lp-browser__dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.08);
 }
 
 .lp-browser__dot:first-child { background: #ef4444; }
@@ -941,8 +841,8 @@
     flex: 1;
     text-align: center;
     font-size: 0.75rem;
-    color: rgba(255,255,255,0.3);
-    background: rgba(255,255,255,0.04);
+    color: var(--lp-text-dark-secondary);
+    background: rgba(0,0,0,0.04);
     padding: 0.3rem 1rem;
     border-radius: 6px;
     margin-left: 0.5rem;
@@ -957,7 +857,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: rgba(255,255,255,0.05);
+    background: var(--lp-bg-soft);
     padding: 0.875rem;
     border-radius: 12px;
     margin-bottom: 1rem;
@@ -986,18 +886,18 @@
 .lp-demo__user {
     font-weight: 600;
     font-size: 0.8rem;
-    color: var(--lp-text);
+    color: var(--lp-text-dark);
 }
 
 .lp-demo__text {
     font-size: 0.85rem;
-    color: var(--lp-text-secondary);
+    color: var(--lp-text-dark-secondary);
 }
 
 .lp-demo__arrow {
     display: flex;
     justify-content: center;
-    color: var(--lp-accent-light);
+    color: var(--lp-accent);
     margin-bottom: 1rem;
 }
 
@@ -1012,7 +912,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: rgba(255,255,255,0.04);
+    background: var(--lp-bg-soft);
     padding: 0.625rem 0.875rem;
     border-radius: 10px;
     border-left: 3px solid var(--lp-accent);
@@ -1028,20 +928,20 @@
     flex-shrink: 0;
 }
 
-.lp-demo__action-icon--blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.lp-demo__action-icon--indigo { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.lp-demo__action-icon--blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.lp-demo__action-icon--indigo { background: rgba(99,102,241,0.15); color: #6366f1; }
 
 .lp-demo__action-label {
     display: block;
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--lp-text);
+    color: var(--lp-text-dark);
 }
 
 .lp-demo__action-text {
     display: block;
     font-size: 0.75rem;
-    color: var(--lp-text-secondary);
+    color: var(--lp-text-dark-secondary);
 }
 
 .lp-demo__badge {
@@ -1050,7 +950,7 @@
     justify-content: center;
     gap: 0.5rem;
     font-size: 0.8rem;
-    color: var(--lp-accent-light);
+    color: var(--lp-accent);
     font-weight: 500;
 }
 
@@ -1393,152 +1293,22 @@
     margin: 0;
 }
 
-.lp-builder__canvas {
+.lp-builder__summary {
     background: var(--lp-bg-soft);
     border: 1px solid var(--lp-border);
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 2rem;
-    position: relative;
-    min-height: 440px;
-    overflow: hidden;
+    text-align: center;
     margin-bottom: 3rem;
 }
 
-.lp-canvas__grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
-    background-size: 20px 20px;
-    pointer-events: none;
-}
-
-.lp-canvas__flow {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-}
-
-/* Nodes */
-.lp-node {
-    background: #fff;
-    border: 1px solid var(--lp-border);
-    border-radius: 12px;
-    width: 240px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.lp-node:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
-
-.lp-node__header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 0.875rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: white;
-}
-
-.lp-node__header--orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.lp-node__header--green { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.lp-node__header--blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.lp-node__header--purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-
-.lp-node__body { padding: 0.625rem 0.875rem; }
-.lp-node__label { font-size: 0.68rem; color: var(--lp-text-dark-secondary); margin-bottom: 0.2rem; }
-.lp-node__value { font-size: 0.82rem; font-weight: 600; color: var(--lp-text-dark); }
-.lp-node__preview {
-    font-size: 0.72rem;
+.lp-builder__summary p {
+    font-size: 1.05rem;
     color: var(--lp-text-dark-secondary);
-    line-height: 1.4;
-    padding: 0.4rem;
-    background: var(--lp-bg-soft);
-    border-radius: 6px;
-    margin-top: 0.4rem;
-}
-
-.lp-connector { margin: 0.5rem 0; }
-
-/* Branch */
-.lp-branch {
-    position: relative;
-    width: 280px;
-    height: 50px;
-    margin: 0.5rem 0;
-}
-
-.lp-branch__line-left,
-.lp-branch__line-right {
-    position: absolute;
-    top: 0;
-    width: 50%;
-    height: 100%;
-    border: 2px dashed var(--lp-accent);
-    border-top: none;
-}
-
-.lp-branch__line-left { left: 0; border-right: none; border-radius: 0 0 0 16px; }
-.lp-branch__line-right { right: 0; border-left: none; border-radius: 0 0 16px 0; }
-
-.lp-branch__label {
-    position: absolute;
-    bottom: 0;
-    font-size: 0.68rem;
-    font-weight: 600;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-}
-
-.lp-branch__label--yes { left: 15%; background: #dcfce7; color: #16a34a; }
-.lp-branch__label--no { right: 15%; background: #fee2e2; color: #dc2626; }
-
-.lp-branch__nodes {
-    display: flex;
-    gap: 2rem;
-    margin-top: 0.5rem;
-}
-
-.lp-branch__nodes .lp-node { width: 200px; }
-
-/* Node animations */
-.animate-node {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: lpNodeAppear 0.5s ease forwards;
-}
-
-.animate-connector {
-    opacity: 0;
-    animation: lpFade 0.4s ease forwards;
-}
-
-.animate-branch {
-    opacity: 0;
-    animation: lpFade 0.5s ease forwards;
-}
-
-.delay-1 { animation-delay: 0.2s; }
-.delay-2 { animation-delay: 0.6s; }
-.delay-3 { animation-delay: 1s; }
-.delay-4 { animation-delay: 1.4s; }
-.delay-5 { animation-delay: 1.8s; }
-.delay-6 { animation-delay: 2s; }
-
-@keyframes lpNodeAppear {
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes lpFade {
-    to { opacity: 1; }
+    line-height: 1.7;
+    margin: 0;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 /* Tabs */
@@ -1904,27 +1674,10 @@
 
 /* ========== 6. AI SECTION ========== */
 .lp-ai {
-    background: var(--lp-dark);
+    background: linear-gradient(180deg, #f5f3ff 0%, #eef2ff 50%, #f9fafb 100%);
     position: relative;
     overflow: hidden;
     padding: 5rem 0;
-}
-
-.lp-ai__noise {
-    position: absolute;
-    inset: 0;
-    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-}
-
-.lp-ai__glow {
-    position: absolute;
-    top: 30%;
-    right: 10%;
-    width: 500px;
-    height: 400px;
-    background: radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, transparent 70%);
-    pointer-events: none;
 }
 
 .lp-ai__grid {
@@ -1940,8 +1693,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(99,102,241,0.2);
-    color: var(--lp-accent-light);
+    background: rgba(99,102,241,0.1);
+    color: var(--lp-accent);
     font-size: 0.82rem;
     font-weight: 500;
     padding: 0.45rem 0.875rem;
@@ -1952,7 +1705,7 @@
 .lp-ai h2 {
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 700;
-    color: #fff;
+    color: var(--lp-text-dark);
     margin-bottom: 1rem;
     letter-spacing: -0.02em;
 }
@@ -1960,7 +1713,7 @@
 .lp-ai__desc {
     font-size: 1.1rem;
     line-height: 1.7;
-    color: rgba(255,255,255,0.65);
+    color: var(--lp-text-dark-secondary);
     margin-bottom: 2rem;
 }
 
@@ -1976,7 +1729,7 @@
     align-items: center;
     gap: 0.6rem;
     font-size: 0.95rem;
-    color: rgba(255,255,255,0.8);
+    color: var(--lp-text-dark-secondary);
 }
 
 .lp-ai__check { color: #22c55e; font-weight: 600; }
@@ -1986,10 +1739,10 @@
     background: #fff;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(139,92,246,0.15);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 40px rgba(139,92,246,0.06);
     max-width: 400px;
     margin-left: auto;
-    border: 1px solid rgba(139,92,246,0.2);
+    border: 1px solid rgba(99,102,241,0.15);
 }
 
 .lp-ai__chat-header {
@@ -2218,7 +1971,7 @@
 /* Phone mockup */
 .lp-phone {
     width: 230px;
-    background: var(--lp-dark);
+    background: #09090b;
     border-radius: 28px;
     padding: 10px;
     box-shadow: 0 16px 48px rgba(0,0,0,0.12);
@@ -2258,7 +2011,7 @@
 
 .lp-phone__link {
     background: rgba(255,255,255,0.95);
-    color: var(--lp-dark);
+    color: #09090b;
     padding: 0.5rem 0.75rem;
     border-radius: 8px;
     font-size: 0.72rem;
@@ -2334,57 +2087,15 @@
 
 /* ========== 8. CTA ========== */
 .lp-cta {
-    background: var(--lp-dark);
+    background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
     text-align: center;
     padding: 5rem 0;
     position: relative;
     overflow: hidden;
 }
 
-.lp-cta__orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    pointer-events: none;
-    animation: lpOrb 8s ease-in-out infinite alternate;
-}
-
-.lp-cta__orb--1 {
-    width: 300px;
-    height: 300px;
-    background: rgba(99,102,241,0.15);
-    top: -100px;
-    left: 20%;
-    animation-delay: 0s;
-}
-
-.lp-cta__orb--2 {
-    width: 250px;
-    height: 250px;
-    background: rgba(139,92,246,0.12);
-    bottom: -80px;
-    right: 15%;
-    animation-delay: -3s;
-}
-
-.lp-cta__orb--3 {
-    width: 200px;
-    height: 200px;
-    background: rgba(168,85,247,0.1);
-    top: 40%;
-    left: 60%;
-    animation-delay: -5s;
-}
-
-@keyframes lpOrb {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(30px, -20px) scale(1.1); }
-    100% { transform: translate(-20px, 15px) scale(0.95); }
-}
-
 .lp-cta__inner {
     position: relative;
-    z-index: 1;
     max-width: 560px;
     margin: 0 auto;
 }
@@ -2392,7 +2103,7 @@
 .lp-cta h2 {
     font-size: clamp(1.75rem, 4vw, 2.75rem);
     font-weight: 700;
-    color: #fff;
+    color: var(--lp-text-dark);
     margin-bottom: 2rem;
     letter-spacing: -0.02em;
 }
@@ -2401,7 +2112,7 @@
 
 .lp-cta__note {
     font-size: 0.88rem;
-    color: rgba(255,255,255,0.5);
+    color: var(--lp-text-dark-secondary);
 }
 
 /* ========== RESPONSIVE ========== */
@@ -2413,11 +2124,6 @@
 
     .lp-ai__chat {
         margin: 0 auto;
-    }
-
-    .lp-builder__canvas {
-        min-height: auto;
-        padding: 1.5rem;
     }
 
     .lp-linkbio {
@@ -2508,13 +2214,6 @@
         gap: 0.75rem;
     }
 
-    /* Builder nodes mobile */
-    .lp-node { width: 180px; }
-    .lp-branch__nodes .lp-node { width: 150px; }
-    .lp-branch__nodes { gap: 1rem; }
-    .lp-branch { width: 220px; }
-    .lp-node__preview { font-size: 0.65rem; }
-
     .lp-tabs__nav {
         gap: 0;
     }
@@ -2554,18 +2253,6 @@
     }
 }
 
-@media (max-width: 480px) {
-    .lp-builder__canvas {
-        padding: 1rem 0.5rem;
-    }
-
-    .lp-node { width: 160px; }
-    .lp-branch__nodes .lp-node { width: 130px; }
-    .lp-branch { width: 180px; }
-    .lp-branch__nodes { gap: 0.5rem; }
-    .lp-node__header { font-size: 0.65rem; padding: 0.4rem 0.6rem; }
-    .lp-node__body { padding: 0.4rem 0.6rem; }
-}
 </style>
 
 <!-- ==================== JS: IntersectionObserver ==================== -->

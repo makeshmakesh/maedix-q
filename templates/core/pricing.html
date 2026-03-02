@@ -172,7 +172,11 @@
                         </ul>
 
                         <!-- CTA Button -->
-                        {% if current_plan and current_plan.id == item.plan.id %}
+                        {% if current_plan and current_plan.id == item.plan.id and subscription_expiring_soon %}
+                        <a href="{% url 'checkout' %}?plan={{ item.plan.slug }}{% if best_coupon %}&coupon={{ best_coupon.code }}{% endif %}" class="btn btn-success w-100">
+                            Renew Plan
+                        </a>
+                        {% elif current_plan and current_plan.id == item.plan.id %}
                         <a href="{% url 'subscription' %}" class="btn btn-success w-100">
                             Manage Subscription
                         </a>

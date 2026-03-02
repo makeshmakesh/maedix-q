@@ -47,6 +47,7 @@ class PricingPage(View):
 
         # Get user's current plan if logged in
         current_plan = None
+        subscription_expiring_soon = False
         if request.user.is_authenticated:
             subscription = Subscription.objects.filter(
                 user=request.user,
@@ -54,6 +55,11 @@ class PricingPage(View):
             ).select_related('plan').first()
             if subscription:
                 current_plan = subscription.plan
+                # Allow renewal if subscription expires within 7 days
+                if subscription.end_date:
+                    days_left = (subscription.end_date - timezone.now()).days
+                    if days_left <= 7:
+                        subscription_expiring_soon = True
 
         # Get user's country and currency
         user_country = get_user_country(request)
@@ -87,6 +93,7 @@ class PricingPage(View):
             'plans': plans,
             'plans_with_pricing': plans_with_pricing,
             'current_plan': current_plan,
+            'subscription_expiring_soon': subscription_expiring_soon,
             'best_coupon': best_coupon,
             'user_country': user_country,
             'currency': currency_info['currency'],

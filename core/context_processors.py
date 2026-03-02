@@ -55,7 +55,7 @@ def banners(request):
     popup_banners = [b for b in all_banners if b['display_mode'] in ('popup', 'both')]
 
     # Add subscription expiry warning for non-staff, non-free active subscriptions
-    if request.user.is_authenticated and not request.user.is_staff:
+    if request.user.is_authenticated:
         try:
             from .subscription_utils import get_user_subscription
             subscription = get_user_subscription(request.user)
@@ -73,6 +73,40 @@ def banners(request):
                         'banner_type': 'warning',
                         'link_url': '/pricing/',
                         'link_text': 'Renew Now',
+                        'display_seconds': 0,
+                        'is_dismissible': True,
+                    })
+        except Exception:
+            pass
+
+        # Add Instagram token expiry warning
+        try:
+            from instagram.models import InstagramAccount
+            ig_account = InstagramAccount.objects.filter(
+                user=request.user, is_active=True
+            ).first()
+            if ig_account and ig_account.token_expires_at:
+                days_left = (ig_account.token_expires_at - timezone.now()).days
+                if days_left <= 0:
+                    top_banners.insert(0, {
+                        'id': 'ig_token_expired',
+                        'title': 'Instagram Disconnected',
+                        'message': 'Your Instagram connection has expired. Reconnect to keep your automations running.',
+                        'banner_type': 'danger',
+                        'link_url': '/instagram/connect/',
+                        'link_text': 'Reconnect Now',
+                        'display_seconds': 0,
+                        'is_dismissible': False,
+                    })
+                elif days_left <= 7:
+                    s = '' if days_left == 1 else 's'
+                    top_banners.insert(0, {
+                        'id': f'ig_token_expiry_{days_left}',
+                        'title': 'Instagram Token Expiring',
+                        'message': f'Your Instagram connection expires in {days_left} day{s}. Reconnect to avoid disruption.',
+                        'banner_type': 'warning',
+                        'link_url': '/instagram/connect/',
+                        'link_text': 'Reconnect Now',
                         'display_seconds': 0,
                         'is_dismissible': True,
                     })

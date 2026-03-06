@@ -714,14 +714,20 @@ class InstagramPostsAPIView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View)
 
         try:
             api_client = get_api_client_for_account(instagram_account)
-            data = api_client.get_media(limit=50)
+            after = request.GET.get('after')
+            data = api_client.get_media(limit=50, after=after)
 
             posts = data.get('data', [])
+            next_cursor = None
+            paging = data.get('paging', {})
+            if 'next' in paging:
+                next_cursor = paging.get('cursors', {}).get('after')
 
             return JsonResponse({
                 'success': True,
                 'posts': posts,
-                'count': len(posts)
+                'count': len(posts),
+                'next_cursor': next_cursor,
             })
 
         except Exception as e:

@@ -885,6 +885,12 @@
                     <p class="mt-3 mb-0 text-muted">Loading your posts...</p>
                 </div>
                 <div id="postsGrid" class="row g-2" style="display: none;"></div>
+                <div id="loadMoreContainer" class="text-center py-3" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="loadMoreBtn">
+                        <i class="bi bi-arrow-down-circle me-1"></i> Load More Posts
+                    </button>
+                    <div id="loadMoreSpinner" class="spinner-border spinner-border-sm text-primary ms-2" style="display: none;" role="status"></div>
+                </div>
                 <div id="postsError" class="alert alert-danger" style="display: none;"></div>
                 <div id="postsEmpty" class="text-center py-4" style="display: none;">
                     <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
@@ -917,6 +923,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const hasAccountLevelAutomation = {{ features.account_level_automation|yesno:"true,false,false" }};
 
     let postsCache = null;
+    let nextCursor = null;
     let keywords = [];
 
     // Initialize keywords from hidden input
@@ -1108,63 +1115,89 @@ document.addEventListener('DOMContentLoaded', function() {
         loadPosts();
     });
 
-    function loadPosts() {
+    function appendPostsToGrid(posts, grid) {
+        posts.forEach(post => {
+            const col = document.createElement('div');
+            col.className = 'col-4 col-md-3';
+            const imgUrl = post.media_type === 'VIDEO'
+                ? (post.thumbnail_url || '/static/img/placeholder.png')
+                : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
+            const isVideo = post.media_type === 'VIDEO';
+            const isSelected = postInput.value === post.id;
+
+            col.innerHTML = `
+                <div class="post-item p-1 position-relative ${isSelected ? 'border-primary' : ''}"
+                     data-post-id="${post.id}"
+                     data-img-url="${imgUrl}">
+                    <img src="${imgUrl}" class="img-fluid rounded"
+                         style="aspect-ratio: 1; object-fit: cover; width: 100%;">
+                    ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
+                    ${isSelected ? '<span class="position-absolute top-0 end-0 m-2 badge bg-primary"><i class="bi bi-check"></i></span>' : ''}
+                </div>
+            `;
+
+            col.querySelector('.post-item').addEventListener('click', function() {
+                postInput.value = post.id;
+                selectedPostImg.src = imgUrl;
+                updatePostUI();
+                modal.hide();
+            });
+
+            grid.appendChild(col);
+        });
+    }
+
+    function loadPosts(cursor) {
         const loading = document.getElementById('postsLoading');
         const grid = document.getElementById('postsGrid');
         const error = document.getElementById('postsError');
         const empty = document.getElementById('postsEmpty');
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loadMoreSpinner = document.getElementById('loadMoreSpinner');
 
-        loading.style.display = 'block';
-        grid.style.display = 'none';
+        if (!cursor) {
+            loading.style.display = 'block';
+            grid.style.display = 'none';
+            grid.innerHTML = '';
+            postsCache = [];
+            nextCursor = null;
+        } else {
+            loadMoreBtn.disabled = true;
+            loadMoreSpinner.style.display = 'inline-block';
+        }
         error.style.display = 'none';
         empty.style.display = 'none';
+        loadMoreContainer.style.display = 'none';
 
-        fetch('{% url "instagram_api_posts" %}')
+        const url = cursor
+            ? '{% url "instagram_api_posts" %}?after=' + encodeURIComponent(cursor)
+            : '{% url "instagram_api_posts" %}';
+
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 loading.style.display = 'none';
-                if (data.success) {
-                    postsCache = data.posts;
+                loadMoreBtn.disabled = false;
+                loadMoreSpinner.style.display = 'none';
 
-                    if (data.posts.length === 0) {
+                if (data.success) {
+                    postsCache = (postsCache || []).concat(data.posts);
+                    nextCursor = data.next_cursor;
+
+                    if (postsCache.length === 0) {
                         empty.style.display = 'block';
                         return;
                     }
 
-                    grid.innerHTML = '';
-                    data.posts.forEach(post => {
-                        const col = document.createElement('div');
-                        col.className = 'col-4 col-md-3';
-                        const imgUrl = post.media_type === 'VIDEO'
-                            ? (post.thumbnail_url || '/static/img/placeholder.png')
-                            : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
-                        const isVideo = post.media_type === 'VIDEO';
-                        const isSelected = postInput.value === post.id;
-
-                        col.innerHTML = `
-                            <div class="post-item p-1 position-relative ${isSelected ? 'border-primary' : ''}"
-                                 data-post-id="${post.id}"
-                                 data-img-url="${imgUrl}">
-                                <img src="${imgUrl}" class="img-fluid rounded"
-                                     style="aspect-ratio: 1; object-fit: cover; width: 100%;">
-                                ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
-                                ${isSelected ? '<span class="position-absolute top-0 end-0 m-2 badge bg-primary"><i class="bi bi-check"></i></span>' : ''}
-                            </div>
-                        `;
-
-                        col.querySelector('.post-item').addEventListener('click', function() {
-                            postInput.value = post.id;
-                            selectedPostImg.src = imgUrl;
-                            updatePostUI();
-                            modal.hide();
-                        });
-
-                        grid.appendChild(col);
-                    });
+                    appendPostsToGrid(data.posts, grid);
                     grid.style.display = 'flex';
                     grid.classList.add('flex-wrap');
 
-                    // Update the preview image if we have a post selected
+                    if (nextCursor) {
+                        loadMoreContainer.style.display = 'block';
+                    }
+
                     updatePostUI();
                 } else {
                     error.textContent = data.error || 'Failed to load posts';
@@ -1173,10 +1206,16 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(err => {
                 loading.style.display = 'none';
+                loadMoreBtn.disabled = false;
+                loadMoreSpinner.style.display = 'none';
                 error.textContent = 'Error loading posts. Please try again.';
                 error.style.display = 'block';
             });
     }
+
+    document.getElementById('loadMoreBtn').addEventListener('click', function() {
+        if (nextCursor) loadPosts(nextCursor);
+    });
 });
 </script>
 {% endblock %}

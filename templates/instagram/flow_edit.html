@@ -549,6 +549,12 @@ const hasAccountLevelAutomation = {{ features.account_level_automation|yesno:"tr
                     <p class="mt-2 mb-0 small">Loading your posts...</p>
                 </div>
                 <div id="postsGrid" class="row g-2" style="display: none;"></div>
+                <div id="loadMoreContainer" class="text-center py-3" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="loadMoreBtn">
+                        <i class="bi bi-arrow-down-circle me-1"></i> Load More Posts
+                    </button>
+                    <div id="loadMoreSpinner" class="spinner-border spinner-border-sm text-primary ms-2" style="display: none;" role="status"></div>
+                </div>
                 <div id="postsError" class="alert alert-danger" style="display: none;"></div>
             </div>
         </div>

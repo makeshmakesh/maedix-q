@@ -709,24 +709,28 @@ class InstagramAPIClient:
             }
         )
 
-    def get_media(self, limit: int = 50) -> dict:
+    def get_media(self, limit: int = 50, after: str = None) -> dict:
         """
         Get the user's recent media posts.
 
         Args:
             limit: Maximum number of posts to return (default 50)
+            after: Pagination cursor to fetch the next page
 
         Returns:
             API response with media data
         """
+        params = {
+            'fields': 'id,media_type,media_url,thumbnail_url,timestamp,caption,permalink',
+            'access_token': self.access_token,
+            'limit': limit
+        }
+        if after:
+            params['after'] = after
         return self._make_request(
             method='GET',
             endpoint=f'{self.ig_user_id}/media',
-            params={
-                'fields': 'id,media_type,media_url,thumbnail_url,timestamp,caption,permalink',
-                'access_token': self.access_token,
-                'limit': limit
-            }
+            params=params
         )
 
 

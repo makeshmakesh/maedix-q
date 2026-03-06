@@ -3688,47 +3688,70 @@ if (typeof hasAccountLevelAutomation !== 'undefined' && !hasAccountLevelAutomati
     });
 }
 
-// Load posts for form editor modal
-function loadPostsForForm() {
+// Shared state for post pagination
+let postsNextCursor = null;
+let currentPostsMode = null; // 'form' or 'settings'
+
+function appendPostItemToGrid(grid, post, onSelect) {
+    const col = document.createElement('div');
+    col.className = 'col-4 col-md-3';
+    const imgUrl = post.media_type === 'VIDEO'
+        ? (post.thumbnail_url || '/static/img/placeholder.png')
+        : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
+    const isVideo = post.media_type === 'VIDEO';
+    col.innerHTML = `
+        <div class="post-item border rounded p-1 position-relative" style="cursor: pointer;">
+            <img src="${imgUrl}" class="img-fluid rounded" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
+            ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
+        </div>
+    `;
+    col.querySelector('.post-item').addEventListener('click', function() {
+        onSelect(post);
+    });
+    grid.appendChild(col);
+}
+
+function loadPostsGeneric(cursor, onPostSelect) {
     const loading = document.getElementById('postsLoading');
     const grid = document.getElementById('postsGrid');
     const error = document.getElementById('postsError');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const loadMoreSpinner = document.getElementById('loadMoreSpinner');
 
-    loading.style.display = 'block';
-    grid.style.display = 'none';
+    if (!cursor) {
+        loading.style.display = 'block';
+        grid.style.display = 'none';
+        grid.innerHTML = '';
+        postsNextCursor = null;
+    } else {
+        loadMoreBtn.disabled = true;
+        loadMoreSpinner.style.display = 'inline-block';
+    }
     error.style.display = 'none';
+    loadMoreContainer.style.display = 'none';
 
-    fetch(postsApiUrl)
+    const url = cursor
+        ? postsApiUrl + '?after=' + encodeURIComponent(cursor)
+        : postsApiUrl;
+
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             loading.style.display = 'none';
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreSpinner.style.display = 'none';
+            }
             if (data.success) {
-                grid.innerHTML = '';
+                postsNextCursor = data.next_cursor;
                 data.posts.forEach(post => {
-                    const col = document.createElement('div');
-                    col.className = 'col-4 col-md-3';
-                    const imgUrl = post.media_type === 'VIDEO'
-                        ? (post.thumbnail_url || '/static/img/placeholder.png')
-                        : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
-                    const isVideo = post.media_type === 'VIDEO';
-                    col.innerHTML = `
-                        <div class="post-item border rounded p-1 position-relative" style="cursor: pointer;">
-                            <img src="${imgUrl}" class="img-fluid rounded" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
-                            ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
-                        </div>
-                    `;
-                    col.querySelector('.post-item').addEventListener('click', function() {
-                        formPostId.value = post.id;
-                        // Also update the sidebar input if exists
-                        if (settingsPostId) settingsPostId.value = post.id;
-                        bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
-                        // Show clear buttons
-                        if (formClearPostBtn) formClearPostBtn.style.display = 'block';
-                        if (settingsClearPostBtn) settingsClearPostBtn.style.display = 'block';
-                    });
-                    grid.appendChild(col);
+                    appendPostItemToGrid(grid, post, onPostSelect);
                 });
                 grid.style.display = 'flex';
+                if (postsNextCursor) {
+                    loadMoreContainer.style.display = 'block';
+                }
             } else {
                 error.textContent = data.error || 'Failed to load posts';
                 error.style.display = 'block';
@@ -3736,61 +3759,58 @@ function loadPostsForForm() {
         })
         .catch(err => {
             loading.style.display = 'none';
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreSpinner.style.display = 'none';
+            }
             error.textContent = 'Error loading posts';
             error.style.display = 'block';
         });
+}
+
+// Load posts for form editor modal
+function loadPostsForForm() {
+    currentPostsMode = 'form';
+    loadPostsGeneric(null, function(post) {
+        formPostId.value = post.id;
+        if (settingsPostId) settingsPostId.value = post.id;
+        bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
+        if (formClearPostBtn) formClearPostBtn.style.display = 'block';
+        if (settingsClearPostBtn) settingsClearPostBtn.style.display = 'block';
+    });
 }
 
 // Load posts for settings modal
 function loadPostsForSettings() {
-    const loading = document.getElementById('postsLoading');
-    const grid = document.getElementById('postsGrid');
-    const error = document.getElementById('postsError');
-
-    loading.style.display = 'block';
-    grid.style.display = 'none';
-    error.style.display = 'none';
-
-    fetch(postsApiUrl)
-        .then(response => response.json())
-        .then(data => {
-            loading.style.display = 'none';
-            if (data.success) {
-                grid.innerHTML = '';
-                data.posts.forEach(post => {
-                    const col = document.createElement('div');
-                    col.className = 'col-4 col-md-3';
-                    const imgUrl = post.media_type === 'VIDEO'
-                        ? (post.thumbnail_url || '/static/img/placeholder.png')
-                        : (post.media_url || post.thumbnail_url || '/static/img/placeholder.png');
-                    const isVideo = post.media_type === 'VIDEO';
-                    col.innerHTML = `
-                        <div class="post-item border rounded p-1 position-relative" style="cursor: pointer;">
-                            <img src="${imgUrl}" class="img-fluid rounded" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
-                            ${isVideo ? '<span class="position-absolute top-50 start-50 translate-middle text-white"><i class="bi bi-play-circle-fill fs-3"></i></span>' : ''}
-                        </div>
-                    `;
-                    col.querySelector('.post-item').addEventListener('click', function() {
-                        settingsPostId.value = post.id;
-                        bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
-                        // Show clear button
-                        const clearBtn = document.getElementById('settingsClearPostBtn');
-                        if (clearBtn) clearBtn.style.display = 'block';
-                    });
-                    grid.appendChild(col);
-                });
-                grid.style.display = 'flex';
-            } else {
-                error.textContent = data.error || 'Failed to load posts';
-                error.style.display = 'block';
-            }
-        })
-        .catch(err => {
-            loading.style.display = 'none';
-            error.textContent = 'Error loading posts';
-            error.style.display = 'block';
-        });
+    currentPostsMode = 'settings';
+    loadPostsGeneric(null, function(post) {
+        settingsPostId.value = post.id;
+        bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
+        const clearBtn = document.getElementById('settingsClearPostBtn');
+        if (clearBtn) clearBtn.style.display = 'block';
+    });
 }
+
+// Load More button handler (use delegation since modal HTML may load after this script)
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#loadMoreBtn')) return;
+    if (!postsNextCursor) return;
+    const onSelect = currentPostsMode === 'form'
+        ? function(post) {
+            formPostId.value = post.id;
+            if (settingsPostId) settingsPostId.value = post.id;
+            bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
+            if (formClearPostBtn) formClearPostBtn.style.display = 'block';
+            if (settingsClearPostBtn) settingsClearPostBtn.style.display = 'block';
+        }
+        : function(post) {
+            settingsPostId.value = post.id;
+            bootstrap.Modal.getInstance(document.getElementById('postSelectModal')).hide();
+            const clearBtn = document.getElementById('settingsClearPostBtn');
+            if (clearBtn) clearBtn.style.display = 'block';
+        };
+    loadPostsGeneric(postsNextCursor, onSelect);
+});
 
 // ============================================================================
 // Initialize

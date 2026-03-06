@@ -775,6 +775,7 @@
         var closeBtn = document.getElementById('closeModalBtn');
         var modalBody = document.getElementById('modalBody');
         var postsData = {};
+        var autoNextCursor = null;
 
         browseBtn.addEventListener('click', function() {
             modal.classList.add('active');
@@ -791,10 +792,18 @@
             }
         });
 
-        function loadInstagramPosts() {
-            modalBody.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Loading your Instagram posts...</p></div>';
+        function loadInstagramPosts(cursor) {
+            if (!cursor) {
+                modalBody.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Loading your Instagram posts...</p></div>';
+                postsData = {};
+                autoNextCursor = null;
+            }
 
-            fetch('{% url "instagram_api_posts" %}')
+            var url = cursor
+                ? '{% url "instagram_api_posts" %}?after=' + encodeURIComponent(cursor)
+                : '{% url "instagram_api_posts" %}';
+
+            fetch(url)
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) {
@@ -802,33 +811,59 @@
                         return;
                     }
                     if (!data.posts || data.posts.length === 0) {
-                        modalBody.innerHTML = '<div class="empty-state"><i class="bi bi-inbox" style="font-size: 2rem;"></i><p class="mt-2">No posts found</p></div>';
+                        if (!cursor) {
+                            modalBody.innerHTML = '<div class="empty-state"><i class="bi bi-inbox" style="font-size: 2rem;"></i><p class="mt-2">No posts found</p></div>';
+                        }
                         return;
                     }
-                    renderPosts(data.posts);
+                    autoNextCursor = data.next_cursor;
+                    renderPosts(data.posts, !!cursor);
                 })
                 .catch(function() {
                     modalBody.innerHTML = '<div class="error-state"><i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i><p class="mt-2">Network error</p></div>';
                 });
         }
 
-        function renderPosts(posts) {
+        function renderPosts(posts, append) {
             var currentPostId = document.getElementById('instagram_post_id').value;
-            postsData = {};
             posts.forEach(function(post) { postsData[post.id] = post; });
 
-            var html = '<div class="posts-grid">';
+            var html = '';
+            if (!append) {
+                html = '<div class="posts-grid">';
+            }
             posts.forEach(function(post) {
                 var imageUrl = post.media_type === 'VIDEO' ? (post.thumbnail_url || post.media_url) : post.media_url;
                 var caption = post.caption ? post.caption.substring(0, 40) + '...' : 'No caption';
                 var date = new Date(post.timestamp).toLocaleDateString();
                 var selected = currentPostId === post.id ? 'selected' : '';
                 html += '<div class="post-card ' + selected + '" data-post-id="' + post.id + '">' +
-                    '<img src="' + imageUrl + '" alt="Post" onerror="this.src=\'https://via.placeholder.com/200?text=No+Image\'">' +
+                    '<img src="' + imageUrl + '" alt="Post" onerror="this.src=\'/static/img/placeholder.png\'">' +
                     '<div class="post-info"><p class="post-caption">' + escapeHtml(caption) + '</p><p class="post-date">' + date + '</p></div></div>';
             });
-            html += '</div>';
-            modalBody.innerHTML = html;
+
+            if (append) {
+                // Remove existing load more button, append new posts
+                var existingLoadMore = modalBody.querySelector('.load-more-container');
+                if (existingLoadMore) existingLoadMore.remove();
+                var gridEl = modalBody.querySelector('.posts-grid');
+                if (gridEl) gridEl.insertAdjacentHTML('beforeend', html);
+            } else {
+                html += '</div>';
+                modalBody.innerHTML = html;
+            }
+
+            if (autoNextCursor) {
+                var loadMoreHtml = '<div class="load-more-container" style="text-align: center; padding: 15px 0;">' +
+                    '<button type="button" class="btn btn-outline-primary btn-sm" id="autoLoadMoreBtn">' +
+                    '<i class="bi bi-arrow-down-circle me-1"></i> Load More Posts</button></div>';
+                modalBody.insertAdjacentHTML('beforeend', loadMoreHtml);
+                document.getElementById('autoLoadMoreBtn').addEventListener('click', function() {
+                    this.disabled = true;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Loading...';
+                    loadInstagramPosts(autoNextCursor);
+                });
+            }
 
             document.querySelectorAll('.post-card').forEach(function(card) {
                 card.addEventListener('click', function() { selectPost(this); });

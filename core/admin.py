@@ -21,7 +21,11 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'amount', 'currency', 'status', 'created_at')
+    list_filter = ('status', 'currency', 'created_at')
+    search_fields = ('user__email', 'razorpay_order_id', 'razorpay_payment_id')
+    readonly_fields = ('id', 'razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature', 'created_at', 'updated_at')
+    date_hierarchy = 'created_at'
 
 
 @admin.register(CreditTransaction)
@@ -35,7 +39,11 @@ class CreditTransactionAdmin(admin.ModelAdmin):
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'email', 'subject', 'is_read', 'created_at')
+    list_filter = ('is_read', 'created_at')
+    search_fields = ('name', 'email', 'subject', 'message')
+    readonly_fields = ('name', 'email', 'subject', 'message', 'created_at')
+    date_hierarchy = 'created_at'
 
 
 class BannerAdminForm(forms.ModelForm):

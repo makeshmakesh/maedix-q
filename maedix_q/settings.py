@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'maedix.com,www.maedix.com').split(',')
 
@@ -76,7 +76,7 @@ LOGGING = {
           'handlers': ['console'],
       },
       'loggers': {
-          'core': {'level': 'INFO', 'handlers': ['console']},
+          'core': {'level': 'INFO', 'handlers': ['console'], 'propagate': False},
           'instagram': {'level': 'WARNING'},
           'django.security.DisallowedHost': {'level': 'CRITICAL'},
       },
@@ -91,6 +91,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'users.middleware.AcquisitionTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'maedix_q.urls'
@@ -117,10 +118,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'maedix_q.wsgi.application'
 ASGI_APPLICATION = 'maedix_q.asgi.application'
 
-# Channel Layers
+# Channel Layers (Redis for multi-worker support)
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [os.getenv('REDIS_URL', 'redis://localhost:6379/2')],
+        },
     }
 }
 
@@ -217,14 +221,27 @@ PASSWORD_RESET_TIMEOUT = 86400
 
 
 
-# Cache Configuration (file-based for multi-worker support)
+# ============================================================
+# Celery / Redis Configuration
+# ============================================================
+# Flip this to False to revert webhooks to synchronous (old behavior)
+USE_CELERY = True
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Cache Configuration (Redis - also used by Celery)
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': BASE_DIR / 'cache',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
         'TIMEOUT': 3600,  # 1 hour
         'OPTIONS': {
-            'MAX_ENTRIES': 1000
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }

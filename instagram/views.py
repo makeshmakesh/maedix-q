@@ -2640,6 +2640,9 @@ class InstagramWebhookView(View):
             payload = json.loads(request.body)
             logger.info(f"Instagram webhook received: {json.dumps(payload)[:1000]}")
 
+            from django.conf import settings
+            use_celery = getattr(settings, 'USE_CELERY', False)
+
             for entry in payload.get('entry', []):
                 ig_business_account_id = str(entry.get('id', ''))
                 logger.info(f"Processing webhook entry: id={ig_business_account_id}")
@@ -2647,11 +2650,20 @@ class InstagramWebhookView(View):
                 # Handle comment changes
                 for change in entry.get('changes', []):
                     if change.get('field') == 'comments':
-                        self.handle_comment(change.get('value', {}), ig_business_account_id)
+                        comment_data = change.get('value', {})
+                        if use_celery:
+                            from instagram.tasks import process_comment_task
+                            process_comment_task.delay(comment_data, ig_business_account_id)
+                        else:
+                            self.handle_comment(comment_data, ig_business_account_id)
 
                 # Handle message events (quick replies, text replies)
                 for messaging in entry.get('messaging', []):
-                    self.handle_message(messaging, ig_business_account_id)
+                    if use_celery:
+                        from instagram.tasks import process_message_task
+                        process_message_task.delay(messaging, ig_business_account_id)
+                    else:
+                        self.handle_message(messaging, ig_business_account_id)
 
             return JsonResponse({'status': 'ok'})
 

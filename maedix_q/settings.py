@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'maedix.com,www.maedix.com').split(',')
 
@@ -233,6 +233,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 50  # Restart worker after 50 tasks (prevents memory leaks)
+CELERY_TASK_TIME_LIMIT = 120  # Hard kill task after 120s
+CELERY_TASK_SOFT_TIME_LIMIT = 90  # Raise exception after 90s
 
 # Cache Configuration (Redis - also used by Celery)
 CACHES = {

@@ -2645,6 +2645,17 @@ class InstagramWebhookView(View):
 
             for entry in payload.get('entry', []):
                 ig_business_account_id = str(entry.get('id', ''))
+
+                # Skip unknown accounts using Redis cache (no DB hit)
+                from django.core.cache import cache
+                cache_key = f'ig_account_known:{ig_business_account_id}'
+                is_known = cache.get(cache_key)
+                if is_known is None:
+                    is_known = self._find_instagram_account(ig_business_account_id) is not None
+                    cache.set(cache_key, is_known, 3600)
+                if not is_known:
+                    continue
+
                 logger.info(f"Processing webhook entry: id={ig_business_account_id}")
 
                 # Handle comment changes

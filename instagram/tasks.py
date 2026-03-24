@@ -1,8 +1,21 @@
 import json
 import logging
+import redis
 from celery import shared_task
 
 logger = logging.getLogger('instagram')
+
+QUEUE_MAX_SIZE = 500
+
+
+@shared_task
+def trim_queue():
+    """Flush the Celery queue if it exceeds QUEUE_MAX_SIZE"""
+    r = redis.Redis(host='localhost', port=6379, db=0)
+    queue_size = r.llen('celery')
+    if queue_size > QUEUE_MAX_SIZE:
+        r.delete('celery')
+        logger.warning(f"Queue trimmed: {queue_size} tasks were stale, queue flushed")
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=10)

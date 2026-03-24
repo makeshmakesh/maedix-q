@@ -17,8 +17,8 @@ from typing import Optional, List, Dict, Any
 logger = logging.getLogger(__name__)
 
 # Rate limiting configuration
-DM_DELAY_MIN_SECONDS = 1  # Minimum delay before sending DM
-DM_DELAY_MAX_SECONDS = 2  # Maximum delay before sending DM
+DM_DELAY_MIN_SECONDS = 0  # Minimum delay before sending DM
+DM_DELAY_MAX_SECONDS = 1  # Maximum delay before sending DM
 
 # Instagram API version
 API_VERSION = "v24.0"

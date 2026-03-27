@@ -1818,17 +1818,18 @@ class FlowToggleActiveView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
 
 class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
-    """View sessions/logs for a flow"""
+    """View sessions/logs for a flow (staff only)"""
     template_name = 'instagram/flow_sessions.html'
     paginate_by = 20
 
     def get(self, request, pk):
         from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-        if request.user.is_staff:
-            flow = get_object_or_404(DMFlow, pk=pk)
-        else:
-            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if not request.user.is_staff:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden()
+
+        flow = get_object_or_404(DMFlow, pk=pk)
 
         sessions = flow.sessions.all().order_by('-created_at')
 
@@ -1868,14 +1869,15 @@ class FlowSessionsView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
 
 
 class FlowSessionDetailView(IGFlowBuilderFeatureMixin, LoginRequiredMixin, View):
-    """View detailed execution logs for a session"""
+    """View detailed execution logs for a session (staff only)"""
     template_name = 'instagram/flow_session_detail.html'
 
     def get(self, request, pk, session_id):
-        if request.user.is_staff:
-            flow = get_object_or_404(DMFlow, pk=pk)
-        else:
-            flow = get_object_or_404(DMFlow, pk=pk, user=request.user)
+        if not request.user.is_staff:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden()
+
+        flow = get_object_or_404(DMFlow, pk=pk)
         session = get_object_or_404(FlowSession, pk=session_id, flow=flow)
 
         # Get execution logs for this session (exclude generic node_executed logs)

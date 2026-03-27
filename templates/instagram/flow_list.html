@@ -1052,10 +1052,12 @@
                                         <i class="bi bi-pencil"></i>
                                         Edit
                                     </a>
+                                    {% if user.is_staff %}
                                     <a href="{% url 'flow_sessions' flow.pk %}" class="flow-action-btn secondary">
                                         <i class="bi bi-list-check"></i>
                                         Sessions
                                     </a>
+                                    {% endif %}
                                     <form method="post" action="{% url 'flow_delete' flow.pk %}"
                                           class="d-inline" onsubmit="return confirm('Delete this flow? This cannot be undone.');">
                                         {% csrf_token %}
